@@ -2,7 +2,9 @@ using RCall, Optim, LinearAlgebra, ForwardDiff, Random, NLSolversBase,
       Distributions, BenchmarkTools, DataFrames
 
 # include functions from other scripts
-
+include("objective_functions.jl")
+include("helper_functions.jl")
+include("sem_wrapper_functions.jl")
 
 # get Data from R
 R"""
@@ -16,7 +18,9 @@ dat = rcopy(R"dat")
 
 #dat = convert(Matrix, dat)
 
-# define model
+# define model as the researcher should do.
+# Note: Variables are currently assessed by position!
+# DataFrame is converted to Matrix internally.
 function ram(x)
       S =   [x[1] 0 0 0
             0 x[2] 0 0
@@ -36,22 +40,11 @@ function ram(x)
 end
 
 
-
-
-
-
-
-
-
-
-
-
-###########################################################
 x0 = append!([0.5, 0.5, 0.5, 0.5], ones(2))
 
-@time fit_in_tree(ram, dat, x0, ML, "LBFGS")
+fit_in_tree(ram, dat, x0, ML, "LBFGS")
 
-@time fit_sem(ram, dat, x0, ML, "LBFGS")
+fit_sem(ram, dat, x0, ML, "LBFGS")
 
 fitted_lb = fit_sem(ram, dat, x0, ML, "LBFGS")
 
