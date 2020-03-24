@@ -53,3 +53,88 @@ fitted_new = fit_sem(ram, dat, x0, ML, "Newton")
 delta_method(fitted_lb)
 
 delta_method(fitted_new)
+
+############### example 2: 3 factors and latent correlations
+
+R"""
+pacman::p_load(lavaan)
+
+data(HolzingerSwineford1939)
+dat2 <- HolzingerSwineford1939
+"""
+
+dat2 = rcopy(R"dat2")
+
+dat2[7:15]
+
+x = ones(6)
+
+S =   :([x[1] 0 0 0
+      0 x[2] 0 0
+      0 0 x[3] 0
+      0 0 0 x[4]])
+
+F =  :([1 0 0 0
+      0 1 0 0
+      0 0 1 0])
+
+A =  :([0 0 0 1
+      0 0 0 x[5]
+      0 0 0 x[6]
+      0 0 0 0])
+
+
+
+function ram(x, S, F, A)
+      x = :($x)
+      S = eval(S)
+      F = eval(F)
+      A = eval(A)
+      return (S, F, A)
+      #return x
+end
+
+S =   :([:($x)[1] 0 0 0
+      0 :($x)[2] 0 0
+      0 0 :($x)[3] 0
+      0 0 0 :($x)[4]])
+
+F =  :([1 0 0 0
+      0 1 0 0
+      0 0 1 0])
+
+A =  :([0 0 0 1
+      0 0 0 :($x)[5]
+      0 0 0 :($x)[6]
+      0 0 0 0])
+
+function ram(x, S, F, A)
+      x = :($x)
+      S =   [:($x)[1] 0 0 0
+            0 :($x)[2] 0 0
+            0 0 :($x)[3] 0
+            0 0 0 :($x)[4]]
+
+      F =  [1 0 0 0
+            0 1 0 0
+            0 0 1 0]
+
+      A =  [0 0 0 1
+            0 0 0 :($x)[5]
+            0 0 0 :($x)[6]
+            0 0 0 0]
+      return (S, F, A)
+end
+
+function ramram(x, S, F, A)
+      x = x
+      return ram(x, S, F, A)
+end
+
+ramram(zeros(6), S, F, A)
+
+function sum2(a, b)
+      return a+b
+end
+
+@parallel sum2(5,5)
