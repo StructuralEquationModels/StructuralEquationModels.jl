@@ -1,6 +1,6 @@
 module sem
 
-include("optim_wrapper.jl")
+include("opt_wrapper.jl")
 include("objective.jl")
 include("helper.jl")
 include("exported.jl")
