@@ -1,30 +1,21 @@
-
-
 # function to fit SEM and obtain a big fitted object
-function fit_sem(model, data, start, est = ML, optim = "LBFGS")
-      data_matr = convert(Matrix{Float64}, data)
-      obs_cov = cov(data_matr)
-      obs_means::Vector{Float64} = vec(mean(data_matr, dims = 1))
-
+function sem_fit!(model)
+      prepare_model!(model)
       # fit model
-      result = optim_sem(model, obs_cov, start, est, optim)
+      result = opt_sem(model)
       # obtain variables to compute logl
-      parameters = Optim.minimizer(result)
-      exp_cov = expected_cov(model, parameters)
+      push!(model, :par => Optim.minimizer(result))
+      push!(model, :opt_result => result)
+      sem_imp_cov!(model)
+end
 
-      fitted_model = Dict{Symbol, Any}(
-      :parameters => parameters,
-      :data => data_matr,
-      :obs_cov => obs_cov,
-      :exp_cov => expected_cov(model, parameters),
-      :obs_means => obs_means,
-      :model => model,
-      :logl => logl(obs_means, exp_cov, data_matr),
-      :opt_result => result,
-      :optimizer => optim,
-      :start => start
-      )
-      return fitted_model
+function prepare_model!(model)
+      if ismissing(model[:obs_cov])
+            sem_obs_cov!(model)
+      end
+      if ismissing(model[:obs_mean])
+            sem_obs_mean!(model)
+      end
 end
 
 # compute standard errors and p-values
@@ -58,15 +49,16 @@ function delta_method(fit)
 end
 
 
-function sem_obs_cov(model)
+
+function sem_obs_cov!(model)
       push!(model, :obs_cov => cov(model[:data]))
 end
 
-function sem_imp_cov(model)
+function sem_imp_cov!(model)
       push!(model, :imp_cov => imp_cov(model[:ram], model[:par]))
 end
 
-function sem_obs_mean(model)
+function sem_obs_mean!(model)
       push!(model,
             :obs_mean =>
                   vec(mean(model[:data], dims = 1))::Vector{Float64}
@@ -74,7 +66,15 @@ function sem_obs_mean(model)
 end
 
 
-function sem_logl(model)
+function sem_logl!(model)
       push!(model, :logl =>
             logl(model[:obs_mean], model[:imp_cov], model[:data]))
+end
+
+function sem_est!(model, est)
+      push!(model, :est => est)
+end
+
+function sem_opt!(model, opt)
+      push!(model, :opt => opt)
 end
