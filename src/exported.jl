@@ -1,20 +1,4 @@
-# wrapper to call the optimizer
-function optim_sem(model, obs_cov, start, est = ML, optim = "LBFGS")
-      if optim == "LBFGS"
-            objective = parameters -> est(parameters, model, obs_cov)
-            result = optimize(objective, start, LBFGS(), autodiff = :forward)
-      elseif optim == "Newton"
-            objective = TwiceDifferentiable(
-                  parameters -> est(parameters, model, obs_cov),
-                  start,
-                  autodiff = :forward)
-            result = optimize(objective, start)
-      else
-            error("Unknown Optimizer")
-      end
-      #result = optimize(objective, start, LBFGS(), autodiff = :forward)
-      return result
-end
+
 
 # function to fit SEM and obtain a big fitted object
 function fit_sem(model, data, start, est = ML, optim = "LBFGS")
@@ -71,25 +55,4 @@ function delta_method(fit)
       return DataFrame(se = se,
                         z = z,
                         p = p)
-end
-
-
-
-# function to use in decision trees. Returns only loglik instead of
-# a big fitted object. Should be modified to return the fit-measure of
-# interest
-function fit_in_tree(model, data, start, est = ML, optim = "LBFGS")
-      data_matr = convert(Array{Float64}, data)
-      obs_cov = cov(data_matr)
-      obs_means = vec(mean(data_matr, dims = 1))
-
-      # fit model
-      result = optim_sem(model, obs_cov, start, est, optim)
-      # obtain variables to compute logl
-      parameters = Optim.minimizer(result)
-      exp_cov = expected_cov(model, parameters)
-
-      # compute logl
-      likelihood = logl(obs_means, exp_cov, data_matr)
-      return likelihood
 end

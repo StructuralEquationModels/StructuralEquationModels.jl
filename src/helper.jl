@@ -1,5 +1,4 @@
 # helper functions
-
 function logl(obs_means, exp_cov, data_matr)
       exp_cov = Matrix(Hermitian(exp_cov))
       likelihood = -loglikelihood(MvNormal(obs_means, exp_cov), transpose(data_matr))
