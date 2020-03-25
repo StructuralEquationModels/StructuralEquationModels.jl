@@ -42,14 +42,14 @@ function delta_method!(model)
             error("Your Optimizer is not supported")
       end
       z = par./se
-      p = cdf.(Normal(), -abs(z))
+      p = cdf.(Normal(), -abs.(z))
       push!(model, :se => se, :p => p, :z => z)
 end
 
 
 
 function sem_obs_cov!(model)
-      push!(model, :obs_cov => cov(model[:data]))
+      push!(model, :obs_cov => Distributions.cov(model[:data]))
 end
 
 function sem_imp_cov!(model)
