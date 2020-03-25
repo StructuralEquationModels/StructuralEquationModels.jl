@@ -6,7 +6,7 @@ function logl(obs_means, exp_cov, data_matr)
 end
 
 
-function expected_cov(model, parameters)
+function imp_cov(model, parameters)
       matrices = model(parameters)
       exp_cov =  matrices[2]*inv(I-matrices[3])*
       matrices[1]*transpose(inv(I-matrices[3]))*transpose(matrices[2])

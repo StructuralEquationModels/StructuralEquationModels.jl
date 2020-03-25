@@ -56,3 +56,25 @@ function delta_method(fit)
                         z = z,
                         p = p)
 end
+
+
+function sem_obs_cov(model)
+      push!(model, :obs_cov => cov(model[:data]))
+end
+
+function sem_imp_cov(model)
+      push!(model, :imp_cov => imp_cov(model[:ram], model[:par]))
+end
+
+function sem_obs_mean(model)
+      push!(model,
+            :obs_mean =>
+                  vec(mean(model[:data], dims = 1))::Vector{Float64}
+            )
+end
+
+
+function sem_logl(model)
+      push!(model, :logl =>
+            logl(model[:obs_mean], model[:imp_cov], model[:data]))
+end
