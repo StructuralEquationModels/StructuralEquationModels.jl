@@ -11,7 +11,10 @@ function model(ram, data, par, est = ML, opt = "LBFGS")
         :imp_cov => missing,
         :obs_mean => missing,
         :logl => missing,
-        :opt_result => missing
+        :opt_result => missing,
+        :se => missing,
+        :z => missing,
+        :p => missing
       )
       return model
 end

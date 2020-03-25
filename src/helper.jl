@@ -8,7 +8,7 @@ end
 
 function imp_cov(model, parameters)
       matrices = model(parameters)
-      exp_cov =  matrices[2]*inv(I-matrices[3])*
+      imp_cov =  matrices[2]*inv(I-matrices[3])*
       matrices[1]*transpose(inv(I-matrices[3]))*transpose(matrices[2])
-      return exp_cov
+      return imp_cov
 end
