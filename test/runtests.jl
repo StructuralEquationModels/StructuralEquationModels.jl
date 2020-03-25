@@ -18,6 +18,8 @@ function holz_onef_mod(x)
     return (S, F, A)
 end
 
+pwd()
+
 holz_onef_dat = Feather.read("test/comparisons/holz_onef_dat.feather")
 holz_onef_par = Feather.read("test/comparisons/holz_onef_par.feather")
 
