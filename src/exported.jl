@@ -19,33 +19,31 @@ function prepare_model!(model)
 end
 
 # compute standard errors and p-values
-function delta_method(fit)
-      parameters = fit[:parameters]
-      model = fit[:model]
-      obs_means = fit[:obs_means]
-      data = fit[:data]
+function delta_method!(model)
+      par = model[:par]
+      ram = model[:ram]
+      obs_mean = model[:obs_mean]
+      data = model[:data]
 
-      if fit[:optimizer] == "LBFGS"
-            fun = param -> logl(obs_means,
-                              expected_cov(model, param),
+      if model[:opt] == "LBFGS"
+            fun = param -> logl(obs_mean,
+                              imp_cov(ram, param),
                               data)
             se =
-            sqrt.(diag(inv(ForwardDiff.hessian(fun, parameters))))
-      elseif fit[:optimizer] == "Newton"
-            fun = TwiceDifferentiable(param -> logl(fit[:obs_means],
-                                          expected_cov(fit[:model], param),
-                                          fit[:data]),
-                                          fit[:start],
+            sqrt.(diag(inv(ForwardDiff.hessian(fun, par))))
+      elseif model[:opt] == "Newton"
+            fun = TwiceDifferentiable(param -> logl(model[:obs_mean],
+                                          imp_cov(model[:ram], param),
+                                          model[:data]),
+                                          model[:par],
                                           autodiff = :forward)
-            se = sqrt.(diag(inv(hessian!(fun, parameters))))
+            se = sqrt.(diag(inv(hessian!(fun, par))))
       else
             error("Your Optimizer is not supported")
       end
-      z = parameters./se
-      p = pdf(Normal(), z)
-      return DataFrame(se = se,
-                        z = z,
-                        p = p)
+      z = par./se
+      p = cdf.(Normal(), -abs(z))
+      push!(model, :se => se, :p => p, :z => z)
 end
 
 
