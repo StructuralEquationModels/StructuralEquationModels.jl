@@ -1,11 +1,9 @@
 module sem
 
-include("sem_wrapper_functions.jl")
-include("objective_functions.jl")
-include("helper_functions.jl")
-
-greet() = print("Hello World!")
-
-export optim_sem
+include("optim_wrapper.jl")
+include("objective.jl")
+include("helper.jl")
+include("exported.jl")
+include("model.jl")
 
 end # module
