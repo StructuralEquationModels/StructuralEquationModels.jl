@@ -89,6 +89,7 @@ delta_method!(mymod_lbfgs)
     p_diff_lbfgs = abs.(mymod_lbfgs[:p] .- lav_p)
 
     # figure out appropriate error margin!
+    # should be relative to absolute size
     @test all(se_diff_newton .< 0.01)
     @test all(se_diff_lbfgs .< 0.01)
     @test all(z_diff_newton .< 0.1)
