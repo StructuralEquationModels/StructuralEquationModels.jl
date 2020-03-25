@@ -1,19 +1,34 @@
-function model(ram, data, parameters, est = ML, optim = "LBFGS")
+function model(ram, data, par, est = ML, optim = "LBFGS")
     data_matr = convert(Matrix{Float64}, data)
-    obs_cov = cov(data_matr)
-    obs_means::Vector{Float64} = vec(mean(data_matr, dims = 1))
 
     model = Dict{Symbol, Any}(
-      :parameters => parameters,
-      :data => data_matr,
-      :obs_cov => obs_cov,
-      :exp_cov => expected_cov(model, parameters),
-      :obs_means => obs_means,
-      :ram => ram,
-      :logl => logl(obs_means, exp_cov, data_matr),
-      :opt_result => result,
-      :optimizer => optim,
-      :start => start
+        :ram => ram,
+        :par => par,
+        :data => data_matr,
+        :optim => optim,
+        :obs_cov => missing,
+        :imp_cov => missing,
+        :obs_mean => missing,
+        :logl => missing,
+        :opt_result => missing
       )
       return model
+end
+
+function ram(x)
+      S =   [x[1] 0 0 0
+            0 x[2] 0 0
+            0 0 x[3] 0
+            0 0 0 x[4]]
+
+      F =  [1 0 0 0
+            0 1 0 0
+            0 0 1 0]
+
+      A =  [0 0 0 1
+            0 0 0 x[5]
+            0 0 0 x[6]
+            0 0 0 0]
+
+      return (S, F, A)
 end

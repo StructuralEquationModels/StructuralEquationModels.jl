@@ -31,6 +31,19 @@ using sem, Test#, Feather
 
 #holz_onef_fit_ne = fit_sem(holz_onef_mod, holz_onef_dat, x0, ML, "Newton")
 
+holz_onef_dat =
+      Feather.read("test/comparisons/holz_onef_dat.feather")
+
+mymod = model(ram, holz_onef_dat, [0.5, 0.5, 0.5, 0.5, 1.0, 1.0])
+
+sem_obs_cov(mymod)
+
+sem_imp_cov(mymod)
+
+sem_obs_mean(mymod)
+
+sem_logl(mymod)
+
 @testset "sem.jl" begin
     #@test x0 == [0.5, 0.5, 0.5, 0.5, 1.0, 1.0]
 end
