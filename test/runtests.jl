@@ -41,8 +41,6 @@ function holz_onef_mod_mean(x)
     return (S, F, A, M)
 end
 
-pwd()
-
 holz_onef_dat = Feather.read("test/comparisons/holz_onef_dat.feather")
 holz_onef_par = Feather.read("test/comparisons/holz_onef_par.feather")
 
@@ -146,20 +144,20 @@ end
 
 
 ### test
-
 mymod_lbfgs =
-    model(holz_onef_mod, holz_onef_dat,
-            [0.5, 0.5, 0.5, 0.5, 1.0, 1.0],
-            sem.ML_mean, "test")
-
-push!(mymod_lbfbs, :est => sem.ML_2)
-
-sem_fit!(mymod_lbfgs)
-
-
-mymod_lbfgs =
-    model_2(
+    model(
     ram = holz_onef_mod,
     data = holz_onef_dat,
     par = [0.5, 0.5, 0.5, 0.5, 1.0, 1.0],
+    mstruc = false)
+
+sem_fit!(mymod_lbfgs)
+
+mymod_lbfgs =
+    model(
+    ram = holz_onef_mod_mean,
+    data = holz_onef_dat,
+    par = [0.5, 0.5, 0.5, 0.5, 1.0, 1.0, 5.0, 1.0, -3.0],
     mstruc = true)
+
+sem_fit!(mymod_lbfgs)

@@ -16,6 +16,11 @@ function prepare_model!(model)
       if ismissing(model[:obs_mean])
             sem_obs_mean!(model)
       end
+      if model[:mstruc]
+            sem_est!(model, ML_mean)
+      elseif !model[:mstruc]
+            sem_est!(model, ML)
+      end
 end
 
 # compute standard errors and p-values
