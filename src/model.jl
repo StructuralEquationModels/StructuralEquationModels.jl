@@ -1,4 +1,4 @@
-function model(ram, data, par, est = ML, opt = "LBFGS")
+function model(ram, data, par, est = ML, opt = "LBFGS", mstruc = false)
     data_matr = convert(Matrix{Float64}, data)
 
     model = Dict{Symbol, Any}(
@@ -7,6 +7,7 @@ function model(ram, data, par, est = ML, opt = "LBFGS")
         :data => data_matr,
         :opt => opt,
         :est => est,
+        :mstruc => mstruc,
         :obs_cov => missing,
         :imp_cov => missing,
         :obs_mean => missing,

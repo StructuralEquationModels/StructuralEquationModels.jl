@@ -1,10 +1,15 @@
 # helper functions
-function logl(obs_means, exp_cov, data_matr)
+function logl(obs_mean, exp_cov, data_matr)
       exp_cov = Matrix(Hermitian(exp_cov))
-      likelihood = -loglikelihood(MvNormal(obs_means, exp_cov), transpose(data_matr))
+      likelihood = -loglikelihood(MvNormal(obs_mean, exp_cov), transpose(data_matr))
       return likelihood
 end
 
+function logl_mean(exp_mean, exp_cov, data_matr)
+      exp_cov = Matrix(Hermitian(exp_cov))
+      likelihood = -loglikelihood(MvNormal(exp_mean, exp_cov), transpose(data_matr))
+      return likelihood
+end
 
 function imp_cov(model, parameters)
       matrices = model(parameters)
