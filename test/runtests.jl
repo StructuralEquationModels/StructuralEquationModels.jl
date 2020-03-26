@@ -143,3 +143,23 @@ sem_fit!(mymod_lbfgs)
 
     @test all(mean_diff .< 0.01)
 end
+
+
+### test
+
+mymod_lbfgs =
+    model(holz_onef_mod, holz_onef_dat,
+            [0.5, 0.5, 0.5, 0.5, 1.0, 1.0],
+            sem.ML_mean, "test")
+
+push!(mymod_lbfbs, :est => sem.ML_2)
+
+sem_fit!(mymod_lbfgs)
+
+
+mymod_lbfgs =
+    model_2(
+    ram = holz_onef_mod,
+    data = holz_onef_dat,
+    par = [0.5, 0.5, 0.5, 0.5, 1.0, 1.0],
+    mstruc = true)

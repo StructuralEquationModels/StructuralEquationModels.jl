@@ -1,4 +1,4 @@
-function model(ram, data, par, est = ML, opt = "LBFGS", mstruc = false)
+function model(; ram, data, par, est = ML, opt = "LBFGS", mstruc = false)
     data_matr = convert(Matrix{Float64}, data)
 
     model = Dict{Symbol, Any}(

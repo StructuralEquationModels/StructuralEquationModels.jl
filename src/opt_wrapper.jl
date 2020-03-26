@@ -7,7 +7,8 @@ function opt_sem(model)
                                     model[:ram],
                                     model[:obs_cov])
                   result =
-                        optimize(objective, model[:par], LBFGS(), autodiff = :forward)
+                        optimize(objective, model[:par], LBFGS(),
+                                    autodiff = :forward)
             elseif model[:opt] == "Newton"
                   objective = TwiceDifferentiable(
                         parameters -> model[:est](parameters,
@@ -27,7 +28,8 @@ function opt_sem(model)
                                     model[:obs_cov],
                                     model[:obs_mean])
                   result =
-                        optimize(objective, model[:par], LBFGS(), autodiff = :forward)
+                        optimize(objective, model[:par], LBFGS(),
+                                    autodiff = :forward)
             elseif model[:opt] == "Newton"
                   objective = TwiceDifferentiable(
                         parameters -> model[:est](parameters,
