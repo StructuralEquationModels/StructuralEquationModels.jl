@@ -18,6 +18,29 @@ function holz_onef_mod(x)
     return (S, F, A)
 end
 
+function holz_onef_mod_mean(x)
+    S = [x[1] 0 0 0
+        0 x[2] 0 0
+        0 0 x[3] 0
+        0 0 0 x[4]]
+
+    F = [1 0 0 0
+        0 1 0 0
+        0 0 1 0]
+
+    A = [0 0 0 1
+        0 0 0 x[5]
+        0 0 0 x[6]
+        0 0 0 0]
+
+    M = [0
+        x[8]
+        x[9]
+        x[7]]
+
+    return (S, F, A, M)
+end
+
 pwd()
 
 holz_onef_dat = Feather.read("test/comparisons/holz_onef_dat.feather")
@@ -31,6 +54,7 @@ holz_onef_par = Feather.read("test/comparisons/holz_onef_par.feather")
         :data
         :opt
         :est
+        :mstruc
         :obs_cov
         :imp_cov
         :obs_mean
@@ -99,4 +123,23 @@ delta_method!(mymod_lbfgs)
     @test all(p_diff_newton .< 0.01)
     @test all(p_diff_lbfgs .< 0.01)
 
+end
+
+
+### meanstructure
+
+mymod_lbfgs =
+    model(holz_onef_mod_mean, holz_onef_dat,
+            [0.5, 0.5, 0.5, 0.5, 1.0, 1.0, 5.0, 1.0, -3.0],
+            sem.ML_mean, "LBFGS", true)
+
+
+sem_fit!(mymod_lbfgs)
+
+@testset "mstruc" begin
+    mean_diff = abs.((vcat(0.0, mymod_lbfgs[:par][8:9]) +
+        mymod_lbfgs[:par][7]*vcat(1.0, mymod_lbfgs[:par][5:6])) -
+        mymod_lbfgs[:obs_mean])
+
+    @test all(mean_diff .< 0.01)
 end

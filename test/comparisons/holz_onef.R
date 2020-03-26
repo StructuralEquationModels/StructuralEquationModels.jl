@@ -14,7 +14,9 @@ testpar <- data.frame(
   op = testpar$op,
   rhs = testpar$rhs,
   est = testpar$est,
-  se = testpar$se
+  se = testpar$se,
+  p = testpar$pvalue,
+  z = testpar$z
 )
 
 write_feather(
@@ -26,5 +28,3 @@ write_feather(
   dat,
   "test/comparisons/holz_onef_dat.feather"
   )
-
-
