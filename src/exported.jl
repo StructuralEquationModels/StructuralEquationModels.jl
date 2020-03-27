@@ -21,6 +21,12 @@ function prepare_model!(model)
       elseif !model[:mstruc]
             sem_est!(model, ML)
       end
+      if ismissing(model[:reg])
+      elseif model[:reg] == "lasso"
+            sem_est!(model, ML_lasso)
+      elseif model[:reg] == "ridge"
+            sem_est!(model, ML_ridge)
+      end
 end
 
 # compute standard errors and p-values

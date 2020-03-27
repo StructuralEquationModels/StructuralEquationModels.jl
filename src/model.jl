@@ -1,4 +1,10 @@
-function model(; ram, data, par, est = ML, opt = "LBFGS", mstruc = false)
+function model(; ram, data, par,
+                    est = ML,
+                    opt = "LBFGS",
+                    mstruc = false,
+                    reg = missing,
+                    reg_vec = missing,
+                    penalty = missing)
     data_matr = convert(Matrix{Float64}, data)
 
     model = Dict{Symbol, Any}(
@@ -15,7 +21,10 @@ function model(; ram, data, par, est = ML, opt = "LBFGS", mstruc = false)
         :opt_result => missing,
         :se => missing,
         :z => missing,
-        :p => missing
+        :p => missing,
+        :reg => reg,
+        :reg_vec => reg_vec,
+        :penalty => penalty
       )
       return model
 end

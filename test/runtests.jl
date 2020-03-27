@@ -143,7 +143,7 @@ sem_fit!(mymod_lbfgs)
 end
 
 
-### test
+### meanstructure
 mymod_lbfgs =
     model(
     ram = holz_onef_mod,
@@ -161,3 +161,113 @@ mymod_lbfgs =
     mstruc = true)
 
 sem_fit!(mymod_lbfgs)
+
+### regularized
+mymod_lasso =
+    model(
+    ram = holz_onef_mod,
+    data = holz_onef_dat,
+    par = [0.5, 0.5, 0.5, 0.5, 1.0, 1.0],
+    reg = "lasso",
+    reg_vec = [false false false false true true])
+
+sem_fit!(mymod_lasso)
+
+mymod_ridge =
+    model(
+    ram = holz_onef_mod,
+    data = holz_onef_dat,
+    par = [0.5, 0.5, 0.5, 0.5, 1.0, 1.0],
+    reg = "ridge",
+    reg_vec = [false false false false true true])
+
+sem_fit!(mymod_ridge)
+
+###
+
+using BenchmarkTools
+
+mymod_lbfgs =
+    model(
+    ram = holz_onef_mod,
+    data = holz_onef_dat,
+    par = [0.5, 0.5, 0.5, 0.5, 1.0, 1.0],
+    mstruc = false)
+
+mymod_lbfgs2 =
+    model(
+    ram = holz_onef_mod,
+    data = holz_onef_dat,
+    par = [0.5, 0.5, 0.5, 0.5, 1.0, 1.0],
+    mstruc = false,
+    opt = "test")
+
+@benchmark begin
+    mymod_lbfgs =
+        model(
+        ram = holz_onef_mod,
+        data = holz_onef_dat,
+        par = [0.5, 0.5, 0.5, 0.5, 1.0, 1.0],
+        mstruc = false,
+        opt = "LBFGS")
+    sem_fit!(mymod_lbfgs)
+end
+
+@benchmark begin
+    mymod_lbfgs2 =
+        model(
+        ram = holz_onef_mod,
+        data = holz_onef_dat,
+        par = [0.5, 0.5, 0.5, 0.5, 1.0, 1.0],
+        mstruc = false,
+        opt = "test")
+    sem_fit!(mymod_lbfgs2)
+end
+
+
+
+
+function sumf(; a, b)
+    res = a+b
+    return res
+end
+
+function sumd(; a, b, kwargs...)
+    res = a+b
+    return res
+end
+
+dictf = Dict{Symbol, Any}(
+    :a => 5,
+    :b => 6
+)
+
+dictd1 = Dict{Symbol, Any}(
+    :a => 5,
+    :b => 6,
+    :c => rand(1000, 10000)
+)
+
+dictd = Dict{Symbol, Any}(
+    :a => 5,
+    :b => 6,
+    :c => rand(10000, 100000)
+)
+
+dictd2 = Dict{Symbol, Any}(
+    :a => 5,
+    :b => 6,
+    :c => rand(10000, 100000),
+    :d => rand(10000, 100000),
+    :e => rand(10000, 100000)
+)
+
+@benchmark sumf(;dictf...)
+
+@benchmark sumd(;dictd1...)
+
+@benchmark sumd(;dictd...)
+
+@benchmark sumd(;dictd2...)
+
+@time
