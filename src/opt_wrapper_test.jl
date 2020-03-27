@@ -6,6 +6,12 @@ function opt_sem(model)
             result =
                   optimize(objective, model[:par], LBFGS(),
                         autodiff = :forward)
+      elseif model[:opt] == "test"
+            objective = parameters ->
+                  ML_test(parameters, model[:ram], model[:obs_cov])
+            result =
+                  optimize(objective, model[:par], LBFGS(),
+                        autodiff = :forward)
       elseif model[:opt] == "Newton"
             objective = TwiceDifferentiable(
                   parameters -> model[:est](parameters, ;model...),
