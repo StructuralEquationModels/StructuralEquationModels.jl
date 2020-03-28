@@ -225,7 +225,7 @@ end
 end
 
 
-
+using BenchmarkTools
 
 function sumf(; a, b)
     res = a+b
@@ -248,26 +248,108 @@ dictd1 = Dict{Symbol, Any}(
     :c => rand(1000, 10000)
 )
 
-dictd = Dict{Symbol, Any}(
+dictd2 = Dict{Symbol, Any}(
     :a => 5,
     :b => 6,
     :c => rand(10000, 100000)
 )
 
-dictd2 = Dict{Symbol, Any}(
+dictd3 = Dict{Symbol, Any}(
     :a => 5,
     :b => 6,
-    :c => rand(10000, 100000),
-    :d => rand(10000, 100000),
-    :e => rand(10000, 100000)
+    :c => rand(1000, 10000),
+    :d => rand(1000, 10000),
+    :e => rand(1000, 10000),
+    :f => rand(1000, 10000),
+    :g => rand(1000, 10000),
+    :h => rand(1000, 10000)
 )
+
+struct mystruct
+    a
+    b
+    c
+    d
+    e
+    f
+    g
+    h
+end
+
+mystruct(; a, b, c, d, e, f, g, h) = mystruct(a, b, c, d, e, f, g, h)
+
+struct mystruct2{T<:Int64, A}
+    a::T
+    b::T
+    c::A
+    d::A
+    e::A
+    f::A
+    g::A
+    h::A
+end
+
+mystruct2(; a, b, c, d, e, f, g, h) = mystruct2(a, b, c, d, e, f, g, h)
+
+mutable struct mystruct3{T, A}
+    a::T
+    b::T
+    c::A
+    d::A
+    e::A
+    f::A
+    g::A
+    h::A
+end
+
+mystruct3(; a, b, c, d, e, f, g, h) = mystruct3(a, b, c, d, e, f, g, h)
+
+function sums(x::mystruct)
+    res = x.a + x.b
+    return res
+end
+
+function sums(x::mystruct2)
+    x.a + x.b
+end
+
+function sums(x::mystruct3)
+    res = x.a + x.b
+    return res
+end
+
+dicts = mystruct(;dictd3...)
+
+dicts2 = mystruct2(;dictd3...)
+
+dicts3 = mystruct3(;dictd3...)
 
 @benchmark sumf(;dictf...)
 
 @benchmark sumd(;dictd1...)
 
-@benchmark sumd(;dictd...)
-
 @benchmark sumd(;dictd2...)
+
+@benchmark sumf(;a = dictd3[:a], b = dictd3[:a])
+
+@benchmark sums(dicts)
+
+@benchmark sums(dicts2)
+
+@benchmark sums(dicts3)
+
+@benchmark 1 + 3
+
+const a = dicts2.a
+const b = dicts2.b
+
+@benchmark a + b
+
+c = dicts2.a
+d = dicts2.b
+
+@benchmark c + d
+
+@benchmark dicts2.a + dicts2.b
 
 @time
