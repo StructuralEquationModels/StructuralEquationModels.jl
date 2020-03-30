@@ -1,0 +1,54 @@
+
+### dictionaries
+# passing the whole dict to the optimizing function
+BenchmarkTools.Trial:
+  memory estimate:  1.00 MiB
+  allocs estimate:  4789
+  --------------
+  minimum time:     812.001 μs (0.00% GC)
+  median time:      864.949 μs (0.00% GC)
+  mean time:        963.595 μs (5.43% GC)
+  maximum time:     4.861 ms (69.86% GC)
+  --------------
+  samples:          5174
+  evals/sample:     1
+
+# only passing relevant arguments
+BenchmarkTools.Trial:
+  memory estimate:  933.84 KiB
+  allocs estimate:  4054
+  --------------
+  minimum time:     338.900 μs (0.00% GC)
+  median time:      359.100 μs (0.00% GC)
+  mean time:        434.160 μs (9.20% GC)
+  maximum time:     5.944 ms (86.46% GC)
+  --------------
+  samples:          10000
+  evals/sample:     1
+
+### structures
+passing the whole structure
+BenchmarkTools.Trial:
+  memory estimate:  944.77 KiB
+  allocs estimate:  4267
+  --------------
+  minimum time:     408.000 μs (0.00% GC)
+  median time:      451.601 μs (0.00% GC)
+  mean time:        507.573 μs (8.50% GC)
+  maximum time:     3.564 ms (81.63% GC)
+  --------------
+  samples:          9798
+  evals/sample:     1
+
+# passing only relevant fields
+BenchmarkTools.Trial:
+  memory estimate:  932.20 KiB
+  allocs estimate:  4023
+  --------------
+  minimum time:     331.700 μs (0.00% GC)
+  median time:      359.899 μs (0.00% GC)
+  mean time:        429.289 μs (9.48% GC)
+  maximum time:     3.435 ms (74.79% GC)
+  --------------
+  samples:          10000
+  evals/sample:     1

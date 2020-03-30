@@ -1,15 +1,18 @@
 # Maximum Likelihood Estimation
-function ML(parameters; ram, obs_cov, kwargs...)
+function ML(parameters, model)
+      obs_cov = model.obs_cov
       n_man = size(obs_cov, 1)
-      matrices = ram(parameters)
+      matrices = model.ram(parameters)
       Cov_Exp = matrices[2]*inv(I-matrices[3])*matrices[1]*transpose(inv(I-matrices[3]))*transpose(matrices[2])
       F_ML = log(det(Cov_Exp)) + tr(obs_cov*inv(Cov_Exp)) - log(det(obs_cov)) - n_man
       return F_ML
 end
 
-function ML_mean(parameters; ram, obs_cov, obs_mean, kwargs...)
+function ML_mean(parameters, model)
+      obs_cov = model.obs_cov
+      obs_mean = model.obs_mean
       n_man = size(obs_cov, 1)
-      matrices = ram(parameters)
+      matrices = model.ram(parameters)
       Cov_Exp = matrices[2]*inv(I-matrices[3])*matrices[1]*
                   transpose(inv(I-matrices[3]))*transpose(matrices[2])
       Mean_Exp = matrices[2]*inv(I-matrices[3])*matrices[4]
@@ -20,26 +23,36 @@ function ML_mean(parameters; ram, obs_cov, obs_mean, kwargs...)
 end
 
 ### RegSem
-function ML_lasso(parameters; ram, obs_cov, reg_vec, penalty, kwargs...)
+function ML_lasso(parameters, model)
+      obs_cov = model.obs_cov
+      obs_mean = model.obs_mean
+      reg_vec = model.rec_vec
+      penalty = model.penalty
       n_man = size(obs_cov, 1)
-      matrices = ram(parameters)
+      matrices = model.ram(parameters)
       Cov_Exp = matrices[2]*inv(I-matrices[3])*matrices[1]*transpose(inv(I-matrices[3]))*transpose(matrices[2])
       F_ML = log(det(Cov_Exp)) + tr(obs_cov*inv(Cov_Exp)) -
                   log(det(obs_cov)) - n_man + penalty*sum(transpose(parameters)[reg_vec])
       return F_ML
 end
 
-function ML_ridge(parameters; ram, obs_cov, reg_vec, kwargs...)
+function ML_ridge(parameters; ram, obs_cov, reg_vec, penalty)
+      obs_cov = model.obs_cov
+      obs_mean = model.obs_mean
+      reg_vec = model.rec_vec
+      penalty = model.penalty
       n_man = size(obs_cov, 1)
-      matrices = ram(parameters)
+      matrices = model.ram(parameters)
       Cov_Exp = matrices[2]*inv(I-matrices[3])*matrices[1]*transpose(inv(I-matrices[3]))*transpose(matrices[2])
       F_ML = log(det(Cov_Exp)) + tr(obs_cov*inv(Cov_Exp)) -
-                  log(det(obs_cov)) - n_man + sum(parameters[reg_vec].^2)
+                  log(det(obs_cov)) - n_man + penalty*sum(transpose(parameters)[reg_vec].^2)
       return F_ML
 end
 # FIML
 ### to add
 
+
+### test - takes only relevant fields instead of the whole model object
 function ML_test(parameters, ram, obs_cov)
       n_man = size(obs_cov, 1)
       matrices = ram(parameters)

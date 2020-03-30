@@ -28,3 +28,20 @@ write_feather(
   dat,
   "test/comparisons/holz_onef_dat.feather"
   )
+
+manifests <- names(dat)
+latents <- c("G")
+factorModel <- mxModel("One Factor",
+                       mxMatrix("Full", 3, 1, values=0.8,
+                                free=TRUE, name="A"),
+                       mxMatrix("Symm", 1, 1, values=1,
+                                free=FALSE, name="L"),
+                       mxMatrix("Diag", 3, 3, values=1,
+                                free=TRUE, name="U"),
+                       mxAlgebra(A %*% L %*% t(A) + U, name="R"),
+                       mxExpectationNormal(covariance = "R",
+                                           dimnames = names(dat)),
+                       mxFitFunctionML(),
+                       mxData(cov(dat), type="cov", numObs=301))
+
+summary(factorModelFit <- mxRun(factorModel))

@@ -3,50 +3,51 @@ function sem_fit!(model)
       prepare_model!(model)
       # fit model
       result = opt_sem(model)
-      # obtain variables to compute logl
-      push!(model, :par => Optim.minimizer(result))
-      push!(model, :opt_result => result)
+      # store obtained solution in model
+      model.par = Optim.minimizer(result)
+      model.opt_result = result
+      #update implied covariance
       sem_imp_cov!(model)
 end
 
 function prepare_model!(model)
-      if ismissing(model[:obs_cov])
+      if isnothing(model.obs_cov)
             sem_obs_cov!(model)
       end
-      if ismissing(model[:obs_mean])
+      if isnothing(model.obs_mean)
             sem_obs_mean!(model)
       end
-      if model[:mstruc]
+      if model.mstruc
             sem_est!(model, ML_mean)
-      elseif !model[:mstruc]
+      elseif !model.mstruc
             sem_est!(model, ML)
       end
-      if ismissing(model[:reg])
-      elseif model[:reg] == "lasso"
+      if isnothing(model.reg)
+      elseif model.reg == "lasso"
             sem_est!(model, ML_lasso)
-      elseif model[:reg] == "ridge"
+      elseif model.reg == "ridge"
             sem_est!(model, ML_ridge)
       end
 end
 
 # compute standard errors and p-values
 function delta_method!(model)
-      par = model[:par]
-      ram = model[:ram]
-      obs_mean = model[:obs_mean]
-      data = model[:data]
+      par = model.par
+      ram = model.ram
+      obs_mean = model.obs_mean
+      data = model.data
 
-      if model[:opt] == "LBFGS"
-            fun = param -> logl(obs_mean,
-                              imp_cov(ram, param),
+      if model.opt == "LBFGS"
+            fun = parameter -> logl(obs_mean,
+                              imp_cov(ram, parameter),
                               data)
             se =
             sqrt.(diag(inv(ForwardDiff.hessian(fun, par))))
-      elseif model[:opt] == "Newton"
-            fun = TwiceDifferentiable(param -> logl(model[:obs_mean],
-                                          imp_cov(model[:ram], param),
-                                          model[:data]),
-                                          model[:par],
+      elseif model.opt == "Newton"
+            fun = TwiceDifferentiable(parameter -> logl(obs_mean,
+                                          imp_cov(ram, parameter),
+                                          data),
+                                          par,
                                           autodiff = :forward)
             se = sqrt.(diag(inv(hessian!(fun, par))))
       else
@@ -57,33 +58,42 @@ function delta_method!(model)
       push!(model, :se => se, :p => p, :z => z)
 end
 
+function sem_replace!(x, new_x)
+    setindex!(x, new_x,
+        1:size(x, 1),
+        1:size(x, 2))
+end
 
+function sem_copy_replace!(x, new_x)
+    setindex!(x, new_x,
+        1:size(x, 1),
+        1:size(x, 2))
+end
 
 function sem_obs_cov!(model)
-      push!(model, :obs_cov => Distributions.cov(model[:data]))
+      model.obs_cov = Distributions.cov(model.data)
 end
 
 function sem_imp_cov!(model)
-      push!(model, :imp_cov => imp_cov(model[:ram], model[:par]))
+      model.imp_cov = imp_cov(model.ram, model.par)
 end
 
 function sem_obs_mean!(model)
-      push!(model,
-            :obs_mean =>
-                  vec(mean(model[:data], dims = 1))::Vector{Float64}
-            )
+      model.obs_mean = mean(model.data, dims = 1)
 end
 
 
 function sem_logl!(model)
-      push!(model, :logl =>
-            logl(model[:obs_mean], model[:imp_cov], model[:data]))
+      model.logl = logl(
+                        model.obs_mean,
+                        model.imp_cov,
+                        model.data)
 end
 
 function sem_est!(model, est)
-      push!(model, :est => est)
+      model.est = est
 end
 
 function sem_opt!(model, opt)
-      push!(model, :opt => opt)
+      model.opt = opt
 end
