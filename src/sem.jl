@@ -3,8 +3,8 @@ module sem
 using Distributions, Feather, ForwardDiff, LinearAlgebra, Optim, Random,
     NLSolversBase
 
-include("opt_wrapper_test.jl")
-include("objective_test.jl")
+include("opt_wrapper.jl")
+include("objective.jl")
 include("helper.jl")
 include("exported.jl")
 include("model.jl")
