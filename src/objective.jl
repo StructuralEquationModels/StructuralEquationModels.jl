@@ -1,5 +1,5 @@
 # Maximum Likelihood Estimation
-function ML(parameters, model)
+function ML(parameters, model::model)
       obs_cov = model.obs_cov
       n_man = size(obs_cov, 1)
       matrices = model.ram(parameters)

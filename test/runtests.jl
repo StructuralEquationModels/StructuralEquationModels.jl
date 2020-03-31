@@ -1,7 +1,9 @@
 using sem, Test, Feather, BenchmarkTools, Distributions,
         Optim
 
-function holz_onef_mod(x)
+function holz_onef_mod(x)::Union{
+        Tuple{Array{Float64}, Array{Float64}, Array{Float64}},
+        Tuple{AbstractArray, AbstractArray, AbstractArray}}
     S = [x[1] 0 0 0
         0 x[2] 0 0
         0 0 x[3] 0
@@ -414,3 +416,40 @@ objective_str = par -> f(par[1], mymod_str)
 
 @benchmark optimize(objective_str, [1.0], LBFGS(),
                         autodiff = :forward)
+
+function f(par, a)::Union{Real, AbstractArray}
+    par^2 + a
+end
+
+objective = par -> f(par[1], 5.0)
+
+optimize(objective, [1.0], LBFGS(),
+                        autodiff = :forward)
+
+function make_my_matrices(x)::Union{Tuple{Array{Float64}, Array{Float64}}, #
+    Tuple{AbstractArray, AbstractArray}}
+    S = [x[1] 0
+        0 x[2]]
+
+    A = [0 x[3]
+        0 x[4]]
+
+    return S, A
+end
+
+function objective_wrapper(parameters, matrix_function)
+    matrices = matrix_function(parameters)
+    objective_value = tr(matrices[1]*matrices[2])
+end
+
+make_my_matrices(ones(4))
+
+objective_wrapper(ones(4), make_my_matrices)
+
+@code_warntype objective_wrapper(ones(4), make_matrices)
+
+objective = parameters ->
+    objective_wrapper(parameters, make_my_matrices)
+
+optimize(objective, ones(4), LBFGS(),
+            autodiff = :forward)
