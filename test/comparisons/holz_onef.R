@@ -32,11 +32,11 @@ write_feather(
 manifests <- names(dat)
 latents <- c("G")
 factorModel <- mxModel("One Factor",
-                       mxMatrix("Full", 3, 1, values=0.8,
-                                free=TRUE, name="A"),
-                       mxMatrix("Symm", 1, 1, values=1,
-                                free=FALSE, name="L"),
-                       mxMatrix("Diag", 3, 3, values=1,
+                       mxMatrix("Full", 3, 1, values=1.0,
+                                free=c(FALSE, TRUE, TRUE), name="A"),
+                       mxMatrix("Symm", 1, 1, values=0.5,
+                                free=TRUE, name="L"),
+                       mxMatrix("Diag", 3, 3, values=0.5,
                                 free=TRUE, name="U"),
                        mxAlgebra(A %*% L %*% t(A) + U, name="R"),
                        mxExpectationNormal(covariance = "R",

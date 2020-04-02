@@ -12,7 +12,7 @@ function holz_onef_mod(x)
         0 0 x[3] 0
         0 0 0 x[4]]
 
-    F = [1 0 0 0
+    F = [1.0 0 0 0
         0 1 0 0
         0 0 1 0]
 
@@ -47,8 +47,14 @@ function holz_onef_mod_mean(x)
     return (S, F, A, M)
 end
 
+using Feather
+
 holz_onef_dat = Feather.read("test/comparisons/holz_onef_dat.feather")
 holz_onef_par = Feather.read("test/comparisons/holz_onef_par.feather")
+
+mymod_lbfgs =
+    model(holz_onef_mod, holz_onef_dat,
+    [0.5, 0.5, 0.5, 0.5, 1.0, 1.0])
 
 ###
 
@@ -84,11 +90,11 @@ end
 
 ### type stability
 mymod_lbfgs =
-    model(holz_onef_mod, holz_onef_dat,
+    model(holz_onef_mod,
+    convert(Matrix{Float64}, holz_onef_dat),
     [0.5, 0.5, 0.5, 0.5, 1.0, 1.0];
     obs_cov = Distributions.cov(convert(Matrix{Float64}, holz_onef_dat)),
-    obs_mean = mean(convert(Matrix{Float64}, holz_onef_dat), dims = 1),
-    est = sem.ML)
+    obs_mean = mean(convert(Matrix{Float64}, holz_onef_dat), dims = 1))
 
 function ML3(parameters::Union{Array{Float64}, AbstractArray}, model::model)
       obs_cov = model.obs_cov
