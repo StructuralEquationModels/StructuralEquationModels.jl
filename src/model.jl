@@ -145,34 +145,3 @@ struct ram{T}
         F::T
         A::T
 end
-
-mutable struct teststruc{
-    A <: Union{Float64, Nothing},
-    B <: Union{Float64, Nothing}}
-    a::A
-    b::B
-    teststruc{A, B}(a, b) where {
-        A <: Union{Float64, Nothing},
-        B <: Union{Float64, Nothing}} =
-    new(a, b)
-end
-
-teststruc(a::A, b::B) where {
-    A <: Union{Float64, Nothing},
-    B <: Union{Float64, Nothing}} =
-    teststruc{A, B}(a, b)
-
-tf1 = teststruc(3.0, 4.0)
-tf2 = teststruc(3.0, nothing)
-tn2 = teststruc(nothing, 3.0)
-tn1 = teststruc(nothing, nothing)
-
-function func(obj::teststruc{Float64; b::Float64})
-    obj.a
-end
-
-function func(obj::teststruc{Nothing, Union{Float64, Nothing}})
-    tf.b
-end
-
-func(tf2)

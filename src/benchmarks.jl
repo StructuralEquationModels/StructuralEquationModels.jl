@@ -94,7 +94,8 @@ mymod_lbfgs =
     convert(Matrix{Float64}, holz_onef_dat),
     [0.5, 0.5, 0.5, 0.5, 1.0, 1.0];
     obs_cov = Distributions.cov(convert(Matrix{Float64}, holz_onef_dat)),
-    obs_mean = mean(convert(Matrix{Float64}, holz_onef_dat), dims = 1))
+    obs_mean = mean(convert(Matrix{Float64}, holz_onef_dat), dims = 1),
+    est = sem.ML)
 
 function ML3(parameters::Union{Array{Float64}, AbstractArray}, model::model)
       obs_cov = model.obs_cov
