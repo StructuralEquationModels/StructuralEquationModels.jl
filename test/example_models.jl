@@ -132,8 +132,3 @@ function growth_func(x)
 
     return (S, F, A)
 end
-
-
-zeros
-
-zeros(Int64, 12, 12)
