@@ -14,7 +14,6 @@ function (objective::SemML)(parameters, model::model)
       return F_ML
 end
 
-
 ### RegSem
 struct SemMLElastic{P, W} <: SemObjective
     ridge_penalty::P
