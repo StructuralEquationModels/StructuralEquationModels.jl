@@ -14,7 +14,8 @@ optimizers = (LBFGS(), GradientDescent(), Newton())
 for i in 1:length(datas)
     for j in 1:length(optimizers)
         model = sem.model(model_funcs[i],
-            datas[i])
+            datas[i],
+            start_values[i])
     end
 end
 test = sem.model(model_funcs[2], datas[2], start_values[2])

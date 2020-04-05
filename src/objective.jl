@@ -9,8 +9,7 @@ function (objective::SemML)(parameters, model::model)
       F_ML = log(det(imp_cov)) + tr(obs_cov*inv(imp_cov)) - log(det(obs_cov)) - n_man
       if size(matrices, 1) == 4
           mean_diff = model.obs.mean - sem.imp_mean(matrices)
-          transpose(mean_diff) * transpose(imp_cov) * mean_diff
-          F_ML = F_ML + log()
+          F_ML = F_ML + transpose(mean_diff)*inv(imp_cov)*mean_diff
       end
       return F_ML
 end
