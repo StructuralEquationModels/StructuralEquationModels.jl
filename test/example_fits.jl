@@ -1,15 +1,22 @@
 include("../test/example_models.jl");
 
-one_fact_mod = model(one_fact_func, one_fact_dat, vcat(fill(1, 4), fill(0.5, 2)))
-sem.fit(one_fact_mod)
+datas = (one_fact_dat, three_mean_dat, three_path_dat)
+model_funcs = (one_fact_func, three_mean_func, three_path_func)
+start_values = (
+    vcat(fill(1, 4), fill(0.5, 2)),
+    vcat(fill(1, 21), fill(0.5, 5)),
+    vcat(fill(1, 20), fill(0.5, 11))
+    )
+
+optimizers = (LBFGS(), GradientDescent(), Newton())
 
 
-@code_warntype one_fact_mod.objective(vcat(fill(1, 4), fill(0.5, 2)), one_fact_mod)
-
-one_fact_reg_mod = model(
-    one_fact_func,
-    one_fact_dat,
-    vcat(fill(1, 4),
-    fill(0.5, 2));
-    objective = sem.SemMLLasso(10, [true, true, true, true, false, false]))
-fit(one_fact_mod)
+for i in 1:length(datas)
+    for j in 1:length(optimizers)
+        model = sem.model(model_funcs[i],
+            datas[i])
+    end
+end
+test = sem.model(model_funcs[2], datas[2], start_values[2])
+fit(test)
+test.objective(start_values[2], test)

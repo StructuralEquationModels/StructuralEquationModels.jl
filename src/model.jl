@@ -42,13 +42,13 @@ function SemObs(data, cov::SemCalcCov, mean)
 end
 
 function SemObs(data, cov, mean::SemCalcMean)
-    mean = Statistics.mean(data, dims = 1)
+    mean = vcat(Statistics.mean(data, dims = 1)...)
     SemObs(data, cov, mean)
 end
 
 function SemObs(data, cov::SemCalcCov, mean::SemCalcMean)
     cov = Statistics.cov(data)
-    mean = Statistics.mean(data, dims = 1)
+    mean = vcat(Statistics.mean(data, dims = 1)...)
     SemObs(data, cov, mean)
 end
 
