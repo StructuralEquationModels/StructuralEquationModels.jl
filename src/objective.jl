@@ -1,13 +1,19 @@
 # Maximum Likelihood Estimation
-function ML(parameters, model::model)
-      obs_cov = model.obs_cov
+
+abstract type SemObjective end
+
+struct SemML <: SemObjective end
+function (objective::SemML)(parameters, model::model)
+      obs_cov = model.obs.cov
       n_man = size(obs_cov, 1)
       Cov_Exp = imp_cov(parameters, model)
       F_ML = log(det(Cov_Exp)) + tr(obs_cov*inv(Cov_Exp)) - log(det(obs_cov)) - n_man
       return F_ML
 end
 
-function ML_mean(parameters, model)
+# SemMLMean doesnt work
+struct SemMLMean <: SemObjective end
+function (objective::SemMLMean)(parameters, model::model)
       obs_cov = model.obs_cov
       obs_mean = model.obs_mean
       n_man = size(obs_cov, 1)
@@ -21,11 +27,15 @@ function ML_mean(parameters, model)
 end
 
 ### RegSem
-function ML_lasso(parameters, model)
-      obs_cov = model.obs_cov
-      obs_mean = model.obs_mean
-      reg_vec = model.rec_vec
-      penalty = model.penalty
+struct SemMLLasso{P, W} <: SemObjective
+    penalty::P
+    wich::W
+end
+function (objective::SemMLLasso)(parameters, model::model)
+      obs_cov = model.obs.cov
+      obs_mean = model.obs.mean
+      reg_vec = objective.which
+      penalty = objective.penalty
       n_man = size(obs_cov, 1)
       matrices = model.ram(parameters)
       Cov_Exp = imp_cov(model, parameters)
@@ -33,7 +43,7 @@ function ML_lasso(parameters, model)
                   log(det(obs_cov)) - n_man + penalty*sum(transpose(parameters)[reg_vec])
       return F_ML
 end
-
+# doesnt work
 function ML_ridge(parameters; ram, obs_cov, reg_vec, penalty)
       obs_cov = model.obs_cov
       obs_mean = model.obs_mean
@@ -48,13 +58,3 @@ function ML_ridge(parameters; ram, obs_cov, reg_vec, penalty)
 end
 # FIML
 ### to add
-
-
-### test - takes only relevant fields instead of the whole model object
-function ML_test(parameters, ram, obs_cov)
-      n_man = size(obs_cov, 1)
-      matrices = ram(parameters)
-      Cov_Exp = matrices[2]*inv(I-matrices[3])*matrices[1]*transpose(inv(I-matrices[3]))*transpose(matrices[2])
-      F_ML = log(det(Cov_Exp)) + tr(obs_cov*inv(Cov_Exp)) - log(det(obs_cov)) - n_man
-      return F_ML
-end

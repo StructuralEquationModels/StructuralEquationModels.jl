@@ -1,6 +1,26 @@
 using sem, Test, Feather, BenchmarkTools, Distributions, Optim
-
+# using Test, Feather, BenchmarkTools, Distributions, Optim
 ### Modelle
+one_fact_dat = Feather.read("test/comparisons/one_fact_dat.feather")
+function one_fact_func(x)
+    S = [x[1] 0 0 0
+        0 x[2] 0 0
+        0 0 x[3] 0
+        0 0 0 x[4]]
+
+    F = [1 0 0 0
+        0 1 0 0
+        0 0 1 0]
+
+    A = [0 0 0 1
+        0 0 0 x[5]
+        0 0 0 x[6]
+        0 0 0 0]
+
+    return (S, F, A)
+end
+
+three_mean_dat = Feather.read("test/comparisons/three_mean_dat.feather")
 function three_mean_func(x)
     S =[x[1] 0.0 0 0 0 0 0 0 0 0 0 0
         0 x[2] 0 0 0 0 0 0 0 0 0 0
@@ -42,6 +62,8 @@ function three_mean_func(x)
 
     return (S, F, A, M)
 end
+
+three_path_dat = Feather.read("test/comparisons/three_path_dat.feather")
 
 function three_path_func(x)
 

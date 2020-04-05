@@ -1,147 +1,72 @@
 mutable struct model{
         RAM <: Function,
-        DATA <: Union{Matrix{Float64}, Nothing},
-        PAR <: Union{Array{Float64, 1}, Nothing},
-        MSTRUC <: Union{Bool, Nothing},
-        LOGL <: Union{Float64, Nothing},
-        OPT <: Union{String, Nothing},
-        EST <: Union{Function, Nothing},
-        OBS_COV <: Union{Matrix{Float64}, Nothing},
-        IMP_COV <: Union{Matrix{Float64}, Nothing},
-        OBS_MEAN <: Union{Array{Float64, 2}, Nothing},
-        OPT_RESULT <: Any,
-        SE <: Union{Array{Float64, 2}, Nothing},
-        Z <: Union{Array{Float64, 2}, Nothing},
-        P <: Union{Array{Float64, 2}, Nothing},
-        LASSO <: Union{Array{Bool,2}, Nothing},
-        LASSO_PEN <: Union{Float64, Nothing},
-        RIDGE <: Union{Array{Bool,2}, Nothing},
-        RIDGE_PEN <: Union{Float64, Nothing}}
+        OBS,
+        PAR <: AbstractVecOrMat,
+        OBJ <: SemObjective,
+        OPT <: Optim.AbstractOptimizer}
     ram::RAM
-    data::DATA
+    obs::OBS
     par::PAR
-    mstruc::MSTRUC
-    logl::LOGL
-    opt::OPT
-    est::EST
-    obs_cov::OBS_COV
-    imp_cov::IMP_COV
-    obs_mean::OBS_MEAN
-    opt_result::OPT_RESULT
-    se::SE
-    z::Z
-    p::P
-    lasso::LASSO
-    lasso_pen::LASSO_PEN
-    ridge::RIDGE
-    ridge_pen::RIDGE_PEN
-    model{RAM, DATA, PAR, MSTRUC, LOGL, OPT, EST, OBS_COV, IMP_COV, OBS_MEAN, OPT_RESULT, SE, Z, P, LASSO, LASSO_PEN, RIDGE, RIDGE_PEN}(
-            ram, data, par,
-            mstruc,
-            logl,
-            opt,
-            est,
-            obs_cov,
-            imp_cov,
-            obs_mean,
-            opt_result,
-            se,
-            z,
-            p,
-            lasso,
-            lasso_pen,
-            ridge,
-            ridge_pen) where {
-                    RAM <: Function,
-                    DATA <: Union{Matrix{Float64}, Nothing},
-                    PAR <: Union{Array{Float64, 1}, Nothing},
-                    MSTRUC <: Union{Bool, Nothing},
-                    LOGL <: Union{Float64, Nothing},
-                    OPT <: Union{String, Nothing},
-                    EST <: Union{Function, Nothing},
-                    OBS_COV <: Union{Matrix{Float64}, Nothing},
-                    IMP_COV <: Union{Matrix{Float64}, Nothing},
-                    OBS_MEAN <: Union{Array{Float64, 2}, Nothing},
-                    OPT_RESULT <: Any,
-                    SE <: Union{Array{Float64, 2}, Nothing},
-                    Z <: Union{Array{Float64, 2}, Nothing},
-                    P <: Union{Array{Float64, 2}, Nothing},
-                    LASSO <: Union{Array{Bool,2}, Nothing},
-                    LASSO_PEN <: Union{Float64, Nothing},
-                    RIDGE <: Union{Array{Bool,2}, Nothing},
-                    RIDGE_PEN <: Union{Float64, Nothing}} =
-    new(ram, data, par,
-            mstruc,
-            logl,
-            opt,
-            est,
-            obs_cov,
-            imp_cov,
-            obs_mean,
-            opt_result,
-            se,
-            z,
-            p,
-            lasso,
-            lasso_pen,
-            ridge,
-            ridge_pen)
+    objective::OBJ
+    optimizer::OPT
+    imp_cov
+    optimizer_result
+    par_uncertainty
+    fitmeasure
 end
 
-model(ram::RAM, data::DATA, par::PAR;
-        mstruc::MSTRUC = false,
-        logl::LOGL = nothing,
-        opt::OPT = "LBFGS",
-        est::EST = nothing,
-        obs_cov::OBS_COV = nothing,
-        imp_cov::IMP_COV = nothing,
-        obs_mean::OBS_MEAN = nothing,
-        opt_result::OPT_RESULT = nothing,
-        se::SE = nothing,
-        z::Z = nothing,
-        p::P = nothing,
-        lasso::LASSO = nothing,
-        lasso_pen::LASSO_PEN = nothing,
-        ridge::RIDGE = nothing,
-        ridge_pen::RIDGE_PEN = nothing) where {
-                RAM <: Function,
-                DATA <: Union{Matrix{Float64}, Nothing},
-                PAR <: Union{Array{Float64, 1}, Nothing},
-                MSTRUC <: Union{Bool, Nothing},
-                LOGL <: Union{Float64, Nothing},
-                OPT <: Union{String, Nothing},
-                EST <: Union{Function, Nothing},
-                OBS_COV <: Union{Matrix{Float64}, Nothing},
-                IMP_COV <: Union{Matrix{Float64}, Nothing},
-                OBS_MEAN <: Union{Array{Float64, 2}, Nothing},
-                OPT_RESULT <: Any,
-                SE <: Union{Array{Float64, 2}, Nothing},
-                Z <: Union{Array{Float64, 2}, Nothing},
-                P <: Union{Array{Float64, 2}, Nothing},
-                LASSO <: Union{Array{Bool,2}, Nothing},
-                LASSO_PEN <: Union{Float64, Nothing},
-                RIDGE <: Union{Array{Bool,2}, Nothing},
-                RIDGE_PEN <: Union{Float64, Nothing}} =
-        model{RAM, DATA, PAR, MSTRUC, LOGL, OPT, EST, OBS_COV, IMP_COV, OBS_MEAN, OPT_RESULT, SE, Z, P, LASSO, LASSO_PEN, RIDGE, RIDGE_PEN}(
-                ram, data, par,
-                mstruc,
-                logl,
-                opt,
-                est,
-                obs_cov,
-                imp_cov,
-                obs_mean,
-                opt_result,
-                se,
-                z,
-                p,
-                lasso,
-                lasso_pen,
-                ridge,
-                ridge_pen)
 
-struct ram{T}
-        S::T
-        F::T
-        A::T
+struct SemObs{D, C, M}
+    data::D
+    cov::C
+    mean::M
+end
+
+struct SemCalcCov end
+struct SemCalcMean end
+
+function SemObs(data; cov = SemCalcCov(), mean = SemCalcMean())
+    SemObs(data, cov, mean)
+end
+import DataFrames.DataFrame
+function SemObs(data::DataFrame; cov = SemCalcCov(), mean = SemCalcMean())
+    data = convert(Matrix, data)
+    SemObs(data, cov, mean)
+end
+
+function SemObs(data, cov::SemCalcCov, mean)
+    cov = Statistics.cov(data)
+    SemObs(data, cov, mean)
+end
+
+function SemObs(data, cov, mean::SemCalcMean)
+    mean = Statistics.mean(data, dims = 1)
+    SemObs(data, cov, mean)
+end
+
+function SemObs(data, cov::SemCalcCov, mean::SemCalcMean)
+    cov = Statistics.cov(data)
+    mean = Statistics.mean(data, dims = 1)
+    SemObs(data, cov, mean)
+end
+
+function SemObs(; cov, mean = nothing)
+    SemObs(nothing, cov, mean)
+end
+
+import Base.convert
+convert(::Type{SemObs}, data) = SemObs(data)
+convert(::Type{SemObs}, SemObs::SemObs) = SemObs
+
+function model(ram, obs, par; objective = SemML(), optimizer = LBFGS())
+    model(
+    ram,
+    convert(SemObs, obs),
+    par,
+    objective,
+    optimizer,
+    nothing,
+    nothing,
+    nothing,
+    nothing)
 end
