@@ -11,8 +11,14 @@ function logl_mean(exp_mean, exp_cov, data_matr)
       return likelihood
 end
 
-function imp_cov(parameters, model)
-      ms = model.ram(parameters) # m(atrice)s
+function imp_cov(matrices)
+      ms = matrices
       invia = inv(I - ms[3]) # invers of I(dentity) minus A matrix
-      cholesky(Symmetric(ms[2]*invia*ms[1]*transpose(invia)*transpose(ms[2])))
+      imp = cholesky(Symmetric(ms[2]*invia*ms[1]*transpose(invia)*transpose(ms[2])))
+      return imp
+end
+
+function imp_mean(matrices)
+      ms = matrices
+      ms[2]*inv(I-ms[3])*ms[4]
 end

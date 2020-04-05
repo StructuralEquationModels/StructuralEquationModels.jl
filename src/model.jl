@@ -1,3 +1,5 @@
+abstract type SemObjective end
+
 mutable struct model{
         RAM <: Function,
         OBS,

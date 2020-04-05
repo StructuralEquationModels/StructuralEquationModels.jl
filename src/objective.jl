@@ -1,13 +1,17 @@
 # Maximum Likelihood Estimation
 
-abstract type SemObjective end
-
 struct SemML <: SemObjective end
 function (objective::SemML)(parameters, model::model)
       obs_cov = model.obs.cov
       n_man = size(obs_cov, 1)
-      Cov_Exp = imp_cov(parameters, model)
-      F_ML = log(det(Cov_Exp)) + tr(obs_cov*inv(Cov_Exp)) - log(det(obs_cov)) - n_man
+      matrices = model.ram(parameters)
+      imp_cov = sem.imp_cov(matrices)
+      F_ML = log(det(imp_cov)) + tr(obs_cov*inv(imp_cov)) - log(det(obs_cov)) - n_man
+      if size(matrices, 1) == 4
+          mean_diff = model.obs.mean - sem.imp_mean(matrices)
+          transpose(mean_diff) * transpose(imp_cov) * mean_diff
+          F_ML = F_ML + log()
+      end
       return F_ML
 end
 
