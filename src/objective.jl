@@ -14,21 +14,6 @@ function (objective::SemML)(parameters, model::model)
       return F_ML
 end
 
-# SemMLMean doesnt work
-struct SemMLMean <: SemObjective end
-function (objective::SemMLMean)(parameters, model::model)
-      obs_cov = model.obs_cov
-      obs_mean = model.obs_mean
-      n_man = size(obs_cov, 1)
-      matrices = model.ram(parameters)
-      Cov_Exp = imp_cov(model, parameters)
-      Mean_Exp = matrices[2]*inv(I-matrices[3])*matrices[4]
-      F_ML = log(det(Cov_Exp)) + tr(obs_cov*inv(Cov_Exp)) +
-                  transpose(obs_mean - Mean_Exp)*transpose(Cov_Exp)*
-                        (obs_mean - Mean_Exp)
-      return F_ML
-end
-
 ### RegSem
 struct SemMLLasso{P, W} <: SemObjective
     penalty::P

@@ -18,6 +18,7 @@ for i in 1:length(datas)
             start_values[i])
     end
 end
-test = sem.model(model_funcs[2], datas[2], start_values[2])
+test = sem.model(model_funcs[1], datas[1], start_values[1])
+test = sem.model(one_fact_func, one_fact_dat, vcat(fill(1, 4), fill(0.5, 2)))
 fit(test)
-test.objective(start_values[2], test)
+test.objective(start_values[1], test)
