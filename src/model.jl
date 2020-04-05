@@ -17,7 +17,6 @@ mutable struct model{
     fitmeasure
 end
 
-
 struct SemObs{D, C, M}
     data::D
     cov::C
