@@ -5,7 +5,8 @@ model_funcs = (one_fact_func, three_mean_func, three_path_func)
 start_values = (
     vcat(fill(1, 4), fill(0.5, 2)),
     vcat(fill(1, 21), fill(0.5, 5)),
-    vcat(fill(1, 20), fill(0.5, 11))
+    vcat(fill(1, 20), fill(0.5, 6),
+    mean(convert(Matrix{Float64}, three_mean_dat), dims = 1)[5:9])
     )
 
 optimizers = (LBFGS(), GradientDescent(), Newton())
@@ -18,7 +19,12 @@ for i in 1:length(datas)
             start_values[i])
     end
 end
+
+
 test = sem.model(model_funcs[1], datas[1], start_values[1])
-test = sem.model(one_fact_func, one_fact_dat, vcat(fill(1, 4), fill(0.5, 2)))
-fit(test)
+Optim.minimizer(fit(test))
+
+test = sem.model(model_funcs[2], datas[2], start_values[2])
+Optim.minimizer(fit(test))
+
 test.objective(start_values[1], test)
