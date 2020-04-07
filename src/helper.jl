@@ -14,7 +14,7 @@ end
 function imp_cov(matrices)
       ms = matrices
       invia = inv(I - ms[3]) # invers of I(dentity) minus A matrix
-      imp = cholesky(Symmetric(ms[2]*invia*ms[1]*transpose(invia)*transpose(ms[2])))
+      imp = ms[2]*invia*ms[1]*transpose(invia)*transpose(ms[2])
       return imp
 end
 

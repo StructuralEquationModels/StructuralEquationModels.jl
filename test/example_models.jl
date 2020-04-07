@@ -22,7 +22,7 @@ end
 
 three_mean_dat = Feather.read("test/comparisons/three_mean_dat.feather")
 function three_mean_func(x)
-    S =[x[1] 0.0 0 0 0 0 0 0 0 0 0 0
+    S =[x[1] 0 0 0 0 0 0 0 0 0 0 0
         0 x[2] 0 0 0 0 0 0 0 0 0 0
         0 0 x[3] 0 0 0 0 0 0 0 0 0
         0 0 0 x[4] 0 0 0 0 0 0 0 0
@@ -31,9 +31,9 @@ function three_mean_func(x)
         0 0 0 0 0 0 x[7] 0 0 0 0 0
         0 0 0 0 0 0 0 x[8] 0 0 0 0
         0 0 0 0 0 0 0 0 x[9] 0 0 0
-        0 0 0 0 0 0 0 0 0 x[10] x[13] x[14]
-        0 0 0 0 0 0 0 0 0 x[13] x[11] x[15]
-        0 0 0 0 0 0 0 0 0 x[14] x[15] x[12]]
+        0 0 0 0 0 0 0 0 0    x[10] x[13] x[14]
+        0 0 0 0 0 0 0 0 0    x[13] x[11] x[15]
+        0 0 0 0 0 0 0 0 0    x[14] x[15] x[12]]
 
     F =[1.0 0 0 0 0 0 0 0 0 0 0 0
         0 1 0 0 0 0 0 0 0 0 0 0
@@ -58,9 +58,9 @@ function three_mean_func(x)
         0  0  0  0  0  0  0  0  0  0     0     0
         0  0  0  0  0  0  0  0  0  0     0     0]
 
-    M = [0.5, 0.5, 0.5, 0.5, x[22], x[23], x[24], x[25], x[26], 0, 0, 0]
+    #M = [x[22], x[23], x[24], x[25], x[26], x[27], x[28], x[29], x[30], 0, 0, 0]
 
-    return (S, F, A, M)
+    return (S, F, A)#, M)
 end
 
 three_path_dat = Feather.read("test/comparisons/three_path_dat.feather")
