@@ -1,12 +1,20 @@
 abstract type SemObjective end
 
+struct ram{T <: Array{Float64, 2}}
+    S::T
+    F::T
+    A::T
+end
+
 mutable struct model{
-        RAM <: Function,
+        RAM <: ram,
+        RAMF <: Function,
         OBS,
         PAR <: AbstractVecOrMat,
         OBJ <: SemObjective,
         OPT <: Optim.AbstractOptimizer}
     ram::RAM
+    ramf::RAMF
     obs::OBS
     par::PAR
     objective::OBJ
@@ -59,9 +67,10 @@ import Base.convert
 convert(::Type{SemObs}, data) = SemObs(data)
 convert(::Type{SemObs}, SemObs::SemObs) = SemObs
 
-function model(ram, obs, par; objective = SemML(), optimizer = LBFGS())
+function model(ram, ramf, obs, par; objective = SemML(), optimizer = LBFGS())
     model(
     ram,
+    ramf,
     convert(SemObs, obs),
     par,
     objective,
