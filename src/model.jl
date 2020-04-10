@@ -1,6 +1,6 @@
 abstract type SemObjective end
 
-struct ram{T <: Array{Float64, 2}}
+struct ram{T}
     S::T
     F::T
     A::T

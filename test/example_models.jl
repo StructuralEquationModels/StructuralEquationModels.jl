@@ -21,7 +21,7 @@ function one_fact_func(x)#::Union{NTuple(3, Array{Float64}), NTuple(3, AbstractA
 end
 
 three_mean_dat = Feather.read("test/comparisons/three_mean_dat.feather")
-function three_mean_func(x)::Array{Array{Float64,2},1}
+function three_mean_func(x)::Array{AbstractArray}
     S =[x[1] 0 0 0 0 0 0 0 0 0 0 0.0
         0 x[2] 0 0 0 0 0 0 0 0 0 0
         0 0 x[3] 0 0 0 0 0 0 0 0 0
@@ -63,7 +63,8 @@ function three_mean_func(x)::Array{Array{Float64,2},1}
     return [S, F, A]#, M)
 end
 
-function ramfunc(ram::ram, par)
+
+function ramfunc(ram, par)
     for i = 1:12 ram.S[i,i] = par[i] end
     ram.S[11, 10] = par[13]
     ram.S[10, 11] = par[13]

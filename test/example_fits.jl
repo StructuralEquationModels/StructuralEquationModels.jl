@@ -39,20 +39,57 @@ Optim.minimizer(fit(test))
 ### model 2
 
 
-test = sem.model(ram(three_mean_func(start_values)[1],
-                        three_mean_func(start_values)[2],
-                        three_mean_func(start_values)[3],),
-                ramfunc,        
+test = sem.model(ram(three_mean_func(start_values[2])[1],
+                        three_mean_func(start_values[2])[2],
+                        three_mean_func(start_values[2])[3]),
+                ramfunc,
                 datas[2],
                 start_values[2])
 
-test.ram(start_values[2])
 
-start_values[2]
 
-ms = (test.ram(test.par))
+function imp_cov_t(ram::ram{Array{Float64,2}})
+      invia = LinearAlgebra.inv!(factorize(I - ram.A)) # invers of I(dentity) minus A matrix
+      imp = ram.F*invia*factorize(ram.S)*transpose(invia)*transpose(ram.F)
+      return imp
+end
 
-@benchmark sem.imp_cov(test.ram(test.par))
+testram = ram(three_mean_func(start_values[2])[1],
+                        three_mean_func(start_values[2])[2],
+                        three_mean_func(start_values[2])[3])
+
+imp_cov_t(testram)
+
+invia = LinearAlgebra.inv!(factorize(I - testram.A))
+
+@benchmark begin # invers of I(dentity) minus A matrix
+    imp = testram.F*invia*testram.S*transpose(invia)*transpose(testram.F)
+end
+
+@benchmark test.objective(test.par, test)
+
+fit(test)
+
+A = [0.0 0.0
+    0.0 0.0]
+
+function parfunc(A, par)
+    A[1,1] = par[1]
+end
+
+function est(A, par)
+    parfunc(A, par)
+    A[1,1]^2
+end
+
+objective = par -> est(A, par)
+
+optimize(
+    objective,
+    [6.0],
+    LBFGS(),
+    autodiff = :forward)
+
 
 invia = inv(I - test.ram(test.par)[3])
 
@@ -76,26 +113,64 @@ D = [A, B, C]
 
 mat[3]
 
-A = [0  0  0  0  0  0  0  0  0  1     0     0.0
-    0  0  0  0  0  0  0  0  0  0.5    0     0
-    0  0  0  0  0  0  0  0  0  0.5    0     0
-    0  0  0  0  0  0  0  0  0  0     1      0
-    0  0  0  0  0  0  0  0  0  0     0.5    0
-    0  0  0  0  0  0  0  0  0  0     0.5    0
-    0  0  0  0  0  0  0  0  0  0     0     1
-    0  0  0  0  0  0  0  0  0  0     0     0.5
-    0  0  0  0  0  0  0  0  0  0     0     0.5
-    0  0  0  0  0  0  0  0  0  0     0     0
-    0  0  0  0  0  0  0  0  0  0     0     0
-    0  0  0  0  0  0  0  0  0  0     0     0]
 
-@benchmark A[1,2] = 5
+B = Array{Float64}(undef, 12, 12)
 
-function tf(A::Array{Float64, 2})
-    inv(I-A)
+@benchmark begin
+    B = rand(12, 12)
+    B[:,:] = A
 end
 
-@benchmark tf(A)
+function allocate_matr(parameters, ram)
+    A = Array{eltype}(undef, size())
+
+@benchmark C = ram(rand(12,12), rand(12,12), rand(12,12))
+
+
+B
+
+A =             [0.0  0  0  0  0  0  0  0  0  1     0    0.0
+                0  0  0  0  0  0  0  0  0  0.5    0     0
+                0  0  0  0  0  0  0  0  0  0.5    0     0
+                0  0  0  0  0  0  0  0  0  0     1      0
+                0  0  0  0  0  0  0  0  0  0     0.5    0
+                0  0  0  0  0  0  0  0  0  0     0.5    0
+                0  0  0  0  0  0  0  0  0  0     0     1
+                0  0  0  0  0  0  0  0  0  0     0     0.5
+                0  0  0  0  0  0  0  0  0  0     0     0.5
+                0  0  0  0  0  0  0  0  0  0     0     0
+                0  0  0  0  0  0  0  0  0  0     0     0
+                0  0  0  0  0  0  0  0  0  0     0     0]
+
+
+setin
+
+A[15]
+
+
+A_s = sparse([1, 2, 3, 4, 5, 6, 7, 8, 9], [10, 10, 10, 11, 11, 11, 12, 12, 12],
+        [1, 0.5, 0.5, 1, 0.5, 0.5, 1, 0.5, 0.5], 12, 12)
+
+inv(I-A)
+
+C = rand(12,12)
+
+B = I-A
+
+@benchmark inv(B)
+
+LinearAlgebra.inv!(lu!(B))
+
+#B = 1.0*Matrix(I, 12, 12)
+
+LinearAlgebra.inv!(
+    factorize(B))
+
+function tf(A::Array{Float64, 2})
+    LinearAlgebra.inv!(factorize(B))
+end
+
+@benchmark tf(B)
 
 @benchmark begin
     optimize(
@@ -150,3 +225,7 @@ fit(test)
 test.objective(test.par, test)
 
 sem.imp_cov(test.ram(start_values[3]))
+
+@benchmark A = [5.0 5.0 5.0 5.0]
+
+convert(ForwardDiff.Dual{Float64}, A)
