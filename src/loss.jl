@@ -58,6 +58,3 @@ function (loss::Loss)(par, implied, observed)
     end
     return F
 end
-
-a = [ForwardDiff.Dual(10) ForwardDiff.Dual(10)
-    ForwardDiff.Dual(10) ForwardDiff.Dual(10)]
