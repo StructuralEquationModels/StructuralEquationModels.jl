@@ -1,19 +1,20 @@
+#imply is the new ram
 abstract type Imply end
 
-struct ImplyCommon{} <: Imply
-    implied
+struct ImplyCommon{A <: AbstractArray} <: Imply
+    implied::A
 end
 
-struct ImplySparse{} <: Imply
-    implied
+struct ImplySparse{A} <: Imply
+    implied::A
 end
 
-struct ImplyDense{} <: Imply
-    implied
+struct ImplyDense{A <: Array{Float64}} <: Imply
+    implied::A
 end
 
-struct ImplySymbolic{} <: Imply
-    implied
+struct ImplySymbolic{A} <: Imply
+    implied::A
 end
 
 function (imply::ImplySparse)(par)
