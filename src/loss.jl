@@ -24,7 +24,7 @@ function (semml::SemML)(par, implied::SomethingSparse, observed)
 end
 
 ### regularized
-# those do no need to dispatch I guess
+# those do not need to dispatch I guess
 struct SemLasso{P, W} <: LossFunction
     penalty::P
     which::W
@@ -46,7 +46,7 @@ end
 
 
 ### wrapper type that applies all specified loss functions and sums those
-struct Loss{F <: Array{LossFunction}}
+struct Loss{F <: Array{T} where {T <: LossFunction}}
     functions::F
 end
 
