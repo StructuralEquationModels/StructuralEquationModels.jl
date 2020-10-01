@@ -1,13 +1,25 @@
 abstract type SemDiff end
 
 struct SemForwardDiff <: SemDiff
-    options #Optim.Options() call fot optimize()
+    algorithm
+    options #Optim.Options() call to optimize()
 end
 
+# function SemForwardDiff()
+#     return SemForwardDiff(Optim.Options())
+# end
+
 struct SemReverseDiff{} <: SemDiff
+    algorithm
+    options
     # For preallocations, see the examples in ReverseDiff
 end
 
 struct SemFiniteDiff{} <: SemDiff
-    # For preallocations, see the examples in ReverseDiff
+    algorithm
+    options
 end
+
+# function SemFiniteDiff()
+#     return SemFiniteDiff(Optim.Options())
+# end

@@ -36,5 +36,3 @@ implysym_test = ImplySymbolic(A, S, F, x, start_val)
 
 implysym_test(new_val)
 @benchmark implysym_test(new_val)
-
-@benchmark ImplySymbolic(A, S, F, x, start_val)
