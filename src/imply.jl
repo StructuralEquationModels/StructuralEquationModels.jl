@@ -13,9 +13,13 @@ struct ImplyDense{A <: Array{Float64}} <: Imply
     implied::A
 end
 
-struct ImplySymbolic{F <: Any, A <: AbstractArray} <: Imply
+struct ImplySymbolic{
+    F <: Any,
+    A <: AbstractArray,
+    S <: Array{Float64}} <: Imply
     imp_fun::F
     imp_cov::A
+    start_val::S
 end
 
 function ImplySymbolic(
@@ -41,7 +45,7 @@ function ImplySymbolic(
     imp_cov_sym = F*invia*S*permutedims(invia)*permutedims(F)
 
     imp_cov_sym = Array(imp_cov_sym)
-    imp_cov_sym .= simplify.(imp_cov_sym)
+    imp_cov_sym .= ModelingToolkit.simplify.(imp_cov_sym)
 
     imp_fun_, imp_fun =
         ModelingToolkit.build_function(
@@ -49,9 +53,9 @@ function ImplySymbolic(
             parameters,
             expression=Val{false}
         )
-    
+
     imp_cov = imp_fun_(start_val)
-    return ImplySymbolic(imp_fun, imp_cov)
+    return ImplySymbolic(imp_fun, imp_cov, start_val)
 end
 
 function(imply::ImplySymbolic)(parameters)
@@ -59,17 +63,13 @@ function(imply::ImplySymbolic)(parameters)
 end
 
 function (imply::ImplySparse)(par)
-    imply.implied .=
+    imply.implied .= 0.0
 end
 
 function (imply::ImplyDense)(par)
-    imply.implied .=
-end
-
-function (imply::ImplySymbolic)(par)
-    imply.implied .=
+    imply.implied .= 0.0
 end
 
 function (imply::ImplyCommon)(par)
-    imply.implied .=
+    imply.implied .= 0.0
 end

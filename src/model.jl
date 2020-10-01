@@ -1,20 +1,35 @@
-struct Sem{L <: Loss, I <: Imply, D <: SemDiff}
-    loss::L # list of loss functions
+struct Sem{O <: SemObs, I <: Imply, L <: Loss, D <: SemDiff}
+    observed::O
     imply::I # former ram
-    algorithm # LBFGS(), Newton, etc... typed?
+    loss::L # list of loss functions
     diff::D
 end
+
+# function Sem(;
+#         semobs::O,
+#         imply = nothing,
+#         loss = nothing,
+#         semdiff = nothing,
+#         algorithm = nothing
+#         ) where {
+#             O <: SemObs
+#         }
+#     if isnothing(imply) imply = ImplyCommon()
+# end
+
 
 
 ### Two versions. The second one could be easier to construct
 function (model::Sem)(par)
     model.imply(par)
-    F = model.loss(par, model.imply.implied, model.obs)
+    F = model.loss(
+        par,
+        model)
     return(F)
 end
 
 function computeloss(model, par)
     model.imply(par)
-    F = model.loss(par, model.imply.implied, model.obs)
+    F = model.loss(par, model)
     return(F)
 end
