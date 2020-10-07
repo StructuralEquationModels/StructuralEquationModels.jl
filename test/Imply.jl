@@ -1,4 +1,4 @@
-using Test, ModelingToolkit, LinearAlgebra, SparseArrays
+using sem, Test, ModelingToolkit, LinearAlgebra, SparseArrays
 
 ## Test Matrices
 
@@ -75,10 +75,25 @@ start_val = vcat(
 
 new_val = fill(1.0, 31)
 
+##Symbolic
+
 implysym_test = ImplySymbolic(A, S, F, x, start_val)
+
+implysym_test(start_val)
 
 @test implysym_test.imp_cov == imp_cov_start
 
 implysym_test(new_val)
 
 @test implysym_test.imp_cov == imp_cov_new
+
+##Sparse
+implyspa_test = ImplySparse(A, S, F, x, start_val)
+
+implyspa_test(start_val)
+
+@test implyspa_test.imp_cov == imp_cov_start
+
+implyspa_test(new_val)
+
+@test implyspa_test.imp_cov == imp_cov_new
