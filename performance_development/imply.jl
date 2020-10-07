@@ -267,8 +267,39 @@ Ind = [collect(1:30); 65; 66; collect(31:60); 20; 88; collect(61:90); 21; 50;
 Jnd = [fill(91, 32); fill(92, 32); fill(93, 32); 91; 91; 92]
 V = [x[i] for i = 1:99]
 A = sparse(Ind, Jnd, V, 93, 93)
-A = Array(A)
-A^3
+
+S = sparse(collect(1:93), collect(1:93), [x[i] for i = 100:192])
+
+F = sparse(collect(1:90), collect(1:90), fill(1.0, 90), 90, 93)
+
+start_val = fill(0.5, 192)
+
+@btime imply = ImplySymbolic(A, S, F, x, start_val)
+
+@btime imply(start_val)
+
+imply.imp_cov
+
+using ModelingToolkit
+
+@variables x
+
+A = fill(x, 30, 30)
+
+imp_fun_, imp_fun =
+    ModelingToolkit.build_function(
+        A,
+        x,
+        expression=Val{false}
+    )
+
+B = rand(30,30)
+
+@btime imp_fun(B, 1)
+
+imply = ImplySymbolic(A, S, F, x, start_val)
+
+@btime imply(start_val)
 
 ## parse symbolmatr. to indices # too slow
 struct ram_ind{T <: AbstractArray, N <: Union{AbstractArray, Nothing},

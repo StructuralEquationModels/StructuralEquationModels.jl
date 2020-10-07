@@ -1,12 +1,24 @@
-#imply is the new ram
 abstract type Imply end
 
 struct ImplyCommon{A <: AbstractArray} <: Imply
     implied::A
 end
 
-struct ImplySparse{A} <: Imply
-    implied::A
+struct ImplySparse{
+    F1 <: Any,
+    F2 <: Any,
+    A <: AbstractArray,
+    C <: SparseMatrixCSC,
+    D <: SparseMatrixCSC,
+    E <: SparseMatrixCSC,
+    S <: Array{Float64}} <: Imply
+    imp_fun_invia::F1
+    imp_fun_S::F2
+    F::C
+    invia::D
+    S::E
+    imp_cov::A
+    start_val::S
 end
 
 struct ImplyDense{A <: Array{Float64}} <: Imply
@@ -20,6 +32,55 @@ struct ImplySymbolic{
     imp_fun::F
     imp_cov::A
     start_val::S
+end
+
+function ImplySparse(
+        A::Spa1,
+        S::Spa2,
+        F::Spa3,
+        parameters,
+        start_val
+            ) where {
+            Spa1 <: SparseMatrixCSC,
+            Spa2 <: SparseMatrixCSC,
+            Spa3 <: SparseMatrixCSC
+            }
+
+    invia = I + A
+    next_term = A^2
+
+    while nnz(next_term) != 0
+        invia += next_term
+        next_term *= next_term
+    end
+
+    #imp_cov_sym = F*invia*S*permutedims(invia)*permutedims(F)
+    #imp_cov_sym = Array(imp_cov_sym)
+    invia .= ModelingToolkit.simplify.(invia)
+
+    imp_fun_invia_, imp_fun_invia =
+        eval.(ModelingToolkit.build_function(
+            invia,
+            parameters
+            ))  
+
+    imp_fun_S_, imp_fun_S =
+        eval.(ModelingToolkit.build_function(
+            S,
+            parameters
+            ))
+
+    invia_pre = Base.invokelatest(imp_fun_invia_, start_val)
+    S_pre = Base.invokelatest(imp_fun_S_, start_val)
+    imp_cov = rand(size(F)[1], size(F)[1])
+
+    return ImplySparse( imp_fun_invia,
+                        imp_fun_S,
+                        F,
+                        invia_pre,
+                        S_pre,
+                        imp_cov,
+                        start_val)
 end
 
 function ImplySymbolic(
@@ -42,19 +103,19 @@ function ImplySymbolic(
         next_term *= next_term
     end
 
-    imp_cov_sym = F*invia*S*permutedims(invia)*permutedims(F)
+    imp_cov_sym = F*invia*S*invia'*F'
 
     imp_cov_sym = Array(imp_cov_sym)
     imp_cov_sym .= ModelingToolkit.simplify.(imp_cov_sym)
 
-    imp_fun_, imp_fun =
-        ModelingToolkit.build_function(
+    imp_fun =
+        eval(ModelingToolkit.build_function(
             imp_cov_sym,
-            parameters,
-            expression=Val{false}
-        )
+            parameters
+        )[2])
 
-    imp_cov = imp_fun_(start_val)
+    imp_cov = rand(size(F)[1], size(F)[1])
+    #imp_cov = Base.invokelatest(imp_fun_, start_val)
     return ImplySymbolic(imp_fun, imp_cov, start_val)
 end
 
@@ -62,8 +123,13 @@ function(imply::ImplySymbolic)(parameters)
     imply.imp_fun(imply.imp_cov, parameters)
 end
 
-function (imply::ImplySparse)(par)
-    imply.implied .= 0.0
+function (imply::ImplySparse)(parameters)
+    imply.imp_fun_invia(imply.invia, parameters)
+    imply.imp_fun_S(imply.S, parameters)
+    #let (F, S, invia) = (imply.F, imply.S, imply.invia)
+    imply.imp_cov .= imply.F*imply.invia*imply.S*imply.invia'*imply.F'
+    #    imply.imp_cov .= Array(F*invia*S*invia'*F')
+    #end
 end
 
 function (imply::ImplyDense)(par)

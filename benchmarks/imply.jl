@@ -36,3 +36,13 @@ implysym_test = ImplySymbolic(A, S, F, x, start_val)
 
 implysym_test(new_val)
 @benchmark implysym_test(new_val)
+
+## large problem
+
+@variables x[1:200]
+
+Ind = [collect(1:30); 65; 66; collect(31:60); 20; 88; collect(61:90); 21; 50;
+    92; 93; 93]
+Jnd = [fill(91, 32); fill(92, 32); fill(93, 32); 91; 91; 92]
+V = [x[i] for i = 1:99]
+A = sparse(Ind, Jnd, V, 93, 93)

@@ -17,10 +17,10 @@ function (semml::SemML)(
     par,
     model
     )
-    if !isposdef(model.imply.imp_cov)
+    a = cholesky!(Hermitian(model.imply.imp_cov); check = false)
+    if !isposdef(a)
         F = Inf
     else
-        a = cholesky!(model.imply.imp_cov)
         ld = logdet(a)
         model.imply.imp_cov .= LinearAlgebra.inv!(a)
         mul!(semml.mult, model.observed.obs_cov, model.imply.imp_cov)
