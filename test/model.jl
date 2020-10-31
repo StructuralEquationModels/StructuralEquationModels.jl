@@ -1,15 +1,21 @@
 using sem, Feather, ModelingToolkit, Statistics, LinearAlgebra,
-    Optim, SparseArrays, Test
+    Optim, SparseArrays, Test, Zygote, LineSearches
 
 ## Observed Data
 three_path_dat = Feather.read("test/comparisons/three_path_dat.feather")
 three_path_par = Feather.read("test/comparisons/three_path_par.feather")
+three_path_start = Feather.read("test/comparisons/three_path_start.feather")
 
 semobserved = SemObsCommon(data = Matrix(three_path_dat))
 
 loss = Loss([SemML(semobserved)])
 
-diff = SemFiniteDiff(LBFGS(), Optim.Options())
+diff_fin = SemFiniteDiff(LBFGS(
+        ;alphaguess = LineSearches.InitialStatic(;scaled = true),
+        linesearch = LineSearches.Static()), Optim.Options(;g_tol = 0.001))
+diff_fin = SemFiniteDiff(LBFGS(), Optim.Options())
+diff_for = SemForwardDiff(LBFGS(), Optim.Options())
+diff_rev = SemReverseDiff(LBFGS(), Optim.Options())
 
 ## Model definition
 @variables x[1:31]
@@ -77,28 +83,58 @@ start_val = vcat(
 
 imply = ImplySymbolic(A, S, F, x, start_val)
 
-model = Sem(semobserved, imply, loss, diff)
+imply_alloc = sem.ImplySymbolicAlloc(A, S, F, x, start_val)
+imply_forward = sem.ImplySymbolicForward(A, S, F, x, start_val)
 
-@benchmark solution = sem_fit(model)
+model_fin = Sem(semobserved, imply, loss, diff_fin)
+model_rev = Sem(semobserved, imply_alloc, loss, diff_rev)
+model_for = Sem(semobserved, imply_alloc, loss, diff_for)
+model_for2 = Sem(semobserved, imply_forward, loss, diff_for)
+
+Zygote.@nograd isposdef
+Zygote.@nograd Symmetric
+
+ForwardDiff.gradient(model_for, start_val)
+Zygote.gradient(model_for, start_val)
+
+output = copy(start_val)
 
 
+@benchmark FiniteDiff.finite_difference_gradient!($output, $model_fin, $start_val)
+@benchmark model_fin($start_val)
 
-model(vcat(solution.minimizer[1:29], 0.57, solution.minimizer[31]))
+@benchmark solution_fin = sem_fit(model_fin)
+solution_for = sem_fit(model_for)
+solution_for2 = sem_fit(model_for2)
+solution_rev = sem_fit(model_rev)
 
-solution.minimum*75
+all(abs.(solution_fin.minimizer .- solution_for.minimizer) .< 0.01)
 
-@benchmark model.imply(start_val)
+model(vcat(solution_fin.minimizer[1:29], 0.57, solution_fin.minimizer[31]))
+
+solution_fin.minimum
+solution_fin.minimizer
+solution_for.minimum
+
+@benchmark model_fin.imply(start_val)
 
 inverse = zeros(11,11)
 pre = zeros(11,11)
 
-@benchmark model(solution.minimizer)
-
-par_order = [collect(21:34);  collect(15:20); 2;3; 5;6;7; collect(9:14)]
+par_order = [collect(21:34); collect(15:20); 2;3; 5;6;7; collect(9:14)]
 
 all(
-    abs.(solution.minimizer - three_path_par.est[par_order]
-        ) .< 0.05*abs.(solution.minimizer))
+    abs.(solution_for.minimizer - three_path_par.est[par_order]
+        ) .< 0.05*abs.(solution_for.minimizer))
+
+start_lav = three_path_start.start[par_order]
+
+
+
+
+
+
+
 
 u = randn(10)
 mat2 = model.imply.imp_cov

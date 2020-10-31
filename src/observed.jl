@@ -1,5 +1,3 @@
-abstract type SemObs end
-
 struct SemObsCommon{
         A <: Union{AbstractArray, Nothing},
         B <: AbstractArray,

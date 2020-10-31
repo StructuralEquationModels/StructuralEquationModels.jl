@@ -1,12 +1,14 @@
 module sem
 
 using Distributions, Feather, ForwardDiff, LinearAlgebra, Optim, Random,
-    NLSolversBase, Statistics, SparseArrays, ModelingToolkit
+    NLSolversBase, Statistics, SparseArrays, ModelingToolkit, Zygote,
+    DiffEqBase
 
+include("types.jl")
 include("observed.jl")
 include("diff.jl")
-include("loss.jl")
 include("imply.jl")
+include("loss.jl")
 include("model.jl")
 include("optim.jl")
 

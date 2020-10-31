@@ -1,5 +1,3 @@
-abstract type SemDiff end
-
 struct SemForwardDiff <: SemDiff
     algorithm
     options #Optim.Options() call to optimize()
