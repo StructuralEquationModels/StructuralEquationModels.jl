@@ -18,7 +18,18 @@ function (model::Sem)(par)
     F = model.loss(
         par,
         model)
-    return(F)
+    return F
+end
+
+function (model::Sem)(E, G, par)
+    model.imply(par)
+    if G != nothing
+        model.loss(par, model, E, G)
+    end
+    if E != nothing
+        F = model.loss(par, model, E, G)
+        return F
+    end
 end
 
 function computeloss(model, par)
