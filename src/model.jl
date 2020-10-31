@@ -1,10 +1,3 @@
-struct Sem{O <: SemObs, I <: Imply, L <: Loss, D <: SemDiff}
-    observed::O
-    imply::I # former ram
-    loss::L # list of loss functions
-    diff::D
-end
-
 # function Sem(;
 #         semobs::O,
 #         imply = nothing,
