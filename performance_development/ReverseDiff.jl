@@ -1,5 +1,6 @@
 using sem, Feather, ModelingToolkit, Statistics, LinearAlgebra,
-    Optim, SparseArrays, Test
+    Optim, SparseArrays, Test, ReverseDiff, Zygote, ForwardDiff,
+    BenchmarkTools, Optim
 
 ## Observed Data
 three_path_dat = Feather.read("test/comparisons/three_path_dat.feather")
@@ -9,7 +10,9 @@ semobserved = SemObsCommon(data = Matrix(three_path_dat))
 
 loss = Loss([SemML(semobserved)])
 
-diff = SemFiniteDiff(LBFGS(), Optim.Options())
+diff = SemForwardDiff(LBFGS(), Optim.Options())
+
+diff2 = SemFiniteDiff(LBFGS(), Optim.Options())
 
 ## Model definition
 @variables x[1:31]
@@ -75,57 +78,92 @@ start_val = vcat(
 
 
 
-imply = ImplySymbolic(A, S, F, x, start_val)
+imply = sem.ImplySymbolicAlloc(A, S, F, x, start_val)
+imply2 = ImplySymbolic(A, S, F, x, start_val)
 
 model = Sem(semobserved, imply, loss, diff)
+model2 = Sem(semobserved, imply2, loss, diff2)
 
 model(start_val)
 
-const model_tape = GradientTape(model, start_val)
+model
 
-# compile `f_tape` into a more optimized representation
-const compiled_model_tape = compile(model_tape)
+ForwardDiff.gradient(model, start_val)
 
-# some inputs and work buffers to play around with
-a = start_val
-inputs = (a, b)
-results = (similar(a), similar(b))
-all_results = map(DiffResults.GradientResult, results)
-cfg = GradientConfig(inputs)
+@btime sol1 = optimize(model2, start_val, LBFGS())
+@btime sol2 = optimize(model, start_val, LBFGS(), autodiff = :forward)
 
-####################
-# taking gradients #
-####################
+sem_fit(model2)
 
-# with pre-recorded/compiled tapes (generated in the setup above) #
-#-----------------------------------------------------------------#
+pars = [1.0 0]
+pars2 = fill(1.0,4)
 
-# this should be the fastest method, and non-allocating
-gradient!(results, compiled_f_tape, inputs)
+Zygote.@nograd isposdef
 
-# the same as the above, but in addition to calculating the gradients, the value `f(a, b)`
-# is loaded into the the provided `DiffResult` instances (see DiffResults.jl documentation).
-gradient!(all_results, compiled_f_tape, inputs)
+A = DiffEqBase.dualcache(zeros(2,2))
 
-# this should be the second fastest method, and also non-allocating
-gradient!(results, f_tape, inputs)
+function myf(pars, A)
+    A = DiffEqBase.get_tmp(A, pars)
+    A[1] = pars[1]
+    A[2] = pars[2]
+    A[3] = pars[2]
+    A[4] = pars[1]
 
-# you can also make your own function if you want to abstract away the tape
-∇f!(results, inputs) = gradient!(results, compiled_f_tape, inputs)
+    if !isposdef(A)
+        return Inf
+    else
+        F = logdet(A) + tr(inv(A))
+        return F
+    end
+end
 
-# with a pre-allocated GradientConfig #
-#-------------------------------------#
-# these methods are more flexible than a pre-recorded tape, but can be
-# wasteful since the tape will be re-recorded for every call.
+function myf(pars)
+    A = [pars[1] pars[2]
+        pars[2] pars[1]]
 
-gradient!(results, f, inputs, cfg)
+    if !isposdef(A)
+        return Inf
+    else
+        F = logdet(A) + tr(inv(A))
+        return F
+    end
+end
 
-gradient(f, inputs, cfg)
+Zygote.gradient(myf, pars, A)
+ForwardDiff.gradient(par -> myf(par, A), pars)
 
-# without a pre-allocated GradientConfig #
-#----------------------------------------#
-# convenient, but pretty wasteful since it has to allocate the GradientConfig itself
 
-gradient!(results, f, inputs)
+@benchmark sol1 = optimize(par -> myf(par, A), pars; autodiff = :forward)
+@benchmark sol2 = optimize(par -> myf(par), pars; autodiff = :forward)
 
-gradient(f, inputs)
+
+sol1.minimizer
+
+sol2 = optimize(myf,
+    par -> Zygote.gradient(myf, par)[1], pars;
+    inplace = false)
+
+sol2.minimizer
+
+sol3 = optimize(par -> myf(par), pars, autodiff = :forward)
+sol3.minimizer
+
+## ForwardDiff gradients with build functions
+@variables x[1:4]
+
+A = [x[1] x[2]
+    x[3] x[4]]
+
+A = UpperTriangular(A)
+
+myf2 = eval.(ModelingToolkit.build_function(A, x))[2]
+
+mat = rand(2,2)
+
+mat = UpperTriangular(mat)
+
+myf2(mat, fill(1.0, 4))
+
+myf3(x) = x[1]^2
+
+ForwardDiff.gradient(myf2, [1.0])
