@@ -268,8 +268,8 @@ function mygrad2(y, D, A, S, F, S_ind_vec, A_ind_vec)
     d = zeros(parnum)
     gradvec = zeros(parnum)
     for i = 1:parnum
-        S = sparse(S_ind_vec[i]..., matsize...)
-        A = sparse(A_ind_vec[i]..., matsize...)
+        S_der = sparse(S_ind_vec[i]..., matsize...)
+        A_der = sparse(A_ind_vec[i]..., matsize...)
 
         term = F*B*A_der*E*F'
 
@@ -296,6 +296,18 @@ F =[1.0 0 0 0 0 0 0 0 0 0 0 0 0 0
     0 0 0 0 0 0 0 0 0 1 0 0 0 0
     0 0 0 0 0 0 0 0 0 0 1 0 0 0]
 
+
+all(mygrad2(start_val, D, A_pre, S_pre, F, S_ind_vec, A_ind_vec) .≈
+    ForwardDiff.gradient(model_for, start_val))
+
+testfun2 = eval(ModelingToolkit.build_function(A, x)[2])
+
+In = [1, 4, 3, 5]; J = [4, 7, 18, 9]; V = [1, 2, -5, 3];
+mat = sparse(In,J,V)
+
+testfun2(mat, start_val)
+
+testfun2()
 
 ## optim test
 
@@ -341,8 +353,32 @@ function (nest2::nest2)(F, G, x)
 end
 
 function nestedfg!(F, G, x)
-    mynest1()
-    G .= mynest
+    if G != nothing
+        mynest1(F, G, x)
+        mynest2(F, G, x)
+        G .= mynest1.G + mynest2.G
+    end
+    if F != nothing
+        return mynest1(F, G, x) + mynest2(F, G, x)
+    end
 end
 
-Optim.optimize(Optim.only_fg!(fg!), [2.0], Optim.LBFGS())
+Optim.optimize(Optim.only_fg!(nestedfg!), [2.0], Optim.LBFGS())
+
+
+ForwardDiff.gradient(model_for, fill(0, 31))
+
+
+function testfun(mat)
+    let A, B = mat, mat
+    end
+end
+
+mat = rand(10,10)
+
+@btime testfun(mat)
+
+
+## test structs
+
+sem.SemAnalyticDiff(LBFGS(), Optim.Options(), A, S, F, x, start_val)

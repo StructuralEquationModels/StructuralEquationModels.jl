@@ -7,10 +7,31 @@ function (loss::Loss)(par, model)
     return F
 end
 
+function (loss::Loss)(par, model, E, G)
+    if E != nothing
+        F = zero(eltype(model.imply.imp_cov))
+        for i = 1:length(loss.functions)
+            F += loss.functions[i](par, model, E, G)
+        end
+        return F
+    end
+    if G != nothing
+        G .= 0
+        for i = 1:length(loss.functions)
+            loss.functions[i](par, model, E, G)
+        end
+        for i = 1:length(loss.functions)
+            G += loss.functions[i].grad
+        end
+
+    end
+end
+
 ## Lossfunctions
 
-struct SemML{T <: AbstractArray} <: LossFunction
+struct SemML{T <: AbstractArray, U} <: LossFunction
     mult::T # is this type known?
+    grad::U
 end
 
 function SemML(observed::T) where {T <: SemObs}
@@ -47,6 +68,46 @@ function (semml::SemML)(par, model::Sem{O, I, L, D}) where
             tr(semml.mult)
     end
     return F
+end
+
+function (semml::SemML)(par, model::Sem{O, I, L, D}, E, G) where
+            {O <: SemObs, L <: Loss, I <: Imply, D <: SemAnalyticDiff}
+    a = cholesky!(Hermitian(model.imply.imp_cov); check = false)
+    if !isposdef(a)
+        if E != nothing
+            return F = Inf
+        end
+        if G != nothing
+            semml.grad .= 0.0
+        end
+    else
+        model.imply.imp_cov .= LinearAlgebra.inv!(a)
+        if E != nothing
+            ld = logdet(a)
+            mul!(semml.mult, model.imply.imp_cov, model.observed.obs_cov)
+            #mul!()
+            F = ld +
+                tr(semml.mult)
+            return F
+        end
+        if G != nothing
+            model.diff.B!(model.diff.B, par) # B = inv(I-A)
+            model.diff.E!(model.diff.E, par) # E = B*S*B'
+            let B = model.diff.B, E = model.diff.E,
+                Σ_inv = model.imply.imp_cov, F = model.diff.F,
+                D = model.observed.obs_cov
+                for i = 1:size(par, 1)
+                    S_der = sparse(model.diff.S_ind_vec[i]..., model.diff.matsize...)
+                    A_der = sparse(model.diff.A_ind_vec[i]..., model.diff.matsize...)
+
+                    term = F*B*A_der*E*F'
+                    Σ_der =  F*B*S_der*B'F' + term + term'
+
+                    semml.grad[i] = tr(Σ_inv*Σ_der) + tr((-Σ_inv)*Σ_der*Σ_inv*D)
+                end
+            end
+        end
+    end
 end
 
 # this is for Floats, so for example with finite differences
