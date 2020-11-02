@@ -21,7 +21,7 @@ function (loss::Loss)(par, model, E, G)
             loss.functions[i](par, model, E, G)
         end
         for i = 1:length(loss.functions)
-            G += loss.functions[i].grad
+            G .+= loss.functions[i].grad
         end
 
     end
@@ -34,8 +34,8 @@ struct SemML{T <: AbstractArray, U} <: LossFunction
     grad::U
 end
 
-function SemML(observed::T) where {T <: SemObs}
-    return SemML(copy(observed.obs_cov)) # what should this type be?
+function SemML(observed::T, grad) where {T <: SemObs}
+    return SemML(copy(observed.obs_cov), copy(grad)) # what should this type be?
 end
 
 struct SemFIML <: LossFunction
@@ -81,9 +81,9 @@ function (semml::SemML)(par, model::Sem{O, I, L, D}, E, G) where
             semml.grad .= 0.0
         end
     else
+        ld = logdet(a)
         model.imply.imp_cov .= LinearAlgebra.inv!(a)
         if E != nothing
-            ld = logdet(a)
             mul!(semml.mult, model.imply.imp_cov, model.observed.obs_cov)
             #mul!()
             F = ld +
@@ -101,7 +101,7 @@ function (semml::SemML)(par, model::Sem{O, I, L, D}, E, G) where
                     A_der = sparse(model.diff.A_ind_vec[i]..., model.diff.matsize...)
 
                     term = F*B*A_der*E*F'
-                    Σ_der =  F*B*S_der*B'F' + term + term'
+                    Σ_der = Array(F*B*S_der*B'F' + term + term')
 
                     semml.grad[i] = tr(Σ_inv*Σ_der) + tr((-Σ_inv)*Σ_der*Σ_inv*D)
                 end
