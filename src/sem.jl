@@ -16,7 +16,7 @@ export Sem, computeloss,
     Imply, ImplyCommon, ImplySparse, ImplySymbolic, ImplyDense,
     Loss, LossFunction, SemML, SemFIML, SemLasso, SemRidge,
     SemDiff, SemFiniteDiff, SemForwardDiff, SemReverseDiff,
-    SemObs, SemObsCommon,
+    SemAnalyticDiff, SemObs, SemObsCommon,
     sem_fit
 
 end # module

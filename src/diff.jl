@@ -25,8 +25,8 @@ end
 struct SemAnalyticDiff{
     A <: AbstractArray,
     X <: SparseMatrixCSC,
-    Y <: AbstractArray,
-    Z <: AbstractArray,
+    Y <: SparseMatrixCSC,
+    Z <: SparseMatrixCSC,
     T} <: SemDiff
     algorithm
     options
@@ -69,7 +69,6 @@ function SemAnalyticDiff(
     B = invia
     E = B*S*B'
     E .= ModelingToolkit.simplify.(E)
-    E = Array(E)
 
     B_, B! =
         eval.(ModelingToolkit.build_function(
@@ -88,8 +87,23 @@ function SemAnalyticDiff(
     imp_cov = rand(size(F)[1], size(F)[1])
 
     grad = similar(start_val)
-    F = Array(F)
     matsize = size(A)
+
+    for i = 1:length(A)
+        if !isa(A[i], Operation)
+            A[i] = ModelingToolkit.Constant(0)
+        end
+    end
+    SparseArrays.dropzeros!(A)
+
+    for i = 1:length(S)
+        if !isa(S[i], Operation)
+            S[i] = ModelingToolkit.Constant(0)
+        end
+    end
+
+    SparseArrays.dropzeros!(S)
+
 
     S = Array(S)
     A = Array(A)

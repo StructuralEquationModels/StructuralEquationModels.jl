@@ -1,5 +1,5 @@
 using sem, Feather, ModelingToolkit, Statistics, LinearAlgebra,
-    Optim, SparseArrays, Test, Zygote, LineSearches
+    Optim, SparseArrays, Test, Zygote, LineSearches, ForwardDiff
 
 ## Observed Data
 three_path_dat = Feather.read("test/comparisons/three_path_dat.feather")
@@ -8,14 +8,13 @@ three_path_start = Feather.read("test/comparisons/three_path_start.feather")
 
 semobserved = SemObsCommon(data = Matrix(three_path_dat))
 
-loss = Loss([SemML(semobserved)])
-
 diff_fin = SemFiniteDiff(LBFGS(
         ;alphaguess = LineSearches.InitialStatic(;scaled = true),
         linesearch = LineSearches.Static()), Optim.Options(;g_tol = 0.001))
 diff_fin = SemFiniteDiff(LBFGS(), Optim.Options())
 diff_for = SemForwardDiff(LBFGS(), Optim.Options())
 diff_rev = SemReverseDiff(LBFGS(), Optim.Options())
+
 
 ## Model definition
 @variables x[1:31]
@@ -79,7 +78,12 @@ start_val = vcat(
     fill(0, 3)
     )
 
+loss = Loss([SemML(semobserved, similar(start_val))])
 
+diff_ana = SemAnalyticDiff(LBFGS(
+        ;alphaguess = LineSearches.InitialStatic(;scaled = true),
+        linesearch = LineSearches.Static()), Optim.Options(),
+            A, S, F, x, start_val)
 
 imply = ImplySymbolic(A, S, F, x, start_val)
 
@@ -90,23 +94,28 @@ model_fin = Sem(semobserved, imply, loss, diff_fin)
 model_rev = Sem(semobserved, imply_alloc, loss, diff_rev)
 model_for = Sem(semobserved, imply_alloc, loss, diff_for)
 model_for2 = Sem(semobserved, imply_forward, loss, diff_for)
+model_ana = Sem(semobserved, imply, loss, diff_ana)
 
-Zygote.@nograd isposdef
-Zygote.@nograd Symmetric
+#Zygote.@nograd isposdef
+#Zygote.@nograd Symmetric
 
 ForwardDiff.gradient(model_for, start_val)
+FiniteDiff.finite_difference_gradient(model_fin, start_val)
 Zygote.gradient(model_for, start_val)
+
+grad = copy(start_val)
+model_ana(nothing, grad, start_val)
+grad
 
 output = copy(start_val)
 
-
-@benchmark FiniteDiff.finite_difference_gradient!($output, $model_fin, $start_val)
-@benchmark model_fin($start_val)
-
-@benchmark solution_fin = sem_fit(model_fin)
+solution_fin = sem_fit(model_fin)
 solution_for = sem_fit(model_for)
 solution_for2 = sem_fit(model_for2)
 solution_rev = sem_fit(model_rev)
+solution_ana = sem_fit(model_ana)
+
+model_ana.loss.functions[1].grad
 
 all(abs.(solution_fin.minimizer .- solution_for.minimizer) .< 0.01)
 
@@ -131,7 +140,8 @@ start_lav = three_path_start.start[par_order]
 
 
 
-
+##
+##
 
 
 

@@ -30,3 +30,13 @@ function sem_fit(model::Sem{O, I, L, D}) where
                 inplace = false)
     return result
 end
+
+function sem_fit(model::Sem{O, I, L, D}) where
+    {O <: SemObs, L <: Loss, I <: Imply, D <: SemAnalyticDiff}
+    result = optimize(
+                Optim.only_fg!(model),
+                model.imply.start_val,
+                model.diff.algorithm,
+                model.diff.options)
+    return result
+end
