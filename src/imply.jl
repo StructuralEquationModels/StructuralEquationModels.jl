@@ -92,11 +92,11 @@ function ImplySparse(
 
     return ImplySparse( imp_fun_invia,
                         imp_fun_S,
-                        F,
+                        copy(F),
                         invia_pre,
                         S_pre,
                         imp_cov,
-                        start_val)
+                        copy(start_val))
 end
 
 function ImplySymbolic(
@@ -132,7 +132,7 @@ function ImplySymbolic(
 
     imp_cov = rand(size(F)[1], size(F)[1])
     #imp_cov = Base.invokelatest(imp_fun_, start_val)
-    return ImplySymbolic(imp_fun, imp_cov, start_val)
+    return ImplySymbolic(imp_fun, imp_cov, copy(start_val))
 end
 
 function ImplySymbolicAlloc(
@@ -168,7 +168,7 @@ function ImplySymbolicAlloc(
 
     imp_cov = rand(size(F)[1], size(F)[1])
     #imp_cov = Base.invokelatest(imp_fun_, start_val)
-    return ImplySymbolicAlloc(imp_fun, imp_cov, start_val)
+    return ImplySymbolicAlloc(imp_fun, imp_cov, copy(start_val))
 end
 
 function ImplySymbolicForward(
@@ -206,7 +206,7 @@ function ImplySymbolicForward(
 
     imp_cov = DiffEqBase.dualcache(zeros(size(F)[1], size(F)[1]))
     #imp_cov = Base.invokelatest(imp_fun_, start_val)
-    return ImplySymbolicForward(imp_fun, imp_cov, start_val)
+    return ImplySymbolicForward(imp_fun, imp_cov, copy(start_val))
 end
 
 function(imply::ImplySymbolic)(parameters)
