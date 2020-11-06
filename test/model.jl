@@ -78,11 +78,9 @@ start_val = vcat(
     fill(0, 3)
     )
 
-loss = Loss([SemML(semobserved, similar(start_val))])
+loss = Loss([SemML(semobserved, [0.0], similar(start_val))])
 
-diff_ana = SemAnalyticDiff(LBFGS(
-        ;alphaguess = LineSearches.InitialStatic(;scaled = true),
-        linesearch = LineSearches.Static()), Optim.Options(),
+diff_ana = SemAnalyticDiff(LBFGS(), Optim.Options(),
             A, S, F, x, start_val)
 
 imply = ImplySymbolic(A, S, F, x, start_val)
@@ -104,8 +102,10 @@ FiniteDiff.finite_difference_gradient(model_fin, start_val)
 Zygote.gradient(model_for, start_val)
 
 grad = copy(start_val)
-model_ana(nothing, grad, start_val)
+model_ana(1.0, nothing, start_val)
 grad
+
+model_for.loss.functions[1].grad
 
 output = copy(start_val)
 
@@ -214,3 +214,34 @@ obs = copy(model.observed.obs_cov)
 model.observed.obs_cov
 
 obs
+
+A = [0 0 0 "c"
+     1.0 0 0 .5
+     0 0 0 0]
+
+struct ImplySparse3{T1 <: AbstractSparseArray, T2 <: AbstractArray} <: Imply
+    A::T1
+    Aw::T2
+end
+
+function get_indices(A, func)
+   permutedims(reinterpret(Int, reshape(findall(replace(func, A)), 1, :)))
+end
+
+function ImplySparse3(A)
+    Aw = get_indices(A, x -> isa(x, String))
+    ind = get_indices(A, x -> !(isa(x, Number) && iszero(x)))
+    out = sparse(ind[:, 1], ind[:, 2], Vector{Float64}(undef, size(ind)[1]), size(A)...)
+    for i in 1:size(ind)[1]
+        probe = A[ind[i, 1], ind[i, 2]] # element of A
+        if isa(probe, Number)
+            out[ind[i, :]...] = probe
+        end
+    end
+    ImplySparse3(out, Aw)
+end
+
+
+ImplySparse3(A)
+
+sparse(S.rowval, S.colptr, S.nzval)

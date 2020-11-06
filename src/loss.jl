@@ -7,19 +7,42 @@ function (loss::Loss)(par, model)
     return F
 end
 
+# function (loss::Loss)(par, model, E, G)
+#     if E != nothing
+#         F = zero(eltype(model.imply.imp_cov))
+#         for i = 1:length(loss.functions)
+#             F += loss.functions[i](par, model, E, G)
+#         end
+#         return F
+#     end
+#     if G != nothing
+#         G .= zero(eltype(G))
+#         for i = 1:length(loss.functions)
+#             loss.functions[i](par, model, E, G)
+#         end
+#         for i = 1:length(loss.functions)
+#             G .+= loss.functions[i].grad
+#         end
+#
+#     end
+# end
+
 function (loss::Loss)(par, model, E, G)
-    if E != nothing
-        F = zero(eltype(model.imply.imp_cov))
-        for i = 1:length(loss.functions)
-            F += loss.functions[i](par, model, E, G)
-        end
-        return F
+
+    for i = 1:length(loss.functions)
+        loss.functions[i](par, model, E, G)
     end
-    if G != nothing
-        G .= 0
+
+    if E != nothing
+        objective = zero(eltype(model.imply.imp_cov))
         for i = 1:length(loss.functions)
-            loss.functions[i](par, model, E, G)
+            objective += loss.functions[i].objective[1]
         end
+        return objective
+    end
+
+    if G != nothing
+        G .= zero(eltype(G))
         for i = 1:length(loss.functions)
             G .+= loss.functions[i].grad
         end
@@ -29,13 +52,14 @@ end
 
 ## Lossfunctions
 
-struct SemML{T <: AbstractArray, U} <: LossFunction
+struct SemML{T <: AbstractArray, U, V} <: LossFunction
     mult::T # is this type known?
-    grad::U
+    objective::U
+    grad::V
 end
 
-function SemML(observed::T, grad) where {T <: SemObs}
-    return SemML(copy(observed.obs_cov), copy(grad)) # what should this type be?
+function SemML(observed::T, objective, grad) where {T <: SemObs}
+    return SemML(copy(observed.obs_cov), copy(objective), copy(grad)) # what should this type be?
 end
 
 struct SemFIML <: LossFunction
@@ -72,10 +96,11 @@ end
 
 function (semml::SemML)(par, model::Sem{O, I, L, D}, E, G) where
             {O <: SemObs, L <: Loss, I <: Imply, D <: SemAnalyticDiff}
+
     a = cholesky!(Hermitian(model.imply.imp_cov); check = false)
     if !isposdef(a)
         if E != nothing
-            return F = Inf
+            semml.objective .= Inf
         end
         if G != nothing
             semml.grad .= 0.0
@@ -85,10 +110,7 @@ function (semml::SemML)(par, model::Sem{O, I, L, D}, E, G) where
         model.imply.imp_cov .= LinearAlgebra.inv!(a)
         if E != nothing
             mul!(semml.mult, model.imply.imp_cov, model.observed.obs_cov)
-            #mul!()
-            F = ld +
-                tr(semml.mult)
-            return F
+            semml.objective .= ld + tr(semml.mult)
         end
         if G != nothing
             model.diff.B!(model.diff.B, par) # B = inv(I-A)
@@ -110,27 +132,6 @@ function (semml::SemML)(par, model::Sem{O, I, L, D}, E, G) where
     end
 end
 
-# this is for Floats, so for example with finite differences
-# AbstractFloat, because Float32 remains an option
-function (semml::SemML)(
-    par,
-    implied::A,
-    observed
-    ) where {
-    A <: Array{AbstractFloat}
-    }
-      F = 0.0
-      return F
-end
-
-
-
-# sparse
-function (semml::SemML)(par, implied::SparseMatrixCSC, observed)
-      F = 0.0
-      return F
-end
-
 ### regularized
 # those do not need to dispatch I guess
 struct SemLasso{P, W} <: LossFunction
@@ -150,3 +151,12 @@ end
 function (ridge::SemRidge)(par, implied, observed)
       F = ridge.penalty*sum(transpose(par)[ridge.which].^2)
 end
+
+
+struct teststruc2
+    A::Array{Float64, 1}
+end
+
+mystruc = teststruc2([4.0])
+
+mystruc.A .= [5.0]
