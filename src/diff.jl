@@ -55,6 +55,10 @@ function SemAnalyticDiff(
             Spa3 <: SparseMatrixCSC
             }
 
+    A = copy(A)
+    S = copy(S)
+    F = copy(F)
+
     invia = I + A
     next_term = A^2
 
@@ -84,7 +88,6 @@ function SemAnalyticDiff(
 
     B_pre = Base.invokelatest(B_, start_val)
     E_pre = Base.invokelatest(E_, start_val)
-    imp_cov = rand(size(F)[1], size(F)[1])
 
     grad = similar(start_val)
     matsize = size(A)
@@ -101,9 +104,7 @@ function SemAnalyticDiff(
             S[i] = ModelingToolkit.Constant(0)
         end
     end
-
     SparseArrays.dropzeros!(S)
-
 
     S = Array(S)
     A = Array(A)
