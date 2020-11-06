@@ -470,3 +470,54 @@ M = [:x22, :x23, :x24, :x25, :x26, :x27, :x28, :x29, :x30, 0, 0, 0]
 
 ram_ind_test = ram_ind(S, F, A, M, start_val,
     zeros(9,9))
+
+
+## inverse
+
+function f1(mat)
+    mat2 = copy(mat)
+    mat3 = LinearAlgebra.inv!(mat2)
+    return mat3
+end
+
+function f2(mat, pre)
+    mat2 = copy(mat)
+    pre .= LinearAlgebra.inv!(mat2)
+    return pre
+end
+
+function f3(mat, pre)
+    mat2 = copy(mat)
+    pre .= inv(mat2)
+    return pre
+end
+
+mat = rand(10,10)
+
+mat = mat'*mat
+
+trueinv = copy(mat)
+
+trueinv = inv(mat)
+
+mat = cholesky(mat)
+
+check = copy(mat)
+
+pre = zeros(10,10)
+
+@benchmark f1($mat)
+
+@benchmark f2($mat, $pre)
+
+@benchmark f3($mat, $pre)
+
+check == mat
+
+Matrix(f1(mat)) ≈ trueinv
+
+f2(mat, pre) ≈ trueinv
+
+mat
+
+check
