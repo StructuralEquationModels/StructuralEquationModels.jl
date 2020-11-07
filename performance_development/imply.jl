@@ -492,6 +492,12 @@ function f3(mat, pre)
     return pre
 end
 
+function f4(mat)
+    mat2 = copy(mat)
+    pre = inv(mat2)
+    return pre
+end
+
 mat = rand(10,10)
 
 mat = mat'*mat
@@ -512,6 +518,8 @@ pre = zeros(10,10)
 
 @benchmark f3($mat, $pre)
 
+@benchmark f4($mat)
+
 check == mat
 
 Matrix(f1(mat)) ≈ trueinv
@@ -521,3 +529,5 @@ f2(mat, pre) ≈ trueinv
 mat
 
 check
+
+f4(mat)
