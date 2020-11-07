@@ -6,6 +6,7 @@ using Distributions, Feather, ForwardDiff, LinearAlgebra, Optim, Random,
 
 include("types.jl")
 include("observed.jl")
+include("helper.jl")
 include("diff.jl")
 include("imply.jl")
 include("loss.jl")
