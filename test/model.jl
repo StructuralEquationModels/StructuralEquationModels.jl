@@ -133,8 +133,8 @@ pre = zeros(11,11)
 par_order = [collect(21:34); collect(15:20); 2;3; 5;6;7; collect(9:14)]
 
 all(
-    abs.(solution_for.minimizer - three_path_par.est[par_order]
-        ) .< 0.05*abs.(solution_for.minimizer))
+    abs.(solution_fin.minimizer .- three_path_par.est[par_order]
+        ) .< 0.05*abs.(solution_fin.minimizer))
 
 start_lav = three_path_start.start[par_order]
 

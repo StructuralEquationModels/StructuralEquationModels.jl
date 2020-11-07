@@ -52,14 +52,20 @@ end
 
 ## Lossfunctions
 
-struct SemML{T <: AbstractArray, U, V} <: LossFunction
+struct SemML{I <: AbstractArray, T <: AbstractArray, U, V} <: LossFunction
+    imp_inv::I
     mult::T # is this type known?
     objective::U
     grad::V
 end
 
 function SemML(observed::T, objective, grad) where {T <: SemObs}
-    return SemML(copy(observed.obs_cov), copy(objective), copy(grad)) # what should this type be?
+    return SemML(
+        copy(observed.obs_cov),
+        copy(observed.obs_cov),
+        copy(objective),
+        copy(grad)
+        )
 end
 
 struct SemFIML <: LossFunction
@@ -85,8 +91,9 @@ function (semml::SemML)(par, model::Sem{O, I, L, D}) where
         F = Inf
     else
         ld = logdet(a)
-        model.imply.imp_cov .= LinearAlgebra.inv!(a)
-        mul!(semml.mult, model.imply.imp_cov, model.observed.obs_cov)
+        #model.imply.imp_cov .= LinearAlgebra.inv!(a)
+        inv_cov = inv(a)
+        mul!(semml.mult, inv_cov, model.observed.obs_cov)
         #mul!()
         F = ld +
             tr(semml.mult)

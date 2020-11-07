@@ -62,13 +62,7 @@ function ImplySparse(
             Spa3 <: SparseMatrixCSC
             }
 
-    invia = I + A
-    next_term = A^2
-
-    while nnz(next_term) != 0
-        invia += next_term
-        next_term *= next_term
-    end
+    invia = neumann_series(A)
 
     #imp_cov_sym = F*invia*S*permutedims(invia)*permutedims(F)
     #imp_cov_sym = Array(imp_cov_sym)
@@ -111,18 +105,14 @@ function ImplySymbolic(
             Spa3 <: SparseMatrixCSC
             }
 
-    invia = I + A
-    next_term = A^2
+    invia = neumann_series(A)
 
-    while nnz(next_term) != 0
-        invia += next_term
-        next_term *= next_term
-    end
+    #invia = ModelingToolkit.simplify.(invia)
 
-    imp_cov_sym = F*invia*S*invia'*F'
+    imp_cov_sym = F*invia*S*permutedims(invia)*permutedims(F)
 
     imp_cov_sym = Array(imp_cov_sym)
-    imp_cov_sym .= ModelingToolkit.simplify.(imp_cov_sym)
+    imp_cov_sym = ModelingToolkit.simplify.(imp_cov_sym)
 
     imp_fun =
         eval(ModelingToolkit.build_function(
@@ -147,13 +137,7 @@ function ImplySymbolicAlloc(
             Spa3 <: SparseMatrixCSC
             }
 
-    invia = I + A
-    next_term = A^2
-
-    while nnz(next_term) != 0
-        invia += next_term
-        next_term *= next_term
-    end
+    invia = neumann_series(A)
 
     imp_cov_sym = F*invia*S*invia'*F'
 
@@ -183,13 +167,7 @@ function ImplySymbolicForward(
             Spa3 <: SparseMatrixCSC
             }
 
-    invia = I + A
-    next_term = A^2
-
-    while nnz(next_term) != 0
-        invia += next_term
-        next_term *= next_term
-    end
+    invia = neumann_series(A)
 
     imp_cov_sym = F*invia*S*invia'*F'
 
