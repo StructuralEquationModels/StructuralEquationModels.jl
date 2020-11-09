@@ -59,13 +59,7 @@ function SemAnalyticDiff(
     S = copy(S)
     F = copy(F)
 
-    invia = I + A
-    next_term = A^2
-
-    while nnz(next_term) != 0
-        invia += next_term
-        next_term *= next_term
-    end
+    invia = neumann_series(A)
 
     #imp_cov_sym = F*invia*S*permutedims(invia)*permutedims(F)
     #imp_cov_sym = Array(imp_cov_sym)

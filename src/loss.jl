@@ -29,19 +29,26 @@ end
 
 function (loss::Loss)(par, model, E, G)
 
-    for i = 1:length(loss.functions)
-        loss.functions[i](par, model, E, G)
-    end
-
     if E != nothing
+
+        for i = 1:length(loss.functions)
+            loss.functions[i](par, model, E, G)
+        end
+
         objective = zero(eltype(model.imply.imp_cov))
         for i = 1:length(loss.functions)
             objective += loss.functions[i].objective[1]
         end
+
         return objective
     end
 
     if G != nothing
+
+        for i = 1:length(loss.functions)
+            loss.functions[i](par, model, E, G)
+        end
+
         G .= zero(eltype(G))
         for i = 1:length(loss.functions)
             G .+= loss.functions[i].grad
@@ -49,6 +56,50 @@ function (loss::Loss)(par, model, E, G)
 
     end
 end
+
+
+# function (loss::Loss)(par, model, E, G)
+#
+#     #common computations with 2 arguments
+#     #store computations in fields
+#     for i = 1:length(loss.functions)
+#         loss.functions[i](par, model)
+#     end
+#
+#     for i = 1:length(loss.functions)
+#         loss.functions[i](par, model, E, G)
+#     end
+# 
+#     if E != nothing
+#         objective = zero(eltype(model.imply.imp_cov))
+#         for i = 1:length(loss.functions)
+#             objective += loss.functions[i].objective[1]
+#         end
+#         return objective
+#     end
+#
+#     if G != nothing
+#
+#         G .= zero(eltype(G))
+#         for i = 1:length(loss.functions)
+#             G .+= loss.functions[i].grad
+#         end
+#
+#     end
+# end
+
+# function (lasso::SemLasso)(par, model)
+# end
+#
+# function (lasso::SemLasso)(par, model, E, G) where {G <: Nothing}
+#     lasso.F .= lasso.penalty*sum(transpose(par)[lasso.which])
+#     return lasso.F[1]
+# end
+#
+# function (lasso::SemLasso)(par, model, E, G) where {E <: Nothing}
+#     model.imply()
+#     ForwardDiff.gradient!(G, lasso(par, model), par)
+# end
 
 ## Lossfunctions
 
@@ -104,7 +155,7 @@ end
 function (semml::SemML)(par, model::Sem{O, I, L, D}, E, G) where
             {O <: SemObs, L <: Loss, I <: Imply, D <: SemAnalyticDiff}
 
-    a = cholesky!(Hermitian(model.imply.imp_cov); check = false)
+    a = cholesky(Hermitian(model.imply.imp_cov); check = false)
     if !isposdef(a)
         if E != nothing
             semml.objective .= Inf
@@ -114,16 +165,16 @@ function (semml::SemML)(par, model::Sem{O, I, L, D}, E, G) where
         end
     else
         ld = logdet(a)
-        model.imply.imp_cov .= LinearAlgebra.inv!(a)
+        inv_cov = inv(a)
         if E != nothing
-            mul!(semml.mult, model.imply.imp_cov, model.observed.obs_cov)
+            mul!(semml.mult, inv_cov, model.observed.obs_cov)
             semml.objective .= ld + tr(semml.mult)
         end
         if G != nothing
             model.diff.B!(model.diff.B, par) # B = inv(I-A)
             model.diff.E!(model.diff.E, par) # E = B*S*B'
             let B = model.diff.B, E = model.diff.E,
-                Σ_inv = model.imply.imp_cov, F = model.diff.F,
+                Σ_inv = inv_cov, F = model.diff.F,
                 D = model.observed.obs_cov
                 for i = 1:size(par, 1)
                     S_der = sparse(model.diff.S_ind_vec[i]..., model.diff.matsize...)

@@ -11,7 +11,7 @@ semobserved = SemObsCommon(data = Matrix(three_path_dat))
 diff_fin = SemFiniteDiff(LBFGS(
         ;alphaguess = LineSearches.InitialStatic(;scaled = true),
         linesearch = LineSearches.Static()), Optim.Options(;g_tol = 0.001))
-diff_fin = SemFiniteDiff(LBFGS(), Optim.Options())
+diff_fin = SemFiniteDiff(BFGS(), Optim.Options())
 diff_for = SemForwardDiff(LBFGS(), Optim.Options())
 diff_rev = SemReverseDiff(LBFGS(), Optim.Options())
 
@@ -80,7 +80,7 @@ start_val = vcat(
 
 loss = Loss([SemML(semobserved, [0.0], similar(start_val))])
 
-diff_ana = SemAnalyticDiff(LBFGS(), Optim.Options(),
+diff_ana = SemAnalyticDiff(LBFGS(), Optim.Options(;show_trace = true),
             A, S, F, x, start_val)
 
 imply = ImplySymbolic(A, S, F, x, start_val)
@@ -97,13 +97,37 @@ model_ana = Sem(semobserved, imply, loss, diff_ana)
 #Zygote.@nograd isposdef
 #Zygote.@nograd Symmetric
 
+@btime diff_fin = SemFiniteDiff("a", "b")
+
+diff_fin = SemFiniteDiff(BFGS(), Optim.Options())
+
+function loopsem(k, sem, semobserved, imply, loss, diff_fin)
+    A = Vector{Any}(undef, k)
+    for i in 1:k
+        A[i] = deepcopy(Sem(semobserved, imply, loss, diff_fin))
+    end
+    return A
+end
+
+@benchmark loopsem(1000, model_fin, semobserved, imply, loss, diff_fin)
+
+testmat = copy(test[1].imply.imp_cov)
+
+test[1].imply.imp_cov .= zeros(11,11)
+
+test[2].imply.imp_cov
+
+test[1].diff.algorithm = "c"
+
+model_fin
+
 ForwardDiff.gradient(model_for, start_val)
 FiniteDiff.finite_difference_gradient(model_fin, start_val)
 Zygote.gradient(model_for, start_val)
 
 grad = copy(start_val)
-model_ana(1.0, nothing, start_val)
-grad
+model_ana(nothing, grad, start_val)
+grad ≈ ForwardDiff.gradient(model_for, start_val)
 
 model_for.loss.functions[1].grad
 
