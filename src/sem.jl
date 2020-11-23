@@ -11,13 +11,15 @@ include("diff.jl")
 include("imply.jl")
 include("loss.jl")
 include("model.jl")
+include("multigroup.jl")
+include("collection.jl")
 include("optim.jl")
 
-export Sem, computeloss,
+export AbstractSem, Sem, MGSem, computeloss,
     Imply, ImplyCommon, ImplySparse, ImplySymbolic, ImplyDense,
     Loss, LossFunction, SemML, SemFIML, SemLasso, SemRidge,
     SemDiff, SemFiniteDiff, SemForwardDiff, SemReverseDiff,
     SemAnalyticDiff, SemObs, SemObsCommon,
-    sem_fit
+    sem_fit, get_observed, CollectionSem
 
 end # module

@@ -17,7 +17,7 @@ diff_rev = SemReverseDiff(LBFGS(), Optim.Options())
 
 
 ## Model definition
-@variables x[1:31]
+@ModelingToolkit.variables x[1:31]
 
 S =[x[1]  0     0     0     0     0     0     0     0     0     0     0     0     0
     0     x[2]  0     0     0     0     0     0     0     0     0     0     0     0
@@ -88,7 +88,7 @@ imply = ImplySymbolic(A, S, F, x, start_val)
 imply_alloc = sem.ImplySymbolicAlloc(A, S, F, x, start_val)
 imply_forward = sem.ImplySymbolicForward(A, S, F, x, start_val)
 
-model_fin = Sem(semobserved, imply, loss, diff_fin)
+@benchmark model_fin = Sem(semobserved, imply, loss, diff_fin)
 model_rev = Sem(semobserved, imply_alloc, loss, diff_rev)
 model_for = Sem(semobserved, imply_alloc, loss, diff_for)
 model_for2 = Sem(semobserved, imply_forward, loss, diff_for)
@@ -165,29 +165,6 @@ start_lav = three_path_start.start[par_order]
 
 
 ##
-##
-
-
-
-
-u = randn(10)
-mat2 = model.imply.imp_cov
-
-mat = copy(mat2)
-
-@benchmark logdet($mat)
-@benchmark logdet(cholesky($mat))
-
-cholesky!(mat)
-
-
-
-isposdef!(mat, zeros(11,11))
-logdet(mat)
-
-
-
-
 using LinearAlgebra, Optim
 
 obs = abs.(randn(20))
@@ -214,30 +191,6 @@ A = ones(2,2)
 mysol = optimize(par -> myf(par, A), [2.4,2.05, 2.05],
     Optim.Options(show_trace=true, extended_trace = true))
 
-myf([2.4,2.05, 2.05], A)
-
-mat = [2.4 2.05
-        2.05 2.4]
-
-logdet(mat)
-
-logdet(cholesky(mat))
-
-cholesky!(mat)
-
-logdet(mat)
-
-Inf > 0
-
-a = isposdef!(mat)
-
-@btime cholesky!(obs)
-
-obs = copy(model.observed.obs_cov)
-
-model.observed.obs_cov
-
-obs
 
 A = [0 0 0 "c"
      1.0 0 0 .5
@@ -265,7 +218,28 @@ function ImplySparse3(A)
     ImplySparse3(out, Aw)
 end
 
+using StructuredOptimization
 
-ImplySparse3(A)
+x = Variable(n)               # initialize optimization variable
 
-sparse(S.rowval, S.colptr, S.nzval)
+λ = 1e-2*norm(A'*y, Inf)       # define λ
+
+@minimize ls( A*x - y ) + λ*norm(x, 1)
+
+
+##
+using StructuredOptimization
+
+n, m = 100, 10;                # define problem size
+
+A, y = randn(m,n), randn(m);
+
+x = StructuredOptimization.Variable(n)               # initialize optimization variable
+
+λ = 1e-2*norm(A'*y, Inf)       # define λ
+
+sol = @minimize ls( A*x - y ) #+ λ*norm(x, 1)
+
+x = StructuredOptimization.Variable(31)
+
+sol = @minimize model_for(x)

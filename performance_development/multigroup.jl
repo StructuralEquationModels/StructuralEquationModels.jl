@@ -79,26 +79,21 @@ imply = ImplySymbolic(A, S, F, x, start_val)
 
 model_fin = Sem(semobserved, imply, loss, diff_fin)
 
-
+A = Vector{Any}(undef, 6)
+for i in 1:6
+    global A[i] = deepcopy(imply)
+end
 
 ##
 
 
 rowind = [1:25, collect(26:50), collect(51:75)]
 
-function multigroup(rowind, data, imply, diff, loss)
-    observed = Vector{SemObs}(undef, length(rowind))
-    for i in 1:length(rowind)
-        observed[i] = SemObsCommon(data = Matrix(data[rowind[i], :]))
-    end
-
-
-end
-
-three_path_dat[rowind[2], :]
-
-@benchmark multigroup(rowind, three_path_dat)
-
+differ_group = [
+    fill(1, 31),
+    vcat(fill(1, 14), fill(2, 17)),
+    vcat(fill(1, 7), fill(2, 7), fill(3, 10), fill(2, 7))
+    ]
 
 function parsubset(differ_group, start_val)
     differ_group = hcat(differ_group...)
@@ -124,24 +119,146 @@ function parsubset(differ_group, start_val)
         parsubsets[i, locations[i, :]] .= true
     end
 
-
     return parsubsets, start_val_long
 end
 
-differ_group = [
-    fill(1, 31),
-    vcat(fill(1, 14), fill(2, 17)),
-    vcat(fill(1, 7), fill(2, 7), fill(3, 10), fill(2, 7))
-    ]
-
-
 parsubset(differ_group, start_val)
 
+function make_onelement_array(A)
+    isa(A, Array) ? nothing : (A = [A])
+    return A
+end
 
-function fitfun(par, models)
+function semvec(observed, imply, loss, diff)
+
+    observed = make_onelement_array(observed)
+    imply = make_onelement_array(imply)
+    loss = make_onelement_array(loss)
+    diff = make_onelement_array(diff)
+
+    sem_vec = Array{AbstractSem}(undef, maximum(length.([observed, imply, loss, diff])))
+    sem_vec .= Sem.(observed, imply, loss, diff)
+
+    return sem_vec
+end
+
+function get_observed(rowind, data, semobserved;
+            args = (),
+            kwargs = NamedTuple())
+    observed_vec = Vector{semobserved}(undef, length(rowind))
+    for i in 1:length(rowind)
+        observed_vec[i] = semobserved(
+                            args...;
+                            data = Matrix(data[rowind[i], :]),
+                            kwargs...)
+    end
+    return observed_vec
+end
+
+
+function start_val(multigroup_sem, start_val)
+end
+
+function SemMG(
+    data, start_val, differ_group, rowind,
+    observed, imply, loss, diff;
+    obs_args = (),
+    imply_agrs = (),
+    loss_args = (),
+    diff_args = ())
+
+    #diff = diff(diff_args...)
+    #imply = imply(imply_args...)
+    #loss = loss(loss_args...)
+    #observed = observed(obs_args...)
+
+    sem_vec = semvec(observed, imply, loss, diff)
+
+    par_subsets, start_val_long = parsubset(differ_group, start_val)
+
+
+    return SemMG2(sem_vec, par_subsets), start_val_long
+end
+
+
+obs_list = get_observed(rowind, three_path_dat, SemObsCommon)
+
+sem_mg, start_val_mg = SemMG(three_path_dat, start_val, differ_group, rowind, obs_list,
+    imply, loss, diff_fin)
+
+sem_mg
+
+function (semmg::SemMG)(par)
     F = zero(eltype(par))
-    for i in 1:length(models)
-        F += models[i](par)
+    for i in 1:length(semmg.sem_vec)
+        F += semmg.sem_vec[i](par[sem.par_subsets[i,:]])
     end
     return F
+end
+
+start_val_mg[sem_mg.par_subsets[3,:]] == start_val
+
+
+## Testing Zone
+
+function MultigroupSem(
+    data, algorithm, options, A, S, F, x, start_val,
+    differ_group, rowind,
+    semobserved, imply, loss, diff;
+    obs_args = NamedTuple(),
+    imply_agrs = NamedTuple(),
+    loss_args = NamedTuple(),
+    diff_args = NamedTuple())
+
+    diff = diff(algorithm, options, )
+end
+
+function fitfun(par, models, parsubsets)
+    F = zero(eltype(par))
+    for i in 1:length(models)
+        F += models[i](par[parsubsets[i,:]])
+    end
+    return F
+end
+
+
+function test(diff, algo; args1 = NamedTuple())
+    return diff(;algo, args1...)
+end
+
+function test2(;algo = nothing, data = nothing)
+    return data
+end
+
+test(test2, "a")
+
+Dict([("data", 4)])
+
+x = (data = 10,)
+
+x
+
+function test3(;data)
+    return data
+end
+
+
+test3(;x...)
+
+maximum(length.([1 2 3]))
+
+length(semobserved)
+
+
+function f(constructor, value, length)
+    vec = Vector{constructor}(undef, length)
+    for i = 1:length
+        vec[i] = constructor(value)
+    end
+end
+
+
+struct SemMG2{V <: Tuple{AbstractSem}, D <: Array{Bool, 2}} <: AbstractSem
+    sem_vec::V
+    par_subsets::D
 end

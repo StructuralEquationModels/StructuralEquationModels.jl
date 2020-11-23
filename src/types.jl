@@ -14,11 +14,32 @@ abstract type SemObs end
 ## Imply
 abstract type Imply end
 
-
 ## SEModel
-struct Sem{O <: SemObs, I <: Imply, L <: Loss, D <: SemDiff}
+abstract type AbstractSem end
+
+struct Sem{O <: SemObs, I <: Imply, L <: Loss, D <: SemDiff} <: AbstractSem
     observed::O
     imply::I # former ram
     loss::L # list of loss functions
     diff::D
+end
+
+struct CollectionSem{
+    O <: Vector{O} where O <: SemObs,
+    I <: Vector{I} where I <: Imply,
+    L <: Vector{L} where L <: Loss,
+    D <: Vector{D} where D <: SemDiff} <: AbstractSem
+    observed_vec::O
+    imply_vec::I
+    loss_vec::L
+    diff_vec::D
+end
+
+struct MGSem{V <: Vector{AS} where {
+    AS <: AbstractSem}, D <: Vector{Vector{Int64}}} <: AbstractSem
+    sem_vec::V
+    par_subsets::D
+end
+
+struct FIMLSem{} <: AbstractSem
 end
