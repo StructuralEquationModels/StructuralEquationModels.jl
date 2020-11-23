@@ -69,7 +69,7 @@ end
 #     for i = 1:length(loss.functions)
 #         loss.functions[i](par, model, E, G)
 #     end
-# 
+#
 #     if E != nothing
 #         objective = zero(eltype(model.imply.imp_cov))
 #         for i = 1:length(loss.functions)
@@ -137,14 +137,15 @@ end
 # maximum speed for finite differences
 function (semml::SemML)(par, model::Sem{O, I, L, D}) where
             {O <: SemObs, L <: Loss, I <: Imply, D <: SemFiniteDiff}
-    a = cholesky!(Hermitian(model.imply.imp_cov); check = false)
+    semml.imp_inv .= model.imply.imp_cov
+    a = cholesky!(Hermitian(semml.imp_inv); check = false)
     if !isposdef(a)
         F = Inf
     else
         ld = logdet(a)
-        #model.imply.imp_cov .= LinearAlgebra.inv!(a)
-        inv_cov = inv(a)
-        mul!(semml.mult, inv_cov, model.observed.obs_cov)
+        semml.imp_inv .= LinearAlgebra.inv!(a)
+        #inv_cov = inv(a)
+        mul!(semml.mult, semml.imp_inv, model.observed.obs_cov)
         #mul!()
         F = ld +
             tr(semml.mult)
