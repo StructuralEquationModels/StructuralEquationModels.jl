@@ -69,10 +69,35 @@ all_equal = c("loadings", "residuals", "residual.covariances", "lv.variances",
 
 fits[[4]] <- cfa(models[[4]], datas[[4]], group = "group", group.equal = all_equal,
                  meanstructure = FALSE)#c("loadings"))
-fits[[5]] <- cfa(models[[5]], datas[[5]], group = "group", group.equal = c("loadings"),
+fits[[5]] <- cfa(models[[5]], datas[[5]], group = "group", group.equal = c("loadings",
+                                                                           "regressions"),
                  meanstructure = FALSE)
 
-rams <- map(fits, RAMpath::lavaan2ram) %>% map(~.[c("A", "S")])
+
+# FIML --------------------------------------------------------------------
+ 
+induce_missing <- function(v, p){
+  miss <- sample(c(0,1), length(v), replace = TRUE, prob = c(1-p, p))
+  ifelse(miss, NA, v)
+}
+
+three_path_dat_miss20 <- mutate(PoliticalDemocracy, 
+                                across(everything(), ~induce_missing(., 0.2)))
+three_path_dat_miss30 <- mutate(PoliticalDemocracy, 
+                                across(everything(), ~induce_missing(., 0.3)))
+three_path_dat_miss50 <- mutate(PoliticalDemocracy, 
+                             across(everything(), ~induce_missing(., 0.5)))
+
+datas_miss <- list(
+  dat_miss20 = three_path_dat_miss20, 
+  dat_miss30 = three_path_dat_miss30, 
+  dat_miss50 = three_path_dat_miss50)
+fits_miss <- map(datas_miss, ~cfa(models[[2]], data = .x, missing = "FIML"))
+
+
+# write do disk -----------------------------------------------------------
+
+#rams <- map(fits, RAMpath::lavaan2ram) %>% map(~.[c("A", "S")])
 
 get_testpars <- function(fit) {
   select(parameterEstimates(fit), lhs, op, rhs, est, se, p = pvalue, z)
@@ -81,9 +106,13 @@ get_testpars <- function(fit) {
 #write_feather(datas[[5]], "test/comparisons/testdat.feather")
 
 pars <- map(fits, get_testpars)
+pars_miss <- map(fits_miss, get_testpars)
 
 data_subsets <- map(fits, lavNames, "ov") %>%
   map2(datas, ~select(.y, one_of(.x)))
+
+data_subsets_miss <- map(fits_miss, lavNames, "ov") %>%
+  map2(datas_miss, ~select(.y, one_of(.x)))
 
 # write out
 
@@ -92,11 +121,20 @@ imap(data_subsets,
 imap(pars,
      ~write_feather(.x, str_c("test/comparisons/", .y, "_par.feather")))
 
+imap(data_subsets_miss,
+     ~write_feather(.x, str_c("test/comparisons/", .y, "_dat.feather")))
+imap(pars_miss,
+     ~write_feather(.x, str_c("test/comparisons/", .y, "_par.feather")))
+
+
+#----benchmarks----
+
 microbenchmark(cfa(models[["three_path_loadeq"]], datas[["three_path_loadeq"]],
                    group = "group", 
                    group.equal = c("loadings")))
 
-#----benchmarks----
+microbenchmark(cfa(models[["three_path"]], datas_miss[[1]], missing = "FIML"))
+
 if(FALSE){
   microbenchmark(cfa(models[["one_fact"]], datas[["one_fact"]]),
                  cfa(models[["three_path"]], datas[["three_path"]]),
@@ -154,3 +192,12 @@ oneFactorFit <- mxRun(twoFactorModel)
 
 oneFactorFit$output
 summary(oneFactorFit)
+
+sigma <- matrix(rnorm(36), ncol = 6)
+
+sigma <- sigma%*%t(sigma)
+
+test <- sigma
+sigma <- test
+
+sigma[rm.ind, -rm.ind]
