@@ -40,3 +40,11 @@ function get_observed(rowind, data, semobserved;
     end
     return observed_vec
 end
+
+function skipmissing_mean(mat)
+    means = Vector{Float64}(undef, size(mat, 2))
+    for i = 1:size(mat, 2)
+        @views means[i] = mean(skipmissing(mat[:,i]))
+    end
+    return means
+end
