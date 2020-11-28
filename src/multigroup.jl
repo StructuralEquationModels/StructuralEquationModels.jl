@@ -53,7 +53,7 @@ end
 function (semmg::MGSem)(par)
     F = zero(eltype(par))
     for i in 1:length(semmg.sem_vec)
-        F += (semmg.sem_vec[i].observed.n_obs-1)*
+        F += (semmg.sem_vec[i].observed.n_obs - 1)*
             semmg.sem_vec[i](view(par, semmg.par_subsets[i]))
     end
     return F
