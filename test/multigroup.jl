@@ -78,7 +78,7 @@ diff_fin = SemFiniteDiff(
     BFGS(
         ;alphaguess = LineSearches.InitialStatic(;scaled = true),
         linesearch = LineSearches.Static()),
-    Optim.Options()
+    Optim.Options(;g_tol = 0.001)
     )
 
 # diff_fin = SemFiniteDiff(
