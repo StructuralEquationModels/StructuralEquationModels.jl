@@ -103,19 +103,28 @@ end
 
 ## Lossfunctions
 
-struct SemML{I <: AbstractArray, T <: AbstractArray, U, V} <: LossFunction
+struct SemML{
+        I <: AbstractArray,
+        T <: AbstractArray,
+        U, V,
+        W <: Union{Nothing, AbstractArray}} <: LossFunction
     imp_inv::I
     mult::T # is this type known?
     objective::U
     grad::V
+    meandiff::W
 end
 
 function SemML(observed::T, objective, grad) where {T <: SemObs}
+    isnothing(observed.obs_mean) ?
+        meandiff = nothing :
+        meandiff = copy(observed.obs_mean)
     return SemML(
         copy(observed.obs_cov),
         copy(observed.obs_cov),
         copy(objective),
-        copy(grad)
+        copy(grad),
+        meandiff
         )
 end
 
@@ -146,9 +155,15 @@ function (semml::SemML)(par, model::Sem{O, I, L, D}) where
         semml.imp_inv .= LinearAlgebra.inv!(a)
         #inv_cov = inv(a)
         mul!(semml.mult, semml.imp_inv, model.observed.obs_cov)
+        if !isnothing(model.imply.imp_mean)
+            @. semml.meandiff = model.observed.obs_mean - model.imply.imp_mean
+            F_mean = semml.meandiff'*semml.imp_inv*semml.meandiff
+        else
+            F_mean = zero(eltype(par))
+        end
         #mul!()
         F = ld +
-            tr(semml.mult)
+            tr(semml.mult) + F_mean
     end
     return F
 end
@@ -210,12 +225,3 @@ end
 function (ridge::SemRidge)(par, implied, observed)
       F = ridge.penalty*sum(transpose(par)[ridge.which].^2)
 end
-
-
-struct teststruc2
-    A::Array{Float64, 1}
-end
-
-mystruc = teststruc2([4.0])
-
-mystruc.A .= [5.0]

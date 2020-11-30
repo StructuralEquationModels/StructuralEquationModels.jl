@@ -28,10 +28,14 @@ end
 struct ImplySymbolic{
     F <: Any,
     A <: AbstractArray,
-    S <: Array{Float64}} <: Imply
+    S <: Array{Float64},
+    F2 <: Any,
+    A2 <: Union{Nothing, AbstractArray}} <: Imply
     imp_fun::F
     imp_cov::A
     start_val::S
+    imp_fun_mean::F2
+    imp_mean::A2
 end
 
 mutable struct ImplySymbolicForward{
@@ -98,16 +102,18 @@ function ImplySymbolic(
         S::Spa2,
         F::Spa3,
         parameters,
-        start_val
+        start_val;
+        M::Spa4 = nothing
             ) where {
             Spa1 <: SparseMatrixCSC,
             Spa2 <: SparseMatrixCSC,
-            Spa3 <: SparseMatrixCSC
+            Spa3 <: SparseMatrixCSC,
+            Spa4 <: Union{Nothing, AbstractArray}
             }
 
-    invia = neumann_series(A)
+    #Model-implied covmat
 
-    #invia = ModelingToolkit.simplify.(invia)
+    invia = neumann_series(A)
 
     imp_cov_sym = F*invia*S*permutedims(invia)*permutedims(F)
 
@@ -120,9 +126,33 @@ function ImplySymbolic(
             parameters
         )[2])
 
-    imp_cov = rand(size(F)[1], size(F)[1])
+    imp_cov = zeros(size(F)[1], size(F)[1])
     #imp_cov = Base.invokelatest(imp_fun_, start_val)
-    return ImplySymbolic(imp_fun, imp_cov, copy(start_val))
+    #Model implied mean
+    if !isnothing(M)
+        imp_mean_sym = F*invia*M
+        imp_mean_sym = Array(imp_mean_sym)
+        imp_mean_sym = ModelingToolkit.simplify.(imp_mean_sym)
+
+        imp_fun_mean =
+            eval(ModelingToolkit.build_function(
+                imp_mean_sym,
+                parameters
+            )[2])
+
+        imp_mean = zeros(size(F)[1])
+    else
+        imp_fun_mean = nothing
+        imp_mean = nothing
+    end
+
+    return ImplySymbolic(
+        imp_fun,
+        imp_cov,
+        copy(start_val),
+        imp_fun_mean,
+        imp_mean
+    )
 end
 
 function ImplySymbolicAlloc(
@@ -187,8 +217,20 @@ function ImplySymbolicForward(
     return ImplySymbolicForward(imp_fun, imp_cov, copy(start_val))
 end
 
+# function(imply::ImplySymbolic{A,B,C,D,E} where {
+#         A <: Any,
+#         B <: Any,
+#         C <: Any,
+#         D <: Any,
+#         E <: Nothing})(parameters)
+#     imply.imp_fun(imply.imp_cov, parameters)
+# end
+
 function(imply::ImplySymbolic)(parameters)
     imply.imp_fun(imply.imp_cov, parameters)
+    if !isnothing(imply.imp_mean)
+        imply.imp_fun_mean(imply.imp_mean, parameters)
+    end
 end
 
 function(imply::ImplySymbolicAlloc)(parameters)

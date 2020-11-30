@@ -50,14 +50,32 @@ models <- c(one_fact = "f1 =~ x1 + x2 + x3",
             y2 ~~ y4 + y6
             y3 ~~ y7
             y4 ~~ y8
-            y6 ~~ y8"
+            y6 ~~ y8",
+            three_path_mean =
+            "# measurement model
+            ind60 =~ x1 + x2 + x3
+            dem60 =~ y1 + y2 + y3 + y4
+            dem65 =~ y5 + y6 + y7 + y8
+            # regressions
+            dem60 ~ ind60
+            dem65 ~ ind60 + dem60
+            # residual correlations
+            y1 ~~ y5
+            y2 ~~ y4 + y6
+            y3 ~~ y7
+            y4 ~~ y8
+            y6 ~~ y8
+            #means
+            x1 + x2 + x3 ~ a*1
+            y6 ~ 3*1"
             )
 
 datas <-  list(one_fact = HolzingerSwineford1939,
              three_path = PoliticalDemocracy,
              three_mean = HolzingerSwineford1939,
              three_path_2 = PoliticalDemocracy,
-             three_path_loadeq = bind_rows(PoliticalDemocracy, PoliticalDemocracy))
+             three_path_loadeq = bind_rows(PoliticalDemocracy, PoliticalDemocracy),
+             three_path_mean = PoliticalDemocracy)
 
 datas[[4]]$group = c(rep("1", 25), rep("2", 25), rep("3", 25))
 datas[[5]]$group = c(rep("1", 40), rep("2", 40), rep("3", 70))
