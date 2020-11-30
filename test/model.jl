@@ -133,6 +133,10 @@ model_for.loss.functions[1].grad
 
 output = copy(start_val)
 
+model_fin(start_val)
+
+typeof(model_fin.imply)
+
 solution_fin = sem_fit(model_fin)
 solution_for = sem_fit(model_for)
 solution_for2 = sem_fit(model_for2)

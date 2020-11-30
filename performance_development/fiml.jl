@@ -341,3 +341,57 @@ function F_missingpattern(pattern, inverse, data, ld, mult, n_obs, imp_mean)
             (data[i, :] - imp_mean[pattern])
     end
 end
+
+
+using LinearAlgebra
+
+?LinearAlgebra.BLAS.spmv!
+
+A = rand(5)
+
+B = rand(5,5)
+
+pre = zeros(5)
+
+mul!(pre, transpose(A),B)
+
+function myf(A, B)
+    res = LinearAlgebra.BLAS.gemv('N', B, A)
+    A'*res
+end
+
+
+function myf2(A, B)
+    transpose(A)*B*A
+end
+
+@code_native myf(A, B)
+
+@code_llvm myf2(A, B)
+
+@benchmark myf(A, B)
+
+@benchmark myf2(A, B)
+
+res = LinearAlgebra.BLAS.gemv('N', B, A)
+
+LinearAlgebra.BLAS.gemv('T', A, res)
+
+A'*res
+
+
+struct mystr2{A <: Any}
+    f::A
+end
+
+test = mystr2(10)
+
+test2 = mystr2(nothing)
+
+function (str::mystr2{B} where {B <: Nothing})()
+end
+function (str::mystr2)()
+    return 5.0
+end
+
+test()
