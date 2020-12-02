@@ -1,19 +1,23 @@
 using sem, Feather, ModelingToolkit, Statistics, LinearAlgebra,
     Optim, SparseArrays, Test, Zygote, LineSearches, ForwardDiff
 
-## Observed Data
-three_path_dat = Feather.read("test/comparisons/three_path_dat.feather")
-three_path_par = Feather.read("test/comparisons/three_path_mean_par.feather")
-three_path_start = Feather.read("test/comparisons/three_path_start.feather")
+miss20_dat = Feather.read("test/comparisons/dat_miss20_dat.feather")
+miss30_dat = Feather.read("test/comparisons/dat_miss30_dat.feather")
+miss50_dat = Feather.read("test/comparisons/dat_miss50_dat.feather")
 
-semobserved = SemObsCommon(data = Matrix(three_path_dat); meanstructure = true)
+miss20_par = Feather.read("test/comparisons/dat_miss20_par.feather")
+miss30_par = Feather.read("test/comparisons/dat_miss30_par.feather")
+miss50_par = Feather.read("test/comparisons/dat_miss50_par.feather")
+
+three_path_dat = Feather.read("test/comparisons/three_path_dat.feather")
+
+miss20_mat = Matrix(miss20_dat)
+
 
 diff_fin = SemFiniteDiff(BFGS(), Optim.Options())
 
-
-
 ## Model definition
-@ModelingToolkit.variables x[1:31], mₓ, my[1:8]
+@ModelingToolkit.variables x[1:31], mₓ, my[1:8], m[1:11]
 
 S =[x[1]  0     0     0     0     0     0     0     0     0     0     0     0     0
     0     x[2]  0     0     0     0     0     0     0     0     0     0     0     0
@@ -59,7 +63,9 @@ A =[0  0  0  0  0  0  0  0  0  0  0     1     0     0
 
 M = [mₓ, mₓ, mₓ, my[1:5]..., 3.0, my[7:8]..., 0.0, 0.0, 0.0]
 
-#M = sparse(M)
+M_free = [m[1:11]..., 0.0, 0.0, 0.0]
+
+#S
 
 S = sparse(S)
 
@@ -74,17 +80,41 @@ start_val = vcat(
     fill(0.05, 3),
     fill(0.0, 6),
     fill(1.0, 8),
+    fill(0, 3)
+    )
+
+start_val_mean = vcat(
+    vec(var(Matrix(three_path_dat), dims = 1))./2,
+    fill(0.05, 3),
+    fill(0.0, 6),
+    fill(1.0, 8),
     fill(0, 3),
     [mean(Matrix(three_path_dat), dims = 1)...][[1, 4:8..., 10:11...]]
     )
 
-loss = Loss([SemML(semobserved, [0.0], similar(start_val))])
+semobserved = SemObsMissing(miss20_mat)
+semobserved_mean = SemObsMissing(miss20_mat; meanstructure = true)
 
-imply = ImplySymbolic(A, S, F, [x..., mₓ, my[1:5]..., my[7:8]...], start_val; M = M)
+loss = Loss([SemFIML(semobserved, [0.0], start_val)])
+loss_mean = Loss([SemFIML(semobserved_mean, [0.0], start_val_mean)])
+
+imply = ImplySymbolic(A, S, F, x, start_val)
+imply_mean = ImplySymbolic(A, S, F, [x..., mₓ, my[1:5]..., my[7:8]...], start_val_mean; M = M)
+imply_mean_free = ImplySymbolic(A, S, F, [x..., m...], start_val_mean; M = M_free)
 
 model_fin = Sem(semobserved, imply, loss, diff_fin)
+model_fin_mean = Sem(semobserved_mean, imply_mean, loss_mean, diff_fin)
+model_fin_mean_free = Sem(semobserved_mean, imply_mean_free, loss_mean, diff_fin)
+
+using BenchmarkTools
+
+@benchmark model_fin(start_val)
+
+model_fin_mean(start_val_mean)
 
 solution_fin = sem_fit(model_fin)
+solution_fin = sem_fit(model_fin_mean)
+solution_fin = sem_fit(model_fin_mean_free)
 
 par_order = [collect(25:38); collect(15:20); 2;3; 5;6;7; collect(9:14); 21;
     collect(39:45)]
@@ -94,3 +124,5 @@ all(
         ) .< 0.05*abs.(solution_fin.minimizer))
 
 #start_lav = three_path_start.start[par_order]
+
+getindex(5.0, [1])
