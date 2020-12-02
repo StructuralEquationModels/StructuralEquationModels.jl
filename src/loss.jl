@@ -128,8 +128,48 @@ function SemML(observed::T, objective, grad) where {T <: SemObs}
         )
 end
 
-struct SemFIML <: LossFunction
-    #here is space for preallocations
+struct SemFIML{
+        INV <: AbstractArray,
+        C <: AbstractArray,
+        L <: AbstractArray,
+        M <: AbstractArray,
+        I <: AbstractArray,
+        T <: AbstractArray,
+        U,
+        V} <: LossFunction
+    inverses::INV #preallocated inverses of imp_cov
+    choleskys::C #preallocated choleskys
+    logdets::L #logdets of implied covmats
+    meandiff::M
+    imp_inv::I
+    mult::T # is this type known?
+    objective::U
+    grad::V
+end
+
+function SemFIML(observed::O where {O <: SemObs}, objective, grad)
+
+    inverses = broadcast(x -> zeros(x, x), Int64.(observed.pattern_n_obs))
+    choleskys = Array{Cholesky{Float64,Array{Float64,2}},1}(undef, length(inverses))
+
+    n_patterns = size(observed.rows, 1)
+    logdets = zeros(n_patterns)
+
+    meandiff = zeros.(Int64.(observed.pattern_n_obs))
+
+    imp_inv = zeros(Int64(observed.n_obs), Int64(observed.n_obs))
+    mult = similar.(inverses)
+
+    return SemFIML(
+    inverses,
+    choleskys,
+    logdets,
+    meandiff,
+    imp_inv,
+    mult,
+    copy(objective),
+    copy(grad)
+    )
 end
 
 # this catches everything that is not further optimized (including Duals)
@@ -204,6 +244,58 @@ function (semml::SemML)(par, model::Sem{O, I, L, D}, E, G) where
             end
         end
     end
+end
+
+function (semfiml::SemFIML)(par, model::Sem{O, I, L, D}) where
+            {O <: SemObs, L <: Loss, I <: Imply, D <: SemFiniteDiff}
+
+
+    copyto!(semfiml.inverses[1], model.imply.imp_cov)
+    semfiml.choleskys[1] = cholesky!(Hermitian(semfiml.inverses[1]); check = false)
+
+    if !isposdef(semfiml.choleskys[1])
+        F = Inf
+    else
+        @views for i = 2:size(semfiml.inverses, 1)
+            semfiml.inverses[i] .=
+                model.imply.imp_cov[
+                    model.observed.patterns[i],
+                    model.observed.patterns[i]]
+        end
+
+        for i = 2:size(semfiml.inverses, 1)
+            semfiml.choleskys[i] = cholesky!(semfiml.inverses[i])
+        end
+
+        #ld = logdet(a)
+        semfiml.logdets .= logdet.(semfiml.choleskys)
+
+        #semml.imp_inv .= LinearAlgebra.inv!(a)
+        for i = 1:size(semfiml.inverses, 1)
+            semfiml.inverses[i] .= LinearAlgebra.inv!(semfiml.choleskys[i])
+        end
+
+        F = zero(eltype(par))
+
+        for i = 1:size(model.observed.rows, 1)
+
+            F += F_missingpattern(
+                model.imply.imp_mean,
+                model.observed.obs_mean,
+                semfiml.meandiff,
+                model.observed.patterns,
+                semfiml.inverses,
+                model.observed.pattern_S,
+                model.observed.pattern_data,
+                semfiml.logdets,
+                semfiml.mult,
+                model.observed.pattern_n_obs,
+                i
+                )
+
+        end
+    end
+    return F
 end
 
 ### regularized

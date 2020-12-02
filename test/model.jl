@@ -88,7 +88,7 @@ imply = ImplySymbolic(A, S, F, x, start_val)
 imply_alloc = sem.ImplySymbolicAlloc(A, S, F, x, start_val)
 imply_forward = sem.ImplySymbolicForward(A, S, F, x, start_val)
 
-@benchmark model_fin = Sem(semobserved, imply, loss, diff_fin)
+model_fin = Sem(semobserved, imply, loss, diff_fin)
 model_rev = Sem(semobserved, imply_alloc, loss, diff_rev)
 model_for = Sem(semobserved, imply_alloc, loss, diff_for)
 model_for2 = Sem(semobserved, imply_forward, loss, diff_for)
