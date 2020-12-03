@@ -22,5 +22,5 @@ function F_missingpattern(imp_mean, obs_mean, meandiff,
         F += meandiff[i]'*inverse[i]*meandiff[i]
     end
 
-    return F
+    return F2
 end
