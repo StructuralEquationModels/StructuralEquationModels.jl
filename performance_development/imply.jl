@@ -419,8 +419,7 @@ function (ram::ram_ind{T, N, B, B2,V, IM,V2} where {
         V2 <: Vector{Any}
     })(parameters)
     for i = 1:length(ram.Ind_s)
-        ram.S[ram.Ind_s[i]]
-     .= parameters[ram.parind_s]
+        ram.S[ram.Ind_s[i]] .= parameters[ram.parind_s]
     ram.A[ram.Ind_a] .= parameters[ram.parind_a]
     ram.M[ram.Ind_m] .= parameters[ram.parind_m]
 end

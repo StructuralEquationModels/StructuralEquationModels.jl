@@ -34,7 +34,8 @@ struct SemObsMissing{
         R <: Vector,
         PD <: AbstractArray,
         PS <: Union{AbstractArray, Nothing},
-        PO <: AbstractArray} <: SemObs
+        PO <: AbstractArray,
+        PVO <: AbstractArray} <: SemObs
     data::A
     obs_mean::C
     n_man::D
@@ -44,9 +45,10 @@ struct SemObsMissing{
     pattern_data::PD # list of data per missing pattern
     pattern_S::PS
     pattern_n_obs::PO #
+    pattern_nvar_obs::PVO
 end
 
-function SemObsMissing(data; meanstructure = false)
+function SemObsMissing(data; meanstructure = true)
 
     n_obs = Float64(size(data, 1))
     n_man = Float64(size(data, 2))
@@ -85,7 +87,8 @@ function SemObsMissing(data; meanstructure = false)
     end
     pattern_data = convert.(Array{Float64}, pattern_data)
 
-    pattern_n_obs = length.(remember_cart)
+    pattern_n_obs = size.(rows, 1)
+    pattern_nvar_obs = length.(remember_cart) 
 
     # if a meanstructure is needed, don't compute observed means
     if meanstructure
@@ -96,7 +99,7 @@ function SemObsMissing(data; meanstructure = false)
         obs_mean = skipmissing_mean(data)
 
         for i in 1:length(pattern_data)
-            S = zeros(pattern_n_obs[i], pattern_n_obs[i])
+            S = zeros(pattern_nvar_obs[i], pattern_nvar_obs[i])
             for j in 1:size(pattern_data[i], 1)
                 diff = pattern_data[i][j, :] - obs_mean[remember_cart[i]]
                 S += diff*diff'
@@ -106,5 +109,5 @@ function SemObsMissing(data; meanstructure = false)
     end
 
     return SemObsMissing(data, obs_mean, n_man, n_obs, remember_cart,
-    rows, pattern_data, pattern_S, Float64.(pattern_n_obs))
+    rows, pattern_data, pattern_S, Float64.(pattern_n_obs), Float64.(pattern_nvar_obs))
 end

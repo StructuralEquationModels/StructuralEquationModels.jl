@@ -1,5 +1,3 @@
-abstract type Imply end
-
 struct ImplyCommon{A <: AbstractArray} <: Imply
     implied::A
 end

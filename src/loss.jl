@@ -149,15 +149,15 @@ end
 
 function SemFIML(observed::O where {O <: SemObs}, objective, grad)
 
-    inverses = broadcast(x -> zeros(x, x), Int64.(observed.pattern_n_obs))
+    inverses = broadcast(x -> zeros(x, x), Int64.(observed.pattern_nvar_obs))
     choleskys = Array{Cholesky{Float64,Array{Float64,2}},1}(undef, length(inverses))
 
     n_patterns = size(observed.rows, 1)
     logdets = zeros(n_patterns)
 
-    meandiff = zeros.(Int64.(observed.pattern_n_obs))
+    meandiff = zeros.(Int64.(observed.pattern_nvar_obs))
 
-    imp_inv = zeros(Int64(observed.n_obs), Int64(observed.n_obs))
+    imp_inv = zeros(size(observed.data, 2), size(observed.data, 2))
     mult = similar.(inverses)
 
     return SemFIML(
@@ -249,21 +249,24 @@ end
 function (semfiml::SemFIML)(par, model::Sem{O, I, L, D}) where
             {O <: SemObs, L <: Loss, I <: Imply, D <: SemFiniteDiff}
 
+    if isnothing(model.imply.imp_mean) 
+        error("A model implied meanstructure is needed for FIML")
+    end
 
-    copyto!(semfiml.inverses[1], model.imply.imp_cov)
-    semfiml.choleskys[1] = cholesky!(Hermitian(semfiml.inverses[1]); check = false)
+    copyto!(semfiml.imp_inv, model.imply.imp_cov)
+    a = cholesky!(Hermitian(semfiml.imp_inv); check = false)
 
-    if !isposdef(semfiml.choleskys[1])
+    if !isposdef(a)
         F = Inf
     else
-        @views for i = 2:size(semfiml.inverses, 1)
+        @views for i = 1:size(semfiml.inverses, 1)
             semfiml.inverses[i] .=
                 model.imply.imp_cov[
                     model.observed.patterns[i],
                     model.observed.patterns[i]]
         end
 
-        for i = 2:size(semfiml.inverses, 1)
+        for i = 1:size(semfiml.inverses, 1)
             semfiml.choleskys[i] = cholesky!(semfiml.inverses[i])
         end
 
