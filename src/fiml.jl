@@ -1,16 +1,10 @@
-function F_missingpattern(imp_mean::Nothing, obs_mean, meandiff,
+#= function F_missingpattern(imp_mean::Nothing, obs_mean, meandiff,
     pattern, inverse, S, data, ld, mult, n_obs, i)
-
-    # if n_obs == 1
-    #     mult = inverse*S
-    # else
-    #     mul!(mult, inverse, S)
-    # end
 
     mul!(mult[i], inverse[i], S[i])
     F = n_obs[i]*(ld[i] + tr(mult[i]))
     return F
-end
+end # gives wrong results! =#
 
 function F_missingpattern(imp_mean, obs_mean, meandiff,
     pattern, inverse, S, data, ld, mult, n_obs, i)

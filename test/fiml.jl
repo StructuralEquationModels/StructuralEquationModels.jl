@@ -9,12 +9,22 @@ miss20_par = Feather.read("test/comparisons/dat_miss20_par.feather")
 miss30_par = Feather.read("test/comparisons/dat_miss30_par.feather")
 miss50_par = Feather.read("test/comparisons/dat_miss50_par.feather")
 
+miss20_par_mean = Feather.read("test/comparisons/dat_miss20_par_mean.feather")
+miss30_par_mean = Feather.read("test/comparisons/dat_miss30_par_mean.feather")
+miss50_par_mean = Feather.read("test/comparisons/dat_miss50_par_mean.feather")
+
 three_path_dat = Feather.read("test/comparisons/three_path_dat.feather")
 
 miss20_mat = Matrix(miss20_dat)
+miss30_mat = Matrix(miss30_dat)
+miss50_mat = Matrix(miss50_dat)
 
 
 diff_fin = SemFiniteDiff(BFGS(), Optim.Options())
+
+diff_fin = SemFiniteDiff(LBFGS(
+        ;alphaguess = LineSearches.InitialStatic(;scaled = true),
+        linesearch = LineSearches.Static()), Optim.Options(;g_tol = 0.001))
 
 ## Model definition
 @ModelingToolkit.variables x[1:31], mₓ, my[1:8], m[1:11]
@@ -91,38 +101,89 @@ start_val_mean = vcat(
     fill(0, 3),
     [mean(Matrix(three_path_dat), dims = 1)...][[1, 4:8..., 10:11...]]
     )
+ 
+start_val_mean_free = vcat(
+vec(var(Matrix(three_path_dat), dims = 1))./2,
+fill(0.05, 3),
+fill(0.0, 6),
+fill(1.0, 8),
+fill(0, 3),
+[mean(Matrix(three_path_dat), dims = 1)...]
+)
 
 semobserved = SemObsMissing(miss20_mat)
-semobserved_mean = SemObsMissing(miss20_mat; meanstructure = true)
 
-loss = Loss([SemFIML(semobserved, [0.0], start_val)])
-loss_mean = Loss([SemFIML(semobserved_mean, [0.0], start_val_mean)])
+loss = Loss([SemFIML(semobserved, [0.0], start_val_mean_free)])
+loss_mean = Loss([SemFIML(semobserved, [0.0], start_val_mean)]) 
 
-imply = ImplySymbolic(A, S, F, x, start_val)
+imply = ImplySymbolic(A, S, F, [x..., m...], start_val_mean_free; M = M_free)
 imply_mean = ImplySymbolic(A, S, F, [x..., mₓ, my[1:5]..., my[7:8]...], start_val_mean; M = M)
-imply_mean_free = ImplySymbolic(A, S, F, [x..., m...], start_val_mean; M = M_free)
 
 model_fin = Sem(semobserved, imply, loss, diff_fin)
-model_fin_mean = Sem(semobserved_mean, imply_mean, loss_mean, diff_fin)
-model_fin_mean_free = Sem(semobserved_mean, imply_mean_free, loss_mean, diff_fin)
+model_fin_mean = Sem(semobserved, imply_mean, loss_mean, diff_fin)
 
 using BenchmarkTools
 
 @benchmark model_fin(start_val)
 
-model_fin_mean(start_val_mean)
-
 solution_fin = sem_fit(model_fin)
-solution_fin = sem_fit(model_fin_mean)
-solution_fin = sem_fit(model_fin_mean_free)
+solution_fin_mean = sem_fit(model_fin_mean)
 
-par_order = [collect(25:38); collect(15:20); 2;3; 5;6;7; collect(9:14); 21;
+par_order = [collect(21:34); collect(15:20); 2;3; 5;6;7; collect(9:14);
+    collect(35:45)]
+all(
+    abs.(solution_fin.minimizer .- miss20_par.est[par_order]
+        ) .< 0.05*abs.(miss20_par.est[par_order]))      
+
+
+par_order_mean = [collect(25:38); collect(15:20); 2;3; 5;6;7; collect(9:14); 21;
     collect(39:45)]
 
 all(
-    abs.(solution_fin.minimizer .- three_path_par.est[par_order]
-        ) .< 0.05*abs.(solution_fin.minimizer))
+    abs.(solution_fin_mean.minimizer .- miss20_par_mean.est[par_order_mean]
+        ) .< 0.05*abs.(miss20_par.est[par_order_mean]))
 
-#start_lav = three_path_start.start[par_order]
+### 30% missingness        
 
-getindex(5.0, [1])
+semobserved = SemObsMissing(miss30_mat)
+
+loss = Loss([SemFIML(semobserved, [0.0], start_val_mean_free)])
+loss_mean = Loss([SemFIML(semobserved, [0.0], start_val_mean)]) 
+
+model_fin = Sem(semobserved, imply, loss, diff_fin)
+model_fin_mean = Sem(semobserved, imply_mean, loss_mean, diff_fin)
+
+solution_fin = sem_fit(model_fin)
+solution_fin_mean = sem_fit(model_fin_mean)
+
+all(
+    abs.(solution_fin.minimizer .- miss30_par.est[par_order]
+        ) .< 0.05*abs.(miss30_par_mean.est[par_order]))      
+
+all(
+    abs.(solution_fin_mean.minimizer .- miss30_par_mean.est[par_order_mean]
+        ) .< 0.05*abs.(miss30_par_mean.est[par_order_mean]))
+
+### 50% missingness  
+
+semobserved = SemObsMissing(miss50_mat)
+
+loss = Loss([SemFIML(semobserved, [0.0], start_val_mean_free)])
+loss_mean = Loss([SemFIML(semobserved, [0.0], start_val_mean)]) 
+
+model_fin = Sem(semobserved, imply, loss, diff_fin)
+model_fin_mean = Sem(semobserved, imply_mean, loss_mean, diff_fin)
+
+model_fin(start_val_mean_free)
+
+solution_fin = sem_fit(model_fin)
+solution_fin_mean = sem_fit(model_fin_mean)
+
+all(
+    abs.(solution_fin.minimizer .- miss50_par.est[par_order]
+        ) .< 0.05*abs.(miss50_par.est[par_order]))      
+
+all(
+    abs.(solution_fin_mean.minimizer .- miss50_par_mean.est[par_order_mean]
+        ) .< 0.05*abs.(miss50_par_mean.est[par_order_mean]))
+

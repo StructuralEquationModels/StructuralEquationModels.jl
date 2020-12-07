@@ -1,5 +1,7 @@
 pacman::p_load(here, feather, tidyverse, lavaan, microbenchmark)
 
+set.seed(123)
+
 #----lavaan----
 models <- c(one_fact = "f1 =~ x1 + x2 + x3",
             three_path =
@@ -111,6 +113,8 @@ datas_miss <- list(
   dat_miss30 = three_path_dat_miss30, 
   dat_miss50 = three_path_dat_miss50)
 fits_miss <- map(datas_miss, ~cfa(models[[2]], data = .x, missing = "FIML"))
+fits_miss_mean <- 
+  map(datas_miss, ~cfa(models[[6]], data = .x, missing = "FIML"))
 
 
 # write do disk -----------------------------------------------------------
@@ -125,6 +129,7 @@ get_testpars <- function(fit) {
 
 pars <- map(fits, get_testpars)
 pars_miss <- map(fits_miss, get_testpars)
+pars_miss_mean <- map(fits_miss_mean, get_testpars)
 
 data_subsets <- map(fits, lavNames, "ov") %>%
   map2(datas, ~select(.y, one_of(.x)))
@@ -143,6 +148,8 @@ imap(data_subsets_miss,
      ~write_feather(.x, str_c("test/comparisons/", .y, "_dat.feather")))
 imap(pars_miss,
      ~write_feather(.x, str_c("test/comparisons/", .y, "_par.feather")))
+imap(pars_miss_mean,
+     ~write_feather(.x, str_c("test/comparisons/", .y, "_par_mean.feather")))
 
 
 #----benchmarks----
