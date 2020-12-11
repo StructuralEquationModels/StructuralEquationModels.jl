@@ -1,4 +1,4 @@
-pacman::p_load(here, feather, tidyverse, lavaan, microbenchmark)
+pacman::p_load(here, feather, tidyverse, lavaan, microbenchmark, magrittr)
 
 set.seed(123)
 
@@ -168,6 +168,64 @@ if(FALSE){
 }
 
 
+
+# Definition Variables ----------------------------------------------------
+
+library(OpenMx)
+
+model <- ' i =~ 1*t1 + 1*t2 + 1*t3 + 1*t4
+           s =~ 0*t1 + 1*t2 + 2*t3 + 3*t4 '
+growth_fit <- growth(model, data=Demo.growth)
+summary(fit)
+
+Demo.growth %<>% mutate(
+  load_t1 = rep(0, 400),
+  load_t2 = c(rep(0.5, 200), rep(1.5, 200)),
+  load_t3 = c(rep(1.5, 200), rep(2.5, 200)),
+  load_t4 = c(rep(2.5, 200), rep(3.5, 200))
+)
+
+dataRaw <- mxData( observed=Demo.growth, type="raw" )
+# residual variances
+resVars <- mxPath( from=c("t1","t2","t3","t4"), arrows=2,
+                   free=TRUE, values = c(1,1,1,1))
+# latent variances and covariance
+latVars <- mxPath( from=c("intercept","slope"), arrows=2, connect="unique.pairs",
+                   free=TRUE, values=c(1,1,1), labels=c("vari","cov","vars") )
+# intercept loadings
+intLoads <- mxPath( from="intercept", to=c("t1","t2","t3","t4"), arrows=1,
+                    free=FALSE, values=c(1,1,1,1) )
+# slope loadings
+sloLoads <- mxPath( from="slope", to=c("t1","t2","t3","t4"), arrows=1,
+                    free=FALSE, values=c(0,1,2,3) )
+# manifest means
+manMeans <- mxPath( from="one", to=c("t1","t2","t3","t4"), arrows=1,
+                    free=FALSE, values=c(0,0,0,0) )
+# latent means
+latMeans <- mxPath( from="one", to=c("intercept", "slope"), arrows=1,
+                    free=TRUE, values=c(1,1), labels=c("meani","means") )
+growthCurveModel <- mxModel("Linear Growth Curve Model Path Specification", 
+                            type="RAM",
+                            manifestVars=c("t1","t2","t3","t4"),
+                            latentVars=c("intercept","slope"),
+                            dataRaw, resVars, latVars, intLoads, sloLoads,
+                            manMeans, latMeans)
+
+growthCurveFit <- mxRun(growthCurveModel)
+summary(growthCurveFit)
+
+
+data_growth <- select(Demo.growth, t1, t2, t3, t4)
+write_feather(data_growth, str_c("test/comparisons/growth_dat.feather"))
+write_feather(
+  select(parameterEstimates(growth_fit), lhs, op, rhs, est, se, p = pvalue, z),
+  str_c("test/comparisons/growth_par.feather"))
+
+data_definition <- select(Demo.growth, starts_with("load"))
+write_feather(data_definition, str_c("test/comparisons/definition_dat.feather"))
+
+
+
 # open MX -----------------------------------------------------------------
 
 library(OpenMx)
@@ -217,12 +275,3 @@ oneFactorFit <- mxRun(twoFactorModel)
 
 oneFactorFit$output
 summary(oneFactorFit)
-
-sigma <- matrix(rnorm(36), ncol = 6)
-
-sigma <- sigma%*%t(sigma)
-
-test <- sigma
-sigma <- test
-
-sigma[rm.ind, -rm.ind]
