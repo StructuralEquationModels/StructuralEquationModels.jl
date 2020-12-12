@@ -176,13 +176,20 @@ library(OpenMx)
 model <- ' i =~ 1*t1 + 1*t2 + 1*t3 + 1*t4
            s =~ 0*t1 + 1*t2 + 2*t3 + 3*t4 '
 growth_fit <- growth(model, data=Demo.growth)
-summary(fit)
+summary(growth_fit)
 
 Demo.growth %<>% mutate(
   load_t1 = rep(0, 400),
   load_t2 = c(rep(0.5, 200), rep(1.5, 200)),
   load_t3 = c(rep(1.5, 200), rep(2.5, 200)),
   load_t4 = c(rep(2.5, 200), rep(3.5, 200))
+)
+
+Demo.growth %<>% mutate(
+  load_t1 = load_t1 + rnorm(400, 0, 0.001),
+  load_t2 = load_t2 + rnorm(400, 0, 0.001),
+  load_t3 = load_t3 + rnorm(400, 0, 0.001),
+  load_t4 = load_t4 + rnorm(400, 0, 0.001)
 )
 
 dataRaw <- mxData( observed=Demo.growth, type="raw" )
@@ -197,7 +204,11 @@ intLoads <- mxPath( from="intercept", to=c("t1","t2","t3","t4"), arrows=1,
                     free=FALSE, values=c(1,1,1,1) )
 # slope loadings
 sloLoads <- mxPath( from="slope", to=c("t1","t2","t3","t4"), arrows=1,
-                    free=FALSE, values=c(0,1,2,3) )
+                    free=FALSE, #values=c(0,1,2,3), 
+                    labels = c("data.load_t1",
+                               "data.load_t2",
+                               "data.load_t3",
+                               "data.load_t4"))
 # manifest means
 manMeans <- mxPath( from="one", to=c("t1","t2","t3","t4"), arrows=1,
                     free=FALSE, values=c(0,0,0,0) )
@@ -212,7 +223,10 @@ growthCurveModel <- mxModel("Linear Growth Curve Model Path Specification",
                             manMeans, latMeans)
 
 growthCurveFit <- mxRun(growthCurveModel)
-summary(growthCurveFit)
+#microbenchmark(mxRun(growthCurveModel))
+sum = summary(growthCurveFit)
+
+def_pars <- sum$parameters %>% select(row, col, Estimate, Std.Error)
 
 
 data_growth <- select(Demo.growth, t1, t2, t3, t4)
@@ -223,7 +237,7 @@ write_feather(
 
 data_definition <- select(Demo.growth, starts_with("load"))
 write_feather(data_definition, str_c("test/comparisons/definition_dat.feather"))
-
+write_feather(def_pars, str_c("test/comparisons/definition_par.feather"))
 
 
 # open MX -----------------------------------------------------------------

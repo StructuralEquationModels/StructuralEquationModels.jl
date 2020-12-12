@@ -199,16 +199,6 @@ function(imply::ImplySymbolicDefinition)(parameters)
     end
 end
 
-function(imply::ImplySymbolicDefinition)(parameters, pre1, pre2, pre3)
-    for i = 1:imply.n_obs
-        #let def_vars = data_def[i]
-        copyto!(pre3, data_def[i])
-            imply.imp_fun(pre1, parameters, pre3)
-            imply.imp_fun_mean(pre2, parameters, pre3)
-        #end
-    end
-end
-
 
 imply = ImplySymbolicDefinition(
     A, 
@@ -223,9 +213,6 @@ imply = ImplySymbolicDefinition(
 
 
 @benchmark imply($start_val)
-
-@benchmark imply.imp_fun($pre, $par, $lol)
-@benchmark imply.imp_fun_mean($pre2, $start_val, $pre3)
 
 struct SemDefinition{ #################### call it per person or sth????
         INV <: AbstractArray,
@@ -261,7 +248,7 @@ function SemDefinition(observed::O where {O <: SemObs}, objective, grad)
     imp_inv = zeros(size(observed.data, 2), size(observed.data, 2))
     mult = similar.(inverses)
 
-    data_perperson = [observed.data[i, :], for i = 1:n_obs]
+    data_perperson = [observed.data[i, :] for i = 1:n_obs]
 
     return SemDefinition(
     inverses,
@@ -284,7 +271,8 @@ function (semdef::SemDefinition)(par, model::Sem{O, I, L, D}) where
     end
 
     for i = 1:size(semdef.choleskys, 1)
-        semdef.choleskys[i] = cholesky!(model.implied.imp_cov[i]; check = false)
+        semdef.choleskys[i] = 
+            cholesky!(Hermitian(model.imply.imp_cov[i]); check = false)
     end
 
     if any(.!isposdef.(semdef.choleskys))
@@ -313,3 +301,17 @@ function (semdef::SemDefinition)(par, model::Sem{O, I, L, D}) where
     end
     return F
 end
+
+loss = Loss([SemDefinition(semobserved, 0.0, 0.0)])
+
+model_fin = Sem(semobserved, imply, loss, diff_fin)
+
+model_fin(start_val)
+
+solution = sem_fit(model_fin)
+
+par_order = [collect(1:5); 7; 6; 8; 9]
+
+all(
+    abs.(solution.minimizer .- definition_par.Estimate[par_order]
+        ) .< 0.05*abs.(definition_par.Estimate[par_order]))

@@ -1,5 +1,5 @@
 function (loss::Loss)(par, model)
-    F = zero(eltype(model.imply.imp_cov))
+    F = zero(eltype(par))
     for i = 1:length(loss.functions)
         F += loss.functions[i](par, model)
         # all functions have to have those arguments??
