@@ -42,7 +42,7 @@ struct SemObsMissing{
     n_obs::O
     patterns::P # missing patterns
     rows::R # coresponding rows in the data or matrices
-    pattern_data::PD # list of data per missing pattern
+    data_perperson::PD # list of data per missing pattern
     pattern_S::PS
     pattern_n_obs::PO #
     pattern_nvar_obs::PVO
@@ -50,12 +50,17 @@ end
 
 function SemObsMissing(data; meanstructure = true)
 
-    n_obs = Float64(size(data, 1))
-    n_man = Float64(size(data, 2))
+    n_obs = size(data, 1)
+    n_man = size(data, 2)
 
     # compute and store the different missing patterns with their rowindices
     missings = ismissing.(data)
     patterns = [missings[i, :] for i = 1:size(missings, 1)]
+
+    patterns_cart = findall.(!, patterns)
+    data_perperson = [data[i, patterns_cart[i]] for i = 1:n_obs]
+    data_perperson = convert.(Array{Float64}, data_perperson)
+
     remember = Vector{BitArray{1}}()
     rows = [Vector{Int64}(undef, 0) for i = 1:size(patterns, 1)]
     for i = 1:size(patterns, 1)
@@ -80,13 +85,6 @@ function SemObsMissing(data; meanstructure = true)
     remember_cart = findall.(!, remember)
     rows = rows[sort_n_miss]
 
-    # store the data belonging to the missing patterns
-    pattern_data = Vector{Array{Float64}}(undef, n_patterns)
-    for i = 1:n_patterns
-        pattern_data[i] = data[rows[i], remember_cart[i]]
-    end
-    pattern_data = convert.(Array{Float64}, pattern_data)
-
     pattern_n_obs = size.(rows, 1)
     pattern_nvar_obs = length.(remember_cart) 
 
@@ -108,6 +106,6 @@ function SemObsMissing(data; meanstructure = true)
         end
     end
 
-    return SemObsMissing(data, obs_mean, n_man, n_obs, remember_cart,
-    rows, pattern_data, pattern_S, Float64.(pattern_n_obs), Float64.(pattern_nvar_obs))
+    return SemObsMissing(data, obs_mean, Float64(n_man), Float64(n_obs), remember_cart,
+    rows, data_perperson, pattern_S, Float64.(pattern_n_obs), Float64.(pattern_nvar_obs))
 end
