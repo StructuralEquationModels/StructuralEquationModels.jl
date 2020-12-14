@@ -50,8 +50,18 @@ end
 
 function SemObsMissing(data; meanstructure = true)
 
+    # remove persons with only missings
+    keep = Vector{Int64}()
+    for i = 1:size(data, 1)
+        if any(.!ismissing.(data[i, :]))
+            push!(keep, i)
+        end
+    end
+    data = data[keep, :]
+
     n_obs = size(data, 1)
     n_man = size(data, 2)
+    
 
     # compute and store the different missing patterns with their rowindices
     missings = ismissing.(data)
