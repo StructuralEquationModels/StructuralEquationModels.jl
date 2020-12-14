@@ -20,7 +20,7 @@ miss30_mat = Matrix(miss30_dat)
 miss50_mat = Matrix(miss50_dat)
 
 
-diff_fin = SemFiniteDiff(BFGS(), Optim.Options())
+diff_fin = SemFiniteDiff(BFGS(), Optim.Options(;g_tol = 0.001))
 
 diff_fin = SemFiniteDiff(LBFGS(
         ;alphaguess = LineSearches.InitialStatic(;scaled = true),
@@ -103,12 +103,12 @@ start_val_mean = vcat(
     )
  
 start_val_mean_free = vcat(
-vec(var(Matrix(three_path_dat), dims = 1))./2,
-fill(0.05, 3),
-fill(0.0, 6),
-fill(1.0, 8),
-fill(0, 3),
-[mean(Matrix(three_path_dat), dims = 1)...]
+    vec(var(Matrix(three_path_dat), dims = 1))./2,
+    fill(0.05, 3),
+    fill(0.0, 6),
+    fill(1.0, 8),
+    fill(0, 3),
+    [mean(Matrix(three_path_dat), dims = 1)...]
 )
 
 semobserved = SemObsMissing(miss20_mat)
@@ -124,9 +124,9 @@ model_fin_mean = Sem(semobserved, imply_mean, loss_mean, diff_fin)
 
 using BenchmarkTools
 
-@benchmark model_fin(start_val)
+model_fin(start_val)
 
-solution_fin = sem_fit(model_fin)
+@benchmark solution_fin = sem_fit(model_fin)
 solution_fin_mean = sem_fit(model_fin_mean)
 
 par_order = [collect(21:34); collect(15:20); 2;3; 5;6;7; collect(9:14);

@@ -133,6 +133,7 @@ struct SemFIML{
         C <: AbstractArray,
         L <: AbstractArray,
         M <: AbstractArray,
+        IM <: AbstractArray,
         I <: AbstractArray,
         T <: AbstractArray,
         U,
@@ -140,6 +141,7 @@ struct SemFIML{
     inverses::INV #preallocated inverses of imp_cov
     choleskys::C #preallocated choleskys
     logdets::L #logdets of implied covmats
+    imp_mean::IM
     meandiff::M
     imp_inv::I
     mult::T # is this type known?
@@ -155,6 +157,7 @@ function SemFIML(observed::O where {O <: SemObs}, objective, grad)
     n_patterns = size(observed.rows, 1)
     logdets = zeros(n_patterns)
 
+    imp_mean = zeros.(Int64.(observed.pattern_nvar_obs))
     meandiff = zeros.(Int64.(observed.pattern_nvar_obs))
 
     imp_inv = zeros(size(observed.data, 2), size(observed.data, 2))
@@ -164,6 +167,7 @@ function SemFIML(observed::O where {O <: SemObs}, objective, grad)
     inverses,
     choleskys,
     logdets,
+    imp_mean,
     meandiff,
     imp_inv,
     mult,
@@ -266,8 +270,13 @@ function (semfiml::SemFIML)(par, model::Sem{O, I, L, D}) where
                     model.observed.patterns[i]]
         end
 
+        @views for i = 1:size(semfiml.imp_mean, 1)
+            semfiml.imp_mean[i] .=
+                model.imply.imp_mean[model.observed.patterns[i]]
+        end
+
         for i = 1:size(semfiml.inverses, 1)
-            semfiml.choleskys[i] = cholesky!(semfiml.inverses[i])
+            semfiml.choleskys[i] = cholesky!(Hermitian(semfiml.inverses[i]))
         end
 
         #ld = logdet(a)
@@ -279,23 +288,21 @@ function (semfiml::SemFIML)(par, model::Sem{O, I, L, D}) where
         end
 
         F = zero(eltype(par))
+        
 
         for i = 1:size(model.observed.rows, 1)
-
-            F += F_missingpattern(
-                model.imply.imp_mean,
-                model.observed.obs_mean,
-                semfiml.meandiff,
-                model.observed.patterns,
-                semfiml.inverses,
-                model.observed.pattern_S,
-                model.observed.pattern_data,
-                semfiml.logdets,
-                semfiml.mult,
-                model.observed.pattern_n_obs,
-                i
-                )
-
+            for j in model.observed.rows[i]
+                let (imp_mean, meandiff, inverse, data, logdet) =
+                    (semfiml.imp_mean[i],
+                    semfiml.meandiff[i],
+                    semfiml.inverses[i],
+                    model.observed.data_perperson[j],
+                    semfiml.logdets[i])
+    
+                    F += F_one_person(imp_mean, meandiff, inverse, data, logdet)
+    
+                end
+            end
         end
     end
     return F

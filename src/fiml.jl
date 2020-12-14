@@ -6,8 +6,7 @@
     return F
 end # gives wrong results! =#
 
-function F_missingpattern(imp_mean, obs_mean, meandiff,
-    pattern, inverse, S, data, ld, mult, n_obs, i)
+function F_missingpattern(imp_mean, meandiff, inverse, data, ld)
 
     F = n_obs[i]*ld[i]
 
