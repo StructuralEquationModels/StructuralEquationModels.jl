@@ -2,6 +2,8 @@ pacman::p_load(here, feather, tidyverse, lavaan, microbenchmark, magrittr)
 
 set.seed(123)
 
+#setwd(r"(C:\Users\maxim\.julia\dev\sem)")
+
 #----lavaan----
 models <- c(one_fact = "f1 =~ x1 + x2 + x3",
             three_path =
@@ -230,7 +232,10 @@ def_pars <- sum$parameters %>% select(row, col, Estimate, Std.Error)
 
 
 data_growth <- select(Demo.growth, t1, t2, t3, t4)
+data_growth_miss_30 <- mutate(data_growth, 
+                              across(everything(), ~induce_missing(., 0.3)))
 write_feather(data_growth, str_c("test/comparisons/growth_dat.feather"))
+write_feather(data_growth_miss_30, str_c("test/comparisons/growth_dat_miss30.feather"))
 write_feather(
   select(parameterEstimates(growth_fit), lhs, op, rhs, est, se, p = pvalue, z),
   str_c("test/comparisons/growth_par.feather"))

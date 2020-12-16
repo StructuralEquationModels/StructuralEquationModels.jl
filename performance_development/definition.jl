@@ -3,6 +3,7 @@ using sem, Feather, ModelingToolkit, Statistics, LinearAlgebra,
 
 ## Observed Data
 growth_dat = Feather.read("test/comparisons/growth_dat.feather")
+growth_dat_miss30 = Feather.read("test/comparisons/growth_dat_miss30.feather")
 growth_par = Feather.read("test/comparisons/growth_par.feather")
 
 definition_dat = Feather.read("test/comparisons/definition_dat.feather")
@@ -99,8 +100,7 @@ F = sparse(F)
 #A
 A = sparse(A)
 
-data_def = Matrix(definition_dat)
-   
+data_def = Matrix(definition_dat)  
 
 #abstract type Imply end
 
@@ -124,6 +124,18 @@ struct ImplySymbolicDefinition{
     rows::R
     data_def::D
 end
+
+function remove_all_missing(data)
+    keep = Vector{Int64}()
+    for i = 1:size(data, 1)
+        if any(.!ismissing.(data[i, :]))
+            push!(keep, i)
+        end
+    end
+    return data[keep, :], keep
+end
+
+data_def = data_def[remove_all_missing(data_miss)[2], :]
 
 function ImplySymbolicDefinition(
     A::Spa1,
@@ -167,6 +179,7 @@ function ImplySymbolicDefinition(
     
     pattern_n_obs = size.(rows, 1)
     
+    #############################################
     #Model-implied covmat
     invia = sem.neumann_series(A)
 
@@ -227,6 +240,8 @@ function(imply::ImplySymbolicDefinition)(parameters)
     end
 end
 
+data_miss = Matrix(growth_dat_miss30) 
+semobserved = SemObsMissing(data_miss)
 
 imply = ImplySymbolicDefinition(
     A, 
@@ -250,6 +265,8 @@ struct SemDefinition{ #################### call it per person or sth????
         I <: AbstractArray,
         T <: AbstractArray,
         DP <: AbstractArray,
+        K <: Union{AbstractArray, Nothing},
+        R <: Union{AbstractArray, Nothing},
         U,
         V} <: LossFunction
     inverses::INV #preallocated inverses of imp_cov
@@ -259,6 +276,8 @@ struct SemDefinition{ #################### call it per person or sth????
     imp_inv::I
     mult::T
     data_perperson::DP
+    keys::K
+    rows::R
     objective::U
     grad::V
 end
@@ -291,6 +310,8 @@ function SemDefinition(
     imp_inv,
     mult,
     data_perperson,
+    nothing,
+    nothing,
     copy(objective),
     copy(grad)
     )
@@ -353,4 +374,165 @@ all(
         ) .< 0.05*abs.(definition_par.Estimate[par_order]))
 
 
+
+## missings ############################################################
+
+function SemDefinition(
+        observed::O where {O <: SemObsMissing}, 
+        imply::I where {I <: ImplySymbolicDefinition}, 
+        objective,
+        grad) 
+    
+        
+    keys = findrow.(1:Int64(observed.n_obs), [observed.rows])
+
+    rows_nested = Vector{Vector{Vector{Int64}}}()
+    keys_inner_vec = Vector{Vector{Int64}}()
+
+    for i in 1:length(imply.rows)
+        nest = Vector{Vector{Int64}}()
+        keys_inner = Vector{Int64}()
+        for j in imply.rows[i]
+            unknown = true
+            key = keys[j]
+            for k in 1:size(keys_inner, 1)
+                if keys_inner[k] == key
+                    push!(nest[k], j)
+                    unknown = false
+                end
+            end
+            if unknown
+                push!(keys_inner, key)
+                push!(nest, [j])
+            end
+        end
+        push!(rows_nested, nest)
+        push!(keys_inner_vec, keys_inner)
+    end
+
+    data_perperson = [observed.data[i, :] for i = 1:Int64(observed.n_obs)]
+
+    rows_nested
+
+    inverses = Vector{Vector{Array{Float64, 2}}}()
+    for i = 1:size(keys_inner_vec, 1)
+        inverses_defgroup = Vector{Array{Float64, 2}}()
+        for j in keys_inner_vec[i] 
+            nvar = Int64(observed.pattern_nvar_obs[j])
+            push!(inverses_defgroup, zeros(nvar, nvar))
+        end
+        push!(inverses, inverses_defgroup)
+    end
+
+    inverses
+
+    #choleskys = Array{Cholesky{Float64,Array{Float64,2}},1}(undef, length(inverses))
+    choleskys = [
+        Array{Cholesky{Float64,Array{Float64,2}},1}(
+            undef, length(inverses[i])) for i in 1:length(inverses)]
+
+    n_patterns = sum([size(inverses[i], 1) for i = 1:length(inverses)])
+    logdets = zeros(n_patterns)
+
+    imp_mean = zeros.(size.(inverses, 1))
+    meandiff = zeros.(size.(inverses, 1))
+
+    imp_inv = similar(imply.imp_cov)
+    mult = similar.(inverses)
+
+
+    return SemDefinition(
+    inverses,
+    choleskys,
+    logdets,
+    meandiff,
+    imp_inv,
+    mult,
+    data_perperson,
+    keys_inner_vec,
+    rows_nested,
+    copy(objective),
+    copy(grad)
+    )
+end
+
+
+
+
+
+
+
+function (semdef::SemDefinition)(par, model::Sem{O, I, L, D}) where
+    {O <: SemObs, L <: Loss, I <: Imply, D <: SemFiniteDiff}
+
+    if isnothing(model.imply.imp_mean) 
+        error("A model implied meanstructure is needed for Definition Variables")
+    end
+
+    ################################################
+    #copyto!(semfiml.imp_inv, model.imply.imp_cov)
+    #a = cholesky!(Hermitian(semfiml.imp_inv); check = false)
+
+    #if !isposdef(a)
+    #    F = Inf
+    #else
+    for i = 1:size(semdef.keys, 1)
+        for j = 1:size(semdef.keys[i])
+            @views semdef.inverses[i][j] .=
+                    model.imply.imp_cov[
+                        model.observed.patterns[keys[i][j]],
+                        model.observed.patterns[keys[i][j]]]
+            semdef.choleskys[i][j] = 
+                cholesky!(Hermitian(semdef.inverses[i][j]); check = false)
+            if !isposdef(semdef.choleskys[i][j]) return Inf end
+        end
+    end
+
+    @views  for i = 1:size(semdef.keys, 1)
+                for j = 1:size(semdef.keys[i])
+                    semdef.imp_mean[i][j] .=
+                        model.imply.imp_mean[i][
+                            model.observed.patterns[keys[i][j]]]
+                end
+            end
+
+    for i = 1:size(semdef.keys, 1)
+        for j = 1:size(semdef.keys[i])
+            semdef.logdets[i][j] = logdet(semdef.choleskys[i][j])
+        end
+    end
+
+    #semml.imp_inv .= LinearAlgebra.inv!(a)
+    for i = 1:size(semdef.keys, 1)
+        for j = 1:size(semdef.keys[i])
+            semdef.inverses[i][j] .= LinearAlgebra.inv!(semdef.choleskys[i][j])
+        end
+    end
+
+    F = zero(eltype(par))
+
+    for i = 1:size(semdef.rows, 1)
+        for j = 1:size(semdef.rows[i], 1)
+            for k = 1:size(semdef.rows[i][j], 1)
+                let (imp_mean, meandiff, inverse, data, logdet) =
+                    (model.imply.imp_mean[i][j],
+                    semdef.meandiff[i][j],
+                    semdef.inverses[i][j],
+                    semdef.data_perperson[semdef.rows[i][j][k]],
+                    semdef.logdets[i][j])
+
+                    F += F_one_person(imp_mean, meandiff, inverse, data, logdet)
+            end
+        end
+    end
+    return F
+end
+
+function findrow(r, rows)
+    for i in 1:length(rows)
+        if r ∈ rows[i]
+            return i
+        end
+    end
+end
 
