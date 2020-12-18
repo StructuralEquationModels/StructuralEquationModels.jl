@@ -55,3 +55,13 @@ function F_one_person(imp_mean, meandiff, inverse, data, logdet)
     F += meandiff'*inverse*meandiff
     return F
 end
+
+function remove_all_missing(data)
+    keep = Vector{Int64}()
+    for i = 1:size(data, 1)
+        if any(.!ismissing.(data[i, :]))
+            push!(keep, i)
+        end
+    end
+    return data[keep, :], keep
+end
