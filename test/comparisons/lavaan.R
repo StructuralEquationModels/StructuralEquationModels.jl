@@ -175,23 +175,16 @@ if(FALSE){
 
 library(OpenMx)
 
-model <- ' i =~ 1*t1 + 1*t2 + 1*t3 + 1*t4
-           s =~ 0*t1 + 1*t2 + 2*t3 + 3*t4 '
-growth_fit <- growth(model, data=Demo.growth)
-summary(growth_fit)
+#model <- ' i =~ 1*t1 + 1*t2 + 1*t3 + 1*t4
+           #s =~ 0*t1 + 1*t2 + 2*t3 + 3*t4 '
+#growth_fit <- growth(model, data=Demo.growth)
+#summary(growth_fit)
 
 Demo.growth %<>% mutate(
   load_t1 = rep(0, 400),
   load_t2 = c(rep(0.5, 200), rep(1.5, 200)),
   load_t3 = c(rep(1.5, 200), rep(2.5, 200)),
   load_t4 = c(rep(2.5, 200), rep(3.5, 200))
-)
-
-Demo.growth %<>% mutate(
-  load_t1 = load_t1 + rnorm(400, 0, 0.001),
-  load_t2 = load_t2 + rnorm(400, 0, 0.001),
-  load_t3 = load_t3 + rnorm(400, 0, 0.001),
-  load_t4 = load_t4 + rnorm(400, 0, 0.001)
 )
 
 dataRaw <- mxData( observed=Demo.growth, type="raw" )
@@ -231,9 +224,44 @@ sum = summary(growthCurveFit)
 def_pars <- sum$parameters %>% select(row, col, Estimate, Std.Error)
 
 
+### with unique loadings and missings
+Demo.growth_missing <- mutate(Demo.growth, 
+       across(starts_with("t"), ~induce_missing(., 0.3)))
+
+Demo.growth_missing_unique <-  mutate(Demo.growth_missing,
+  load_t1 = load_t1 + rnorm(400, 0, 0.5),
+  load_t2 = load_t2 + rnorm(400, 0, 0.5),
+  load_t3 = load_t3 + rnorm(400, 0, 0.5),
+  load_t4 = load_t4 + rnorm(400, 0, 0.5)
+)
+
+dataRaw_missing <- mxData( observed=Demo.growth_missing, type="raw" )
+dataRaw_missing_unique <- mxData( observed=Demo.growth_missing_unique, type="raw" )
+
+growthCurveModel_missing <- mxModel("Linear Growth Curve Model Path Specification", 
+                            type="RAM",
+                            manifestVars=c("t1","t2","t3","t4"),
+                            latentVars=c("intercept","slope"),
+                            dataRaw_missing, resVars, latVars, intLoads, sloLoads,
+                            manMeans, latMeans)
+growthCurveFit_missing <- mxRun(growthCurveModel_missing)
+sum_missing = summary(growthCurveFit_missing)
+def_pars_missing <- sum_missing$parameters %>% select(row, col, Estimate, Std.Error)
+
+growthCurveModel_missing_unique <- mxModel("Linear Growth Curve Model Path Specification", 
+                            type="RAM",
+                            manifestVars=c("t1","t2","t3","t4"),
+                            latentVars=c("intercept","slope"),
+                            dataRaw_missing_unique, resVars, latVars, intLoads, sloLoads,
+                            manMeans, latMeans)
+growthCurveFit_missing_unique <- mxRun(growthCurveModel_missing_unique)
+sum_missing_unique = summary(growthCurveFit_missing_unique)
+def_pars_missing_unique <- sum_missing_unique$parameters %>% select(row, col, Estimate, Std.Error)
+
+
 data_growth <- select(Demo.growth, t1, t2, t3, t4)
-data_growth_miss_30 <- mutate(data_growth, 
-                              across(everything(), ~induce_missing(., 0.3)))
+data_growth_miss_30 <- select(Demo.growth_missing, t1, t2, t3, t4)
+ 
 write_feather(data_growth, str_c("test/comparisons/growth_dat.feather"))
 write_feather(data_growth_miss_30, str_c("test/comparisons/growth_dat_miss30.feather"))
 write_feather(
@@ -241,8 +269,13 @@ write_feather(
   str_c("test/comparisons/growth_par.feather"))
 
 data_definition <- select(Demo.growth, starts_with("load"))
+data_definition_unique <- select(Demo.growth_missing_unique, starts_with("load"))
+
 write_feather(data_definition, str_c("test/comparisons/definition_dat.feather"))
+write_feather(data_definition_unique, str_c("test/comparisons/definition_dat_unique.feather"))
 write_feather(def_pars, str_c("test/comparisons/definition_par.feather"))
+write_feather(def_pars_missing, str_c("test/comparisons/definition_par_missing.feather"))
+write_feather(def_pars_missing_unique, str_c("test/comparisons/definition_par_missing_unique.feather"))
 
 
 # open MX -----------------------------------------------------------------
