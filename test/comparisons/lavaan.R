@@ -84,7 +84,7 @@ datas <-  list(one_fact = HolzingerSwineford1939,
 datas[[4]]$group = c(rep("1", 25), rep("2", 25), rep("3", 25))
 datas[[5]]$group = c(rep("1", 40), rep("2", 40), rep("3", 70))
 
-fits <- map2(models, datas, ~cfa(.x, .y, meanstructure = T))
+fits <- map2(models, datas, ~cfa(.x, .y, meanstructure = T, likelihood = "wishart"))
 
 all_equal = c("loadings", "residuals", "residual.covariances", "lv.variances",
               "lv.covariances", "regressions")
@@ -139,6 +139,15 @@ data_subsets <- map(fits, lavNames, "ov") %>%
 data_subsets_miss <- map(fits_miss, lavNames, "ov") %>%
   map2(datas_miss, ~select(.y, one_of(.x)))
 
+get_fitm <- function(fit){
+  fitm <- fitmeasures(fit)
+  fitm <- as_tibble(as.list(fitm))
+}
+
+fitm <- map(fits, get_fitm)
+fitm_miss <- map(fits_miss, get_fitm)
+fitm_miss_mean <- map(fits_miss_mean, get_fitm)
+
 # write out
 
 imap(data_subsets,
@@ -153,6 +162,13 @@ imap(pars_miss,
 imap(pars_miss_mean,
      ~write_feather(.x, str_c("test/comparisons/", .y, "_par_mean.feather")))
 
+ 
+imap(fitm, 
+     ~write_feather(.x, str_c("test/comparisons/", .y, "_fitm.feather")))
+imap(fitm_miss,
+     ~write_feather(.x, str_c("test/comparisons/", .y, "_fitm_miss.feather")))
+imap(fitm_miss_mean,
+     ~write_feather(.x, str_c("test/comparisons/", .y, "_fitm_miss_mean.feather")))
 
 #----benchmarks----
 
@@ -310,7 +326,7 @@ means        <- mxPath( from="one", to=c("x1","x2","x3","y1","y2","y3",
                                          "y4", "y5", "y6","y7", "y8",
                                          "ind60","dem60", "dem65"),
                         arrows=1,
-                        free=c(T,T,T,T,T,T,T,T,T,T,T,F,F), values=c(1,1,1,1,1,1,1,1,1,1,1,0,0,0),
+                        free=c(T,T,T,T,T,T,T,T,T,T,F,F,F), values=c(1,1,1,1,1,1,1,1,1,1,1,0,0,0),
                         labels=c("meanx1","meanx2","meanx3",
                                  "meany1","meany2","meany3",
                                  "meany4","meany5","meany6",
@@ -325,5 +341,40 @@ twoFactorModel <- mxModel("Two Factor Model Path Specification", type="RAM",
 
 oneFactorFit <- mxRun(twoFactorModel)
 
+oneFactorFit$output
+summary(oneFactorFit)
+summary(oneFactorFit, refModels=mxRefModels(oneFactorFit, run = T))
+
+mxCompare(oneFactorFit)
+
+
+# OpenMX Chi2 -------------------------------------------------------------
+
+dataRaw <- mxData( observed=PoliticalDemocracy, type="raw" )
+# residual variances
+resVars <- mxPath( from=c(str_c("y", 1:8), str_c("x", 1:3)), arrows=2,
+                   free=TRUE, values=c(1,1,1,1,1,1),
+                   labels=c("e1","e2","e3","e4","e5","e6") )
+# latent variances and covariance
+latVars <- mxPath( from=c("F1","F2"), arrows=2, connect="unique.pairs",
+                   free=TRUE, values=c(1,.5,1), labels=c("varF1","cov","varF2") )
+# factor loadings for x variables
+facLoadsX <- mxPath( from="F1", to=c("x1","x2","x3"), arrows=1,
+                     free=c(F,T,T), values=c(1,1,1), labels=c("l1","l2","l3") )
+# factor loadings for y variables
+facLoadsY <- mxPath( from="F2", to=c("y1","y2","y3"), arrows=1,
+                     free=c(F,T,T), values=c(1,1,1), labels=c("l4","l5","l6") )
+# means
+means <- mxPath( from="one", to=c("x1","x2","x3","y1","y2","y3","F1","F2"),
+                 arrows=1,
+                 free=c(T,T,T,T,T,T,F,F), values=c(1,1,1,1,1,1,0,0),
+                 labels=c("meanx1","meanx2","meanx3",
+                          "meany1","meany2","meany3",NA,NA) )
+twoFactorModel <- mxModel("Two Factor Model Path Specification", type="RAM",
+                          manifestVars=c("x1", "x2", "x3", "y1", "y2", "y3"),
+                          latentVars=c("F1","F2"),
+                          dataRaw, resVars, latVars, facLoadsX, facLoadsY, means)
+
+oneFactorFit <- mxRun(oneFactorModel)
 oneFactorFit$output
 summary(oneFactorFit)
