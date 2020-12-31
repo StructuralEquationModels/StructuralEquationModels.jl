@@ -2,7 +2,7 @@ pacman::p_load(here, feather, tidyverse, lavaan, microbenchmark, magrittr)
 
 set.seed(123)
 
-setwd(r"(C:\Users\maxim\.julia\dev\sem)")
+#setwd(r"(C:\Users\maxim\.julia\dev\sem)")
 
 induce_missing <- function(v, p){
   miss <- sample(c(0,1), length(v), replace = TRUE, prob = c(1-p, p))
@@ -108,9 +108,6 @@ data_growth_miss_30 <- select(Demo.growth_missing, t1, t2, t3, t4)
 
 write_feather(data_growth, str_c("test/comparisons/growth_dat.feather"))
 write_feather(data_growth_miss_30, str_c("test/comparisons/growth_dat_miss30.feather"))
-write_feather(
-  select(parameterEstimates(growth_fit), lhs, op, rhs, est, se, p = pvalue, z),
-  str_c("test/comparisons/growth_par.feather"))
 
 data_definition <- select(Demo.growth, starts_with("load"))
 data_definition_unique <- select(Demo.growth_missing_unique, starts_with("load"))
