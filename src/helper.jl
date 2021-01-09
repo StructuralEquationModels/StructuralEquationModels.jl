@@ -52,7 +52,7 @@ end
 function F_one_person(imp_mean, meandiff, inverse, data, logdet)
     F = logdet
     @. meandiff = data - imp_mean
-    F += meandiff'*inverse*meandiff
+    F += dot(meandiff, inverse, meandiff)
     return F
 end
 
