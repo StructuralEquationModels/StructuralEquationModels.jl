@@ -311,3 +311,27 @@ all(
     abs.(z .- three_path_par.z[par_order]
         ) .< 0.001*abs.(three_path_par.z[par_order]))
 
+using LinearAlgebra, BenchmarkTools
+
+x = rand(50)
+
+y = rand(50)
+
+A = rand(50,50)
+A = A*A'
+A = cholesky(A)
+x = permutedims(x)
+
+@benchmark dot($x, $A, $y)
+
+x'*A*y
+
+dot(x, A, y)
+
+function mydot(x, A, y, pre)
+    mul!(pre, x, A)
+    return dot(pre, y)
+end
+
+pre = zeros(50,1)
+mydot(x, A, y, pre)

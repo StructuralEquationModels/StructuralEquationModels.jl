@@ -79,8 +79,26 @@ Demo.growth_missing_unique <-  mutate(Demo.growth_missing,
                                       load_t4 = load_t4 + rnorm(400, 0, 0.5)
 )
 
+Demo.growth_unique <- mutate(Demo.growth, 
+                             load_t1 = Demo.growth_missing_unique$load_t1,
+                             load_t2 = Demo.growth_missing_unique$load_t2,
+                             load_t3 = Demo.growth_missing_unique$load_t3,
+                             load_t4 = Demo.growth_missing_unique$load_t4)
+
+dataRaw_unique <- mxData( observed=Demo.growth_unique, type="raw" )
 dataRaw_missing <- mxData( observed=Demo.growth_missing, type="raw" )
 dataRaw_missing_unique <- mxData( observed=Demo.growth_missing_unique, type="raw" )
+
+growthCurveModel_unique <- mxModel("Linear Growth Curve Model Path Specification", 
+                            type="RAM",
+                            manifestVars=c("t1","t2","t3","t4"),
+                            latentVars=c("intercept","slope"),
+                            dataRaw_unique, resVars, latVars, intLoads, sloLoads,
+                            manMeans, latMeans)
+
+growthCurveFit_unique <- mxRun(growthCurveModel_unique)
+#microbenchmark(mxRun(growthCurveModel))
+sum = summary(growthCurveFit_unique)
 
 growthCurveModel_missing <- mxModel("Linear Growth Curve Model Path Specification", 
                                     type="RAM",
