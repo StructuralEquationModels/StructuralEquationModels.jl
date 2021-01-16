@@ -57,7 +57,7 @@ A = sparse(A)
 
 data_def_small = Matrix(data_def_small)  
 
-start_val = [1.0, 1, 1, 1, 0.05, 0.05, 0.0, 1.0, 1.0]
+start_val = [1.0, 1, 1, 1, 1, 1, 1, 1.0, 1.0]
 
 imply_small = ImplySymbolicDefinition(
     A, 
@@ -89,7 +89,7 @@ all(
 semobserved_big = 
     SemObsCommon(data = Matrix(data_big); meanstructure = true)
 
-diff_fin_big = SemFiniteDiff(BFGS(), Optim.Options())
+diff_fin_big = SemFiniteDiff(LBFGS(), Optim.Options(x_tol = 1e-9))
 
 @ModelingToolkit.variables x[1:18], m[1:2], load_t[1:15]
 
@@ -115,7 +115,7 @@ A = sparse(Ind, J, V, 17, 17)
 
 data_def_big = Matrix(data_def_big)  
 
-start_val = [ones(15)..., 0.05, 0.05, 0.0, 1.0, 1.0]
+start_val = ones(20) #[ones(15)..., 0.05, 0.05, 0.0, 1.0, 1.0]
 
 imply_big = ImplySymbolicDefinition(
     A, 
@@ -174,7 +174,7 @@ A = sparse(Ind, J, V, 32, 32)
 
 data_def_huge = Matrix(data_def_huge)  
 
-start_val = [ones(30)..., 0.05, 0.05, 0.0, 1.0, 1.0]
+start_val = ones(35)#[ones(30)..., 0.05, 0.05, 0.0, 1.0, 1.0]
 
 imply_huge = ImplySymbolicDefinition(
     A, 
@@ -200,11 +200,6 @@ all(
         ) .< 0.001*abs.(pars_huge.Estimate[par_order]))
 
 @benchmark sem_fit(model_fin_huge)
-
-#times
-#small 270ms
-#big 17s
-#huge 100s
 
 ## benchmark #######################################################
 start_val = [ones(15)..., 0.05, 0.05, 0.0, 1.0, 1.0]
@@ -257,3 +252,68 @@ function to_prof(n, par, model)
 end
 
 ProfileView.@profview to_prof(1000, start_val, model_fin_big)
+
+using LinearAlgebra, BenchmarkTools
+BLAS.vendor()
+
+using CUDA, MKL
+
+a = rand(30,30); a = a'*a
+
+BLAS.set_num_threads(8)
+
+set_max_threads(n) = ccall((:mkl_set_num_threads, libmkl_rt), Cvoid, (Ptr{Int32},), Ref(Int32(n)));
+set_max_threads(3)
+MKL.typemin()
+
+@benchmark inv(a)
+
+
+a = CUDA.rand(Float64, 30, 30)
+a32 = CUDA.rand(30, 30)
+
+a32 isa StridedCuArray
+
+inv(a32)
+
+b = rand(30,30)
+b32 = rand(Float32, 30 , 30)
+
+@benchmark inv(b)
+
+@benchmark inv(b32)
+
+a = rand(5)
+
+
+### bounds
+
+a = rand(30,30); a = a*a'
+matvec = [a for i = 1:500]
+safe = copy(matvec)
+pre = similar(matvec)
+
+copyto!(safe, matvec)
+
+cholvec = cholesky.(matvec)
+
+function myf(pre, matvec)
+    @inbounds @fastmath for i = 1:size(pre, 1)
+        pre[i] = matvec[i]^2
+    end
+end
+
+function myf2(pre, matvec)
+    @inbounds @fastmath for i = 1:size(pre, 1)
+        pre[i] = matvec[i]^2
+    end
+end
+
+@benchmark myf(pre, cholvec)
+
+@benchmark myf2(pre, matvec)
+
+
+# 0.2720108 secs vs 100ms
+# 36.52637 secs vs 30s
+# 156.6648 secs vs 157s
