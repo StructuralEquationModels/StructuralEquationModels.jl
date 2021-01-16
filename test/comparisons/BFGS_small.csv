@@ -1,0 +1,16 @@
+line_search,step_length,minimum,time,truepars
+HagerZhang,InitialPrevious,1100.1665590443044,0.08899998664855957,true
+MoreThuente,InitialPrevious,1100.166559051956,0.0970001220703125,true
+BackTracking,InitialPrevious,1100.1665644679294,1.443000078201294,false
+StrongWolfe,InitialPrevious,Inf,0.01399993896484375,false
+Static,InitialPrevious,1100.1665644679294,1.4800000190734863,false
+HagerZhang,InitialStatic,1100.1665590443051,0.09500002861022949,true
+MoreThuente,InitialStatic,1100.166559044306,0.06199979782104492,true
+BackTracking,InitialStatic,1100.1665590443058,0.029999971389770508,true
+StrongWolfe,InitialStatic,Inf,0.013000011444091797,false
+Static,InitialStatic,Inf,0.021999835968017578,false
+HagerZhang,InitialQuadratic,1100.1665590443044,0.09100008010864258,true
+MoreThuente,InitialQuadratic,1100.1665590443058,0.039999961853027344,true
+BackTracking,InitialQuadratic,1100.166559044305,0.03600001335144043,true
+StrongWolfe,InitialQuadratic,Inf,0.01399993896484375,false
+Static,InitialQuadratic,1100.1665590443058,0.06099987030029297,true

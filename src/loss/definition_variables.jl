@@ -73,10 +73,7 @@ function (semdef::SemDefinition)(par, model::Sem{O, I, L, D}) where
     for i = 1:size(semdef.choleskys, 1)
         semdef.choleskys[i] = 
             cholesky!(Hermitian(model.imply.imp_cov[i]); check = false)
-    end
-
-    if any(.!isposdef.(semdef.choleskys))
-        return Inf
+        if !isposdef(semdef.choleskys[i]) return Inf end
     end
 
     semdef.logdets .= logdet.(semdef.choleskys)
