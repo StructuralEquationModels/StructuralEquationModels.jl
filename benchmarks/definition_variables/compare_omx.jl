@@ -315,5 +315,5 @@ end
 
 
 # 0.2720108 secs vs 100ms
-# 36.52637 secs vs 30s
+# 36.52637 secs vs 30s (21s)
 # 156.6648 secs vs 157s

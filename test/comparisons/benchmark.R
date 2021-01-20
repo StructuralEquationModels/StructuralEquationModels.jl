@@ -177,7 +177,7 @@ growthCurveModel_big <- mxModel("Linear Growth Curve Model Path Specification",
 
 
 
-mxOption(model= growthCurveModel_big, key="Number of Threads", value= 4)
+mxOption(model= growthCurveModel_big, key="Number of Threads", value= 1)
 
 # data_mx_big %>% select(starts_with("t")) %>% var() %>% diag()
 
