@@ -168,7 +168,12 @@ loss_huge = Loss([SemDefinition(semobserved_huge, imply_huge, 0.0, 0.0)])
 
 ## Tolerances
 # what about x_tol and g_tol?
-f_tol = 6.3e-12
+omx_abstol = 6.3e-12
+objective_value = 2.272870e+04
+rel_tol = omx_abstol/(objective_value+1)
+
+f_tol = rel_tol #6.3e-12
+time_limit = 40
 
 ## initial step length
 #InitialPrevious (Use the step length from the previous optimization iteration)
@@ -184,7 +189,7 @@ f_tol = 6.3e-12
 #StrongWolfe (Nocedal and Wright)
 #Static (Takes the proposed initial step length.)
 
-step_length = (InitialPrevious, InitialStatic, InitialQuadratic)
+step_length = (InitialPrevious, InitialStatic, InitialQuadratic, InitialHagerZhang, InitialConstantChange)
 line_search = (HagerZhang, MoreThuente, BackTracking, StrongWolfe, Static)
 algo = (BFGS, LBFGS, Newton)
 
@@ -192,67 +197,87 @@ algo = (BFGS, LBFGS, Newton)
 sl_names = String.(Symbol.(step_length))
 ls_names = String.(Symbol.(line_search))
 algo_names = String.(Symbol.(algo))
+m = [10, 50]
 
+#combinations = Array{String, 1}(undef, 25)
 
-combinations = Array{String, 1}(undef, 15)
+#solutions_BFGS = Dict{String, Any}()
+#solutions_LBFGS = Dict{String, Any}()
+#solutions_newton = Dict{String, Any}()
 
-solutions_BFGS = Dict{String, Any}()
-solutions_LBFGS = Dict{String, Any}()
-solutions_newton = Dict{String, Any}()
+using DataFrames, CSV
 
-solutions_BFGS = 
+solutions = 
     DataFrame(
+        algo = String[],
         line_search = String[], 
         step_length = String[],
-        solution = Any[])
+        solution = Any[],
+        m = Int64[],
+        n = Int64[])
 
 
 #push!(solutions, "hi" => 1.0)
 
 for i = 1:length(step_length)
     for j = 1:length(line_search)
-        diff = SemFiniteDiff(
-            BFGS(;
-                alphaguess = step_length[i](), 
-                linesearch = line_search[j]()), 
-            Optim.Options(f_tol = f_tol))
-        model = Sem(semobserved_small, imply_small, loss_small, diff)
-        solution = sem_fit(model)
-        push!(solutions_BFGS, (ls_names[j], sl_names[i], solution))
+        for k = 1:length(algo)
+            if algo[k] == LBFGS
+                for l = 1:length(m)
+                    m_ = m[l]
+                    diff = SemFiniteDiff(
+                        algo[k](;
+                            m = m_,
+                            alphaguess = step_length[i](), 
+                            linesearch = line_search[j]()), 
+                        Optim.Options(f_tol = f_tol, time_limit = time_limit))
+                    model = Sem(semobserved_big, imply_big, loss_big, diff)
+                    solution = sem_fit(model)
+                    push!(solutions, (algo_names[k], ls_names[j], sl_names[i], solution, m_, size(solutions)[1]+1))
+                end
+            else
+            m_ = 1    
+            diff = SemFiniteDiff(
+                algo[k](;
+                    alphaguess = step_length[i](), 
+                    linesearch = line_search[j]()), 
+                Optim.Options(f_tol = f_tol, time_limit = time_limit))
+            model = Sem(semobserved_big, imply_big, loss_big, diff)
+            solution = sem_fit(model)
+            push!(solutions, (algo_names[k], ls_names[j], sl_names[i], solution, m_, size(solutions)[1]+1))
+            end
+        end
     end
 end
 
 #times_BFGS = Dict{String, Any}()
-
-solutions_BFGS.minimum = getproperty.(solutions_BFGS.solution, :minimum)
-solutions_BFGS.minimizer = getproperty.(solutions_BFGS.solution, :minimizer)
-solutions_BFGS.time = getproperty.(solutions_BFGS.solution, :time_run)
-solutions_BFGS.truepars = 
-    broadcast(x -> compare_solutions(
-        x, 
-        pars_small.Estimate, 
-        par_order), solutions_BFGS.minimizer)
-
-select!(solutions_BFGS, #Not(:solution), 
-    Not(:minimizer))
-        
-Feather.write(
-    "test/comparisons/BFGS_small.feather",
-    solutions_BFGS)
-
-CSV.write("test/comparisons/BFGS_small.csv", solutions_BFGS)
-
-mytest.time_run
-
-diff_BFGS = SemFiniteDiff(BFGS(), Optim.Options(f_tol = f_tol))
-diff_LBFGS = SemFiniteDiff(LBFGS(), Optim.Options(f_tol = f_tol))
-diff_Newton = SemFiniteDiff(Newton(), Optim.Options(f_tol = f_tol))
 
 function compare_solutions(mypars, truepars, order)
     all(
         abs.(mypars .- truepars[order]
             ) .< 0.001*abs.(truepars[order]))
 end
+
+solutions.minimum = getproperty.(solutions.solution, :minimum)
+solutions.minimizer = getproperty.(solutions.solution, :minimizer)
+solutions.time = getproperty.(solutions.solution, :time_run)
+solutions.f_calls = getproperty.(solutions.solution, :f_calls)
+solutions.g_calls = getproperty.(solutions.solution, :g_calls)
+solutions.h_calls = getproperty.(solutions.solution, :h_calls) 
+solutions.truepars = 
+    broadcast(x -> compare_solutions(
+        x, 
+        pars_big.Estimate, 
+        par_order), solutions.minimizer)
+
+select!(solutions, #Not(:solution), 
+    Not(:minimizer))
+        
+Feather.write(
+    "test/comparisons/benchmark_small.feather",
+    solutions)
+
+CSV.write("test/comparisons/benchmark_big.csv", solutions)
 
 
 
@@ -272,6 +297,15 @@ all(
 @benchmark sem_fit(model_fin_small)
 
 ##
+
+diff_fin_big = SemFiniteDiff(
+    LBFGS(), 
+    Optim.Options(f_tol = f_tol))#, time_limit = 20))
+
+diff_fin_big = SemFiniteDiff(
+    BFGS(alphaguess = InitialHagerZhang(), 
+        linesearch = HagerZhang()), 
+    Optim.Options(f_tol = f_tol, time_limit = time_limit))
 
 model_fin_big = Sem(semobserved_big, imply_big, loss_big, diff_fin_big)
 
