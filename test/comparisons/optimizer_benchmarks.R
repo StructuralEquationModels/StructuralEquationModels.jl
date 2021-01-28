@@ -46,5 +46,6 @@ BFGS_results %>% ggplot() +
              alpha = .5) +
   facet_grid(rows = vars(line_search), cols = vars(algo)) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  coord_cartesian(ylim=c(0, 30))
 

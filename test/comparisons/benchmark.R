@@ -178,6 +178,8 @@ growthCurveModel_big <- mxModel("Linear Growth Curve Model Path Specification",
 
 
 mxOption(model= growthCurveModel_big, key="Number of Threads", value= 1)
+growthCurveModel_big <- mxOption(growthCurveModel_big, "Calculate Hessian", "No")
+growthCurveModel_big <- mxOption(growthCurveModel_big, "Standard Errors"  , "No")
 
 # data_mx_big %>% select(starts_with("t")) %>% var() %>% diag()
 
@@ -191,9 +193,29 @@ growthCurveFit_big <- mxRun(growthCurveModel_big)
 #sum_big_true <- summary(growthCurveFit_big_true)
 #sum_big_nostart <- summary(growthCurveFit_big_nostart)
 sum_big <- summary(growthCurveFit_big)
-  
-#sum_big_true$parameters %>% 
-#  select(row, col, Estimate, Std.Error)
+
+mxOption(NULL,
+         "Default optimizer",
+         "NPSOL")
+
+growthCurveFit_big <- mxRun(growthCurveModel_big)
+sum_big <- summary(growthCurveFit_big)
+
+mxOption(NULL, 
+         "Default optimizer", 
+         "CSOLNP")
+growthCurveFit_big <- mxRun(growthCurveModel_big)
+sum_big <- summary(growthCurveFit_big)
+
+test <- sum_big$parameters %>% pull(Estimate)
+
+
+mxOption(NULL, 
+         "Summary file", 
+         1)
+mxOption(NULL, 
+         "Print file", 
+         1)
 
 #truevals <- growthCurveModel_big_true$S$values %>% diag()
 #truevals[18] <- 0.5
@@ -205,8 +227,10 @@ sum_big <- summary(growthCurveFit_big)
 
 #diag(growthCurveModel_big_withstart$S$values) <- start_var
 
+#RAM_mod <- mxOption(model= growthCurveModel_big, 
+#                    key="RAM Max Depth", value= NA)
 
-
+#growthCurveFit_big <- mxRun(RAM_mod)
 
 # huge model --------------------------------------------------------------
 
@@ -287,6 +311,9 @@ growthCurveModel_huge <- mxModel("Linear Growth Curve Model Path Specification",
                                 dataRaw_mx_huge, 
                                 resVars, latVars, intLoads, sloLoads,
                                 manMeans, latMeans)
+
+growthCurveModel_huge <- mxOption(growthCurveModel_huge, "Calculate Hessian", "No")
+growthCurveModel_huge <- mxOption(growthCurveModel_huge, "Standard Errors"  , "No")
 
 growthCurveFit_huge <- mxRun(growthCurveModel_huge)
 #microbenchmark(mxRun(growthCurveModel_huge), times = 1)

@@ -169,6 +169,7 @@ loss_huge = Loss([SemDefinition(semobserved_huge, imply_huge, 0.0, 0.0)])
 ## Tolerances
 # what about x_tol and g_tol?
 omx_abstol = 6.3e-12
+objective_value = 41856.14242753569
 objective_value = 2.272870e+04
 rel_tol = omx_abstol/(objective_value+1)
 
@@ -320,6 +321,10 @@ all(
 @benchmark sem_fit(model_fin_big)
 
 ##
+diff_fin_huge = SemFiniteDiff(
+    LBFGS(; m = 50,
+    alphaguess = InitialHagerZhang()), 
+    Optim.Options(f_tol = f_tol))
 
 model_fin_huge = Sem(semobserved_huge, imply_huge, loss_huge, diff_fin_huge)
 
