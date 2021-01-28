@@ -15,27 +15,35 @@ end
 
 ### Constructor
 function SemML(observed::T, objective, grad) where {T <: SemObs}
-isnothing(observed.obs_mean) ?
-    meandiff = nothing :
-    meandiff = copy(observed.obs_mean)
-return SemML(
-    copy(observed.obs_cov),
-    copy(observed.obs_cov),
-    copy(objective),
-    copy(grad),
-    meandiff
-    )
+    isnothing(observed.obs_mean) ?
+        meandiff = nothing :
+        meandiff = copy(observed.obs_mean)
+    return SemML(
+        copy(observed.obs_cov),
+        copy(observed.obs_cov),
+        copy(objective),
+        copy(grad),
+        meandiff
+        )
 end
 
 ### Loss
 # generic (not optimized)
 function (semml::SemML)(par, model)
-    if !isposdef(Hermitian(model.imply.imp_cov))
+    B = copy(model.imply.imp_cov)
+    C = similar(model.imply.imp_cov)
+
+    a = cholesky!(Hermitian(B); check = false)
+    if !isposdef(a)
         F = Inf
     else
-        F = logdet(model.imply.imp_cov) +
-             tr(inv(model.imply.imp_cov)*model.observed.obs_cov)
+        mul!(C, inv(a), model.observed.obs_cov)
+        F = logdet(a) +
+             tr(C)
     end
+    #B = nothing
+    #C = nothing
+    #a = nothing
     return F
 end
 

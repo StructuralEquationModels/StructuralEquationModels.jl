@@ -80,83 +80,32 @@ start_val = vcat(
 
 loss = Loss([SemML(semobserved, [0.0], similar(start_val))])
 
-diff_ana = SemAnalyticDiff(LBFGS(), Optim.Options(;show_trace = true),
-            A, S, F, x, start_val)
+#diff_ana = SemAnalyticDiff(LBFGS(), Optim.Options(;show_trace = true),
+#            A, S, F, x, start_val)
+
+sem.neumann_series(A)
 
 imply = ImplySymbolic(A, S, F, x, start_val)
 
+@benchmark ImplySymbolic(A, S, F, x, start_val)
+
 imply_alloc = sem.ImplySymbolicAlloc(A, S, F, x, start_val)
-imply_forward = sem.ImplySymbolicForward(A, S, F, x, start_val)
+#imply_forward = sem.ImplySymbolicForward(A, S, F, x, start_val)
 
 model_fin = Sem(semobserved, imply, loss, diff_fin)
 model_rev = Sem(semobserved, imply_alloc, loss, diff_rev)
-model_for = Sem(semobserved, imply_alloc, loss, diff_for)
-model_for2 = Sem(semobserved, imply_forward, loss, diff_for)
-model_ana = Sem(semobserved, imply, loss, diff_ana)
+#model_for = Sem(semobserved, imply_alloc, loss, diff_for)
+#model_for2 = Sem(semobserved, imply_forward, loss, diff_for)
+#model_ana = Sem(semobserved, imply, loss, diff_ana)
 
 #Zygote.@nograd isposdef
 #Zygote.@nograd Symmetric
 
-@btime diff_fin = SemFiniteDiff("a", "b")
-
-diff_fin = SemFiniteDiff(BFGS(), Optim.Options())
-
-function loopsem(k, sem, semobserved, imply, loss, diff_fin)
-    A = Vector{Any}(undef, k)
-    for i in 1:k
-        A[i] = deepcopy(Sem(semobserved, imply, loss, diff_fin))
-    end
-    return A
-end
-
-@benchmark loopsem(1000, model_fin, semobserved, imply, loss, diff_fin)
-
-testmat = copy(test[1].imply.imp_cov)
-
-test[1].imply.imp_cov .= zeros(11,11)
-
-test[2].imply.imp_cov
-
-test[1].diff.algorithm = "c"
-
-model_fin
-
-ForwardDiff.gradient(model_for, start_val)
-FiniteDiff.finite_difference_gradient(model_fin, start_val)
-Zygote.gradient(model_for, start_val)
-
-grad = copy(start_val)
-model_ana(nothing, grad, start_val)
-grad ≈ ForwardDiff.gradient(model_for, start_val)
-
-model_for.loss.functions[1].grad
-
-output = copy(start_val)
-
-model_fin(start_val)
-
-typeof(model_fin.imply)
-
 solution_fin = sem_fit(model_fin)
-solution_for = sem_fit(model_for)
-solution_for2 = sem_fit(model_for2)
+#solution_for = sem_fit(model_for)
+#solution_for2 = sem_fit(model_for2)
 solution_rev = sem_fit(model_rev)
-solution_ana = sem_fit(model_ana)
-
-model_ana.loss.functions[1].grad
-
-all(abs.(solution_fin.minimizer .- solution_for.minimizer) .< 0.01)
-
-model(vcat(solution_fin.minimizer[1:29], 0.57, solution_fin.minimizer[31]))
-
-solution_fin.minimum
-solution_fin.minimizer
-solution_for.minimum
-
-@benchmark model_fin.imply(start_val)
-
-inverse = zeros(11,11)
-pre = zeros(11,11)
+#solution_ana = sem_fit(model_ana)
 
 par_order = [collect(21:34); collect(15:20); 2;3; 5;6;7; collect(9:14)]
 
@@ -166,9 +115,60 @@ all(
 
 start_lav = three_path_start.start[par_order]
 
+model_fin(start_val)
+model_rev(start_val)
 
+FiniteDiff.finite_difference_jacobian(model_rev, start_val) ==
+    FiniteDiff.finite_difference_jacobian(model_fin, start_val)
 
+truegrad = similar(start_val)
+    
+truegrad = FiniteDiff.finite_difference_jacobian(model_fin, start_val)
+
+truegrad = [truegrad...]
+const tape2 = 
+    ReverseDiff.GradientTape(model_rev, (start_val))    
+# compile `f_tape` into a more optimized representation
+const compiled_tape2 = ReverseDiff.compile(tape2)
+
+results = similar(start_val)
+g_r(G, x) = ReverseDiff.gradient!(G, compiled_tape2, x)
+
+truegrad .≈ results
 ##
+
+g_f(x) = FiniteDiff.finite_difference_gradient(model_fin, x)
+
+@benchmark model_fin(start_val)
+@benchmark g_f(start_val)
+@benchmark g_r(results, start_val)
+
+solution = sem_fit(model_fin, g_f)
+solution2 = sem_fit(model_fin)
+
+solution.minimizer ≈ solution2.minimizer
+
+solution3 = sem_fit(model_fin, g_r)
+
+solution3.minimizer ≈ solution2.minimizer
+
+@benchmark sem_fit(model_fin)
+@benchmark sem_fit(model_fin, g_r)
+
+const tape3 = 
+    ReverseDiff.HessianTape(model_rev, (start_val))    
+# compile `f_tape` into a more optimized representation
+const compiled_tape3 = ReverseDiff.compile(tape3)
+
+results = similar(start_val)
+h_r(G, x) = ReverseDiff.hessian!(G, compiled_tape3, x)
+
+@benchmark sem_fit(model_fin, g_r, h_r)
+
+G = zeros(31,31)
+@btime h_r(G, start_val)
+
+
 using LinearAlgebra, Optim
 
 obs = abs.(randn(20))
