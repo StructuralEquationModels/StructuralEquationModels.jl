@@ -3,15 +3,20 @@
 using LinearAlgebra, Optim, BenchmarkTools
 
 ## we need to minimize a loss function that is quite similiar to the one below
+# the loss function will hence be called a few hundreds to a few thousend times by an optimizer
+# we will often find us in situation where we have several thousend (even millions) of these optimization problems
+# but our focus for now is on paralelization of the a single loss function (which is a sum of independend matrix operations)
 
-n = 100 # number of parallelizable units
+# number of parallelizable units
+# in real life this value will usually be around 500-2000 and almost never > 10000
+n = 100 
 
 parameters = [100.0, 300] # we get those from the optimizer; 
                         # it decides which parameters are tested
 specific_data = rand(n) # something that is unique between units  
 
 # pre-allocating some memory
-pre = [rand(2,2) for i in 1:n]
+# in real life this value will usually be around 10*10 and almost never > 100*100
 for i in 1:n pre[i] = pre[i]*pre[i]' end
 prod = copy(pre)
 a = cholesky.(Hermitian.(pre))
@@ -30,6 +35,7 @@ function loss_perunit(pars, pre, a, specific_data)
     return ld + tr(pre)
 end
 
+### not parallelized
 function loss(pars, pre, a, specific_data, n, F)
     for i in 1:n
         F[i] = loss_perunit(pars, pre[i], a[i], specific_data[i])
