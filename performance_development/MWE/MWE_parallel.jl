@@ -5,10 +5,10 @@ using LinearAlgebra, Optim, BenchmarkTools
 ## we need to minimize a loss function that is quite similiar to the one below
 # the loss function will hence be called a few hundreds to a few thousend times by an optimizer
 # we will often find us in situation where we have several thousend (even millions) of these optimization problems
-# but our focus for now is on paralelization of the a single loss function (which is a sum of independend matrix operations)
+# but our focus for now is on parallelization of the a single loss function (which is a sum of independend matrix operations)
 
 # number of parallelizable units
-# in real life this value will usually be around 500-2000 and almost never > 10000
+# in real life this value will usually be around 1-2000 and almost never > 10000
 n = 100 
 
 parameters = [100.0, 300] # we get those from the optimizer; 
@@ -16,7 +16,8 @@ parameters = [100.0, 300] # we get those from the optimizer;
 specific_data = rand(n) # something that is unique between units  
 
 # pre-allocating some memory
-# in real life this value will usually be around 10*10 and almost never > 100*100
+# in real life those matrices will usually have dimensions around 10*10 to 50*50 and almost never > 200*200
+pre = [rand(2,2) for i in 1:n]
 for i in 1:n pre[i] = pre[i]*pre[i]' end
 prod = copy(pre)
 a = cholesky.(Hermitian.(pre))
@@ -55,3 +56,9 @@ end
 
 
 @benchmark loss_parallel(parameters, pre, a, specific_data, n, F)
+
+# We have two questions:
+# 1. The preallocated memory can be very big (e.g. 8 bytes * 50*50* 1000 * 2 = 40GB for example). 
+# However, in theory we believe only twice as many matrices have to be preallocated as there are threads, 
+# but we are not shure how to implement that.
+# 2. As soon as one computation yields the value Inf; all other computations can be stopped; because the sum will be Inf in any case.
