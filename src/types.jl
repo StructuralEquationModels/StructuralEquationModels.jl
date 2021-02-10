@@ -19,8 +19,8 @@ abstract type AbstractSem end
 
 struct Sem{O <: SemObs, I <: Imply, L <: Loss, D <: SemDiff} <: AbstractSem
     observed::O
-    imply::I # former ram
-    loss::L # list of loss functions
+    imply::I 
+    loss::L 
     diff::D
 end
 
