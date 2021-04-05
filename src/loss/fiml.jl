@@ -49,7 +49,7 @@ function SemFIML(observed::O where {O <: SemObs}, objective, grad)
     end
 
 
-    function (semfiml::SemFIML)(par, model::Sem{O, I, L, D}) where
+function (semfiml::SemFIML)(par, model::Sem{O, I, L, D}) where
             {O <: SemObs, L <: Loss, I <: Imply, D <: SemFiniteDiff}
 
     if isnothing(model.imply.imp_mean) 

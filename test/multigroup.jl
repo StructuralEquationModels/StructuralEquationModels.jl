@@ -124,22 +124,10 @@ sem_mg_loadeq, start_val_loadeq = MGSem(three_path_dat_loadeq, start_val,
     differ_group_loadeq, rowind_loadeq, obs_list_loadeq, imply,
     loss, diff_fin)
 
-sem_mg_loadeq
-
-names(three_path_dat_loadeq)
-
-@code_warntype sem_mg(start_val_mg)
 
 solution = sem_fit(sem_mg, start_val_mg)
 
 solution_loadeq = sem_fit(sem_mg_loadeq, start_val_loadeq)
-
-@profile (for i = 1:100000 sem_mg(start_val_mg) end)
-
-model_fin = Sem(semobserved, imply, loss, diff_fin)
-
-sem_fit(model_fin)
-
 
 ##
 three_path_par_alleq = three_path_par_alleq[1:34, :]
@@ -168,122 +156,3 @@ est_loadeq = three_path_par_loadeq.est[vcat(par_order_alleq, 34 .+ par_order_all
 all(
     abs.(par_loadeq .- est_loadeq
         ) .< 0.05*abs.(est_loadeq))
-
-findmax(abs.(par_loadeq .- est_loadeq))
-
-variab = rand(5)
-
-subsets = trues(10, 10)
-sub_vec = [subsets[i, :] for i in 1:size(subsets, 1)]
-par = rand(10)
-
-card_vec = [findall(sub_vec[i]) for i in 1:10]
-
-function tp_inner(par)
-end
-
-# function tp_outer(par, ind)
-#     @views for i in 1:size(ind, 2)
-#         tp_inner(par[ind[i, :]])
-#     end
-# end
-
-function tp_outer_vec(par, ind)
-    for i in 1:length(ind)
-        tp_inner(par[ind[i]])
-    end
-end
-
-index = Array{Float64, 1}(undef, 10)
-
-function tp_outer_vec_2(par, ind, index)
-    for i in 1:length(ind)
-        tp_inner(view(par, ind[i]))
-    end
-end
-
-function tp_outer_vec_3(par, ind, index)
-    @views for i in 1:length(ind)
-        tp_inner(par[ind[i]])
-    end
-end
-
-function tp_outer_vec_4(par, ind, index)
-    for i in 1:length(ind)
-        index = par[ind[i]]
-        tp_inner(index)
-    end
-end
-
-@benchmark tp_outer($par, $subsets)
-@benchmark tp_outer_vec($par, $sub_vec)
-@benchmark tp_outer_vec_2($par, $card_vec, $index)
-@benchmark tp_outer_vec_3($par, $card_vec, $index)
-@benchmark tp_outer_vec_4($par, $sub_vec, $index)
-
-view(par, )
-
-bitrand(2,2)
-
-mat = falses(2, 2)
-
-mat[1] = true
-
-mat
-
-sem.parsubset(differ_group, start_val)
-
-using Optim, ForwardDiff, FiniteDiff
-
-f(x) = sum(abs, x)
-
-function Δf(x)
-    grad = sign.(x)
-    return grad
-end
-
-
-optimize(f, start2, BFGS(); autodiff = :forward)
-
-optimize(f, start2, BFGS())
-
-optimize(f, Δf, start2, BFGS(); inplace = false)
-
-start = [0.0, 0]
-start2 = [5.0, -15]
-
-FiniteDiff.finite_difference_gradient(f, start)
-
-sign(0.0)
-
-sign.(start2)
-
-x = rand(5)
-
-(x[i] for i = 1:5)
-
-sol.minimizer - sol2.minimizer
-
-
-function myf(A)
-    d = det(A)
-    return d
-end
-
-function myf_outer(A)
-    F = zero(eltype(A[1]))
-    for i in 1:length(A)
-        F += myf(A[i])
-    end
-    return F
-end
-
-A = [rand(10,10), rand(10,10), rand(10,10)]
-
-B = rand(10,10)
-
-@benchmark myf(B)
-
-@benchmark myf_outer(A)
-
-@code_warntype myf_outer(A)

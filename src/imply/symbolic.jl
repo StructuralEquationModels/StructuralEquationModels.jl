@@ -272,23 +272,23 @@ end
 ############################################################################
 ### loss functions
 
-function (imply::ImplySymbolic)(parameters)
+function (imply::ImplySymbolic)(parameters, model)
     imply.imp_fun(imply.imp_cov, parameters)
     if !isnothing(imply.imp_mean)
         imply.imp_fun_mean(imply.imp_mean, parameters)
     end
 end
 
-function (imply::ImplySymbolicAlloc)(parameters)
+function (imply::ImplySymbolicAlloc)(parameters, model)
     imply.imp_cov = imply.imp_fun(parameters)
 end
 
-function (imply::ImplySymbolicForward)(parameters)
+function (imply::ImplySymbolicForward)(parameters, model)
     imply.imp_cov = DiffEqBase.get_tmp(imply.imp_cov, parameters)
     imply.imp_fun(imply.imp_cov, parameters)
 end
 
-function (imply::ImplySymbolicDefinition)(parameters)
+function (imply::ImplySymbolicDefinition)(parameters, model)
     for i = 1:imply.n_patterns
         let (cov, 
             mean, 

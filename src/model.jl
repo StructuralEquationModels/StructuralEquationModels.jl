@@ -14,10 +14,8 @@
 
 ### Two versions. The second one could be easier to construct
 function (model::Sem)(par)
-    model.imply(par)
-    F = model.loss(
-        par,
-        model)
+    model.imply(par, model)
+    F = model.loss(par, model)
     return F
 end
 
