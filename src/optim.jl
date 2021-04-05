@@ -31,6 +31,16 @@ function sem_fit(model::A, g!) where
     return result
 end
 
+function sem_fit(model::A, start_val::B) where
+    {A <: AbstractSem, B <: AbstractArray}
+    result = optimize(
+                par -> model(par),
+                start_val,
+                model.sem_vec[1].diff.algorithm,
+                model.sem_vec[1].diff.options)
+    return result
+end
+
 function sem_fit(model::A, g!, h!) where
     {A <: AbstractSem}
     result = optimize(
