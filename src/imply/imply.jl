@@ -59,7 +59,7 @@ function ImplySparse(
 end
 
 
-function (imply::ImplySparse)(parameters)
+function (imply::ImplySparse)(parameters, model)
     imply.imp_fun_invia(imply.invia, parameters)
     imply.imp_fun_S(imply.S, parameters)
     #let (F, S, invia) = (imply.F, imply.S, imply.invia)
