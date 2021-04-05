@@ -11,6 +11,61 @@ F[diagind(F)] .= 1.0
 mat2 = zeros(8,8)
 @benchmark for i in 1:8 for j in 1:8 mat2[i, j] = mat[i, j] end end
 
+@variables x[1:32]
+
+S =[x[1]  0     0     0     0     0     0     0     0     0     0     0     0     0
+    0     x[2]  0     0     0     0     0     0     0     0     0     0     0     0
+    0     0     x[3]  0     0     0     0     0     0     0     0     0     0     0
+    0     0     0     x[4]  0     0     0     x[15] 0     0     0     0     0     0
+    0     0     0     0     x[5]  0     x[16] 0     x[17] 0     0     0     0     0
+    0     0     0     0     0     x[6]  0     0     0     x[18] 0     0     0     0
+    0     0     0     0     x[16] 0     x[7]  0     0     0     x[19] 0     0     0
+    0     0     0     x[15] 0     0     0     x[8]  0     0     0     0     0     0
+    0     0     0     0     x[17] 0     0     0     x[9]  0     x[20] 0     0     0
+    0     0     0     0     0     x[18] 0     0     0     x[10] 0     0     0     0
+    0     0     0     0     0     0     x[19] 0     x[20] 0     x[11] 0     0     0
+    0     0     0     0     0     0     0     0     0     0     0     x[12] 0     0
+    0     0     0     0     0     0     0     0     0     0     0     0     x[13] 0
+    0     0     0     0     0     0     0     0     0     0     0     0     0     x[14]]
+
+F =[1.0 0 0 0 0 0 0 0 0 0 0 0 0 0
+    0 1 0 0 0 0 0 0 0 0 0 0 0 0
+    0 0 1 0 0 0 0 0 0 0 0 0 0 0
+    0 0 0 1 0 0 0 0 0 0 0 0 0 0
+    0 0 0 0 1 0 0 0 0 0 0 0 0 0
+    0 0 0 0 0 1 0 0 0 0 0 0 0 0
+    0 0 0 0 0 0 1 0 0 0 0 0 0 0
+    0 0 0 0 0 0 0 1 0 0 0 0 0 0
+    0 0 0 0 0 0 0 0 1 0 0 0 0 0
+    0 0 0 0 0 0 0 0 0 1 0 0 0 0
+    0 0 0 0 0 0 0 0 0 0 1 0 0 0]
+
+A =[0  0  0  0  0  0  0  0  0  0  0     1     0     0
+    0  0  0  0  0  0  0  0  0  0  0     x[21] 0     0
+    0  0  0  0  0  0  0  0  0  0  0     x[22] 0     0
+    0  0  0  0  0  0  0  0  0  0  0     0     1     0
+    0  0  0  0  0  0  0  0  0  0  0     0     x[23] 0
+    0  0  0  0  0  0  0  0  0  0  0     0     x[24] 0
+    0  0  0  0  0  0  0  0  0  0  0     0     x[25] 0
+    0  0  0  0  0  0  0  0  0  0  0     0     0     1
+    0  0  0  0  0  0  0  0  0  0  0     0     0     x[26]
+    0  0  0  0  0  0  0  0  0  0  0     0     0     x[27]
+    0  0  0  0  0  0  0  0  0  0  0     0     0     x[28]
+    0  0  0  0  0  0  0  0  0  0  0     0     0     0
+    0  0  0  0  0  0  0  0  0  0  0     x[29] 0     0
+    0  0  0  0  0  0  0  0  0  0  0     x[30] x[31] 0]
+
+
+S = sparse(S)
+
+#F
+F = sparse(F)
+
+#A
+A = sparse(A)
+
+invia = sem.neumann_series(A)
+
 test = invia*S*permutedims(invia)
 @benchmark F*test*permutedims(F)
 
@@ -23,9 +78,11 @@ test2 = Array{Num,2}(undef, 30, 30)
 F = zeros(30, 32)
 F[diagind(F)] .= 1.0
 
+imp_cov_sym = F*test*permutedims(F)
+
 @benchmark ModelingToolkit.build_function(
             imp_cov_sym,
-            [x..., m...], 
+            [x...],#, m...], 
             load_t
         )
 
@@ -33,8 +90,8 @@ imp_cov_sym = LowerTriangular(imp_cov_sym)
 
 str_f = ModelingToolkit.build_function(
     imp_cov_sym,
-    [x..., m...], 
-    load_t
+    [x...]#, m...], 
+    #load_t
 )[2]
 
 write("function.jl", string(str_f))
