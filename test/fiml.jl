@@ -122,11 +122,7 @@ imply_mean = ImplySymbolic(A, S, F, [x..., mₓ, my[1:5]..., my[7:8]...], start_
 model_fin = Sem(semobserved, imply, loss, diff_fin)
 model_fin_mean = Sem(semobserved, imply_mean, loss_mean, diff_fin)
 
-using BenchmarkTools
-
-model_fin(start_val)
-
-@benchmark solution_fin = sem_fit(model_fin)
+solution_fin = sem_fit(model_fin)
 solution_fin_mean = sem_fit(model_fin_mean)
 
 par_order = [collect(21:34); collect(15:20); 2;3; 5;6;7; collect(9:14);
