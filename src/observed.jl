@@ -38,10 +38,10 @@ struct SemObsMissing{
     n_man::D
     n_obs::O
     patterns::P # missing patterns
-    rows::R # coresponding rows in the data or matrices
-    data_perperson::PD # list of data per missing pattern
-    pattern_n_obs::PO #
-    pattern_nvar_obs::PVO
+    rows::R # coresponding rows in data_rowwise
+    data_rowwise::PD # list of data
+    pattern_n_obs::PO # observed rows per pattern
+    pattern_nvar_obs::PVO # number of non-missing variables per pattern
 end
 
 function SemObsMissing(data)
@@ -64,8 +64,8 @@ function SemObsMissing(data)
     patterns = [missings[i, :] for i = 1:size(missings, 1)]
 
     patterns_cart = findall.(!, patterns)
-    data_perperson = [data[i, patterns_cart[i]] for i = 1:n_obs]
-    data_perperson = convert.(Array{Float64}, data_perperson)
+    data_rowwise = [data[i, patterns_cart[i]] for i = 1:n_obs]
+    data_rowwise = convert.(Array{Float64}, data_rowwise)
 
     remember = Vector{BitArray{1}}()
     rows = [Vector{Int64}(undef, 0) for i = 1:size(patterns, 1)]
@@ -95,5 +95,5 @@ function SemObsMissing(data)
     pattern_nvar_obs = length.(remember_cart) 
 
     return SemObsMissing(data, Float64(n_man), Float64(n_obs), remember_cart,
-    rows, data_perperson, Float64.(pattern_n_obs), Float64.(pattern_nvar_obs))
+    rows, data_rowwise, Float64.(pattern_n_obs), Float64.(pattern_nvar_obs))
 end
