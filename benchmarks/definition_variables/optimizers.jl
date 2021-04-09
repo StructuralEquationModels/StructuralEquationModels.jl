@@ -84,7 +84,7 @@ F = zeros(15, 17)
 diag(F)
 F[diagind(F)] .= 1.0
 
-M = zeros(Expression, 17, 1)
+M = zeros(Num, 17, 1)
 M .= [zeros(15)..., m[1:2]...]
 M = sparse(M)
 
@@ -304,7 +304,7 @@ diff_fin_big = SemFiniteDiff(
     Optim.Options(f_tol = f_tol))#, time_limit = 20))
 
 diff_fin_big = SemFiniteDiff(
-    BFGS(alphaguess = InitialHagerZhang(), 
+    LBFGS(alphaguess = InitialHagerZhang(), 
         linesearch = HagerZhang()), 
     Optim.Options(f_tol = f_tol, time_limit = time_limit))
 
