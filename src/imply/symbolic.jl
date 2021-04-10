@@ -32,7 +32,6 @@ mutable struct ImplySymbolicAlloc{
     start_val::S
 end
 
-
 struct ImplySymbolicDefinition{
     F <: Any,
     A <: AbstractArray,
@@ -42,7 +41,7 @@ struct ImplySymbolicDefinition{
     I <: Int64,
     P <: Int64,
     R <: AbstractArray,
-    D <: AbstractArray} <: Imply
+    D <: AbstractArray} <: ImplyDefinition
 imp_fun::F
 imp_cov::A # Array of matrices
 start_val::S

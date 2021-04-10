@@ -113,11 +113,11 @@ start_val_mean_free = vcat(
 
 semobserved = SemObsMissing(miss20_mat)
 
-loss = Loss([SemFIML(semobserved, imply, [0.0], start_val_mean_free)])
-loss_mean = Loss([SemFIML(semobserved, imply, [0.0], start_val_mean)]) 
-
 imply = ImplySymbolic(A, S, F, [x..., m...], start_val_mean_free; M = M_free)
 imply_mean = ImplySymbolic(A, S, F, [x..., mₓ, my[1:5]..., my[7:8]...], start_val_mean; M = M)
+
+loss = Loss([SemFIML(semobserved, imply, [0.0], start_val_mean_free)])
+loss_mean = Loss([SemFIML(semobserved, imply, [0.0], start_val_mean)]) 
 
 model_fin = Sem(semobserved, imply, loss, diff_fin)
 model_fin_mean = Sem(semobserved, imply_mean, loss_mean, diff_fin)
