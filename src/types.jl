@@ -13,6 +13,7 @@ abstract type SemObs end
 
 ## Imply
 abstract type Imply end
+abstract type ImplyDefinition <: Imply end
 
 ## SEModel
 abstract type AbstractSem end

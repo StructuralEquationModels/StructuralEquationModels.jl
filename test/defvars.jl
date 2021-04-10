@@ -20,7 +20,7 @@ definition_par_missing_unique =
 
 ##############################################################################
 
-semobserved = SemObsCommon(data = Matrix(growth_dat); meanstructure = true)
+semobserved = SemObsCommon(data = Matrix(growth_dat); meanstructure = true, rowwise = true)
 
 diff_fin = SemFiniteDiff(BFGS(), Optim.Options())
 
@@ -74,7 +74,7 @@ imply = ImplySymbolicDefinition(
     data_def
 )
 
-loss = Loss([SemDefinition(semobserved, imply, 0.0, 0.0)])
+loss = Loss([SemML(semobserved, imply, 0.0, 0.0)])
 
 model_fin = Sem(semobserved, imply, loss, diff_fin)
 

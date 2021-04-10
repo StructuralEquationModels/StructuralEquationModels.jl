@@ -1,16 +1,34 @@
 # Ordinary Maximum Likelihood Estimation
 
 ### Type
+#= struct SemML{
+        I <: AbstractArray,
+        T <: AbstractArray,
+        U, V,
+        W <: Union{Nothing, AbstractArray}} <: LossFunction
+    imp_inv::I
+    mult::T # is this type known?
+    objective::U
+    grad::V
+    meandiff::W
+end =#
+
 struct SemML{
-    I <: AbstractArray,
-    T <: AbstractArray,
-    U, V,
-    W <: Union{Nothing, AbstractArray}} <: LossFunction
-imp_inv::I
-mult::T # is this type known?
-objective::U
-grad::V
-meandiff::W
+        INV <: AbstractArray,
+        C <: Union{AbstractArray, Nothing},
+        L <: Union{AbstractArray, Nothing},
+        M <: Union{AbstractArray, Nothing},
+        M2 <: Union{AbstractArray, Nothing},
+        U,
+        V} <: LossFunction
+    inverses::INV #preallocated inverses of imp_cov
+    choleskys::C #preallocated choleskys
+    mult::M
+    logdets::L #logdets of implied covmats
+    meandiff::M2
+    #data_rowwise::DP  -> add to semobs
+    objective::U
+    grad::V
 end
 
 ### Constructor
@@ -20,10 +38,12 @@ function SemML(observed::T, objective, grad) where {T <: SemObs}
         meandiff = copy(observed.obs_mean)
     return SemML(
         copy(observed.obs_cov),
+        nothing,
         copy(observed.obs_cov),
+        nothing,
+        meandiff,
         copy(objective),
         copy(grad),
-        meandiff
         )
 end
 
@@ -50,22 +70,21 @@ end
 # maximum speed for finite differences
 function (semml::SemML)(par, model::Sem{O, I, L, D}) where
             {O <: SemObs, L <: Loss, I <: Imply, D <: SemFiniteDiff}
-    semml.imp_inv .= model.imply.imp_cov
+    semml.inverses .= model.imply.imp_cov
     a = cholesky!(Hermitian(semml.imp_inv); check = false)
     if !isposdef(a)
         F = Inf
     else
         ld = logdet(a)
-        semml.imp_inv .= LinearAlgebra.inv!(a)
+        semml.inverses .= LinearAlgebra.inv!(a)
         #inv_cov = inv(a)
-        mul!(semml.mult, semml.imp_inv, model.observed.obs_cov)
+        mul!(semml.mult, semml.inverses, model.observed.obs_cov)
         if !isnothing(model.imply.imp_mean)
             @. semml.meandiff = model.observed.obs_mean - model.imply.imp_mean
             F_mean = semml.meandiff'*semml.imp_inv*semml.meandiff
         else
             F_mean = zero(eltype(par))
         end
-        #mul!()
         F = ld +
             tr(semml.mult) + F_mean
     end

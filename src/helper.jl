@@ -65,3 +65,9 @@ function remove_all_missing(data)
     end
     return data[keep, :], keep
 end
+
+function batch_inv!(lossfun::LossFunction)
+    for i = 1:size(lossfun.inverses, 1)
+        lossfun.inverses[i] .= LinearAlgebra.inv!(lossfun.choleskys[i])
+    end
+end

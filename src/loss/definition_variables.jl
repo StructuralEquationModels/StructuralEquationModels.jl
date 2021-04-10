@@ -1,34 +1,26 @@
-struct SemDefinition{ #################### call it per person or sth????
+# move data_rowwise to observed
+# 
+
+#= struct SemDefinition{ #################### call it per person or sth????
         INV <: AbstractArray,
         C <: AbstractArray,
         L <: AbstractArray,
         M <: AbstractArray,
-        I <: AbstractArray,
-        IM <: Union{AbstractArray, Nothing},
-        T <: AbstractArray,
-        DP <: AbstractArray,
-        K <: Union{AbstractArray, Nothing},
-        R <: Union{AbstractArray, Nothing},
         U,
         V} <: LossFunction
     inverses::INV #preallocated inverses of imp_cov
     choleskys::C #preallocated choleskys
     logdets::L #logdets of implied covmats
     meandiff::M
-    imp_inv::I
-    imp_mean::IM
-    mult::T
-    data_perperson::DP
-    keys::K
-    rows::R
+    #data_rowwise::DP  -> add to semobs
     objective::U
     grad::V
-end
+end =#
 
 # constructor
-function SemDefinition(
+function SemML(
         observed::O where {O <: SemObs}, 
-        imply::I where {I <: ImplySymbolicDefinition}, 
+        imply::I where {I <: ImplyDefinition}, 
         objective,
         grad) 
     n_obs = Int64(observed.n_obs)
@@ -41,57 +33,54 @@ function SemDefinition(
 
     meandiff = [zeros(n_man) for i = 1:n_obs]
 
-    imp_inv = zeros(size(observed.data, 2), size(observed.data, 2))
-    mult = similar.(inverses)
-
-    data_perperson = [observed.data[i, :] for i = 1:n_obs]
-
-    return SemDefinition(
+    return SemML(
     inverses,
     choleskys,
+    nothing,
     logdets,
     meandiff,
-    imp_inv,
-    nothing,
-    mult,
-    data_perperson,
-    nothing,
-    nothing,
     copy(objective),
     copy(grad)
     )
 end
 
 # loss
-function (semdef::SemDefinition)(par, model::Sem{O, I, L, D}) where
-    {O <: SemObs, L <: Loss, I <: Imply, D <: SemFiniteDiff}
+function (semml::SemML)(par, model::Sem{O, I, L, D}) where
+    {O <: SemObs, L <: Loss, I <: ImplyDefinition, D <: SemFiniteDiff}
 
-    if isnothing(model.imply.imp_mean) 
-        error("A model implied meanstructure is needed for Definition Variables")
-    end
-
-    for i = 1:size(semdef.choleskys, 1)
-        semdef.choleskys[i] = 
-            cholesky!(Hermitian(model.imply.imp_cov[i]); check = false)
-        if !isposdef(semdef.choleskys[i]) return Inf end
-    end
-
-    semdef.logdets .= logdet.(semdef.choleskys)
-
-    for i = 1:size(semdef.inverses, 1)
-        semdef.inverses[i] .= LinearAlgebra.inv!(semdef.choleskys[i])
-    end
+    if !prepare_ML!(semml, model) return Inf end
 
     F = zero(eltype(par))
+    F = F_Definition(F, semml, model)
+    
+    return F
+end
 
+function batch_cholesky!(semml::SemML, model)
+    for i = 1:size(semml.choleskys, 1)
+        semml.choleskys[i] = 
+            cholesky!(Hermitian(model.imply.imp_cov[i]); check = false)
+        if !isposdef(semml.choleskys[i]) return false end
+    end
+    return true
+end
+
+function prepare_ML!(semml, model)
+    if !batch_cholesky!(semml, model) return false end
+    semml.logdets .= logdet.(semml.choleskys)
+    batch_inv!(semml)
+    return true
+end
+
+function F_Definition(F, semml, model)
     for i = 1:Int64(model.imply.n_patterns)
         for j in model.imply.rows[i]
             let (imp_mean, meandiff, inverse, data, logdet) =
                 (model.imply.imp_mean[i],
-                semdef.meandiff[i],
-                semdef.inverses[i],
-                semdef.data_perperson[j],
-                semdef.logdets[i])
+                semml.meandiff[i],
+                semml.inverses[i],
+                model.observed.data_rowwise[j],
+                semml.logdets[i])
 
                 F += F_one_person(imp_mean, meandiff, inverse, data, logdet)
 
@@ -100,6 +89,7 @@ function (semdef::SemDefinition)(par, model::Sem{O, I, L, D}) where
     end
     return F
 end
+
 
 # constructor for defvars + fiml (observed <: SemObsMissing)
 function SemDefinition(
@@ -135,7 +125,7 @@ function SemDefinition(
         push!(keys_inner_vec, keys_inner)
     end
 
-    data_perperson = [observed.data[i, :] for i = 1:Int64(observed.n_obs)]
+    data_rowwise = [observed.data[i, :] for i = 1:Int64(observed.n_obs)]
 
     #rows_nested
 
@@ -174,7 +164,7 @@ function SemDefinition(
     imp_inv,
     imp_mean,
     mult,
-    data_perperson,
+    data_rowwise,
     keys_inner_vec,
     rows_nested,
     copy(objective),
@@ -182,7 +172,7 @@ function SemDefinition(
     )
 end
 
-# loss function for defvars + fiml
+#= # loss function for defvars + fiml
 function (semdef::SemDefinition)(par, model::Sem{O, I, L, D}) where
     {O <: SemObsMissing, L <: Loss, I <: Imply, D <: SemFiniteDiff}
 
@@ -239,7 +229,7 @@ function (semdef::SemDefinition)(par, model::Sem{O, I, L, D}) where
                     (semdef.imp_mean[i][j],
                     semdef.meandiff[i][j],
                     semdef.inverses[i][j],
-                    model.observed.data_perperson[semdef.rows[i][j][k]],
+                    model.observed.data_rowwise[semdef.rows[i][j][k]],
                     semdef.logdets[i][j])
 
                     F += F_one_person(imp_mean, meandiff, inverse, data, logdet)
@@ -258,3 +248,4 @@ function findrow(r, rows)
     end
 end
 
+ =#

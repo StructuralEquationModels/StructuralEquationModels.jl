@@ -63,13 +63,12 @@ function (semfiml::SemFIML)(
     I <: Imply, 
     D <: SemFiniteDiff}
 
-    if !check_fiml(semfiml, model)
-        F = Inf
-    else
-        prepare_fiml!(semfiml, model)
-        F = zero(eltype(par))
-        F = F_FIML(F, semfiml, model)
-    end
+    if !check_fiml(semfiml, model) return Inf end
+
+    prepare_fiml!(semfiml, model)
+    F = zero(eltype(par))
+    F = F_FIML(F, semfiml, model)
+
     return F
 end
 
@@ -91,12 +90,6 @@ end
 function batch_cholesky!(semfiml::SemFIML)
     for i = 1:size(semfiml.inverses, 1)
         semfiml.choleskys[i] = cholesky!(Hermitian(semfiml.inverses[i]))
-    end
-end
-
-function batch_inv!(semfiml::SemFIML)
-    for i = 1:size(semfiml.inverses, 1)
-        semfiml.inverses[i] .= LinearAlgebra.inv!(semfiml.choleskys[i])
     end
 end
 
