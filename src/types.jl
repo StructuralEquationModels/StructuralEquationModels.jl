@@ -15,6 +15,9 @@ abstract type SemObs end
 abstract type Imply end
 abstract type ImplyDefinition <: Imply end
 
+## Interaction
+abstract type SemInteraction end
+
 ## SEModel
 abstract type AbstractSem end
 
