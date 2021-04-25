@@ -17,6 +17,33 @@
     grad::V
 end =#
 
+struct SemDefinition{ #################### call it per person or sth????
+        INV <: AbstractArray,
+        C <: AbstractArray,
+        L <: AbstractArray,
+        M <: AbstractArray,
+        I <: AbstractArray,
+        IM <: Union{AbstractArray, Nothing},
+        T <: AbstractArray,
+        DP <: AbstractArray,
+        K <: Union{AbstractArray, Nothing},
+        R <: Union{AbstractArray, Nothing},
+        U,
+        V} <: LossFunction
+    inverses::INV #preallocated inverses of imp_cov
+    choleskys::C #preallocated choleskys
+    logdets::L #logdets of implied covmats
+    meandiff::M
+    imp_inv::I
+    imp_mean::IM
+    mult::T
+    data_perperson::DP
+    keys::K
+    rows::R
+    objective::U
+    grad::V
+end
+
 # constructor
 function SemML(
         observed::O where {O <: SemObs}, 
@@ -180,13 +207,6 @@ function (semdef::SemDefinition)(par, model::Sem{O, I, L, D}) where
         error("A model implied meanstructure is needed for Definition Variables")
     end
 
-    ################################################
-    #copyto!(semfiml.imp_inv, model.imply.imp_cov)
-    #a = cholesky!(Hermitian(semfiml.imp_inv); check = false)
-
-    #if !isposdef(a)
-    #    F = Inf
-    #else
     for i = 1:size(semdef.keys, 1)
         for j = 1:size(semdef.keys[i], 1)
             @views semdef.inverses[i][j] .=
@@ -239,6 +259,7 @@ function (semdef::SemDefinition)(par, model::Sem{O, I, L, D}) where
     end
     return F
 end
+ =#
 
 function findrow(r, rows)
     for i in 1:length(rows)
@@ -247,5 +268,3 @@ function findrow(r, rows)
         end
     end
 end
-
- =#

@@ -80,11 +80,6 @@ start_val = vcat(
 
 loss = Loss([SemML(semobserved, [0.0], similar(start_val))])
 
-#diff_ana = SemAnalyticDiff(LBFGS(), Optim.Options(;show_trace = true),
-#            A, S, F, x, start_val)
-
-sem.neumann_series(A)
-
 imply = ImplySymbolic(A, S, F, x, start_val)
 
 @benchmark ImplySymbolic(A, S, F, x, start_val)
