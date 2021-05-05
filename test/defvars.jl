@@ -108,7 +108,7 @@ imply = ImplySymbolicDefinition(
     data_def
     )
 
-loss = Loss([SemDefinition(semobserved, imply, 0.0, 0.0)])
+loss = Loss([SemFIML(semobserved, imply, 0.0, 0.0)])
 
 model_fin = Sem(semobserved, imply, loss, diff_fin)
 
@@ -138,7 +138,7 @@ imply = ImplySymbolicDefinition(
     data_def_unique
     )
 
-loss = Loss([SemDefinition(semobserved, imply, 0.0, 0.0)])
+loss = Loss([SemFIML(semobserved, imply, 0.0, 0.0)])
 
 model_fin = Sem(semobserved, imply, loss, diff_fin)
 
