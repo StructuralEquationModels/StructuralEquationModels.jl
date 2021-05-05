@@ -160,7 +160,7 @@ function (semfiml::SemFIML)(
 
     if !check_fiml(semfiml, model) return Inf end
 
-    copy_per_pattern!(semfiml.inverses, model)
+    copy_per_pattern!(semfiml, model)
     batch_cholesky!(semfiml, model)
     semfiml.logdets .= logdet.(semfiml.choleskys)
     batch_inv!(semfiml, model)
@@ -197,7 +197,7 @@ function SemFIML(
         for i in 1:Int64(observed.n_obs)
             new = true
             for j in 1:length(rows_per_comb)
-                if group_obs[i] == group_obs_per_comb[j] & group_imp[i] == group_imp_per_comb[j]
+                if (group_obs[i] == group_obs_per_comb[j]) && (group_imp[i] == group_imp_per_comb[j])
                     push!(rows_per_comb[j], i)
                     new = false
                 end
@@ -226,7 +226,7 @@ function SemFIML(
         logdets = zeros(size(inverses, 1))
         
         imp_mean = zeros.(size.(inverses, 1))
-        meandiff = copy(imp_mean)
+        meandiff = zeros.(size.(inverses, 1))
         
         imp_inv = similar(imply.imp_cov)
         mult = similar.(inverses)
@@ -252,7 +252,7 @@ end
 function (semfiml::SemFIML)(par, model::Sem{O, I, L, D}) where
     {O <: SemObsMissing, L <: Loss, I <: ImplyDefinition, D <: SemFiniteDiff}
     
-    copy_per_pattern!(semfiml.inverses, model)
+    copy_per_pattern!(semfiml, model)
     if !batch_cholesky!(semfiml, model) return Inf end
     semfiml.logdets .= logdet.(semfiml.choleskys)
     batch_inv!(semfiml, model)
@@ -261,4 +261,3 @@ function (semfiml::SemFIML)(par, model::Sem{O, I, L, D}) where
     F = F_FIML(F, semfiml.interaction.rows_per_comb, semfiml, model)
     return F
 end
-
