@@ -20,6 +20,7 @@ include("multigroup.jl")
 #include("fiml.jl")
 include("collection.jl")
 include("optimizer/optim.jl")
+include("optimizer/nlopt.jl")
 
 export  AbstractSem, 
             Sem, MGSem, SemFIML, computeloss,

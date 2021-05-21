@@ -99,7 +99,7 @@ function (model::Sem{A, B, C, D} where {A, B, C, D <: SemFiniteDiff})(par::Vecto
     return model(par)
 end
 
-opt = Opt(:LN_COBYLA, 31)
+opt = Opt(:LD_LBFGS, 31)
 
 #cache = FiniteDiff.GradientCache(start)
 
