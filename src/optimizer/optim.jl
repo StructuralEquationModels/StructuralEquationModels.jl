@@ -1,6 +1,8 @@
+## connect do Optim.jl as backend
+
 function sem_fit(model::Sem{O, I, L, D}) where
     {O <: SemObs, L <: Loss, I <: Imply, D <: SemForwardDiff}
-    result = optimize(
+    result = Optim.optimize(
                 par -> model(par),
                 model.imply.start_val,
                 model.diff.algorithm,
@@ -11,7 +13,7 @@ end
 
 function sem_fit(model::Sem{O, I, L, D}) where
     {O <: SemObs, L <: Loss, I <: Imply, D <: SemFiniteDiff}
-    result = optimize(
+    result = Optim.optimize(
                 par -> model(par),
                 model.imply.start_val,
                 model.diff.algorithm,
@@ -21,7 +23,7 @@ end
 
 function sem_fit(model::A, g!) where
     {A <: AbstractSem}
-    result = optimize(
+    result = Optim.optimize(
                 par -> model(par),
                 g!,
                 model.imply.start_val,
@@ -33,7 +35,7 @@ end
 
 function sem_fit(model::A, start_val::B) where
     {A <: AbstractSem, B <: AbstractArray}
-    result = optimize(
+    result = Optim.optimize(
                 par -> model(par),
                 start_val,
                 model.sem_vec[1].diff.algorithm,
@@ -43,7 +45,7 @@ end
 
 function sem_fit(model::A, g!, h!) where
     {A <: AbstractSem}
-    result = optimize(
+    result = Optim.optimize(
                 par -> model(par),
                 g!,
                 h!,
@@ -68,7 +70,7 @@ end
 
 function sem_fit(model::Sem{O, I, L, D}) where
     {O <: SemObs, L <: Loss, I <: Imply, D <: SemAnalyticDiff}
-    result = optimize(
+    result = Optim.optimize(
                 Optim.only_fg!(model),
                 model.imply.start_val,
                 model.diff.algorithm,

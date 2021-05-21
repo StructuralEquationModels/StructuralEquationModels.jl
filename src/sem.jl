@@ -1,7 +1,8 @@
 module sem
 
 using Distributions, LinearAlgebra, Optim, Random,
-    NLSolversBase, Statistics, SparseArrays, ModelingToolkit
+    NLSolversBase, Statistics, SparseArrays, ModelingToolkit,
+    NLopt, FiniteDiff
 
 include("types.jl")
 include("observed.jl")
@@ -13,11 +14,12 @@ include("loss/loss.jl")
 include("loss/ML.jl")
 include("loss/fiml.jl")
 include("loss/definition_variables.jl")
+include("loss/regularized.jl")
 include("model.jl")
 include("multigroup.jl")
 #include("fiml.jl")
 include("collection.jl")
-include("optim.jl")
+include("optimizer/optim.jl")
 
 export  AbstractSem, 
             Sem, MGSem, SemFIML, computeloss,
