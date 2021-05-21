@@ -1,4 +1,3 @@
-
 # those do not need to dispatch I guess
 struct SemLasso{P, W} <: LossFunction
     penalty::P
@@ -6,7 +5,8 @@ struct SemLasso{P, W} <: LossFunction
 end
 
 function (lasso::SemLasso)(par, model)
-      F = lasso.penalty*sum(transpose(par)[lasso.which])
+    F = lasso.penalty*sum(transpose(par)[lasso.which])
+    return F
 end
 
 struct SemRidge{P, W} <: LossFunction
@@ -14,8 +14,9 @@ struct SemRidge{P, W} <: LossFunction
     which::W
 end
 
-function (ridge::SemRidge)(par, implied, observed)
-      F = ridge.penalty*sum(transpose(par)[ridge.which].^2)
+function (ridge::SemRidge)(par, model)
+    F = ridge.penalty*sum(transpose(par)[ridge.which].^2)
+    return F
 end
 
 # function (lasso::SemLasso)(par, model)
