@@ -15,6 +15,7 @@ include("loss/ML.jl")
 include("loss/fiml.jl")
 include("loss/definition_variables.jl")
 include("loss/regularized.jl")
+include("loss/constant.jl")
 include("model.jl")
 include("multigroup.jl")
 #include("fiml.jl")
@@ -29,6 +30,7 @@ export  AbstractSem,
             ImplyDense, ImplySymbolicDefinition,
         Loss, 
             LossFunction, SemML, SemFIML, SemDefinition, SemLasso, SemRidge,
+            SemConstant,
         SemDiff, 
             SemFiniteDiff, SemForwardDiff, SemReverseDiff, SemAnalyticDiff, 
         SemObs, 
