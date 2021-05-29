@@ -71,7 +71,7 @@ end
 function (semml::SemML)(par, model::Sem{O, I, L, D}) where
             {O <: SemObs, L <: Loss, I <: Imply, D <: SemFiniteDiff}
     semml.inverses .= model.imply.imp_cov
-    a = cholesky!(Hermitian(semml.inverses); check = false)
+    a = cholesky!(Symmetric(semml.inverses); check = false)
     if !isposdef(a)
         F = Inf
     else
