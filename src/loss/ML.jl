@@ -78,15 +78,15 @@ function (semml::SemML)(par, model::Sem{O, I, L, D}) where
         ld = logdet(a)
         semml.inverses .= LinearAlgebra.inv!(a)
         #inv_cov = inv(a)
-        mul!(semml.mult, semml.inverses, model.observed.obs_cov)
+        
         if !isnothing(model.imply.imp_mean)
             @. semml.meandiff = model.observed.obs_mean - model.imply.imp_mean
             F_mean = semml.meandiff'*semml.imp_inv*semml.meandiff
+            F = ld + F_mean
         else
-            F_mean = zero(eltype(par))
+            mul!(semml.mult, semml.inverses, model.observed.obs_cov)
+            F = ld + tr(semml.mult)
         end
-        F = ld +
-            tr(semml.mult) + F_mean
     end
     return F
 end
