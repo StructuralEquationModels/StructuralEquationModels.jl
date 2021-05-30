@@ -72,7 +72,9 @@ start_val = start_lav.est[par_order]
     fill(0, 171)
     ) =#
 
-grad_ml = sem.∇SemML(A, S, F, x, start_val)            
+grad_ml = sem.∇SemML(A, S, F, x, start_val)       
+grad_ml2 = sem.∇SemML2(A, S, F, x, start_val)  
+
 diff_ana = 
     SemAnalyticDiff(
         LBFGS(
@@ -82,7 +84,18 @@ diff_ana =
         Optim.Options(
             ;f_tol = 1e-10, 
             x_tol = 1.5e-8),
-            (grad_ml,))    
+            (grad_ml,))  
+diff_ana2 = 
+    SemAnalyticDiff(
+        LBFGS(
+            m = 50,
+            alphaguess = InitialHagerZhang(), 
+            linesearch = HagerZhang()), 
+        Optim.Options(
+            ;f_tol = 1e-10, 
+            x_tol = 1.5e-8),
+            (grad_ml2,))            
+            
 loss = Loss(
     [SemML(semobserved, [0.0], similar(start_val))])
 
@@ -92,7 +105,35 @@ model_fin = Sem(semobserved, imply, loss, diff_fin)
 solution_fin = sem_fit(model_fin)
 
 model_ana = Sem(semobserved, imply, loss, diff_ana)
-@btime solution_ana = sem_fit(model_ana)
+model_ana2 = Sem(semobserved, imply, loss, diff_ana2)
+
+@btime solution_ana = sem_fit(model_ana2)
+
+@benchmark sem_fit(model_ana2)
+
+grad = similar(start_val)
+
+imply(start_val, model_ana2)
+
+@btime model_ana.diff(start_val, grad, model_ana)
+@btime model_ana2.diff(start_val, grad, model_ana2)
+@code_warntype model_ana.diff.functions[1](start_val, grad, model_ana)
+
+using ProfileView
+
+function profile_diff(n)
+    for i = 1:n
+        model_ana.diff(start_val, grad, model_ana)
+    end
+end
+function profile_diff2(n)
+    for i = 1:n
+        model_ana2.diff(start_val, grad, model_ana2)
+    end
+end
+
+ProfileView.@profview profile_diff(1000)
+ProfileView.@profview profile_diff2(100)
 
 @btime model_fin(start_val)
 grad = similar(start_val)
@@ -145,7 +186,7 @@ using ProfileView
 
 function profile_test(n)
     for i = 1:n
-        sem_fit(model_fin)
+        sem_fit(model_ana)
     end
 end
 
