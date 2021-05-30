@@ -7,7 +7,8 @@ using Distributions, LinearAlgebra, Optim, Random,
 include("types.jl")
 include("observed.jl")
 include("helper.jl")
-include("diff.jl")
+include("diff/diff.jl")
+include("diff/ML.jl")
 include("imply/imply.jl")
 include("imply/symbolic.jl")
 include("loss/loss.jl")
@@ -32,7 +33,9 @@ export  AbstractSem,
             LossFunction, SemML, SemFIML, SemDefinition, SemLasso, SemRidge,
             SemConstant,
         SemDiff, 
-            SemFiniteDiff, SemForwardDiff, SemReverseDiff, SemAnalyticDiff, 
+            SemFiniteDiff, SemForwardDiff, SemReverseDiff, 
+            SemAnalyticDiff, 
+                ∇SemML,
         SemObs, 
             SemObsCommon, SemObsMissing,
         sem_fit, get_observed, CollectionSem, remove_all_missing

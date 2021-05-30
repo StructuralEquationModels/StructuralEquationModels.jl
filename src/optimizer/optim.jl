@@ -21,6 +21,17 @@ function sem_fit(model::Sem{O, I, L, D}) where
     return result
 end
 
+function sem_fit(model::Sem{O, I, L, D}) where
+    {O <: SemObs, L <: Loss, I <: Imply, D <: SemAnalyticDiff}
+    result = Optim.optimize(
+                model,
+                (grad, par) -> model(par, grad),
+                model.imply.start_val,
+                model.diff.algorithm,
+                model.diff.options)
+    return result
+end
+
 function sem_fit(model::A, g!) where
     {A <: AbstractSem}
     result = Optim.optimize(
@@ -67,16 +78,6 @@ end
 #                inplace = false)
 #    return result
 #end
-
-function sem_fit(model::Sem{O, I, L, D}) where
-    {O <: SemObs, L <: Loss, I <: Imply, D <: SemAnalyticDiff}
-    result = Optim.optimize(
-                Optim.only_fg!(model),
-                model.imply.start_val,
-                model.diff.algorithm,
-                model.diff.options)
-    return result
-end
 
 #function sem_fit(model::A, start_val) where
 #    {A <: AbstractSem}

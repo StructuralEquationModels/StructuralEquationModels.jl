@@ -8,6 +8,14 @@ end
 ## Diff
 abstract type SemDiff end
 
+abstract type DiffFunction <: Function end
+
+struct SemAnalyticDiff{F <: Tuple} <: SemDiff
+    algorithm
+    options
+    functions::F
+end
+
 ## Obs
 abstract type SemObs end
 
