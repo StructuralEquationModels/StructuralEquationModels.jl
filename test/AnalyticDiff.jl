@@ -1,98 +1,216 @@
 using sem, Feather, ModelingToolkit, Statistics, LinearAlgebra,
-    Optim, SparseArrays, Test, Zygote, LineSearches, ForwardDiff
+    SparseArrays, BenchmarkTools, Optim, LineSearches
 
 ## Observed Data
-three_path_dat = Feather.read("test/comparisons/three_path_dat.feather")
-three_path_par = Feather.read("test/comparisons/three_path_par.feather")
+dat = Feather.read("test/comparisons/reg_1.feather")
+par = Feather.read("test/comparisons/reg_1_par.feather")
+start_lav = Feather.read("test/comparisons/reg_1_start.feather")
 
+semobserved = SemObsCommon(data = Matrix(dat))
+rel_tol = 3.1956e-13
+
+diff_fin = 
+    SemFiniteDiff(
+        LBFGS(
+            m = 50,
+            alphaguess = InitialHagerZhang(), 
+            linesearch = HagerZhang()), 
+        Optim.Options(;
+            f_tol = 1e-10, 
+            x_tol = 1.5e-8))
 
 ## Model definition
-@variables x[1:31]
+@ModelingToolkit.variables x[1:243]
 
-S =[x[1]  0     0     0     0     0     0     0     0     0     0     0     0     0
-    0     x[2]  0     0     0     0     0     0     0     0     0     0     0     0
-    0     0     x[3]  0     0     0     0     0     0     0     0     0     0     0
-    0     0     0     x[4]  0     0     0     x[15] 0     0     0     0     0     0
-    0     0     0     0     x[5]  0     x[16] 0     x[17] 0     0     0     0     0
-    0     0     0     0     0     x[6]  0     0     0     x[18] 0     0     0     0
-    0     0     0     0     x[16] 0     x[7]  0     0     0     x[19] 0     0     0
-    0     0     0     x[15] 0     0     0     x[8]  0     0     0     0     0     0
-    0     0     0     0     x[17] 0     0     0     x[9]  0     x[20] 0     0     0
-    0     0     0     0     0     x[18] 0     0     0     x[10] 0     0     0     0
-    0     0     0     0     0     0     x[19] 0     x[20] 0     x[11] 0     0     0
-    0     0     0     0     0     0     0     0     0     0     0     x[12] 0     0
-    0     0     0     0     0     0     0     0     0     0     0     0     x[13] 0
-    0     0     0     0     0     0     0     0     0     0     0     0     0     x[14]]
-
-F =[1.0 0 0 0 0 0 0 0 0 0 0 0 0 0
-    0 1 0 0 0 0 0 0 0 0 0 0 0 0
-    0 0 1 0 0 0 0 0 0 0 0 0 0 0
-    0 0 0 1 0 0 0 0 0 0 0 0 0 0
-    0 0 0 0 1 0 0 0 0 0 0 0 0 0
-    0 0 0 0 0 1 0 0 0 0 0 0 0 0
-    0 0 0 0 0 0 1 0 0 0 0 0 0 0
-    0 0 0 0 0 0 0 1 0 0 0 0 0 0
-    0 0 0 0 0 0 0 0 1 0 0 0 0 0
-    0 0 0 0 0 0 0 0 0 1 0 0 0 0
-    0 0 0 0 0 0 0 0 0 0 1 0 0 0]
-
-A =[0  0  0  0  0  0  0  0  0  0  0     1     0     0
-    0  0  0  0  0  0  0  0  0  0  0     x[21] 0     0
-    0  0  0  0  0  0  0  0  0  0  0     x[22] 0     0
-    0  0  0  0  0  0  0  0  0  0  0     0     1     0
-    0  0  0  0  0  0  0  0  0  0  0     0     x[23] 0
-    0  0  0  0  0  0  0  0  0  0  0     0     x[24] 0
-    0  0  0  0  0  0  0  0  0  0  0     0     x[25] 0
-    0  0  0  0  0  0  0  0  0  0  0     0     0     1
-    0  0  0  0  0  0  0  0  0  0  0     0     0     x[26]
-    0  0  0  0  0  0  0  0  0  0  0     0     0     x[27]
-    0  0  0  0  0  0  0  0  0  0  0     0     0     x[28]
-    0  0  0  0  0  0  0  0  0  0  0     0     0     0
-    0  0  0  0  0  0  0  0  0  0  0     x[29] 0     0
-    0  0  0  0  0  0  0  0  0  0  0     x[30] x[31] 0]
-
-fun_A = eval(ModelingToolkit.build_function(A, x)[2])
-fun_S = eval(ModelingToolkit.build_function(S, x)[2])
-
-start_val = vcat(
-    vec(var(Matrix(three_path_dat), dims = 1))./2,
-    fill(0.05, 3),
-    fill(0.0, 6),
-    fill(1.0, 8),
-    fill(0, 3)
-    )
-
-A_comp = zeros(14,14); fun_A(A_comp, start_val)
-S_comp = zeros(14,14); fun_S(S_comp, start_val)
-
-S = sparse(S)
 #F
-F = sparse(F)
+Ind = collect(1:25)
+Jnd = collect(1:25)
+V = fill(1,25)
+F = sparse(Ind, Jnd, V, 25, 46)
+
 #A
-A = sparse(A)
+Ind = [collect(2:25); 5; collect(6:25); fill(27, 19); 1; 4]
+Jnd = [fill(26, 24); 27; collect(27:46); collect(28:46); 26; 27]
+V =[x[1:64]; 1.0; 1.0]
+A = sparse(Ind, Jnd, V, 46, 46)
 
-diff_ana = SemAnalyticDiff(LBFGS(), Optim.Options(), A, S, F, x, start_val)
+#S
+Ind = [collect(1:6); 26; 27; collect(28:46)]
+Jnd = [collect(1:6); 26; 27; collect(28:46)]
+V = [x[65:72]; fill(1.0, 19)]
+S = sparse(Ind, Jnd, V, 46, 46)
+xind = 73
+for i = 28:46
+    for j = (i+1):46
+       S[i,j] = x[xind]
+       S[j,i] = x[xind]
+       xind += 1
+    end
+end
 
-B_comp = inv(I-A_comp)
+par_order = [
+    collect(2:6); 
+    collect(11:29); 
+    8;9; 
+    collect(49:67);
+    collect(106:124); 
+    collect(125:130);
+    131; 132;
+    collect(133:303)]
 
-E_comp = B_comp*S_comp*B_comp'
+start_val = start_lav.est[par_order]
 
-diff_ana.B!(diff_ana.B, start_val)
+#= start_val = vcat(
+    fill(1, 2),
+    fill(0.5, 3),
+    fill(0.1, 19),
+    fill(1,2),
+    fill(1,19),
+    fill(0,19),
+    fill(0.5, 6),
+    fill(0.05, 2),
+    fill(0, 171)
+    ) =#
 
-diff_ana.E!(diff_ana.E, start_val)
+grad_ml = sem.∇SemML(A, S, F, x, start_val)            
+diff_ana = 
+    SemAnalyticDiff(
+        LBFGS(
+            m = 50,
+            alphaguess = InitialHagerZhang(), 
+            linesearch = HagerZhang()), 
+        Optim.Options(
+            ;f_tol = 1e-10, 
+            x_tol = 1.5e-8),
+            (grad_ml,))    
+loss = Loss(
+    [SemML(semobserved, [0.0], similar(start_val))])
 
-@test diff_ana.B == B_comp
+imply = ImplySymbolic(A, S, F, x, start_val)
 
-@test diff_ana.E == E_comp
+model_fin = Sem(semobserved, imply, loss, diff_fin)
+solution_fin = sem_fit(model_fin)
 
-@test diff_ana.F == F
+model_ana = Sem(semobserved, imply, loss, diff_ana)
+@btime solution_ana = sem_fit(model_ana)
 
-diff_ana.grad
+@btime model_fin(start_val)
+grad = similar(start_val)
 
-dropzeros!(diff_ana.B)
+using FiniteDiff
+@btime FiniteDiff.finite_difference_gradient!(grad, model_fin, start_val)
 
-diff_ana.E
+FiniteDiff.GradientCache(
+    c1         :: Union{Nothing,AbstractArray{<:Number}},
+    c2         :: Union{Nothing,AbstractArray{<:Number}},
+    fx         :: Union{Nothing,<:Number,AbstractArray{<:Number}} = nothing,
+    fdtype     :: Type{T1} = Val{:central},
+    returntype :: Type{T2} = eltype(df),
+    inplace    :: Type{Val{T3}} = Val{true})
 
-dropzeros!(diff_ana.E)
+cache = FiniteDiff.GradientCache(grad, start_val)    
+@btime FiniteDiff.finite_difference_gradient!(grad, model_fin, start_val, cache)
 
-diff_ana.S_ind_vec
+FiniteDiff.finite_difference_gradient!(
+    df,
+    f,
+    x,
+    fdtype::Type{T1}=Val{:central},
+    returntype::Type{T2}=eltype(df),
+    inplace::Type{Val{T3}}=Val{true};
+    [epsilon_factor])
+
+# Cached
+FiniteDiff.finite_difference_gradient!(
+    df::AbstractArray{<:Number},
+    f,
+    x::AbstractArray{<:Number},
+    cache::GradientCache;
+    [epsilon_factor])    
+
+using FiniteDifferences
+
+@btime FiniteDifferences.grad(central_fdm(2, 1), model_fin, start_val)
+
+function (model::Sem{A, B, C, D} where {A, B, C, D <: SemFiniteDiff})(par::Vector, grad::Vector)
+    if length(grad) > 0
+        grad .= FiniteDifferences.grad(central_fdm(2, 1), model_fin, par)[1]
+    end
+    return model(par)
+end
+
+@code_warntype model_fin.loss(start_val, model_fin)
+
+using ProfileView
+
+function profile_test(n)
+    for i = 1:n
+        sem_fit(model_fin)
+    end
+end
+
+ProfileView.@profview profile_test(1)
+
+@btime model_fin(start_val)
+
+grad = similar(start_val)
+
+@btime model_fin(start_val, grad)
+
+using NLopt
+diff_nlopt = SemFiniteDiff(:LD_LBFGS, nothing)
+model_nlopt = Sem(semobserved, imply, loss, diff_nlopt)
+@btime solution_nlopt = sem.sem_fit_nlopt(model_nlopt, 3.1956e-13)
+
+
+function profile_test_nlopt(n)
+    for i = 1:n
+        sem.sem_fit_nlopt(model_nlopt, 3.1956e-13)
+    end
+end
+
+ProfileView.@profview profile_test_nlopt(10)
+
+all(
+    abs.(solution_fin.minimizer .- par.est[par_order]
+        ) .< 0.05*abs.(par.est[par_order]))
+
+all(
+    abs.(solution_ana.minimizer .- par.est[par_order]
+        ) .< 0.05*abs.(par.est[par_order]))        
+
+
+##### regularized
+solutions = []
+
+ml = SemML(semobserved, [0.0], similar(start_val))
+con = SemConstant(-(logdet(semobserved.obs_cov) + semobserved.n_man))
+
+for i = 1:50
+    ridge = sem.SemRidge(0.01*i, 46:64)
+    loss = Loss([ml, con, ridge])
+    model_fin = Sem(semobserved, imply, loss, diff_fin)
+    push!(solutions, sem_fit(model_fin))
+end
+
+getindex.(getfield.(solutions, :minimizer), 46)
+
+
+maximum(abs.(getfield.(solutions, :minimizer)[50] .- solution_fin.minimizer))
+
+fieldnames(typeof(solutions[1]))
+
+pars = getfield.(solutions, :minimizer)
+pars = getindex.(pars, [46:64])
+
+pars = permutedims(hcat(pars...))
+
+#using DataFrames
+
+#pars = DataFrame(pars)
+
+#using Plots
+
+plot(pars)
+
+savefig("pars.pdf")

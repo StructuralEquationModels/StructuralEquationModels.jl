@@ -91,7 +91,7 @@ function (semml::SemML)(par, model::Sem{O, I, L, D}) where
     return F
 end
 
-# analytic differentiation
+#= # analytic differentiation
 function (semml::SemML)(par, model::Sem{O, I, L, D}, E, G) where
             {O <: SemObs, L <: Loss, I <: Imply, D <: SemAnalyticDiff}
 
@@ -129,3 +129,4 @@ function (semml::SemML)(par, model::Sem{O, I, L, D}, E, G) where
         end
     end
 end
+ =#
