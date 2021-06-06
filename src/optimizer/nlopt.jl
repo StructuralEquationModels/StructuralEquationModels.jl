@@ -7,13 +7,13 @@ function (model::Sem{A, B, C, D} where {A, B, C, D <: SemFiniteDiff})(par::Vecto
     return model(par)
 end
 
-function sem_fit_nlopt(model::Sem{O, I, L, D}) where
+function sem_fit_nlopt(model::Sem{O, I, L, D}, rel_tol) where
     {O <: SemObs, L <: Loss, I <: Imply, D <: SemDiff}
 
     opt = NLopt.Opt(model.diff.algorithm, length(model.imply.start_val))
     #cache = FiniteDiff.GradientCache(start)
     opt.min_objective = (x,y) -> model(x,y)
-    #opt.ftol_rel = f_tol
+    opt.ftol_rel = rel_tol
     result = NLopt.optimize(opt, model.imply.start_val)
     
     return result

@@ -111,6 +111,8 @@ model_ana2 = Sem(semobserved, imply, loss, diff_ana2)
 
 @benchmark sem_fit(model_ana2)
 
+@benchmark for i in 1:10 sem_fit(model_ana2) end
+
 grad = similar(start_val)
 
 imply(start_val, model_ana2)
@@ -128,11 +130,11 @@ function profile_diff(n)
 end
 function profile_diff2(n)
     for i = 1:n
-        model_ana2.diff(start_val, grad, model_ana2)
+        sem_fit(model_ana2)
     end
 end
 
-ProfileView.@profview profile_diff(1000)
+ProfileView.@profview profile_diff(10)
 ProfileView.@profview profile_diff2(100)
 
 @btime model_fin(start_val)
