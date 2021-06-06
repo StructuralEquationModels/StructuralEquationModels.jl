@@ -1,12 +1,12 @@
-using sem, Feather, ModelingToolkit, Statistics, LinearAlgebra,
-    SparseArrays, BenchmarkTools, Optim, LineSearches, Plots
+using sem, Arrow, ModelingToolkit, Statistics, LinearAlgebra,
+    SparseArrays, BenchmarkTools, Optim, LineSearches, DataFrames
 
 ## Observed Data
-dat = Feather.read("test/comparisons/reg_1.feather")
-par = Feather.read("test/comparisons/reg_1_par.feather")
-start_lav = Feather.read("test/comparisons/reg_1_start.feather")
+dat = DataFrame(Arrow.Table("test/comparisons/reg_1.arrow"))
+par = DataFrame(Arrow.Table("test/comparisons/reg_1_par.arrow"))
+start_lav = DataFrame(Arrow.Table("test/comparisons/reg_1_start.arrow"))
 
-semobserved = SemObsCommon(data = Matrix(dat))
+semobserved = SemObsCommon(data = Matrix{Float64}(dat))
 rel_tol = 3.1956e-13
 
 diff_fin = SemFiniteDiff(LBFGS(
@@ -56,7 +56,7 @@ par_order = [
     131; 132;
     collect(133:303)]
 
-start_val = start_lav.est[par_order]    
+start_val = Vector{Float64}(start_lav.est[par_order])   
 
 #= start_val = vcat(
     fill(1, 2),
