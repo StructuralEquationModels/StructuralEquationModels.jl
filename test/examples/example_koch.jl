@@ -1,4 +1,4 @@
-using sem, Arrow, ModelingToolkit, LinearAlgebra, SparseArrays, DataFrames, Optim
+using sem, Arrow, ModelingToolkit, LinearAlgebra, SparseArrays, DataFrames, Optim, LineSearches
 
 ## Observed Data
 dat = DataFrame(Arrow.Table("comparisons/reg_1.arrow"))
@@ -69,4 +69,26 @@ solution_fin = sem_fit(model_fin)
 
 @test all(
         abs.(solution_fin.minimizer .- par.est[par_order]
+            ) .< 0.05*abs.(par.est[par_order]))
+
+
+grad_ml = sem.∇SemML(A, S, F, x, start_val)       
+
+diff_ana = 
+    SemAnalyticDiff(
+        LBFGS(
+            m = 50,
+            alphaguess = InitialHagerZhang(), 
+            linesearch = HagerZhang()), 
+        Optim.Options(
+            ;f_tol = 1e-10, 
+            x_tol = 1.5e-8),
+            (grad_ml,))  
+            
+model_ana = Sem(semobserved, imply, loss, diff_ana)
+
+solution_ana = sem_fit(model_ana)
+
+@test all(
+        abs.(solution_ana.minimizer .- par.est[par_order]
             ) .< 0.05*abs.(par.est[par_order]))
