@@ -5,8 +5,19 @@ cd("C:\\Users\\maxim\\.julia\\dev\\sem\\test\\comparisons\\factor_simulation")
 
 config = DataFrame(CSV.File("config_factor.csv"))
 
-function read_files(dir)
-    data_paths = readdir(dir; sort = false)
+
+
+function get_data_paths(config)
+    data_paths = []
+    for i = 1:nrow(config)
+        row = config[i, :]
+        file = string("nfact_", row.nfact_vec, "_nitem_", row.nitem_vec, ".arrow")
+        push!(data_paths, file)
+    end
+    return data_paths
+end
+
+function read_files(dir, data_paths)
     data = Vector{Any}()
     for i in 1:length(data_paths)
         push!(data, DataFrames.DataFrame(Arrow.Table(dir*"/"*data_paths[i])))
@@ -14,18 +25,20 @@ function read_files(dir)
     return data
 end
 
-data_vec = read_files("data")
+data_vec = read_files("data", get_data_paths(config))
 
 function gen_model(nfact, nitem, data)
     nfact = Int64(nfact)
     nitem = Int64(nitem)
     # observed
-    semobserved = SemObsCommon(data = Matrix{Float64}(data))
+    #semobserved = SemObsCommon(data = Matrix{Float64}(data))
+
+    semobserved = SemObsMissing(data)
 
     ## Model definition
     nobs = nfact*nitem
     nnod = nfact+nobs
-    @ModelingToolkit.variables x[1:Int64(2*nobs+(nfact*(nfact+1)/2)-nfact)]
+    @ModelingToolkit.variables x[1:Int64(2*nobs+(nfact*(nfact+1)/2)-nfact)], m[1:nobs]
 
     #F
     Ind = collect(1:nobs)
@@ -60,27 +73,41 @@ function gen_model(nfact, nitem, data)
         end
     end
 
+    M = [m..., fill(0.0, nfact)...]
+
     start_val = vcat(
         fill(1.0, nobs),
         fill(0.05, Int64(nfact*(nfact+1)/2)),
-        fill(0.05, nobs-nfact)
+        fill(0.05, nobs-nfact),
+        fill(0.0, nobs)
     )
 
-    # loss
-    loss = Loss([SemML(semobserved, [0.0], similar(start_val))])
-
     # imply
-    imply = ImplySymbolic(A, S, F, x, start_val)    
+    imply = ImplySymbolic(A, S, F, [x..., m...], start_val; M = M)   
 
-    grad_ml = sem.∇SemML(A, S, F, x, start_val)    
+    # loss
+    #loss = Loss([SemML(semobserved, [0.0], similar(start_val))])
+    loss = Loss([SemFIML(semobserved, imply, 0.0, 0.0)])
 
-    diff_ana = 
+    #grad_ml = sem.∇SemML(A, S, F, x, start_val)    
+
+#=     diff_ana = 
         SemAnalyticDiff(
             LBFGS(), 
             Optim.Options(
                 ;f_tol = 1e-10, 
                 x_tol = 1.5e-8),
-                (grad_ml,))  
+                (grad_ml,))   =#
+
+    diff_fin = SemFiniteDiff(
+        LBFGS(), 
+        Optim.Options(;
+            f_tol = 1e-10, 
+            x_tol = 1.5e-8))
                 
-    return Sem(semobserved, imply, loss, diff_ana)
+    return Sem(semobserved, imply, loss, diff_fin)
 end
+
+testsem = gen_model(3, 5, Matrix(data_vec[1]))
+
+solution = sem_fit(testsem)
