@@ -16,6 +16,33 @@ results <- mutate(
   results,
   data = map(model, ~simulateData(.x, sample.nobs = 5000)))
 
+####################### generate parameter estimates
+results <- mutate(
+  results,
+  fits = pmap(results, ~with(list(...), 
+                             cfa(model, data, meanstructure = TRUE))))
+
+results <- mutate(
+  results,
+  parest = pmap(results, ~with(list(...), parameterEstimates(fits))))
+
+pwalk(results, 
+      ~with(
+        list(...), 
+        arrow::write_arrow(
+          parest, 
+          str_c(
+            "parest/",
+            "nfact_",
+            nfact_vec,
+            "_nitem_",
+            nitem_vec,
+            ".arrow")
+        )
+      )
+)
+#######################
+
 results <- mutate(
   results,
   model = pmap_chr(results,  ~gen_model_wol(.x, .y)))
@@ -37,3 +64,5 @@ pwalk(results,
       )
 
 write_rds(results, "data.rds")
+
+
