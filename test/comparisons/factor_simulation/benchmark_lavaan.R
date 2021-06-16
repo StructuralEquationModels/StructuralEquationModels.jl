@@ -7,7 +7,8 @@ benchmarks <-
   purrr::pmap_dfr(data, 
            ~with(
              list(...), 
-             summary(microbenchmark(cfa(model, data), times = 2))))
+             summary(microbenchmark(
+               cfa(model, data, meanstructure = TRUE), times = 2))))
 
 benchmarks <- 
   bind_cols(
