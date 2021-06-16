@@ -8,7 +8,9 @@ benchmarks <-
            ~with(
              list(...), 
              summary(microbenchmark(
-               cfa(model, data, meanstructure = TRUE), times = 2))))
+               cfa(model, data, meanstructure = TRUE, 
+                   missing = "fiml"), times = 1, 
+               unit = "s"))))
 
 benchmarks <- 
   bind_cols(

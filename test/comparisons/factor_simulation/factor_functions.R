@@ -76,3 +76,21 @@ gen_model_omx <- function(nfact, nitem, data){
       dataRaw, resVars, latVars, splice(loadings), means)
   return(model)
 }
+
+
+induce_missing <- function(data, p){
+  n_rows = nrow(data)
+  n_cols = ncol(data)
+  missing <- sample(c(TRUE, FALSE), 
+         size = n_rows*n_cols, 
+         replace = TRUE, 
+         prob = c(p, 1-p))
+  for (i in 1:n_rows){
+    for (j in 1:n_cols){
+      if (missing[(i-1)*n_cols + j]){
+        data[i, j] <- NA
+      }
+    }
+  }
+  return(data)
+}

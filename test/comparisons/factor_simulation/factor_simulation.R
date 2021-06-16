@@ -14,33 +14,40 @@ results <- mutate(
 
 results <- mutate(
   results,
-  data = map(model, ~simulateData(.x, sample.nobs = 5000)))
+  data = pmap(results, 
+              ~with(list(...),
+                    simulateData(model, sample.nobs = nobs))))
+
+results <- mutate(
+  results,
+  data = map(data,  ~induce_missing(.x, 0.1)))
 
 ####################### generate parameter estimates
-results <- mutate(
-  results,
-  fits = pmap(results, ~with(list(...), 
-                             cfa(model, data, meanstructure = TRUE))))
-
-results <- mutate(
-  results,
-  parest = pmap(results, ~with(list(...), parameterEstimates(fits))))
-
-pwalk(results, 
-      ~with(
-        list(...), 
-        arrow::write_arrow(
-          parest, 
-          str_c(
-            "parest/",
-            "nfact_",
-            nfact_vec,
-            "_nitem_",
-            nitem_vec,
-            ".arrow")
-        )
-      )
-)
+# results <- mutate(
+#   results,
+#   fits = pmap(results, ~with(list(...), 
+#                              cfa(model, data, meanstructure = TRUE,
+#                                  missing = "fiml"))))
+# 
+# results <- mutate(
+#   results,
+#   parest = pmap(results, ~with(list(...), parameterEstimates(fits))))
+# 
+# pwalk(results, 
+#       ~with(
+#         list(...), 
+#         arrow::write_arrow(
+#           parest, 
+#           str_c(
+#             "parest/",
+#             "nfact_",
+#             nfact_vec,
+#             "_nitem_",
+#             nitem_vec,
+#             ".arrow")
+#         )
+#       )
+# )
 #######################
 
 results <- mutate(
@@ -64,5 +71,3 @@ pwalk(results,
       )
 
 write_rds(results, "data.rds")
-
-
