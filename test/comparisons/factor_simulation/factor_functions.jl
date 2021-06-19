@@ -1,11 +1,6 @@
 using CSV, DataFrames, Arrow, sem, ModelingToolkit, 
-    LinearAlgebra, SparseArrays, DataFrames, Optim, LineSearches
-
-cd("C:\\Users\\maxim\\.julia\\dev\\sem\\test\\comparisons\\factor_simulation")
-
-config = DataFrame(CSV.File("config_factor.csv"))
-
-
+    LinearAlgebra, SparseArrays, DataFrames, Optim, LineSearches,
+    BenchmarkTools
 
 function get_data_paths(config)
     data_paths = []
@@ -25,9 +20,7 @@ function read_files(dir, data_paths)
     return data
 end
 
-data_vec = read_files("data", get_data_paths(config))
-
-function gen_model(nfact, nitem, data)
+function gen_model(nfact, nitem, data, start_val)
     nfact = Int64(nfact)
     nitem = Int64(nitem)
     # observed
@@ -38,7 +31,7 @@ function gen_model(nfact, nitem, data)
     ## Model definition
     nobs = nfact*nitem
     nnod = nfact+nobs
-    @ModelingToolkit.variables x[1:Int64(2*nobs+(nfact*(nfact+1)/2)-nfact)], m[1:nobs]
+    @ModelingToolkit.variables x[1:Int64(nobs + nobs)], m[1:nobs]
 
     #F
     Ind = collect(1:nobs)
@@ -49,37 +42,27 @@ function gen_model(nfact, nitem, data)
     #S
     Ind = collect(1:nnod)
     Jnd = collect(1:nnod)
-    V = x[1:nnod]
+    V = [x[1:nobs]; fill(1.0, nfact)]
     S = sparse(Ind, Jnd, V, nnod, nnod)
-    xind = nnod + 1
-    for i = nobs+1:nnod
-        for j = (i+1):nnod
-            S[i,j] = x[xind]
-            S[j,i] = x[xind]
-            xind += 1
-        end
-    end
+
 
     #A
-    Ind = collect(0:nfact-1).*nitem .+ 1
-    Jnd = collect(nobs+1:nnod)
-    V = fill(Num(1), nfact)
+    Ind = collect(1:nobs)
+    Jnd = vcat([fill(nobs+i, nitem) for i in 1:nfact]...)
+    V = x[(nobs+1):(2*nobs)]
     A = sparse(Ind, Jnd, V, nnod, nnod)
-
-    for i = 1:nfact
-        for j = ((i-1)*nitem+2):((i-1)*nitem+nitem)
-            A[j, i+nobs] = x[xind]
-            xind += 1
-        end
-    end
 
     M = [m..., fill(0.0, nfact)...]
 
+    res_ind = (nobs+1):(2*nobs)
+    load_ind = 1:nobs
+    n_est = length(start_val)
+    mean_ind = (n_est-nobs-nfact+1):(n_est-nfact)
+
     start_val = vcat(
-        fill(1.0, nobs),
-        fill(0.05, Int64(nfact*(nfact+1)/2)),
-        fill(0.05, nobs-nfact),
-        fill(0.0, nobs)
+        start_val[res_ind],
+        start_val[load_ind],
+        start_val[mean_ind]
     )
 
     # imply
@@ -108,6 +91,31 @@ function gen_model(nfact, nitem, data)
     return Sem(semobserved, imply, loss, diff_fin)
 end
 
-testsem = gen_model(3, 5, Matrix(data_vec[1]))
+function gen_models(config, data_vec, start_vec)
+    models = []
+    for i = 1:nrow(config)
+        row = config[i, :]
+        model = gen_model(row.nfact_vec, row.nitem_vec, Matrix(data_vec[i]), 
+        convert(Vector{Float64}, start_vec[i].est))
+        push!(models, model)
+    end
+    return models
+end
 
-solution = sem_fit(testsem)
+function benchmark_models(models)
+    benchmarks = []
+    for model in models
+        bm = @benchmark sem_fit($model)
+        push!(benchmarks, bm)
+    end
+    return benchmarks
+end
+
+function get_fits(models)
+    fits = []
+    for model in models
+        fit = sem_fit(model)
+        push!(fits, fit)
+    end
+    return fits
+end

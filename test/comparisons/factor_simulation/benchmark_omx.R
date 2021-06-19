@@ -15,7 +15,7 @@ results <- mutate(
     pmap(results, 
          ~with(
            list(...), 
-           gen_model_omx(nfact_vec, nitem_vec, data)))
+           gen_model_omx(nfact_vec, nitem_vec, data, starting_values$est)))
 )
 
 benchmarks <- 

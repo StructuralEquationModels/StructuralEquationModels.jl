@@ -35,7 +35,7 @@ gen_model_wol <- function(nfact, nitem){
   return(model)
 }
 
-gen_model_omx <- function(nfact, nitem, data){
+gen_model_omx <- function(nfact, nitem, data, lav_start){
   
   dataRaw <- mxData( observed=data, type="raw" )
   
@@ -44,28 +44,38 @@ gen_model_omx <- function(nfact, nitem, data){
   observed_vars <- str_c("x_", 1:nfact, "_")
   observed_vars <- map(observed_vars, ~str_c(.x, 1:nitem))
   
+  res_ind <- (nobs+1):(2*nobs)
+  load_ind <- map_dbl(1:nfact, function(i){(i-1)*nitem+1})
+  load_ind <- map(load_ind, ~.x:(.x+nitem-1))
+  mean_ind <- (2*nobs+nfact*(nfact+1)/2+1):(2*nobs+nfact*(nfact+1)/2+nobs+nfact)
+  
   # residual variances
   resVars <- mxPath( from=unlist(observed_vars), arrows=2,
                      free=TRUE,
+                     values=lav_start[res_ind],
                      labels=str_c("e", 1:nobs) )
   # latent variances and covariance
-  latVars <- mxPath( lat_vars, arrows=2, connect="unique.pairs",
-                     free=TRUE)
+  # nvoc <- nfact*(nfact+1)/2
   
-  loadings <- map2(lat_vars, observed_vars, 
+  latVars <- mxPath( lat_vars, arrows=2, connect="single",
+                     free=FALSE, values = rep(1, nfact))
+  # latCov <- mxPath( lat_vars, arrows=2, connect="unique.bivariate",
+  #                  free=TRUE, values = rep(0, nvoc-nfact) )
+  
+  loadings <- pmap(list(lat_vars, observed_vars, load_ind), 
                    ~mxPath(
-                     from = .x, 
-                     to = .y,
+                     from = ..1, 
+                     to = ..2,
                      arrows = 1,
-                     values = rep(1, nitem),
-                     free = c(F, rep(T, nitem-1)),
+                     values = lav_start[..3],
+                     free = rep(T, nitem),
                      labels = str_c("l_", .y)))
   
   # means
   means <- mxPath( from="one", c(unlist(observed_vars), lat_vars),
                    arrows=1,
                    free=c(rep(T, nobs), rep(F, nfact)), 
-                   values=c(rep(1, nobs), rep(0, nfact)) )
+                   values=lav_start[mean_ind] )
   
   model <- 
     mxModel(
