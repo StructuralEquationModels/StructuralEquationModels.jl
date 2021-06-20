@@ -71,3 +71,11 @@ function batch_inv!(lossfun::LossFunction, model)
         lossfun.inverses[i] .= LinearAlgebra.inv!(lossfun.choleskys[i])
     end
 end
+
+function sparse_outer_mul!(C, A, B, ind) #computes A*S*B -> C, where ind gives the entries of S that are 1
+    fill!(C, 0.0)
+    for i in 1:length(ind)
+        BLAS.ger!(1.0, A[:, ind[i][1]], B[ind[i][2], :], C)
+    end
+    return C
+end

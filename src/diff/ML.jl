@@ -24,7 +24,8 @@ function ∇SemML(
         S::Spa2,
         F::Spa3,
         parameters,
-        start_val
+        start_val;
+        M = nothing
             ) where {
             Spa1 <: SparseMatrixCSC,
             Spa2 <: SparseMatrixCSC,
@@ -69,21 +70,46 @@ function ∇SemML(
     matsize = size(A)
     C_pre = zeros(size(F, 1), size(F, 1))
 
-    S_ind_vec = Vector{Tuple{Array{Int64,1},Array{Int64,1},Array{Float64,1}}}()
-    A_ind_vec = Vector{Tuple{Array{Int64,1},Array{Int64,1},Array{Float64,1}}}()
+    #S_ind_vec = Vector{Tuple{Array{Int64,1},Array{Int64,1},Array{Float64,1}}}()
+    #A_ind_vec = Vector{Tuple{Array{Int64,1},Array{Int64,1},Array{Float64,1}}}()
+    S_ind_vec = Vector{Vector{CartesianIndex{2}}}()
+    A_ind_vec = Vector{Vector{CartesianIndex{2}}}()
 
     for i = 1:size(parameters, 1)
-        S_der = broadcast(var -> Float64(isequal(var, parameters[i])), S)
-        A_der = broadcast(var -> Float64(isequal(var, parameters[i])), A)
-
-        S_der = sparse(S_der)
-        A_der = sparse(A_der)
-
-        S_ind = findnz(S_der)
-        A_ind = findnz(A_der)
+        S_ind = findall(var -> isequal(var, parameters[i]), S)
+        A_ind = findall(var -> isequal(var, parameters[i]), A)
 
         push!(S_ind_vec, S_ind)
         push!(A_ind_vec, A_ind)
+    end
+
+
+    if !isnothing(M)
+        
+        fun_mean =
+            eval(ModelingToolkit.build_function(
+                M,
+                parameters
+            )[2])
+        M_pre = zeros(size(F)[2])
+
+        Bm = B*M
+        Bm = ModelingToolkit.simplify.(Bm)
+        fun_bm =
+            eval(ModelingToolkit.build_function(
+                Bm,
+                parameters
+            )[2])
+        Bm_pre = zeros(size(F)[2])
+
+        M_ind_vec = Vector{Vector{Int64}}()
+        for i = 1:size(parameters, 1)
+            M_ind = findall(var -> isequal(var, parameters[i]), M)
+            push!(M_ind_vec, M_ind)
+        end
+    else
+        imp_fun_mean = nothing
+        imp_mean = nothing
     end
 
     return ∇SemML(
@@ -113,10 +139,11 @@ function (diff::∇SemML)(par, grad, model::Sem{O, I, L, D}) where
             mul!(diff.C, Σ_inv, D)
             diff.C .= LinearAlgebra.I-diff.C
             Threads.@threads for i = 1:size(par, 1)
-                S_der = sparse(diff.S_ind_vec[i]..., diff.matsize...)
-                A_der = sparse(diff.A_ind_vec[i]..., diff.matsize...)
-                term = B*A_der*E
-                Σ_der = Array(B*S_der*B' + term + term')
+                term = similar(diff.C)
+                term2 = similar(diff.C)
+                sparse_outer_mul!(term, B, E, diff.A_ind_vec[i])
+                sparse_outer_mul!(term2, B, B', diff.S_ind_vec[i])
+                Σ_der = term2 + term + term'
                 grad[i] = tr(Σ_inv*Σ_der*diff.C)
             end
         end
