@@ -5,7 +5,7 @@ B = rand(200,200)
 
 C = zeros(200,200)
 C[3, 6] = 1
-C[30, 60] = 1
+C[4, 6] = 1
 C[31, 16] = 1
 C[32, 56] = 1
 C[43, 46] = 1
@@ -74,3 +74,40 @@ function outer_mul_6(A, B, C)
 end
 
 @benchmark outer_mul_6(A,B, C)
+
+
+###################################
+using SparseArrays, LinearAlgebra, BenchmarkTools, MKL
+
+A = rand(100,100)
+m = zeros(100)
+m[10] = 1.0
+m[56] = 1.0
+m[84] = 1.0
+
+A*m
+
+ind = findall(x -> isone(x), m)
+
+function sparse_outer_mul!(A, ind) #computes A*S*B -> C, where ind gives the entries of S that are 1
+    C = zeros(size(A, 1))
+    @views @inbounds for i in 1:length(ind)
+        C += A[:, ind[i]]
+    end
+    return C
+end
+
+isapprox(A*m, sparse_outer_mul!(A, ind))
+
+@benchmark A*m
+
+@benchmark sparse_outer_mul!(A, ind)
+
+function sparse_outer_mul_2!(A, ind) #computes A*S*B -> C, where ind gives the entries of S that are 1
+    @views C = sum(A[:, ind], dims = 2)
+    return C
+end
+
+isapprox(A*m, sparse_outer_mul_2!(A, ind))
+
+@benchmark @views sum(A[:, ind], dims = 2)
