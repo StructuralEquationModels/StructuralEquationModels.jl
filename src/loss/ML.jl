@@ -57,13 +57,16 @@ function (semml::SemML)(par, model)
     if !isposdef(a)
         F = Inf
     else
-        mul!(C, inv(a), model.observed.obs_cov)
+        a_inv = inv(a)
+        mul!(C, a_inv, model.observed.obs_cov)
         F = logdet(a) +
              tr(C)
+        if !isnothing(model.imply.imp_mean)
+        meandiff = model.observed.obs_mean - model.imply.imp_mean
+        F_mean = meandiff'*a_inv*meandiff
+        F += F_mean
     end
-    #B = nothing
-    #C = nothing
-    #a = nothing
+    end
     return F
 end
 
@@ -81,6 +84,29 @@ function (semml::SemML)(par, model::Sem{O, I, L, D}) where
         mul!(semml.mult, semml.inverses, model.observed.obs_cov)
         F = ld + tr(semml.mult)
         
+        if !isnothing(model.imply.imp_mean)
+            @. semml.meandiff = model.observed.obs_mean - model.imply.imp_mean
+            F_mean = semml.meandiff'*semml.inverses*semml.meandiff
+            F += F_mean
+        end
+    end
+    return F
+end
+
+# maximum speed for analytic diff
+function (semml::SemML)(par, model::Sem{O, I, L, D}) where
+            {O <: SemObs, L <: Loss, I <: Imply, D <: SemAnalyticDiff}
+    semml.inverses .= model.imply.imp_cov
+    a = cholesky!(Symmetric(semml.inverses); check = false)
+    if !isposdef(a)
+        F = Inf
+    else
+        ld = logdet(a)
+        semml.inverses .= LinearAlgebra.inv!(a)
+        #inv_cov = inv(a)
+        mul!(semml.mult, semml.inverses, model.observed.obs_cov)
+        F = ld + tr(semml.mult)
+
         if !isnothing(model.imply.imp_mean)
             @. semml.meandiff = model.observed.obs_mean - model.imply.imp_mean
             F_mean = semml.meandiff'*semml.inverses*semml.meandiff

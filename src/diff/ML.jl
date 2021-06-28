@@ -7,7 +7,12 @@ struct ∇SemML{
         F2,
         I,
         I2,
-        T} <: DiffFunction
+        T,
+        F3,
+        TM,
+        F4,
+        TBm,
+        I3} <: DiffFunction
     B::X
     B!::F
     E::Y
@@ -17,6 +22,11 @@ struct ∇SemML{
     S_ind_vec::I
     A_ind_vec::I2
     matsize::T
+    M!::F3
+    M::TM
+    Bm!::F4
+    Bm::TBm
+    M_ind_vec::I3
 end
 
 function ∇SemML(
@@ -108,8 +118,11 @@ function ∇SemML(
             push!(M_ind_vec, M_ind)
         end
     else
-        imp_fun_mean = nothing
-        imp_mean = nothing
+        M_ind_vec = nothing
+        M_pre = nothing
+        Bm_pre = nothing
+        fun_mean = nothing
+        fun_bm = nothing
     end
 
     return ∇SemML(
@@ -121,7 +134,12 @@ function ∇SemML(
         C_pre,
         S_ind_vec,
         A_ind_vec,
-        matsize)
+        matsize,
+        fun_mean,
+        M_pre,
+        fun_bm,
+        Bm_pre,
+        M_ind_vec)
 end
 
 function (diff::∇SemML)(par, grad, model::Sem{O, I, L, D}) where
@@ -134,17 +152,30 @@ function (diff::∇SemML)(par, grad, model::Sem{O, I, L, D}) where
         Σ_inv = inv(a)
         diff.B!(diff.B, par) # B = inv(I-A)
         diff.E!(diff.E, par) # E = B*S*B'
-        let B = diff.B, E = diff.E, F = diff.F, D = model.observed.obs_cov
+        if !isnothing(diff.M)
+            b = model.observed.obs_mean - model.imply.imp_mean
+        end
+        let B = diff.B, E = diff.E, F = diff.F, D = model.observed.obs_cov,
+            Bm = diff.Bm
             #C = LinearAlgebra.I-Σ_inv*D
             mul!(diff.C, Σ_inv, D)
             diff.C .= LinearAlgebra.I-diff.C
-            Threads.@threads for i = 1:size(par, 1)
+            for i = 1:size(par, 1)
                 term = similar(diff.C)
                 term2 = similar(diff.C)
                 sparse_outer_mul!(term, B, E, diff.A_ind_vec[i])
                 sparse_outer_mul!(term2, B, B', diff.S_ind_vec[i])
                 Σ_der = term2 + term + term'
                 grad[i] = tr(Σ_inv*Σ_der*diff.C)
+                # if !isnothing(diff.M)
+                #     term3 = Vector{Float64}(undef, size(B, 1))
+                #     term4 = similar(term3)
+                #     sparse_outer_mul!(term3, B, Bm, diff.A_ind_vec[i])
+                #     sparse_outer_mul!(term4, B, diff.M_ind_vec[i])
+                #     µ_der = term3 + term4
+                #     gradupdate = (b'*Σ_inv*Σ_der + 2*µ_der')*Σ_inv*b
+                #     grad[i] -= gradupdate[1]
+                # end
             end
         end
     end

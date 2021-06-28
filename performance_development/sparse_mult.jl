@@ -87,9 +87,11 @@ m[84] = 1.0
 
 A*m
 
+C = similar(m)
+
 ind = findall(x -> isone(x), m)
 
-function sparse_outer_mul!(A, ind) #computes A*S*B -> C, where ind gives the entries of S that are 1
+function sparse_outer_mul!(A, C,ind) #computes A*S*B -> C, where ind gives the entries of S that are 1
     C = zeros(size(A, 1))
     @views @inbounds for i in 1:length(ind)
         C += A[:, ind[i]]
@@ -103,7 +105,7 @@ isapprox(A*m, sparse_outer_mul!(A, ind))
 
 @benchmark sparse_outer_mul!(A, ind)
 
-function sparse_outer_mul_2!(A, ind) #computes A*S*B -> C, where ind gives the entries of S that are 1
+function sparse_outer_mul_2!(A, ind) #computes FB*∇m, where ind gives the entries of S that are 1
     @views C = sum(A[:, ind], dims = 2)
     return C
 end
@@ -111,3 +113,56 @@ end
 isapprox(A*m, sparse_outer_mul_2!(A, ind))
 
 @benchmark @views sum(A[:, ind], dims = 2)
+
+@benchmark sparse_outer_mul_2!(A, ind)
+@benchmark sparse_outer_mul_2!(C, A, ind)
+
+
+
+###################################
+using SparseArrays, LinearAlgebra, BenchmarkTools, MKL
+
+A = rand(100,120)
+S = zeros(120,120)
+B = rand(120)
+
+S[3, 6] = 1
+S[4, 6] = 1
+S[31, 16] = 1
+S[32, 56] = 1
+S[43, 46] = 1
+S[109, 89] = 1
+
+A*S*B
+
+C = Vector{Float64}(undef, 100)
+
+ind = findall(x -> isone(x), S)
+
+function sparse_outer_mul!(C, A, B, ind) #computes A*S*B -> C, where ind gives the entries of S that are 1
+    fill!(C, 0.0)
+    @views @inbounds for i in 1:length(ind)
+        BLAS.axpy!(B[ind[i][2]], A[:, ind[i][1]], C)
+    end
+end
+
+sparse_outer_mul!(C, A, B, ind)
+
+isapprox(A*S*B, C)
+
+@benchmark genmul($A,$S,$B)
+
+@benchmark sparse_outer_mul!(C, A, B, ind)
+
+function sparse_outer_mul_2!(C, A, B::Vector, ind) #computes A*S*B -> C, where ind gives the entries of S that are 1
+    fill!(C, 0.0)
+    @views @inbounds for i in 1:length(ind)
+        C .+= B[ind[i][2]].*A[:, ind[i][1]]
+    end
+end
+
+sparse_outer_mul_2!(C, A, B, ind)
+
+isapprox(A*S*B, C)
+
+@benchmark sparse_outer_mul_2!(C, A, B, ind)

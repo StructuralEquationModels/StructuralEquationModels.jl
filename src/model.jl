@@ -31,10 +31,10 @@ end
 # end
 
 
-function (model::Sem)(E, G, par)
-    model.imply(par)
-    model.loss(par, model, E, G)
-end
+# function (model::Sem)(E, G, par)
+#     model.imply(par)
+#     model.loss(par, model, E, G)
+# end
 
 function computeloss(model, par)
     model.imply(par)

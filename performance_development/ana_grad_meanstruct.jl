@@ -9,9 +9,9 @@ three_path_start = DataFrame(Arrow.Table("comparisons/three_path_start.arrow"))
 
 semobserved = SemObsCommon(data = Matrix{Float64}(three_path_dat); meanstructure = true)
 
-diff_fin = SemFiniteDiff(BFGS(), Optim.Options())
-
-
+diff_fin = SemFiniteDiff(BFGS(), Optim.Options(
+    ;f_tol = 1e-10, 
+    x_tol = 1.5e-8))
 
 ## Model definition
 @ModelingToolkit.variables x[1:31], mₓ, my[1:8]
@@ -95,3 +95,22 @@ all(
         ) .< 0.05*abs.(three_path_par.est[par_order]))
 
 #start_lav = three_path_start.start[par_order]
+
+# diff
+grad_ml = sem.∇SemML(A, S, F, [x..., mₓ, my[1:5]..., my[7:8]...], start_val; M = M)       
+
+diff_ana = 
+    SemAnalyticDiff(
+        BFGS(), 
+        Optim.Options(
+            ;f_tol = 1e-10, 
+            x_tol = 1.5e-8),
+            (grad_ml,))  
+            
+model_ana = Sem(semobserved, imply, loss, diff_ana)
+
+solution_ana = sem_fit(model_ana)
+
+all(
+    abs.(solution_ana.minimizer .- three_path_par.est[par_order]
+        ) .< 0.05*abs.(three_path_par.est[par_order]))
