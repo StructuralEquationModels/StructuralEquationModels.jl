@@ -72,6 +72,8 @@ diff_ana =
             
 model_ana = Sem(semobserved, imply, loss, diff_ana)
 
+using BenchmarkTools
+
 @benchmark solution_ana = sem_fit(model_ana)
 
 all(abs.(solution_ana.minimizer .- par.est[par_order]) .< 0.05*abs.(par.est[par_order]))
