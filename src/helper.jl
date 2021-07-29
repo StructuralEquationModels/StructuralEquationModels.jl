@@ -91,3 +91,12 @@ end
 #         C .+= B[ind[i][2]].*A[:, ind[i][1]]
 #     end
 # end
+
+function cov_and_mean(rows; corrected = false)
+    data = permutedims(hcat(rows...))
+    size(rows, 1) > 1 ?
+        obs_cov = Statistics.cov(data; corrected = corrected) :
+        obs_cov = reshape([0.0],1,1)
+    obs_mean = vcat(Statistics.mean(data, dims = 1)...)
+    return obs_cov, obs_mean
+end

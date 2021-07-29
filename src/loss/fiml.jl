@@ -1,4 +1,4 @@
-# Full Information Maximum Likelihood Estimation
+##################### compute loss per pattern ############################
 
 # type
 struct SemFIML{
@@ -24,7 +24,6 @@ struct SemFIML{
     interaction::W
 end
 
-# constructor
 function SemFIML(observed::O where {O <: SemObs}, 
     imply::I where {I <: Imply}, objective, grad)
 
@@ -56,6 +55,55 @@ function SemFIML(observed::O where {O <: SemObs},
     copy(grad),
     nothing
     )
+end
+
+function F_one_pattern(imp_mean, meandiff, inverse, obs_cov, obs_mean, logdet, N)
+    F = logdet
+    @. meandiff = obs_mean - imp_mean
+    F += dot(meandiff, inverse, meandiff)
+    if N > one(N)
+        F += tr(obs_cov*inverse)
+    end
+    F = N*F
+    return F
+end
+
+function F_FIML(F, rows, semfiml, model)
+    for i = 1:size(rows, 1)
+        let (imp_mean, meandiff, inverse, obs_cov, obs_mean, logdet, N) =
+            (semfiml.imp_mean[i],
+            semfiml.meandiff[i],
+            semfiml.inverses[i],
+            model.observed.obs_cov[i],
+            model.observed.obs_mean[i],
+            semfiml.logdets[i],
+            model.observed.pattern_n_obs[i])
+
+            F += F_one_pattern(imp_mean, meandiff, inverse, obs_cov, obs_mean, logdet, N)
+        end
+    end
+    return F
+end
+
+function (semfiml::SemFIML)(
+    par, 
+    model::Sem{O, I, L, D}
+    ) where 
+    {O <: SemObs, 
+    L <: Loss, 
+    I <: Imply, 
+    D <: SemDiff}
+
+    if !check_fiml(semfiml, model) return Inf end
+
+    copy_per_pattern!(semfiml, model)
+    batch_cholesky!(semfiml, model)
+    semfiml.logdets .= logdet.(semfiml.choleskys)
+    batch_inv!(semfiml, model)
+
+    F = zero(eltype(par))
+    F = F_FIML(F, model.observed.rows, semfiml, model)
+    return F
 end
 
 # Helper functions
@@ -128,46 +176,6 @@ function check_fiml(semfiml, model)
     copyto!(semfiml.imp_inv, model.imply.imp_cov)
     a = cholesky!(Hermitian(semfiml.imp_inv); check = false)
     return isposdef(a)
-end
-
-function F_FIML(F, rows, semfiml, model)
-    for i = 1:size(rows, 1)
-        for j in rows[i]
-            let (imp_mean, meandiff, inverse, data, logdet) =
-                (semfiml.imp_mean[i],
-                semfiml.meandiff[i],
-                semfiml.inverses[i],
-                model.observed.data_rowwise[j],
-                semfiml.logdets[i])
-
-                F += F_one_person(imp_mean, meandiff, inverse, data, logdet)
-
-            end
-        end
-    end
-    return F
-end
-
-# functor
-function (semfiml::SemFIML)(
-    par, 
-    model::Sem{O, I, L, D}
-    ) where 
-    {O <: SemObs, 
-    L <: Loss, 
-    I <: Imply, 
-    D <: SemFiniteDiff}
-
-    if !check_fiml(semfiml, model) return Inf end
-
-    copy_per_pattern!(semfiml, model)
-    batch_cholesky!(semfiml, model)
-    semfiml.logdets .= logdet.(semfiml.choleskys)
-    batch_inv!(semfiml, model)
-
-    F = zero(eltype(par))
-    F = F_FIML(F, model.observed.rows, semfiml, model)
-    return F
 end
 
 ##################### definition variables ############################
