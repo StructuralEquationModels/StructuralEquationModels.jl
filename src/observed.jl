@@ -40,7 +40,10 @@ struct SemObsMissing{
         R <: Vector,
         PD <: AbstractArray,
         PO <: AbstractArray,
-        PVO <: AbstractArray} <: SemObs
+        PVO <: AbstractArray,
+        A2 <: AbstractArray,
+        A3 <: AbstractArray
+        } <: SemObs
     data::A
     n_man::D
     n_obs::O
@@ -49,6 +52,8 @@ struct SemObsMissing{
     data_rowwise::PD # list of data
     pattern_n_obs::PO # observed rows per pattern
     pattern_nvar_obs::PVO # number of non-missing variables per pattern
+    obs_mean::A2
+    obs_cov::A3
 end
 
 function SemObsMissing(data)
@@ -101,6 +106,11 @@ function SemObsMissing(data)
     pattern_n_obs = size.(rows, 1)
     pattern_nvar_obs = length.(remember_cart) 
 
+    cov_mean = [cov_and_mean(data_rowwise[rows]) for rows in rows]
+    obs_cov = [cov_mean[1] for cov_mean in cov_mean]
+    obs_mean = [cov_mean[2] for cov_mean in cov_mean]
+
     return SemObsMissing(data, Float64(n_man), Float64(n_obs), remember_cart,
-    rows, data_rowwise, Float64.(pattern_n_obs), Float64.(pattern_nvar_obs))
+    rows, data_rowwise, Float64.(pattern_n_obs), Float64.(pattern_nvar_obs),
+    obs_mean, obs_cov)
 end
