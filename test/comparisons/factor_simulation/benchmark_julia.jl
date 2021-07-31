@@ -8,14 +8,20 @@ data_vec = read_files("data", get_data_paths(config))
 par_vec = read_files("parest", get_data_paths(config))
 start_vec = read_files("start", get_data_paths(config))
 
-#############################################
+##############################################
 models = gen_models(config, data_vec, start_vec)
 
-benchmarks = benchmark_models(models)
+par_order = [model[2] for model in models]
+
+models = [model[1] for model in models]
 
 fits = get_fits(models)
 ##############################################
 
-all(
-    abs.(solution_fin.minimizer .- par.est[par_order]
-        ) .< 0.05*abs.(par.est[par_order]))
+check_solution(fits, par_vec, par_order)
+
+##############################################
+
+benchmarks = benchmark_models(models)
+
+##############################################

@@ -1,4 +1,4 @@
-pacman::p_load(here, feather, tidyverse, lavaan, microbenchmark, magrittr)
+pacman::p_load(here, arrow, tidyverse, lavaan, microbenchmark, magrittr)
 
 set.seed(123)
 
@@ -118,6 +118,9 @@ fits_miss <- map(datas_miss, ~cfa(models[[2]], data = .x, missing = "FIML"))
 fits_miss_mean <- 
   map(datas_miss, ~cfa(models[[6]], data = .x, missing = "FIML"))
 
+fits_miss_start <- map(datas_miss, ~cfa(models[[2]], data = .x, missing = "FIML", do.fit = FALSE))
+fits_miss_mean_start <- 
+  map(datas_miss, ~cfa(models[[6]], data = .x, missing = "FIML", do.fit = FALSE))
 
 # write do disk -----------------------------------------------------------
 
@@ -127,11 +130,18 @@ get_testpars <- function(fit) {
   select(parameterEstimates(fit), lhs, op, rhs, est, se, p = pvalue, z)
 }
 
+get_start <- function(fit) {
+  select(parameterEstimates(fit), lhs, op, rhs, est)
+}
+
 #write_feather(datas[[5]], "test/comparisons/testdat.feather")
 
 pars <- map(fits, get_testpars)
 pars_miss <- map(fits_miss, get_testpars)
 pars_miss_mean <- map(fits_miss_mean, get_testpars)
+
+start_miss <- map(fits_miss_start, get_start)
+start_miss_mean <- map(fits_miss_mean_start, get_start)
 
 data_subsets <- map(fits, lavNames, "ov") %>%
   map2(datas, ~select(.y, one_of(.x)))
@@ -156,12 +166,15 @@ imap(pars,
      ~write_feather(.x, str_c("test/comparisons/", .y, "_par.feather")))
 
 imap(data_subsets_miss,
-     ~write_feather(.x, str_c("test/comparisons/", .y, "_dat.feather")))
+     ~write_arrow(.x, str_c("test/comparisons/", .y, "_dat.arrow")))
 imap(pars_miss,
-     ~write_feather(.x, str_c("test/comparisons/", .y, "_par.feather")))
+     ~write_arrow(.x, str_c("test/comparisons/", .y, "_par.arrow")))
 imap(pars_miss_mean,
-     ~write_feather(.x, str_c("test/comparisons/", .y, "_par_mean.feather")))
-
+     ~write_arrow(.x, str_c("test/comparisons/", .y, "_par_mean.arrow")))
+imap(start_miss,
+     ~write_arrow(.x, str_c("test/comparisons/", .y, "_start.arrow")))
+imap(start_miss_mean,
+     ~write_arrow(.x, str_c("test/comparisons/", .y, "_start_mean.arrow")))
  
 imap(fitm, 
      ~write_feather(.x, str_c("test/comparisons/", .y, "_fitm.feather")))

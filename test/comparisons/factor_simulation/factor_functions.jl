@@ -59,11 +59,9 @@ function gen_model(nfact, nitem, data, start_val)
     n_est = length(start_val)
     mean_ind = (n_est-nobs-nfact+1):(n_est-nfact)
 
-    start_val = vcat(
-        start_val[res_ind],
-        start_val[load_ind],
-        start_val[mean_ind]
-    )
+    ind = [collect(res_ind)..., collect(load_ind)..., collect(mean_ind)...]
+
+    start_val = start_val[ind]
 
     # imply
     imply = ImplySymbolic(A, S, F, [x..., m...], start_val; M = M)   
@@ -82,13 +80,29 @@ function gen_model(nfact, nitem, data, start_val)
                 x_tol = 1.5e-8),
                 (grad_ml,))   =#
 
-    diff_fin = SemFiniteDiff(
-        LBFGS(), 
+    grad_fiml = sem.∇SemFIML(semobserved, imply, A, S, F, [x..., m...], start_val; M = M)
+    
+    diff_ana = 
+        SemAnalyticDiff(
+            LBFGS(
+                alphaguess = LineSearches.InitialHagerZhang(),
+                linesearch = LineSearches.HagerZhang()
+            ), 
+            Optim.Options(
+                ;f_tol = 1e-10, 
+                x_tol = 1.5e-8),
+                (grad_fiml,))  
+
+#=     diff_fin = SemFiniteDiff(
+        LBFGS(
+            ;alphaguess = LineSearches.InitialHagerZhang(),
+            linesearch = LineSearches.HagerZhang()
+        ), 
         Optim.Options(;
             f_tol = 1e-10, 
-            x_tol = 1.5e-8))
+            x_tol = 1.5e-8)) =#
                 
-    return Sem(semobserved, imply, loss, diff_fin)
+    return (Sem(semobserved, imply, loss, diff_ana), ind)
 end
 
 function gen_models(config, data_vec, start_vec)
@@ -118,4 +132,16 @@ function get_fits(models)
         push!(fits, fit)
     end
     return fits
+end
+
+function check_solution(fits, par_vec, par_order; tol = 0.05)
+    approx_equal = []
+    for (fit, par, ind) in zip(fits, par_vec, par_order)
+        is_equ = 
+            all(
+                abs.(fit.minimizer .- par.est[ind]) .< 
+                tol*abs.(par.est[ind]))
+        push!(approx_equal, is_equ)
+    end
+    return approx_equal
 end
