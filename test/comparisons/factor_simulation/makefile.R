@@ -1,0 +1,5 @@
+setwd("C:/Users/maxim/.julia/dev/sem/test/comparisons/factor_simulation/")
+source("generate_config.R")
+source("factor_simulation.R")
+source("benchmark_lavaan.R")
+source("benchmark_omx.R")

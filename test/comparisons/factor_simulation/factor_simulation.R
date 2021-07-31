@@ -23,7 +23,7 @@ results <- mutate(
 
 results <- mutate(
   results,
-  data = map(data,  ~induce_missing(.x, 0.1)))
+  data = map2(data, p_missing, ~induce_missing(.x, p_missing)))
 
 results <- mutate(
   results,
