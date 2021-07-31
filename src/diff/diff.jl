@@ -32,6 +32,7 @@ end
 
 function (model::Sem{A, B, C, D} 
     where {A, B, C, D <: SemAnalyticDiff})(par, grad)
+    grad .= zero(eltype(grad))
     model.imply(par, model)
     model.diff(par, grad, model)
 end

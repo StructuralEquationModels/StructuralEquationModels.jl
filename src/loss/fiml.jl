@@ -136,7 +136,7 @@ function copy_per_pattern!(inverses, source_inverses, means, source_means, patte
 end
 
 copy_per_pattern!(
-    semfiml::SemFIML, 
+    semfiml::Union{SemFIML, ∇SemFIML}, 
     model::M where {M <: AbstractSem}) = 
     copy_per_pattern!(
         semfiml.inverses, 
@@ -145,7 +145,7 @@ copy_per_pattern!(
         model.imply.imp_mean, 
         model.observed.patterns)
 
-copy_per_pattern!(semfiml::SemFIML, model::Sem{O, I, L, D}) where
+copy_per_pattern!(semfiml::Union{SemFIML, ∇SemFIML}, model::Sem{O, I, L, D}) where
     {O <: SemObsMissing, L , I <: ImplyDefinition, D} = 
     copy_per_pattern!(
         semfiml.inverses, 
@@ -156,14 +156,14 @@ copy_per_pattern!(semfiml::SemFIML, model::Sem{O, I, L, D}) where
         semfiml.interaction.group_imp_per_comb)
 
 
-function batch_cholesky!(semfiml::SemFIML, model)
+function batch_cholesky!(semfiml::Union{SemFIML, ∇SemFIML}, model)
     for i = 1:size(semfiml.inverses, 1)
         semfiml.choleskys[i] = cholesky!(Hermitian(semfiml.inverses[i]))
     end
     return true
 end
 
-function batch_cholesky!(semfiml::SemFIML, model::Sem{O, I, L, D}) where
+function batch_cholesky!(semfiml::Union{SemFIML, ∇SemFIML}, model::Sem{O, I, L, D}) where
     {O <: SemObsMissing, L, I <: ImplyDefinition, D}
     for i = 1:size(semfiml.inverses, 1)
         semfiml.choleskys[i] = cholesky!(Hermitian(semfiml.inverses[i]); check = false)

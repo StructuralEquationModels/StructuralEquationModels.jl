@@ -66,9 +66,9 @@ function remove_all_missing(data)
     return data[keep, :], keep
 end
 
-function batch_inv!(lossfun::LossFunction, model)
-    for i = 1:size(lossfun.inverses, 1)
-        lossfun.inverses[i] .= LinearAlgebra.inv!(lossfun.choleskys[i])
+function batch_inv!(fun::Union{LossFunction, DiffFunction}, model)
+    for i = 1:size(fun.inverses, 1)
+        fun.inverses[i] .= LinearAlgebra.inv!(fun.choleskys[i])
     end
 end
 
@@ -79,18 +79,18 @@ function sparse_outer_mul!(C, A, B, ind) #computes A*S*B -> C, where ind gives t
     end
 end
 
-# function sparse_outer_mul!(C, A, ind) #computes A*∇m, where ∇m ind gives the entries of ∇m that are 1
-#     fill!(C, 0.0)
-#     @views C .= sum(A[:, ind], dims = 2)
-#     return C
-# end
+function sparse_outer_mul!(C, A, ind) #computes A*∇m, where ∇m ind gives the entries of ∇m that are 1
+    fill!(C, 0.0)
+    @views C .= sum(A[:, ind], dims = 2)
+    return C
+end
 
-# function sparse_outer_mul!(C, A, B::Vector, ind) #computes A*S*B -> C, where ind gives the entries of S that are 1
-#     fill!(C, 0.0)
-#     @views @inbounds for i in 1:length(ind)
-#         C .+= B[ind[i][2]].*A[:, ind[i][1]]
-#     end
-# end
+function sparse_outer_mul!(C, A, B::Vector, ind) #computes A*S*B -> C, where ind gives the entries of S that are 1
+    fill!(C, 0.0)
+    @views @inbounds for i in 1:length(ind)
+        C .+= B[ind[i][2]].*A[:, ind[i][1]]
+    end
+end
 
 function cov_and_mean(rows; corrected = false)
     data = permutedims(hcat(rows...))
