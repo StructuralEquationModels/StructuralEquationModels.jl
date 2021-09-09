@@ -37,6 +37,7 @@ struct SemObsMissing{
         D <: AbstractFloat,
         O <: AbstractFloat,
         P <: Vector,
+        P2 <: Vector,
         R <: Vector,
         PD <: AbstractArray,
         PO <: AbstractArray,
@@ -48,6 +49,7 @@ struct SemObsMissing{
     n_man::D
     n_obs::O
     patterns::P # missing patterns
+    patterns_not::P2
     rows::R # coresponding rows in data_rowwise
     data_rowwise::PD # list of data
     pattern_n_obs::PO # observed rows per pattern
@@ -101,6 +103,7 @@ function SemObsMissing(data)
     sort_n_miss = sortperm(sum.(remember))
     remember = remember[sort_n_miss]
     remember_cart = findall.(!, remember)
+    remember_cart_not = findall.(remember)
     rows = rows[sort_n_miss]
 
     pattern_n_obs = size.(rows, 1)
@@ -111,6 +114,7 @@ function SemObsMissing(data)
     obs_mean = [cov_mean[2] for cov_mean in cov_mean]
 
     return SemObsMissing(data, Float64(n_man), Float64(n_obs), remember_cart,
+    remember_cart_not, 
     rows, data_rowwise, Float64.(pattern_n_obs), Float64.(pattern_nvar_obs),
     obs_mean, obs_cov)
 end

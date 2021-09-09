@@ -1,5 +1,7 @@
 using sem, Arrow, ModelingToolkit, LinearAlgebra, SparseArrays, DataFrames, Optim, LineSearches
 
+cd("test")
+
 ## Observed Data
 dat = DataFrame(Arrow.Table("comparisons/reg_1.arrow"))
 par = DataFrame(Arrow.Table("comparisons/reg_1_par.arrow"))
@@ -59,15 +61,24 @@ loss = Loss([SemML(semobserved, [0.0], similar(start_val))])
 
 # imply
 imply = ImplySymbolic(A, S, F, x, start_val)
+imply_sparse = ImplySparse(A, S, F, x, start_val)
+@time imply_common = ImplyCommon(A, S, F, x, start_val)
 
 # model
 model_fin = Sem(semobserved, imply, loss, diff_fin)
+model_fin_sparse = Sem(semobserved, imply_sparse, loss, diff_fin)
+model_fin_common = Sem(semobserved, imply_common, loss, diff_fin)
 
 # fit 
 solution_fin = sem_fit(model_fin)
+solution_fin_sparse = sem_fit(model_fin_sparse)
+solution_fin_common = sem_fit(model_fin_common)
 
+@test all(#
+        abs.(solution_fin_sparse.minimizer .- par.est[par_order]
+            ) .< 0.05*abs.(par.est[par_order]))
 
-@test all(
+@test all(#
         abs.(solution_fin.minimizer .- par.est[par_order]
             ) .< 0.05*abs.(par.est[par_order]))
 
@@ -92,3 +103,18 @@ solution_ana = sem_fit(model_ana)
 @test all(
         abs.(solution_ana.minimizer .- par.est[par_order]
             ) .< 0.05*abs.(par.est[par_order]))
+
+
+a = [1 x[1] 0]
+
+A_dense = Matrix(A)
+
+F_dense = Matrix(F)
+
+S_dense = Matrix(S)
+
+A_type = typeof.(ModelingToolkit.value.(A_dense))
+
+S_type = typeof.(ModelingToolkit.value.(S_dense))
+
+getindex(A)

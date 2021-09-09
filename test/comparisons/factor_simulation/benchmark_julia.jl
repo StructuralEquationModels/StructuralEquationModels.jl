@@ -25,3 +25,19 @@ check_solution(fits, par_vec, par_order)
 benchmarks = benchmark_models(models)
 
 ##############################################
+
+start_val = models[1].imply.start_val
+grad = similar(start_val)
+grad2 = similar(start_val)
+
+@btime models[1](start_val, grad)
+
+FiniteDiff.finite_difference_gradient!(grad2, models[2], start_val)
+
+isapprox(grad, grad2)
+
+diff_ana = 
+    SemAnalyticDiff(
+        :LD_LBFGS, 
+        nothing,
+        (grad_fiml,))
