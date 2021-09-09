@@ -128,6 +128,10 @@ model_fin_mean = Sem(semobserved, imply_mean, loss_mean, diff_fin)
 solution_fin = sem_fit(model_fin)
 solution_fin_mean = sem_fit(model_fin_mean)
 
+pattern = model_fin.observed.patterns[55]
+inv(model_fin.imply.imp_cov[pattern, pattern]) ≈ model_fin.loss.functions[1].inverses[55]
+model_fin.loss.functions[1].logdets[55] ≈ logdet(model_fin.imply.imp_cov[pattern, pattern])
+
 all(
     abs.(solution_fin.minimizer .- miss20_par.est[par_order]
         ) .< 0.05*abs.(miss20_par.est[par_order]))

@@ -1,6 +1,6 @@
 setwd("C:/Users/maxim/.julia/dev/sem/test/comparisons/factor_simulation/")
 
-nfact_vec <- c(3)#, 5)
+nfact_vec <- c(3, 5)
 
 nitem_vec <- c(10)#, 5, 20, 48)
 

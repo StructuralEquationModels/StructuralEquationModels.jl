@@ -187,9 +187,9 @@ function grad_per_pattern(pattern, Σ_inv_j, Σ_der, µ_der, N, C, b)
     Σ_der_j = Σ_der[pattern, pattern]
     µ_der_j = µ_der[pattern]
     if N > one(N)
-        d1 = tr(Σ_inv_j*Σ_der_j*C)
+        d1 = dot(Σ_inv_j,Σ_der_j,C)
     else
-        d1 = tr(Σ_inv_j*Σ_der_j)
+        d1 = dot(Σ_inv_j,Σ_der_j)
     end
     d2 = (b'*Σ_inv_j*Σ_der_j + 2*µ_der_j')*Σ_inv_j*b
     d = N*(d1 - d2)

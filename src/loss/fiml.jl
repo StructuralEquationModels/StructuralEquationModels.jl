@@ -94,6 +94,27 @@ function (semfiml::SemFIML)(
     I <: Imply, 
     D <: SemDiff}
 
+    if !check_fiml_2(semfiml, model) return Inf end
+
+    copy_per_pattern!(semfiml, model)
+    #batch_cholesky!(semfiml, model)
+    batch_sym_inv_update!(semfiml, model)
+    semfiml.logdets .= -logdet.(semfiml.inverses)
+
+    F = zero(eltype(par))
+    F = F_FIML(F, model.observed.rows, semfiml, model)
+    return F
+end
+
+#= function (semfiml::SemFIML)(
+    par, 
+    model::Sem{O, I, L, D}
+    ) where 
+    {O <: SemObs, 
+    L <: Loss, 
+    I <: Imply, 
+    D <: SemDiff}
+
     if !check_fiml(semfiml, model) return Inf end
 
     copy_per_pattern!(semfiml, model)
@@ -104,7 +125,7 @@ function (semfiml::SemFIML)(
     F = zero(eltype(par))
     F = F_FIML(F, model.observed.rows, semfiml, model)
     return F
-end
+end =#
 
 # Helper functions
 function copy_per_pattern!(inverses, source_inverses, means, source_means, patterns)
@@ -176,6 +197,12 @@ function check_fiml(semfiml, model)
     copyto!(semfiml.imp_inv, model.imply.imp_cov)
     a = cholesky!(Hermitian(semfiml.imp_inv); check = false)
     return isposdef(a)
+end
+
+function check_fiml_2(semfiml, model)
+    copyto!(semfiml.imp_inv, model.imply.imp_cov)
+    semfiml.choleskys[1] = cholesky!(Hermitian(semfiml.imp_inv); check = false)
+    return isposdef(semfiml.choleskys[1])
 end
 
 ##################### definition variables ############################

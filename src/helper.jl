@@ -72,6 +72,24 @@ function batch_inv!(fun::Union{LossFunction, DiffFunction}, model)
     end
 end
 
+function batch_sym_inv_update!(fun::Union{LossFunction, DiffFunction}, model)
+    M_inv = inv(fun.choleskys[1])
+    for i = 1:size(fun.inverses, 1)
+        if size(model.observed.patterns_not[i]) == 0
+            fun.inverses[i] .= M_inv
+        else
+            ind_not = model.observed.patterns_not[i]
+            ind = model.observed.patterns[i]
+
+            A = M_inv[ind_not, ind]
+            H = cholesky(M_inv[ind_not, ind_not])
+            D = H \ A
+            out = M_inv[ind, ind] - LinearAlgebra.BLAS.gemm('T', 'N', 1.0, A, D)
+            fun.inverses[i] .= out
+        end
+    end
+end
+
 function sparse_outer_mul!(C, A, B, ind) #computes A*S*B -> C, where ind gives the entries of S that are 1
     fill!(C, 0.0)
     for i in 1:length(ind)

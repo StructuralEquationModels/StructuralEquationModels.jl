@@ -91,7 +91,7 @@ function gen_model(nfact, nitem, data, start_val)
             Optim.Options(
                 ;f_tol = 1e-10, 
                 x_tol = 1.5e-8),
-                (grad_fiml,))  
+            (grad_fiml,))  
 
 #=     diff_fin = SemFiniteDiff(
         LBFGS(
