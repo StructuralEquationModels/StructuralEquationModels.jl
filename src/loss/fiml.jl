@@ -62,7 +62,7 @@ function F_one_pattern(imp_mean, meandiff, inverse, obs_cov, obs_mean, logdet, N
     @. meandiff = obs_mean - imp_mean
     F += dot(meandiff, inverse, meandiff)
     if N > one(N)
-        F += tr(obs_cov*inverse)
+        F += dot(obs_cov, inverse)
     end
     F = N*F
     return F

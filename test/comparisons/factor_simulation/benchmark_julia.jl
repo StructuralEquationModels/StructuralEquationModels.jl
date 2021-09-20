@@ -41,3 +41,39 @@ diff_ana =
         :LD_LBFGS, 
         nothing,
         (grad_fiml,))
+
+
+using Cthulhu
+
+start_val = convert(Vector{Float64}, start_vec[1].est[par_order[1]])
+
+@descend models[1](start_val)
+
+grad = similar(start_val)
+
+models[1](start_val, grad)
+
+using FiniteDiff
+
+grad2 = FiniteDiff.finite_difference_gradient(models[1], start_val)
+
+grad ≈ grad2
+
+@descend models[1](start_val, grad)
+
+
+### NLopt
+
+sol = sem.sem_fit_nlopt(models[1])
+
+maximum(abs.(sol[2] .- par_vec[1].est[par_order[1]]))
+
+using BenchmarkTools
+
+@benchmark sem.sem_fit_nlopt(models[1])
+
+sol2 = sem_fit_nlopt(models[2])
+
+@time sol2 = sem_fit_nlopt(models[2])
+
+maximum(abs.(sol2[2] .- par_vec[2].est[par_order[2]]))

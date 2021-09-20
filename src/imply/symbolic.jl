@@ -53,6 +53,14 @@ rows::R
 data_def::D
 end
 
+struct ImplySymbolicWLS{
+    F <: Any,
+    A <: AbstractArray,
+    S <: Array{Float64}} <: Imply
+    imp_fun::F
+    imp_cov::A
+    start_val::S
+end
 ############################################################################
 ### Constructors
 
@@ -111,6 +119,46 @@ function ImplySymbolic(
         copy(start_val),
         imp_fun_mean,
         imp_mean
+    )
+end
+
+function ImplySymbolicWLS(
+        A::Spa1,
+        S::Spa2,
+        F::Spa3,
+        parameters,
+        start_val
+            ) where {
+            Spa1 <: SparseMatrixCSC,
+            Spa2 <: SparseMatrixCSC,
+            Spa3 <: SparseMatrixCSC,
+            Spa4 <: Union{Nothing, AbstractArray}
+            }
+
+    #Model-implied covmat
+
+    invia = neumann_series(A)
+
+    imp_cov_sym = F*invia*S*permutedims(invia)*permutedims(F)
+
+    imp_cov_sym = Array(imp_cov_sym)
+    imp_cov_sym = ModelingToolkit.simplify.(imp_cov_sym)
+    imp_cov_sym = LowerTriangular(imp_cov_sym)
+    imp_cov_sym = sparse(imp_cov_sym)
+    imp_cov_sym = imp_cov_sym.nzval
+
+    imp_fun =
+        eval(ModelingToolkit.build_function(
+            imp_cov_sym,
+            parameters
+        )[2])
+
+    imp_cov = zeros(Int64(0.5*size(F)[1]*(size(F)[1] + 1)))
+
+    return ImplySymbolicWLS(
+        imp_fun,
+        imp_cov,
+        copy(start_val)
     )
 end
 
@@ -276,6 +324,10 @@ function (imply::ImplySymbolic)(parameters, model)
     if !isnothing(imply.imp_mean)
         imply.imp_fun_mean(imply.imp_mean, parameters)
     end
+end
+
+function (imply::ImplySymbolicWLS)(parameters, model)
+    imply.imp_fun(imply.imp_cov, parameters)
 end
 
 function (imply::ImplySymbolicAlloc)(parameters, model)

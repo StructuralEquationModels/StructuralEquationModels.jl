@@ -82,7 +82,7 @@ function gen_model(nfact, nitem, data, start_val)
 
     grad_fiml = sem.∇SemFIML(semobserved, imply, A, S, F, [x..., m...], start_val; M = M)
     
-    diff_ana = 
+#=     diff_ana = 
         SemAnalyticDiff(
             LBFGS(
                 alphaguess = LineSearches.InitialHagerZhang(),
@@ -90,8 +90,15 @@ function gen_model(nfact, nitem, data, start_val)
             ), 
             Optim.Options(
                 ;f_tol = 1e-10, 
-                x_tol = 1.5e-8),
-            (grad_fiml,))  
+                x_tol = 1.5e-8,
+                show_trace=true),
+            (grad_fiml,)) =#
+
+    diff_ana = 
+            SemAnalyticDiff(
+                :LD_LBFGS, 
+                nothing,
+                (grad_fiml,))
 
 #=     diff_fin = SemFiniteDiff(
         LBFGS(

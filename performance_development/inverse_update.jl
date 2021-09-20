@@ -1,26 +1,6 @@
 using InvertedIndices, BenchmarkTools, LinearAlgebra, ProfileView,
     GraphRecipes
 
-test = rand(10, 1)
-@benchmark LinearAlgebra.BLAS.gemm('N', 'T', 1.0, test, test)
-@benchmark test*test'
-
-A = rand(10,10)
-B = rand(10,10)
-C = A\B
-
-S_inv = rand(20,20)
-S_inv = S_inv*S_inv'
-S = Symmetric(S)
-res = inv(S_inv[Not(5), Not(5)])
-S_inv = Symmetric(inv(S_inv))
-
-h = S_inv[5, 5]
-a = S_inv[Not(5), 5] / sqrt(h)
-out = S_inv[Not(5), Not(5)] - a*a'
-
-res ≈ out
-
 ## rank 1 update
 function sym_inv_update(M_inv, ind_not::Int64, ind)
     h = M_inv[ind_not, ind_not]
@@ -38,7 +18,7 @@ function sym_inv_update(M_inv, ind_not, ind)
     return out
 end
 
-S = rand(50,50)
+S = rand(30,30)
 S = S*S'
 S = Symmetric(S)
 S_inv = Symmetric(inv(S))
@@ -52,13 +32,15 @@ sym_inv_update(S_inv, [5], ind) ≈ inv(S[Not(5), Not(5)])
 @benchmark sym_inv_update($S_inv, 5, ind)
 @benchmark sym_inv_update($S_inv, [5], ind)
 
-ind = filter(x ->!(x ∈ [2, 3, 5, 7]), 1:size(S, 1))
 
-sym_inv_update(S_inv, [2,3, 5, 7], ind) ≈ inv(S[ind, ind])
+del = [2, 3, 5, 7, 9, 10, 12, 18, 21]
+ind = filter(x ->!(x ∈ del), 1:size(S, 1))
+
+sym_inv_update(S_inv, del, ind) ≈ inv(S[ind, ind])
 inv(cholesky(S)) ≈ cholesky(S) \ I
 
 @benchmark cholesky($S[ind, ind]) \ I
-@benchmark sym_inv_update($S_inv, [2, 3, 5, 7], $ind)
+@benchmark sym_inv_update($S_inv, del, $ind)
 
 function testf(S_inv, ind_not, ind)
     for i = 1:10000
@@ -76,7 +58,7 @@ b = rand(40, 40)
 
 
 #### random graph generation
-using Random, LinearAlgebra, SparseArrays, GraphRecipes, Plots
+using Random, LinearAlgebra, SparseArrays, GraphRecipes, Plots, BenchmarkTools
 
 Random.seed!(78435472956284237434)
 
@@ -97,7 +79,7 @@ G = LowerTriangular(G)
 G[diagind(G)] .= false
 G = sparse(G)
 
-inv(I-Matrix(G))
+C = inv(I-Matrix(G))
 C = C .!= 0
 (C .& C') == I
 @benchmark C = inv(I-Matrix(G))
