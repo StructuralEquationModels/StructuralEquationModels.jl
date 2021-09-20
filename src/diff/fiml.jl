@@ -199,11 +199,14 @@ end
 function (diff::∇SemFIML)(par, grad, model::Sem{O, I, L, D}) where
             {O <: SemObs, L <: Loss, I <: Imply, D <: SemAnalyticDiff}
     #ld = logdet(a)
-    if check_fiml(diff, model)
+    if check_fiml_2(diff, model)
         copy_per_pattern!(diff, model)
-        batch_cholesky!(diff, model)
-        diff.logdets .= logdet.(diff.choleskys)
-        batch_inv!(diff, model)
+        #batch_cholesky!(diff, model)
+        #diff.logdets .= logdet.(diff.choleskys)
+        #batch_inv!(diff, model)
+        copy_per_pattern!(diff, model)
+        batch_sym_inv_update!(diff, model)
+        diff.logdets .= -logdet.(diff.inverses)
 
         diff.B!(diff.B, par) # B = inv(I-A)
         diff.E!(diff.E, par) # E = B*S*B'
