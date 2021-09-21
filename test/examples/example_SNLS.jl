@@ -7,16 +7,22 @@ dat = DataFrame(Arrow.Table("comparisons/data_dem.arrow"))
 par_ml = DataFrame(Arrow.Table("comparisons/par_dem_ml.arrow"))
 par_ls = DataFrame(Arrow.Table("comparisons/par_dem_ls.arrow"))
 
+dat = 
+    select(
+        dat, 
+        [:x1, :x2, :x3, :y1, :y2, :y3, :y4, :y5, :y6, :y7, :y8])
 # observed
 semobserved = SemObsCommon(data = Matrix{Float64}(dat))
 
 #diff
 diff_fin = SemFiniteDiff(
-    LBFGS(),
+    BFGS(),
     Optim.Options())
 
 ## Model definition
 @ModelingToolkit.variables x[1:31]
+
+x = rand(31)
 
 S =[x[1]  0     0     0     0     0     0     0     0     0     0     0     0     0
     0     x[2]  0     0     0     0     0     0     0     0     0     0     0     0
@@ -77,6 +83,9 @@ start_val_ls = Vector{Float64}(par_ls.start[par_order])
 loss_ml = Loss([SemML(semobserved, [0.0], similar(start_val_ml))])
 loss_ls = Loss([sem.SemWLS(semobserved)])
 
+#start_val_ml = [fill(1.0, 14); fill(0, 6); fill(1, 8); fill(0, 3)]
+#start_val_ls = [fill(1.0, 14); fill(0, 6); fill(1, 8); fill(0, 3)]
+
 # imply
 imply_ml = ImplySymbolic(A, S, F, x, start_val_ml)
 imply_ls = sem.ImplySymbolicWLS(A, S, F, x, start_val_ls)
@@ -93,6 +102,10 @@ ind = filter(x -> (x[1] >= x[2]), ind)
 s = imply_ml.imp_cov[ind]
 
 imply_ls.imp_cov ≈ s
+
+imply_ml(x, model_ml)
+imp_cov = F*inv(I-A)*S*transpose(inv(I-A))*transpose(F)
+imp_cov ≈ imply_ml.imp_cov
 
 # fit 
 solution_ml = sem_fit(model_ml)
