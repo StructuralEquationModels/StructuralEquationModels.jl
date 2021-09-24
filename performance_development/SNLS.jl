@@ -322,23 +322,16 @@ simplify.(kron(F*A, F*A))
 
 Sig = ones(Bool, nobs, nobs)
 Sig = LowerTriangular(Sig)
-
 ind = findall(Sig)
-
 Es = []
-
 for i in ind
     E = zeros(Bool, nobs,nobs)
     E[i] = true
     E = vec(E)
     push!(Es, E)
 end
-
 L = hcat(Es...)
-
 K = L*inv(transpose(L)*L)
-
-K = convert(BitArray, K)
 K = sparse(K)
 
 Obse = zeros(Bool, nobs+nlat, nobs+nlat)
