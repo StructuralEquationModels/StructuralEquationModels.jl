@@ -155,28 +155,3 @@ function (semml::SemML)(par, model::Sem{O, I, L, D}, E, G) where
     end
 end
  =#
-
-
- ##### weighted least squares
- struct SemWLS{ Vt <: Union{AbstractArray, UniformScaling{Bool}},
-                St <: AbstractArray} <: LossFunction
-    V::Vt
-    s::St
-end
-
-
-### Constructor
-function SemWLS(observed::T; V = LinearAlgebra.I) where {T <: SemObs}
-    ind = CartesianIndices(observed.obs_cov)
-    ind = filter(x -> (x[1] >= x[2]), ind)
-    s = observed.obs_cov[ind]
-    # compute V here
-    return SemWLS(V, s)
-end
-
-### Loss
-function (semwls::SemWLS)(par, model)
-    diff = semwls.s - model.imply.imp_cov
-    F = dot(diff, semwls.V, diff)
-    return F
-end
