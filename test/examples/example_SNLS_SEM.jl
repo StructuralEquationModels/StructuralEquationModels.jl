@@ -1,13 +1,11 @@
-using sem, Arrow, ModelingToolkit, LinearAlgebra, 
-    SparseArrays, DataFrames, Optim, LineSearches,
-    Statistics
+using sem, Arrow, ModelingToolkit, LinearAlgebra, SparseArrays, DataFrames, Optim, LineSearches
 
 cd("test")
 
 ## Observed Data
-dat = DataFrame(Arrow.Table("comparisons/data_dem.arrow"))
-par_ml = DataFrame(Arrow.Table("comparisons/par_dem_ml.arrow"))
-par_ls = DataFrame(Arrow.Table("comparisons/par_dem_ls.arrow"))
+dat = DataFrame(Arrow.Table("comparisons/data_sem.arrow"))
+par_ml = DataFrame(Arrow.Table("comparisons/par_sem_ml.arrow"))
+par_ls = DataFrame(Arrow.Table("comparisons/par_sem_ls.arrow"))
 
 dat = 
     select(
@@ -22,28 +20,16 @@ diff_fin = SemFiniteDiff(
     Optim.Options())
 
 diff_fin_new = SemFiniteDiff(
-    BFGS(),
+    Newton(),
     Optim.Options())
 
 ## Model definition
-@ModelingToolkit.variables x[1:31]
+@ModelingToolkit.variables x[1:25]
 
 #x = rand(31)
 
-S =[x[1]  0     0     0     0     0     0     0     0     0     0     0     0     0
-    0     x[2]  0     0     0     0     0     0     0     0     0     0     0     0
-    0     0     x[3]  0     0     0     0     0     0     0     0     0     0     0
-    0     0     0     x[4]  0     0     0     x[15] 0     0     0     0     0     0
-    0     0     0     0     x[5]  0     x[16] 0     x[17] 0     0     0     0     0
-    0     0     0     0     0     x[6]  0     0     0     x[18] 0     0     0     0
-    0     0     0     0     x[16] 0     x[7]  0     0     0     x[19] 0     0     0
-    0     0     0     x[15] 0     0     0     x[8]  0     0     0     0     0     0
-    0     0     0     0     x[17] 0     0     0     x[9]  0     x[20] 0     0     0
-    0     0     0     0     0     x[18] 0     0     0     x[10] 0     0     0     0
-    0     0     0     0     0     0     x[19] 0     x[20] 0     x[11] 0     0     0
-    0     0     0     0     0     0     0     0     0     0     0     x[12] 0     0
-    0     0     0     0     0     0     0     0     0     0     0     0     x[13] 0
-    0     0     0     0     0     0     0     0     0     0     0     0     0     x[14]]
+S = zeros(Num, 14,14)
+S[diagind(S)] = x[1:14]
 
 F =[1.0 0 0 0 0 0 0 0 0 0 0 0 0 0
     0 1 0 0 0 0 0 0 0 0 0 0 0 0
@@ -58,19 +44,19 @@ F =[1.0 0 0 0 0 0 0 0 0 0 0 0 0 0
     0 0 0 0 0 0 0 0 0 0 1 0 0 0]
 
 A =[0  0  0  0  0  0  0  0  0  0  0     1     0     0
-    0  0  0  0  0  0  0  0  0  0  0     x[21] 0     0
-    0  0  0  0  0  0  0  0  0  0  0     x[22] 0     0
+    0  0  0  0  0  0  0  0  0  0  0     x[15] 0     0
+    0  0  0  0  0  0  0  0  0  0  0     x[16] 0     0
     0  0  0  0  0  0  0  0  0  0  0     0     1     0
-    0  0  0  0  0  0  0  0  0  0  0     0     x[23] 0
-    0  0  0  0  0  0  0  0  0  0  0     0     x[24] 0
-    0  0  0  0  0  0  0  0  0  0  0     0     x[25] 0
+    0  0  0  0  0  0  0  0  0  0  0     0     x[17] 0
+    0  0  0  0  0  0  0  0  0  0  0     0     x[18] 0
+    0  0  0  0  0  0  0  0  0  0  0     0     x[19] 0
     0  0  0  0  0  0  0  0  0  0  0     0     0     1
-    0  0  0  0  0  0  0  0  0  0  0     0     0     x[26]
-    0  0  0  0  0  0  0  0  0  0  0     0     0     x[27]
-    0  0  0  0  0  0  0  0  0  0  0     0     0     x[28]
+    0  0  0  0  0  0  0  0  0  0  0     0     0     x[20]
+    0  0  0  0  0  0  0  0  0  0  0     0     0     x[21]
+    0  0  0  0  0  0  0  0  0  0  0     0     0     x[22]
     0  0  0  0  0  0  0  0  0  0  0     0     0     0
-    0  0  0  0  0  0  0  0  0  0  0     x[29] 0     0
-    0  0  0  0  0  0  0  0  0  0  0     x[30] x[31] 0]
+    0  0  0  0  0  0  0  0  0  0  0     x[23] 0     0
+    0  0  0  0  0  0  0  0  0  0  0     x[24] x[25] 0]
 
 S = sparse(S)
 
@@ -80,29 +66,25 @@ F = sparse(F)
 #A
 A = sparse(A)
     
-par_order = [collect(21:34); collect(15:20); 2;3; 5;6;7; collect(9:14)]
+par_order = [collect(15:28); 2;3; 5;6;7; collect(9:14)]
 
 start_val_ml = Vector{Float64}(par_ml.start[par_order])
 start_val_ls = Vector{Float64}(par_ls.start[par_order])
-start_val_snlls = Vector{Float64}(par_ls.start[par_order][21:31])
-
-obs_cov = inv(cov(Matrix{Float64}(dat)))
-obs_cov = kron(obs_cov, obs_cov)
-
+start_val_snlls = Vector{Float64}(par_ls.start[par_order][15:25])
 
 # loss
 loss_ml = Loss([SemML(semobserved, [0.0], similar(start_val_ml))])
 loss_ls = Loss([sem.SemWLS(semobserved, [0.0], similar(start_val_ml))])
 loss_snlls = Loss([sem.SemSWLS(semobserved, [0.0], similar(start_val_ml))])
 
-# start_val_ml = [fill(1.0, 14); fill(0, 6); fill(1, 8); fill(0, 3)]
-# start_val_ls = [fill(1.0, 14); fill(0, 6); fill(1, 8); fill(0, 3)]
-# start_val_snlls = [fill(1.0, 8); fill(0, 3)]
+#start_val_ml = [fill(1.0, 14); fill(0, 6); fill(1, 8); fill(0, 3)]
+#start_val_ls = [fill(1.0, 14); fill(0, 6); fill(1, 8); fill(0, 3)]
+# start_val_snlls = [fill(1.0, 8); fill(0.1, 3)]
 
 # imply
 imply_ml = ImplySymbolic(A, S, F, x, start_val_ml)
 imply_ls = sem.ImplySymbolicWLS(A, S, F, x, start_val_ls)
-imply_snlls = sem.ImplySymbolicSWLS(A, S, F, x[21:31], start_val_snlls)
+imply_snlls = sem.ImplySymbolicSWLS(A, S, F, x[15:25], start_val_snlls)
 
 # model
 model_ml = Sem(semobserved, imply_ml, loss_ml, diff_fin)
@@ -123,8 +105,8 @@ all(#
                 ) .< 0.05*abs.(par_ls.est[par_order]))
 
 all(#
-            abs.(solution_snlls.minimizer .- par_ls.est[par_order][21:31]
-                ) .< 0.05*abs.(par_ls.est[par_order][21:31]))
+            abs.(solution_snlls.minimizer .- par_ls.est[par_order][15:25]
+                ) .< 0.05*abs.(par_ls.est[par_order][15:25]))
 
 
 model_snlls(solution_ls.minimizer[21:31])
@@ -220,4 +202,3 @@ all(#
         model_ls; 
         lower = fill(-11.0, 31),
         upper = fill(10.0, 31))[2]
-

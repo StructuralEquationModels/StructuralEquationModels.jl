@@ -2,7 +2,7 @@ pacman::p_load(here, arrow, tidyverse, lavaan, microbenchmark, magrittr)
 
 set.seed(123)
 
-#setwd(r"(C:\Users\maxim\.julia\dev\sem)")
+setwd(r"(C:\Users\maxim\.julia\dev\sem)")
 
 #----lavaan----
 model <-    "# measurement model
@@ -21,22 +21,10 @@ model <-    "# measurement model
 
 data <- PoliticalDemocracy
 
-fit_ml <- cfa(model, data, likelihood = "wishart", do.fit = FALSE)
-fit_ls <- cfa(model, data, estimator = "WLS", do.fit = FALSE,  WLS.V = diag(66))
-
-V <- lavInspect(fit_ls, "WLS.V")
-#V <- V[-c(1:11), -c(1:11)]
-
-obs_cov <- cov(data)
-obs_cov <- solve(obs_cov)
-obs_cov <- kronecker(obs_cov, obs_cov)
-L <- lavaan::lav_matrix_duplication(11)
-W <- t(L)%*%obs_cov%*%L
-
-K = L%*%solve(t(L)%*%L)
+data <- select(data, starts_with("x"), starts_with("y"))
 
 fit_ml <- cfa(model, data, likelihood = "wishart", do.fit = TRUE)
-fit_ls <- cfa(model, data, estimator = "WLS", do.fit = TRUE, WLS.V = diag(66))
+fit_ls <- cfa(model, data, estimator = "GLS", do.fit = TRUE)
 
 par_ml <- select(parTable(fit_ml), lhs, op, rhs, est, start)
 par_ls <- select(parTable(fit_ls), lhs, op, rhs, est, start)
@@ -44,3 +32,33 @@ par_ls <- select(parTable(fit_ls), lhs, op, rhs, est, start)
 write_arrow(par_ml, str_c("test/comparisons/par_dem_ml.arrow"))
 write_arrow(par_ls, str_c("test/comparisons/par_dem_ls.arrow"))
 write_arrow(data, str_c("test/comparisons/data_dem.arrow"))
+
+
+# bootstrap samples -------------------------------------------------------
+
+n = 100
+n_obs = nrow(data)
+n_obs_gen = 50
+max_iter = 200
+
+bootstrap_samples <- function(data, nobs, n_obs_gen, n){
+  obs <- 1:nobs
+  rowind <- map(1:n, ~sample(obs, n_obs_gen))
+  samples <- map(rowind, ~data[.x, ])
+  return(samples)
+}
+
+data_boot <- bootstrap_samples(data, n_obs, n_obs_gen, n)
+
+fits_ml <- map(data_boot, ~cfa(model, .x, likelihood = "wishart", do.fit = TRUE))
+fits_ls <- map(data_boot, ~cfa(model, .x, estimator = "GLS", do.fit = TRUE))
+
+sum(map_lgl(fits_ml, ~lavInspect(.x, "converged")))
+
+sum(map_lgl(fits_ls, ~lavInspect(.x, "converged")))
+
+
+library(microbenchmark)
+
+microbenchmark(cfa(model, data, likelihood = "wishart", do.fit = TRUE))
+

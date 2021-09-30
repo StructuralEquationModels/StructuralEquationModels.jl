@@ -118,3 +118,22 @@ function cov_and_mean(rows; corrected = false)
     obs_mean = vcat(Statistics.mean(data, dims = 1)...)
     return obs_cov, obs_mean
 end
+
+function duplication_matrix(nobs)
+    nobs = Int(nobs)
+    n1 = Int(nobs*(nobs+1)*0.5)
+    n2 = Int(nobs^2)
+    Dt = zeros(n1, n2)
+
+    for j in 1:nobs
+        for i in j:nobs
+            u = zeros(n1)
+            u[Int((j-1)*nobs + i-0.5*j*(j-1))] = 1
+            T = zeros(nobs, nobs)
+            T[j,i] = 1; T[i, j] = 1
+            Dt += u*transpose(vec(T)) 
+        end
+    end
+    D = transpose(Dt)
+    return D
+end

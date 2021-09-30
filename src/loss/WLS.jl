@@ -7,11 +7,17 @@ end
 
 
 ### Constructor
-function SemWLS(observed::T, objective, grad; V = LinearAlgebra.I) where {T <: SemObs}
+function SemWLS(observed::T, objective, grad; V = nothing) where {T <: SemObs}
     ind = CartesianIndices(observed.obs_cov)
     ind = filter(x -> (x[1] >= x[2]), ind)
     s = observed.obs_cov[ind]
     # compute V here
+    if isnothing(V)
+        D = duplication_matrix(observed.n_man)
+        S = inv(observed.obs_cov)
+        S = kron(S,S)
+        V = 0.5*(D'*S*D)
+    end
     return SemWLS(V, s)
 end
 
@@ -33,12 +39,19 @@ end
 
 
 ### Constructor
-function SemSWLS(observed::T, objective, grad; V = LinearAlgebra.I) where {T <: SemObs}
+function SemSWLS(observed::T, objective, grad; V = nothing) where {T <: SemObs}
     ind = CartesianIndices(observed.obs_cov)
     ind = filter(x -> (x[1] >= x[2]), ind)
     s = observed.obs_cov[ind]
+    
+    if isnothing(V)
+        D = duplication_matrix(observed.n_man)
+        S = inv(observed.obs_cov)
+        S = kron(S,S)
+        V = 0.5*(D'*S*D)
+    end
+
     sᵀV = transpose(s)*V
-    # compute V here
     return SemSWLS(V, sᵀV)
 end
 
@@ -48,7 +61,7 @@ function (semswls::SemSWLS)(par, model)
     # V = semswls.V
     # G = model.imply.G
     outer = semswls.sᵀV*model.imply.G
-    b = cholesky(model.imply.G'*semswls.V*model.imply.G)
+    b = cholesky(Symmetric(model.imply.G'*semswls.V*model.imply.G))
     inner = b\outer'
     F = -outer*inner
     # F = transpose(s)*V*s - transpose(s)*V*G*inv(transpose(G)*V*G)*(transpose(G)*V*s)
