@@ -20,7 +20,8 @@ function sem_fit_nlopt(
         xtol_rel = 1.5e-8,
         lower = nothing,
         upper = nothing,
-        local_algo = nothing) where
+        local_algo = nothing,
+        maxeval = 200) where
     {O <: SemObs, L <: Loss, I <: Imply, D <: SemDiff}
 
     opt = NLopt.Opt(model.diff.algorithm, length(model.imply.start_val))
@@ -28,6 +29,7 @@ function sem_fit_nlopt(
     opt.min_objective = (x,y) -> grad_nlopt(model, x, y)
     opt.ftol_rel = ftol_rel
     opt.xtol_rel = xtol_rel
+    opt.maxeval = maxeval
     !isnothing(lower) ? opt.lower_bounds = lower : nothing
     !isnothing(upper) ? opt.upper_bounds = upper : nothing
     !isnothing(local_algo) ? opt.local_optimizer = NLopt.Opt(local_algo, length(model.imply.start_val)) : nothing
