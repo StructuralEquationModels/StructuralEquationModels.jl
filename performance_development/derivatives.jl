@@ -86,10 +86,6 @@ start_val_ml = Vector{Float64}(par_ml.start[par_order])
 start_val_ls = Vector{Float64}(par_ls.start[par_order])
 start_val_snlls = Vector{Float64}(par_ls.start[par_order][21:31])
 
-obs_cov = inv(cov(Matrix{Float64}(dat)))
-obs_cov = kron(obs_cov, obs_cov)
-
-
 # loss
 loss_ml = Loss([SemML(semobserved, [0.0], similar(start_val_ml))])
 loss_ls = Loss([sem.SemWLS(semobserved, [0.0], similar(start_val_ml))])
@@ -104,6 +100,85 @@ imply_snlls = sem.ImplySymbolicSWLS(A, S, F, x[21:31], start_val_snlls)
 model_ml = Sem(semobserved, imply_ml, loss_ml, diff_fin)
 model_ls = Sem(semobserved, imply_ls, loss_ls, diff_fin)
 model_snlls = Sem(semobserved, imply_snlls, loss_snlls, diff_fin_new)
+
+grad_ls = sem.∇SemWLS(loss_ls.functions[1], size(F, 1))       
+
+diff_ana = 
+    SemAnalyticDiff(
+        BFGS(), 
+        Optim.Options(
+            ;f_tol = 1e-10, 
+            x_tol = 1.5e-8),
+            (grad_ls,))
+
+model_ls_ana = Sem(semobserved, imply_ls, loss_ls, diff_ana)
+
+grad_ml = sem.∇SemML_2()       
+
+diff_ana_ml = 
+    SemAnalyticDiff(
+        BFGS(), 
+        Optim.Options(
+            ;f_tol = 1e-10, 
+            x_tol = 1.5e-8),
+            (grad_ml,))
+
+model_ml_ana = Sem(semobserved, imply_ml, loss_ml, diff_ana_ml)
+# fit
+solution_ml = sem_fit(model_ml)
+solution_ls = sem_fit(model_ls)
+solution_snlls = sem_fit(model_snlls)
+solution_ana = sem_fit(model_ls_ana)
+solution_ana_ml = sem_fit(model_ml_ana)
+
+all(#
+        abs.(solution_ml.minimizer .- par_ml.est[par_order]
+            ) .< 0.05*abs.(par_ml.est[par_order]))
+
+all(#
+            abs.(solution_ls.minimizer .- par_ls.est[par_order]
+                ) .< 0.05*abs.(par_ls.est[par_order]))
+
+all(#
+            abs.(solution_snlls.minimizer .- par_ls.est[par_order][21:31]
+                ) .< 0.05*abs.(par_ls.est[par_order][21:31]))
+
+all(#
+            abs.(solution_ana.minimizer .- par_ls.est[par_order]
+                ) .< 0.05*abs.(par_ls.est[par_order]))
+
+all(#
+            abs.(solution_ana_ml.minimizer .- par_ml.est[par_order]
+                ) .< 0.05*abs.(par_ml.est[par_order]))
+
+
+using BenchmarkTools, FiniteDiff
+
+# ls gradient
+grad = FiniteDiff.finite_difference_gradient(model_ls, start_val_ls)
+grad2 = similar(grad)
+model_ls_ana.diff(start_val_ls, grad2, model_ls_ana)
+
+grad ≈ grad2
+
+@benchmark model_ls_ana.diff(start_val_ls, grad2, model_ls_ana)
+@benchmark FiniteDiff.finite_difference_gradient(model_ls, start_val_ls)
+
+@benchmark sem_fit(model_ls)
+@benchmark sem_fit(model_ls_ana)
+
+# ml gradient
+grad = FiniteDiff.finite_difference_gradient(model_ml, start_val_ml)
+grad2 = similar(grad)
+model_ml_ana.diff(start_val_ml, grad2, model_ml_ana)
+
+grad ≈ grad2
+
+@benchmark model_ml_ana.diff(start_val_ml, grad2, model_ml_ana)
+@benchmark FiniteDiff.finite_difference_gradient(model_ml, start_val_ml)
+
+@benchmark sem_fit(model_ml)
+@benchmark sem_fit(model_ml_ana)
 
 # derivatives
 function get_Knn(n)
@@ -278,8 +353,7 @@ J2 = ModelingToolkit.jacobian(vec(imp_cov_sym), x)
 J2 = simplify.(J2)
 J2 = sparse(J2)
 
-J2 = ModelingToolkit.sparsejacobian(vec(imp_cov_sym), x)
-ModelingToolkit.build_function()
+J2 = ModelingToolkit.sparsejacobian(vec(imp_cov_sym), x) 
 
 function identity_kron(A)
     n = size(A, 1)

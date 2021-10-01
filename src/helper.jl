@@ -137,3 +137,22 @@ function duplication_matrix(nobs)
     D = transpose(Dt)
     return D
 end
+
+function elimination_matrix(nobs)
+    nobs = Int(nobs)
+    n1 = Int(nobs*(nobs+1)*0.5)
+    n2 = Int(nobs^2)
+    L = zeros(n1, n2)
+
+    for j in 1:nobs
+        for i in j:nobs
+            u = zeros(n1)
+            u[Int((j-1)*nobs + i-0.5*j*(j-1))] = 1
+            T = zeros(nobs, nobs)
+            T[i, j] = 1
+            L += u*transpose(vec(T)) 
+        end
+    end
+    return L
+end
+
