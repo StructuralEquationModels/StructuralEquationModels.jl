@@ -95,10 +95,6 @@ loss_ml = Loss([SemML(semobserved, [0.0], similar(start_val_ml))])
 loss_ls = Loss([sem.SemWLS(semobserved, [0.0], similar(start_val_ml))])
 loss_snlls = Loss([sem.SemSWLS(semobserved, [0.0], similar(start_val_ml))])
 
-# start_val_ml = [fill(1.0, 14); fill(0, 6); fill(1, 8); fill(0, 3)]
-# start_val_ls = [fill(1.0, 14); fill(0, 6); fill(1, 8); fill(0, 3)]
-# start_val_snlls = [fill(1.0, 8); fill(0, 3)]
-
 # imply
 imply_ml = ImplySymbolic(A, S, F, x, start_val_ml)
 imply_ls = sem.ImplySymbolicWLS(A, S, F, x, start_val_ls)
@@ -108,6 +104,190 @@ imply_snlls = sem.ImplySymbolicSWLS(A, S, F, x[21:31], start_val_snlls)
 model_ml = Sem(semobserved, imply_ml, loss_ml, diff_fin)
 model_ls = Sem(semobserved, imply_ls, loss_ls, diff_fin)
 model_snlls = Sem(semobserved, imply_snlls, loss_snlls, diff_fin_new)
+
+# derivatives
+function get_Knn(n)
+    Knn = zeros(n^2, n^2)
+    for i = 1:n
+        for j = 1:n
+          Knn[i + n*(j - 1), j + n*(i - 1)] = 1
+        end
+    end
+    return Knn
+end
+
+function get_Knn_2(n)
+    Knn = zeros(n^2, n^2)
+    for i = 1:n
+        for j = 1:n
+            e1 = zeros(n)
+            e2 = zeros(n)
+            e1[i] = 1; e2[j] = 1
+            Knn += kron(e1*e2', e2*e1')
+        end
+    end
+    return Knn
+end
+
+get_Knn_2(11) == get_Knn(11)
+
+function Matrix_Jacobian(M, x)
+    Mv = vec(M)
+    JM = zeros(size(Mv, 1), size(x, 1))
+    for i = 1:size(x, 1)
+        JM[:, i] .= isequal.(Mv, x[i])
+    end
+    return JM
+end
+
+JS = Matrix_Jacobian(S, x)
+JA = Matrix_Jacobian(A, x)
+JAT = Matrix_Jacobian(permutedims(A), x)
+
+function elimination_matrix(nobs)
+    nobs = Int(nobs)
+    n1 = Int(nobs*(nobs+1)*0.5)
+    n2 = Int(nobs^2)
+    L = zeros(n1, n2)
+
+    for j in 1:nobs
+        for i in j:nobs
+            u = zeros(n1)
+            u[Int((j-1)*nobs + i-0.5*j*(j-1))] = 1
+            T = zeros(nobs, nobs)
+            T[i, j] = 1
+            L += u*transpose(vec(T)) 
+        end
+    end
+    return L
+end
+
+function der(x, JS, JA, JAT, V, s, σ)
+    S =[x[1]  0     0     0     0     0     0     0     0     0     0     0     0     0
+        0     x[2]  0     0     0     0     0     0     0     0     0     0     0     0
+        0     0     x[3]  0     0     0     0     0     0     0     0     0     0     0
+        0     0     0     x[4]  0     0     0     x[15] 0     0     0     0     0     0
+        0     0     0     0     x[5]  0     x[16] 0     x[17] 0     0     0     0     0
+        0     0     0     0     0     x[6]  0     0     0     x[18] 0     0     0     0
+        0     0     0     0     x[16] 0     x[7]  0     0     0     x[19] 0     0     0
+        0     0     0     x[15] 0     0     0     x[8]  0     0     0     0     0     0
+        0     0     0     0     x[17] 0     0     0     x[9]  0     x[20] 0     0     0
+        0     0     0     0     0     x[18] 0     0     0     x[10] 0     0     0     0
+        0     0     0     0     0     0     x[19] 0     x[20] 0     x[11] 0     0     0
+        0     0     0     0     0     0     0     0     0     0     0     x[12] 0     0
+        0     0     0     0     0     0     0     0     0     0     0     0     x[13] 0
+        0     0     0     0     0     0     0     0     0     0     0     0     0     x[14]]
+
+    F =[1.0 0 0 0 0 0 0 0 0 0 0 0 0 0
+        0 1 0 0 0 0 0 0 0 0 0 0 0 0
+        0 0 1 0 0 0 0 0 0 0 0 0 0 0
+        0 0 0 1 0 0 0 0 0 0 0 0 0 0
+        0 0 0 0 1 0 0 0 0 0 0 0 0 0
+        0 0 0 0 0 1 0 0 0 0 0 0 0 0
+        0 0 0 0 0 0 1 0 0 0 0 0 0 0
+        0 0 0 0 0 0 0 1 0 0 0 0 0 0
+        0 0 0 0 0 0 0 0 1 0 0 0 0 0
+        0 0 0 0 0 0 0 0 0 1 0 0 0 0
+        0 0 0 0 0 0 0 0 0 0 1 0 0 0]
+
+    A =[0  0  0  0  0  0  0  0  0  0  0     1     0     0
+        0  0  0  0  0  0  0  0  0  0  0     x[21] 0     0
+        0  0  0  0  0  0  0  0  0  0  0     x[22] 0     0
+        0  0  0  0  0  0  0  0  0  0  0     0     1     0
+        0  0  0  0  0  0  0  0  0  0  0     0     x[23] 0
+        0  0  0  0  0  0  0  0  0  0  0     0     x[24] 0
+        0  0  0  0  0  0  0  0  0  0  0     0     x[25] 0
+        0  0  0  0  0  0  0  0  0  0  0     0     0     1
+        0  0  0  0  0  0  0  0  0  0  0     0     0     x[26]
+        0  0  0  0  0  0  0  0  0  0  0     0     0     x[27]
+        0  0  0  0  0  0  0  0  0  0  0     0     0     x[28]
+        0  0  0  0  0  0  0  0  0  0  0     0     0     0
+        0  0  0  0  0  0  0  0  0  0  0     x[29] 0     0
+        0  0  0  0  0  0  0  0  0  0  0     x[30] x[31] 0]
+
+    JS = Matrix_Jacobian(S, x)
+    JA = Matrix_Jacobian(A, x)
+    JAT = Matrix_Jacobian(permutedims(A), x)
+
+    n = size(A, 1)
+    Knn = get_Knn(n)
+    A_inv = inv(I-A)
+    K = kron(F, F)*kron(A_inv, A_inv)
+
+    In = zeros(n,n); In[diagind(In)] .= 1.0
+    J = K*(JS + kron((A_inv*S)', In)*JA + kron(In, S*A_inv')*JAT)
+
+    L = elimination_matrix(size(F, 1))
+    
+    J = -2*(s-σ)'*V*L*J
+    return J
+end
+
+par = rand(31)
+
+imply_ls(par, model_ls)
+σ = imply_ls.imp_cov
+s = loss_ls.functions[1].s
+V = loss_ls.functions[1].V
+
+J = der(par, JS, JA, JAT, V, s, σ)
+
+using FiniteDiff
+
+maximum(abs.(FiniteDiff.finite_difference_gradient(model_ls, par) .- J'))
+
+function symbolic_derivative(x, A, S, F)
+
+    JS = Matrix_Jacobian(S, x)
+    JA = Matrix_Jacobian(A, x)
+    JAT = Matrix_Jacobian(permutedims(A), x)
+
+    JS = sparse(JS)
+    JA = sparse(JA)
+    JAT = sparse(JAT)
+
+    JS = convert(SparseMatrixCSC{Num, Int64}, JS)
+    JA = convert(SparseMatrixCSC{Num, Int64}, JA)
+    JAT = convert(SparseMatrixCSC{Num, Int64}, JAT)
+
+    A_inv = sem.neumann_series(A)
+    FA = F*A_inv
+    K = kron(FA, FA)
+
+    In = oneunit(A)
+
+    J = K*(JS + kron(permutedims(A_inv*S), In)*JA + kron(In, S*permutedims(A_inv))*JAT)
+    J = Matrix(J)
+    J = simplify.(J)
+    J = sparse(J)
+    #L = elimination_matrix(size(F, 1))
+    #J = -2*(s-σ)'*V*L*J
+    return J
+end
+
+J = symbolic_derivative(x, A, S, F)
+
+invia = sem.neumann_series(A)
+
+imp_cov_sym = F*invia*S*permutedims(invia)*permutedims(F)
+
+imp_cov_sym = Array(imp_cov_sym)
+imp_cov_sym = ModelingToolkit.simplify.(imp_cov_sym)
+
+J2 = ModelingToolkit.jacobian(vec(imp_cov_sym), x)
+J2 = simplify.(J2)
+J2 = sparse(J2)
+
+J2 = ModelingToolkit.sparsejacobian(vec(imp_cov_sym), x)
+ModelingToolkit.build_function()
+
+function identity_kron(A)
+    n = size(A, 1)
+    n2 = n^2
+    res = zeros(size(n2, n2))
+    for i in 1:n
+        for
+end
 
 # fit
 solution_ml = sem_fit(model_ml)
