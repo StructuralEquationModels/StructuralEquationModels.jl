@@ -3,12 +3,16 @@
 
 struct ImplySymbolic{
     F <: Any,
+    F3 <: Any,
     A <: AbstractArray,
+    A3 <: AbstractArray,
     S <: Array{Float64},
     F2 <: Any,
     A2 <: Union{Nothing, AbstractArray}} <: Imply
     imp_fun::F
+    gradient_fun::F3
     imp_cov::A
+    ∇Σ::A3
     start_val::S
     imp_fun_mean::F2
     imp_mean::A2
@@ -55,10 +59,14 @@ end
 
 struct ImplySymbolicWLS{
     F <: Any,
+    F2 <: Any,
     A <: AbstractArray,
+    A2 <: AbstractArray,
     S <: Array{Float64}} <: Imply
     imp_fun::F
+    gradient_fun::F2
     imp_cov::A
+    ∇Σ::A2
     start_val::S
 end
 
@@ -103,6 +111,14 @@ function ImplySymbolic(
         )[2])
 
     imp_cov = zeros(size(F)[1], size(F)[1])
+
+    ∇Σ_sym = ModelingToolkit.jacobian(vec(imp_cov_sym), parameters)
+    gradient_fun =
+        eval(ModelingToolkit.build_function(
+                ∇Σ_sym,
+                parameters
+            )[2])
+    ∇Σ = zeros(size(F, 1)^2, size(parameters, 1))
     #imp_cov = Base.invokelatest(imp_fun_, start_val)
     #Model implied mean
     if !isnothing(M)
@@ -124,7 +140,9 @@ function ImplySymbolic(
 
     return ImplySymbolic(
         imp_fun,
+        gradient_fun,
         imp_cov,
+        ∇Σ,
         copy(start_val),
         imp_fun_mean,
         imp_mean
@@ -135,13 +153,14 @@ function ImplySymbolicWLS(
         A::Spa1,
         S::Spa2,
         F::Spa3,
-        parameters,
-        start_val
+        parameters::A2,
+        start_val::B
             ) where {
             Spa1 <: SparseMatrixCSC,
             Spa2 <: SparseMatrixCSC,
             Spa3 <: SparseMatrixCSC,
-            Spa4 <: Union{Nothing, AbstractArray}
+            A2 <: AbstractArray,
+            B <: Array{Float64}
             }
 
     #Model-implied covmat
@@ -152,6 +171,7 @@ function ImplySymbolicWLS(
 
     imp_cov_sym = Array(imp_cov_sym)
     imp_cov_sym = ModelingToolkit.simplify.(imp_cov_sym)
+    ∇Σ_sym = ModelingToolkit.jacobian(vec(imp_cov_sym), parameters)
     imp_cov_sym = LowerTriangular(imp_cov_sym)
     imp_cov_sym = sparse(imp_cov_sym)
     imp_cov_sym = imp_cov_sym.nzval
@@ -164,9 +184,18 @@ function ImplySymbolicWLS(
 
     imp_cov = zeros(Int64(0.5*size(F)[1]*(size(F)[1] + 1)))
 
+    gradient_fun =
+        eval(ModelingToolkit.build_function(
+            ∇Σ_sym,
+            parameters
+        )[2])
+    ∇Σ = zeros(size(F, 1)^2, size(parameters, 1))
+
     return ImplySymbolicWLS(
         imp_fun,
+        gradient_fun,
         imp_cov,
+        ∇Σ,
         copy(start_val)
     )
 end
