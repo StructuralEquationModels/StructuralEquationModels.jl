@@ -171,10 +171,8 @@ function ImplySymbolicWLS(
 
     imp_cov_sym = Array(imp_cov_sym)
     imp_cov_sym = ModelingToolkit.simplify.(imp_cov_sym)
-    ∇Σ_sym = ModelingToolkit.jacobian(vec(imp_cov_sym), parameters)
-    imp_cov_sym = LowerTriangular(imp_cov_sym)
-    imp_cov_sym = sparse(imp_cov_sym)
-    imp_cov_sym = imp_cov_sym.nzval
+    imp_cov_sym = imp_cov_sym[tril(trues(size(F, 1), size(F, 1)))]
+    ∇Σ_sym = ModelingToolkit.jacobian(imp_cov_sym, parameters)
 
     imp_fun =
         eval(ModelingToolkit.build_function(
@@ -189,7 +187,7 @@ function ImplySymbolicWLS(
             ∇Σ_sym,
             parameters
         )[2])
-    ∇Σ = zeros(size(F, 1)^2, size(parameters, 1))
+    ∇Σ = zeros(size(imp_cov_sym, 1), size(parameters, 1))
 
     return ImplySymbolicWLS(
         imp_fun,
