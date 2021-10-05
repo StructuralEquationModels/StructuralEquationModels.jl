@@ -101,11 +101,12 @@ model_ml = Sem(semobserved, imply_ml, loss_ml, diff_fin)
 model_ls = Sem(semobserved, imply_ls, loss_ls, diff_fin)
 model_snlls = Sem(semobserved, imply_snlls, loss_snlls, diff_fin_new)
 
-grad_ls = sem.∇SemWLS(loss_ls.functions[1], size(F, 1))       
+grad_ls = sem.∇SemWLS(loss_ls.functions[1], size(F, 1))
+
 
 diff_ana = 
     SemAnalyticDiff(
-        BFGS(), 
+        BFGS(;linesearch = BackTracking(order=3), alphaguess = InitialHagerZhang()),
         Optim.Options(
             ;f_tol = 1e-10, 
             x_tol = 1.5e-8),
@@ -117,13 +118,14 @@ grad_ml = sem.∇SemML_2()
 
 diff_ana_ml = 
     SemAnalyticDiff(
-        BFGS(), 
+        BFGS(;linesearch = BackTracking(order=3), alphaguess = InitialHagerZhang()),
         Optim.Options(
             ;f_tol = 1e-10, 
             x_tol = 1.5e-8),
             (grad_ml,))
 
 model_ml_ana = Sem(semobserved, imply_ml, loss_ml, diff_ana_ml)
+
 # fit
 solution_ml = sem_fit(model_ml)
 solution_ls = sem_fit(model_ls)
@@ -180,6 +182,7 @@ grad ≈ grad2
 @benchmark sem_fit(model_ml)
 @benchmark sem_fit(model_ml_ana)
 
+############################## Appendix
 # derivatives
 function get_Knn(n)
     Knn = zeros(n^2, n^2)
