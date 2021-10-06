@@ -26,6 +26,15 @@ data <- select(data, starts_with("x"), starts_with("y"))
 fit_ml <- cfa(model, data, likelihood = "wishart", do.fit = TRUE)
 fit_ls <- cfa(model, data, estimator = "GLS", do.fit = TRUE)
 
+# timing
+times <- map_dbl(
+  1:100, ~cfa(model, data, likelihood = "wishart", do.fit = TRUE)@timing$optim)
+microbenchmark(cfa(model, data, likelihood = "wishart", do.fit = TRUE, se = "none", test = "none",
+                   baseline = F, loglik = F, h1 = F))
+
+times <- map_dbl(1:100, ~cfa(model, data, estimator = "GLS", do.fit = TRUE)@timing$optim)
+
+
 par_ml <- select(parTable(fit_ml), lhs, op, rhs, est, start)
 par_ls <- select(parTable(fit_ls), lhs, op, rhs, est, start)
 

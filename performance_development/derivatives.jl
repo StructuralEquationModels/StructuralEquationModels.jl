@@ -478,3 +478,11 @@ all(#
         lower = fill(-11.0, 31),
         upper = fill(10.0, 31))[2]
 
+
+function myf(a::AbstractVector)
+    return a
+end
+
+function myf(a::AbstractMatrix)
+    return det(a)
+end

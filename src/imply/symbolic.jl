@@ -60,13 +60,17 @@ end
 struct ImplySymbolicWLS{
     F <: Any,
     F2 <: Any,
+    F3 <: Any,
     A <: AbstractArray,
     A2 <: AbstractArray,
+    A3 <: Any,
     S <: Array{Float64}} <: Imply
     imp_fun::F
     gradient_fun::F2
+    hessian_fun::F3
     imp_cov::A
     ∇Σ::A2
+    ∇²Σ::A3
     start_val::S
 end
 
@@ -154,7 +158,8 @@ function ImplySymbolicWLS(
         S::Spa2,
         F::Spa3,
         parameters::A2,
-        start_val::B
+        start_val::B;
+        hessian = false
             ) where {
             Spa1 <: SparseMatrixCSC,
             Spa2 <: SparseMatrixCSC,
@@ -189,11 +194,30 @@ function ImplySymbolicWLS(
         )[2])
     ∇Σ = zeros(size(imp_cov_sym, 1), size(parameters, 1))
 
+    if hessian
+        n_lower = size(imp_cov_sym, 1)
+        n_par = size(parameters, 1)
+        ∇²Σ_sym_vec = [ModelingToolkit.sparsejacobian(∇Σ_sym[i, :], x) for i = 1:n_lower]
+        @variables J[1:n_lower]
+        # ∇²Σ = similar_sparse_float.(∇²Σ_sym)
+        ∇²Σ_sym = zeros(Num, n_par, n_par)
+        for i in 1:n_lower
+            ∇²Σ_sym += Jsym[i]*H_array[i]
+        end
+        ∇²Σ_sym = simplify.(∇²Σ_sym)
+        hessian_fun = eval(ModelingToolkit.build_function(∇²Σ_sym, J, parameters)[2])
+        ∇²Σ = zeros(n_par, n_par)
+    else
+        hessian_fun = nothing
+        ∇²Σ = nothing
+    end
     return ImplySymbolicWLS(
         imp_fun,
         gradient_fun,
+        hessian_fun,
         imp_cov,
         ∇Σ,
+        ∇²Σ,
         copy(start_val)
     )
 end
