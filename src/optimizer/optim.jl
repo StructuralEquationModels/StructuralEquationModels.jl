@@ -23,12 +23,22 @@ end
 
 function sem_fit(model::Sem{O, I, L, D}) where
     {O <: SemObs, L <: Loss, I <: Imply, D <: SemAnalyticDiff}
-    result = Optim.optimize(
+    if isnothing(model.diff.hessian_functions)
+        result = Optim.optimize(
                 model,
                 (grad, par) -> model(par, grad),
                 model.imply.start_val,
                 model.diff.algorithm,
                 model.diff.options)
+    else
+        result = Optim.optimize(
+                model,
+                (grad, par) -> model(par, grad),
+                (H, par) -> model(par, H),
+                model.imply.start_val,
+                model.diff.algorithm,
+                model.diff.options)
+    end
     return result
 end
 

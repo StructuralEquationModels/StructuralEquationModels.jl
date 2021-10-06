@@ -22,11 +22,19 @@ end
 #     return SemFiniteDiff(Optim.Options())
 # end
 
+function SemAnalyticDiff(algorithm, options, functions)
+    return SemAnalyticDiff(algorithm, options, functions, nothing)
+end
 
-function (diff::SemAnalyticDiff)(par, grad, model)
+function (diff::SemAnalyticDiff)(par, grad::AbstractVector, model)
     for i = 1:length(diff.functions)
         diff.functions[i](par, grad, model)
-        # all functions have to have those arguments??
+    end
+end
+
+function (diff::SemAnalyticDiff)(par, H::AbstractMatrix, model)
+    for i = 1:length(diff.functions)
+        diff.hessian_functions[i](par, H, model)
     end
 end
 

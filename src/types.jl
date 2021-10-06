@@ -10,10 +10,11 @@ abstract type SemDiff end
 
 abstract type DiffFunction <: Function end
 
-struct SemAnalyticDiff{F <: Tuple} <: SemDiff
+struct SemAnalyticDiff{F <: Tuple, F2 <: Union{Tuple, Nothing}} <: SemDiff
     algorithm
     options
     functions::F
+    hessian_functions::F2
 end
 
 ## Obs
