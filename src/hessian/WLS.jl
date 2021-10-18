@@ -5,10 +5,10 @@ struct ∇²SemWLS{Vt <: Union{AbstractArray, UniformScaling{Bool}},
 end
 
 function ∇²SemWLS(semwls::A) where {A <: SemWLS}
-    return ∇SemWLS(semwls.V, semwls.s)
+    return ∇²SemWLS(semwls.V, semwls.s)
 end
 
-function (diff::∇²SemWLS)(par, H, model::Sem{O, I, L, D}) where
+function (diff::∇²SemWLS)(par, H::AbstractArray, model::Sem{O, I, L, D}) where
     {O <: SemObs, L <: Loss, I <: Imply, D <: SemAnalyticDiff}
     model.imply.imp_fun(model.imply.imp_cov, par)
     model.imply.gradient_fun(model.imply.∇Σ, par)

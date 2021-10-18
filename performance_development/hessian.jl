@@ -18,6 +18,7 @@ semobserved = SemObsCommon(data = Matrix{Float64}(dat))
 
 ## Model definition
 @ModelingToolkit.variables x[1:31]
+@Symbolics.variables x[1:31]
 
 #x = rand(31)
 
@@ -128,14 +129,77 @@ all(#
                 ) .< 0.05*abs.(par_ml.est[par_order]))
 
 
+imply_ls = sem.ImplySymbolicWLS(A, S, F, x, start_val_ls; hessian = true)
+
+# J = rand(66)
+# @benchmark imply_ls.hessian_fun(imply_ls.∇²Σ, J, start_val_ls)
+
+hessian_ls = sem.∇²SemWLS(loss_ls.functions[1])
+
+diff_ana_hes = 
+    SemAnalyticDiff(
+        Newton(;linesearch = BackTracking(order=3), alphaguess = InitialHagerZhang()),# m = 100), 
+        #P = 0.5*inv(H0),
+        #precondprep = (P, x) -> 0.5*inv(FiniteDiff.finite_difference_hessian(model_ls_ana, x))), 
+        Optim.Options(
+            ;f_tol = 1e-10, 
+            x_tol = 1.5e-8),
+            (grad_ls,),
+            (hessian_ls,))
+
+model_ls_hes = Sem(semobserved, imply_ls, loss_ls, diff_ana_hes)
+
+#= randpar = rand(31)
+grad = similar(randpar)
+H = zeros(31, 31)
+
+model_ls_hes(randpar, grad)
+model_ls_hes(randpar, H)
+
+maximum(abs.(grad' - FiniteDiff.finite_difference_jacobian(model_ls_ana, randpar)))
+maximum(abs.(H - FiniteDiff.finite_difference_hessian(model_ls_ana, randpar))) =#
+
+solution_hes = sem_fit(model_ls_hes)
+
+all(#
+            abs.(solution_hes.minimizer .- par_ls.est[par_order]
+                ) .< 0.05*abs.(par_ls.est[par_order]))
 ################################# hessian #####################################
 using BenchmarkTools, FiniteDiff
 
 randpar = rand(31)
+H = zeros(31,31)
+J = rand(31)
+grad = rand(31)
+
+@benchmark model_ls_hes.imply.hessian_fun($H, $J, $randpar)
+@benchmark model_ls_hes(randpar, grad)
+
+grad - FiniteDiff.finite_difference_gradient(model_ls_ana, randpar)
+
+@benchmark sem_fit(model_ls_hes)
+@benchmark sem_fit(model_ls_ana)
+
+@benchmark model_ls_hes(randpar)
+@benchmark model_ls_ana(randpar)
+
+grad = similar(randpar)
+
+@benchmark model_ls_hes(randpar, grad)
+@benchmark model_ls_ana(randpar, grad)
+
+H = rand(31,31)
+
+@benchmark model_ls_hes(randpar, H)
+@benchmark FiniteDiff.finite_difference_hessian(model_ls_ana, randpar)
 
 H0 = FiniteDiff.finite_difference_hessian(model_ls_ana, randpar)
+model_ls_hes(randpar, H) 
+H - H0
 #H0 = convert(Matrix{Float64}, H0)
 #H0 = inv(H0)
+@benchmark model_ls_ana.imply.∇Σ'*diff_ana.functions[1].V*model_ls_ana.imply.∇Σ
+@benchmark model_ls_ana.imply.∇Σ'*diff_ana.functions[1].V*model_ls_ana.imply.∇Σ
 
 #function mypre_H0(x)
 #    return H0
@@ -148,15 +212,23 @@ initial_P = 2*model_ls_ana.imply.∇Σ'*model_ls_ana.diff.functions[1].V*model_l
 
 sparse(abs.(initial_P-H0) .> 0.0001)
 
+par = [x[i] for i = 1:31]
 invia = sem.neumann_series(A)
 imp_cov_sym = F*invia*S*permutedims(invia)*permutedims(F)
 imp_cov_sym = Array(imp_cov_sym)
 imp_cov_sym = ModelingToolkit.simplify.(imp_cov_sym)
+#imp_cov_sym = Symbolics.simplify.(imp_cov_sym)
 imp_cov_sym = imp_cov_sym[tril(trues(size(F, 1), size(F, 1)))]
-∇Σ_sym = ModelingToolkit.jacobian(imp_cov_sym, x)
+∇Σ_sym = ModelingToolkit.sparsejacobian(imp_cov_sym, par)
 ∇²Σ_sym = ModelingToolkit.jacobian(vec(permutedims(∇Σ_sym)), x)
 
-H_array = [ModelingToolkit.sparsejacobian(∇Σ_sym[i, :], x) for i = 1:66]
+@time ∇Σ_sym = Symbolics.sparsejacobian(imp_cov_sym, par)
+@time ∇²Σ_sym = Symbolics.jacobian(vec(permutedims(∇Σ_sym)), x)
+∇Σ_sym = Array(∇Σ_sym)
+H_array = [ModelingToolkit.sparsejacobian(∇Σ_sym[i, :], par) for i = 1:66]
+@time H_array = [Symbolics.sparsejacobian(∇Σ_sym[i, :], par) for i = 1:66]
+
+H_array = [ModelingToolkit.sparsehessian(imp_cov_sym[i], par) for i = 1:66]
 
 H_array[2].nzval
 
@@ -169,16 +241,17 @@ end
 H_pre = similar_sparse_float.(H_array)
 
 using StatsBase
-nobs = 300
-npar = 200
+nobs = 80
+npar = 100
 nnd = Int64(nobs*(nobs+1)/2)
 
 testsym = StatsBase.sample(imp_cov_sym, nnd)
 testpar = StatsBase.sample(x, npar)
 
-@time ∇testsym = ModelingToolkit.jacobian(testsym, testpar)
+∇testsym = Symbolics.sparsejacobian(testsym, testpar)
+∇testsym = Array(∇testsym)
 #∇²Σ_sym = ModelingToolkit.jacobian(vec(permutedims(∇Σ_sym)), x)
-@time H_array = [ModelingToolkit.sparsejacobian(∇testsym[i, :], testpar) for i = 1:nnd]
+@time H_array = [Symbolics.sparsejacobian(∇testsym[i, :], testpar) for i = 1:nnd]
 # H_array = [sparse(∇²Σ_sym[((i-1)*31+1):i*31, :]) for i = 1:66]
 
 #= jacobian_fun =
@@ -201,10 +274,10 @@ H = zeros(2046, 31)
 
 J = (-2*(grad_ls.s-model_ls_ana.imply.imp_cov)'*grad_ls.V)'
 
+@variables J[1:nnd]
 
-
-HT = zeros(31,31)
-for i in 1:66
+HT = zeros(Num, npar, npar)
+for i in 1:nnd
     HT += J[i]*H_array[i]
 end
 
@@ -220,12 +293,15 @@ HT = simplify.(HT)
 hessian_fun =
     eval(ModelingToolkit.build_function(
         HT,
-        x,Jsym
+        Jsym,
+        par
     )[2])
 
 T = zeros(31,31)
+randpar = rand(31)
+J = rand(66)
 
-@benchmark hessian_fun(T, randpar, J)
+@benchmark hessian_fun(T, J, randpar)
 
 T
 

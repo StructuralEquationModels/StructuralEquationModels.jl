@@ -10,7 +10,7 @@ function ∇SemWLS(semwls::A, nobs) where {A <: SemWLS}
     return ∇SemWLS(semwls.V, semwls.s, L)
 end
 
-function (diff::∇SemWLS)(par, grad, model::Sem{O, I, L, D}) where
+function (diff::∇SemWLS)(par, grad::AbstractVector, model::Sem{O, I, L, D}) where
         {O <: SemObs, L <: Loss, I <: Imply, D <: SemAnalyticDiff}
     model.imply.imp_fun(model.imply.imp_cov, par)
     model.imply.gradient_fun(model.imply.∇Σ, par)
