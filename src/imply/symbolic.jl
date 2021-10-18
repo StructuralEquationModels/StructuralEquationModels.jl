@@ -177,7 +177,8 @@ function ImplySymbolicWLS(
     imp_cov_sym = Array(imp_cov_sym)
     imp_cov_sym = ModelingToolkit.simplify.(imp_cov_sym)
     imp_cov_sym = imp_cov_sym[tril(trues(size(F, 1), size(F, 1)))]
-    ∇Σ_sym = ModelingToolkit.jacobian(imp_cov_sym, parameters)
+    parvec = [parameters[i] for i in 1:size(parameters, 1)]
+    ∇Σ_sym = ModelingToolkit.jacobian(imp_cov_sym, parvec)
 
     imp_fun =
         eval(ModelingToolkit.build_function(
@@ -196,16 +197,17 @@ function ImplySymbolicWLS(
 
     if hessian
         n_lower = size(imp_cov_sym, 1)
-        n_par = size(parameters, 1)
-        ∇²Σ_sym_vec = [ModelingToolkit.sparsejacobian(∇Σ_sym[i, :], x) for i = 1:n_lower]
+        n_par = size(parvec, 1)
+        ∇²Σ_sym_vec = [ModelingToolkit.sparsehessian(imp_cov_sym[i], parvec) for i = 1:n_lower]
         @variables J[1:n_lower]
         # ∇²Σ = similar_sparse_float.(∇²Σ_sym)
         ∇²Σ_sym = zeros(Num, n_par, n_par)
         for i in 1:n_lower
-            ∇²Σ_sym += Jsym[i]*H_array[i]
+            ∇²Σ_sym += J[i]*∇²Σ_sym_vec[i]
         end
-        ∇²Σ_sym = simplify.(∇²Σ_sym)
-        hessian_fun = eval(ModelingToolkit.build_function(∇²Σ_sym, J, parameters)[2])
+        # ∇²Σ_sym = simplify.(∇²Σ_sym)
+        hessian_fun = eval(ModelingToolkit.build_function(∇²Σ_sym, J, parvec)[2])
+        # print(ModelingToolkit.build_function(∇²Σ_sym, J, parvec)[2])
         ∇²Σ = zeros(n_par, n_par)
     else
         hessian_fun = nothing
