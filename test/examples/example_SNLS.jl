@@ -86,10 +86,6 @@ start_val_ml = Vector{Float64}(par_ml.start[par_order])
 start_val_ls = Vector{Float64}(par_ls.start[par_order])
 start_val_snlls = Vector{Float64}(par_ls.start[par_order][21:31])
 
-obs_cov = inv(cov(Matrix{Float64}(dat)))
-obs_cov = kron(obs_cov, obs_cov)
-
-
 # loss
 loss_ml = Loss([SemML(semobserved, [0.0], similar(start_val_ml))])
 loss_ls = Loss([sem.SemWLS(semobserved, [0.0], similar(start_val_ml))])
