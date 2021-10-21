@@ -1,4 +1,4 @@
-module sem
+module SEM
 
 using Distributions, LinearAlgebra, Optim, Random,
     NLSolversBase, Statistics, SparseArrays, ModelingToolkit,
