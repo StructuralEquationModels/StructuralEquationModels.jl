@@ -1,4 +1,4 @@
-using sem, Test, SafeTestsets
+using Test, SafeTestsets
 
-@safetestset "Koch" begin include("example_koch.jl") end
-@safetestset "DefVars" begin include("example_defvars.jl") end
+@safetestset "Political Democracy" begin include("political_democracy.jl") end
+#@safetestset "DefVars" begin include("example_defvars.jl") end
