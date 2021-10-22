@@ -113,3 +113,17 @@ grad = [0.0]
 modelinst(par, 0.0, grad, nothing)
 
 grad
+
+using Optim, BenchmarkTools
+
+@benchmark sol_fin = optimize(par -> modelinst(par[1], 0.0, nothing, nothing), [par], LBFGS())
+
+sol_fin.minimizer
+
+@benchmark sol_grad = optimize(Optim.only_fg!((F, G, par) -> modelinst(par[1], F, G, nothing)), [par], LBFGS())
+
+sol_grad.minimizer
+
+
+################################# system 2 ######################################
+
