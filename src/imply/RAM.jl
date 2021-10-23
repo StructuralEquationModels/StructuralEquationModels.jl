@@ -2,7 +2,7 @@
 ### Types
 ############################################################################
 
-struct RAMSymbolic{F1, F2, A1, A2, S1, S2, V, F3, A3} <: Imply
+struct RAMSymbolic{F1, F2, A1, A2, S1, S2, V, F3, A3} <: SemImply
     Σ_function::F1
     ∇Σ_function::F2
     Σ::A1
@@ -35,18 +35,17 @@ function RAMSymbolic(
             Spa4 <: Union{Nothing, AbstractArray}
             }
 
-    par = [par[i] for i in size(par, 1)]
-
+    par = [par...]
     # Σ
     Σ_symbolic = get_Σ_symbolic_RAM(S, A, F; vech = vech)
-    Σ_function = eval(ModelingToolkit.build_function(Σ_symbolic, par)[2])
+    Σ_function = eval(Symbolics.build_function(Σ_symbolic, par)[2])
     Σ = zeros(size(F)[1], size(F)[1])
 
     # ∇Σ
     if gradient
-        ∇Σ_symbolic = ModelingToolkit.jacobian(vec(imp_cov_sym), par)
-        ∇Σ_function = eval(ModelingToolkit.build_function(∇Σ_symbolic, parameters)[2])
-        ∇Σ = zeros(size(F, 1)^2, size(parameters, 1))
+        ∇Σ_symbolic = Symbolics.jacobian(vec(Σ_symbolic), par)
+        ∇Σ_function = eval(Symbolics.build_function(∇Σ_symbolic, par)[2])
+        ∇Σ = zeros(size(F, 1)^2, size(par, 1))
     else
         ∇Σ_symbolic = nothing
         ∇Σ_function = nothing
@@ -87,8 +86,8 @@ end
 
 function (imply::RAMSymbolic)(par, F, G, H, model)
     imply.Σ_function(imply.Σ, par)
-    if !isnothing(imply.imp_mean)
-        imply.imp_fun_mean(imply.imp_mean, parameters)
+    if !isnothing(imply.μ)
+        imply.imp_fun_mean(imply.μ, parameters)
     end
     if !isnothing(G)
         imply.∇Σ_function(imply.∇Σ, par)

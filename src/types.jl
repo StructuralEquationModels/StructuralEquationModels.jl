@@ -56,7 +56,7 @@ end
 # automatic differentiation
 #####################################################################################################
 
-struct SemAutoDiff{O <: SemObs, I <: SemImply, L <: SemLoss, D <: SemDiff, G}, <: AbstractSem
+struct SemFiniteDiff{O <: SemObs, I <: SemImply, L <: SemLoss, D <: SemDiff, G} <: AbstractSem
     observed::O
     imply::I
     loss::L
@@ -93,7 +93,7 @@ struct SemForwardDiff{O <: SemObs, I <: SemImply, L <: SemLoss, D <: SemDiff, G}
     has_gradient::G
 end
 
-function (model::SemFForwardDiff)(par, F, G, H, weight = nothing)
+function (model::SemForwardDiff)(par, F, G, H, weight = nothing)
     if !isnothing(G)
         if !isnothing(has_gradient)
             model.imply(par, nothing, G, nothing, model)
@@ -108,7 +108,8 @@ function (model::SemFForwardDiff)(par, F, G, H, weight = nothing)
     if !isnothing(F)
         model.imply(par, F, nothing, nothing, model)
         F = model.loss(par, F, nothing, nothing, model, weight)
-    return F
+        return F
+    end
 end
 
 (model::SemForwardDiff)(par, F, weight) = (model::SemForwardDiff)(par, F, nothing, nothing, weight)
@@ -117,7 +118,7 @@ end
 # ensemble models
 #####################################################################################################
 
-struct SemEnsemble{N, T <: Tuple, V < AbstractVector, G, H} <: AbstractSem
+struct SemEnsemble{N, T <: Tuple, V <: AbstractVector} <: AbstractSem
     n::N
     sems::T
     weights::V
