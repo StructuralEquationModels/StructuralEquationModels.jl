@@ -14,7 +14,10 @@ function get_Σ_symbolic_RAM(S, A, F; vech = false)
     invia = neumann_series(A)
     Σ_symbolic = F*invia*S*permutedims(invia)*permutedims(F)
     Σ_symbolic = Array(Σ_symbolic)
-    Σ_symbolic = ModelingToolkit.simplify.(Σ_symbolic)
+    # Σ_symbolic = Symbolics.simplify.(Σ_symbolic)
+    Threads.@threads for i in eachindex(Σ_symbolic)
+        Σ_symbolic[i] = Symbolics.simplify(Σ_symbolic[i])
+    end
     if vech Σ_symbolic = Σ_symbolic[tril(trues(size(F, 1), size(F, 1)))] end
     return Σ_symbolic
 end
@@ -77,7 +80,7 @@ function remove_all_missing(data)
     return data[keep, :], keep
 end
 
-function batch_inv!(fun::Union{LossFunction, DiffFunction}, model)
+#= function batch_inv!(fun::Union{LossFunction, DiffFunction}, model)
     for i = 1:size(fun.inverses, 1)
         fun.inverses[i] .= LinearAlgebra.inv!(fun.choleskys[i])
     end
@@ -99,7 +102,7 @@ function batch_sym_inv_update!(fun::Union{LossFunction, DiffFunction}, model)
             fun.inverses[i] .= out
         end
     end
-end
+end =#
 
 function sparse_outer_mul!(C, A, B, ind) #computes A*S*B -> C, where ind gives the entries of S that are 1
     fill!(C, 0.0)
@@ -167,3 +170,8 @@ function elimination_matrix(nobs)
     return L
 end
 
+function compare_estimates(solution_true, solution_sus, tol)
+    margin = tol*abs.(solution_true)
+    is_close = all(abs.(solution_sus - solution_true) .< margin)
+    return is_close
+end

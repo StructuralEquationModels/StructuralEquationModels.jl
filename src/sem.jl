@@ -1,8 +1,8 @@
 module SEM
 
 using Distributions, LinearAlgebra, Optim, Random,
-    NLSolversBase, Statistics, SparseArrays, ModelingToolkit,
-    NLopt, FiniteDiff
+    NLSolversBase, Statistics, SparseArrays, Symbolics,
+    NLopt, FiniteDiff, ForwardDiff
 
 include("types.jl")
 include("observed.jl")
@@ -16,6 +16,7 @@ include("loss/ML/ML.jl")
 # include("loss/regularized.jl")
 # include("loss/constant.jl")
 # include("multigroup.jl")
+include("diff/optim.jl")
 include("optimizer/optim.jl")
 # include("optimizer/nlopt.jl")
 
@@ -31,4 +32,5 @@ export  AbstractSem,
         SemObs, 
             SemObsCommon, SemObsMissing,
         sem_fit
+
 end # module

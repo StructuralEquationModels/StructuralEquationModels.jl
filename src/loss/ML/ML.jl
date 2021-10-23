@@ -11,7 +11,7 @@ struct SemML{
         M <: Union{AbstractArray, Nothing},
         M2 <: Union{AbstractArray, Nothing},
         U,
-        V} <: LossFunction
+        V} <: SemLossFunction
     inverses::INV #preallocated inverses of imp_cov
     choleskys::C #preallocated choleskys
     mult::M
@@ -45,7 +45,7 @@ end
 ############################################################################
 
 function (semml::SemML)(par, F, G, H, model, weight = nothing)
-    semml.inverses .= model.imply.imp_cov
+    semml.inverses .= model.imply.Σ
     a = cholesky!(Symmetric(semml.inverses); check = false)
     if !isposdef(a)
         if !isnothing(G) G .+= 0.0 end
@@ -55,8 +55,8 @@ function (semml::SemML)(par, F, G, H, model, weight = nothing)
     ld = logdet(a)
     semml.inverses .= LinearAlgebra.inv!(a)
     if !isnothing(G)
-        grad = (vec(Σ_inv)-vec(Σ_inv*model.observed.obs_cov*Σ_inv))'*model.imply.∇Σ
-        if isnothing(weight)
+        grad = (vec(semml.inverses)-vec(semml.inverses*model.observed.obs_cov*semml.inverses))'*model.imply.∇Σ
+        if !isnothing(weight)
             grad = weight*grad
         end
         G .+= grad'
