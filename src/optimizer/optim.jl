@@ -1,7 +1,11 @@
 ## connect do Optim.jl as backend
+function sem_wrap_optim(par, F, G, H, sem <: AbstractSem)
+    if !isnothing(G) fill!(G, zero(eltype(G))) end
+    if !isnothing(H) fill!(H, zero(eltype(H))) end
+    return sem(par, F, G, H)
+end
 
-function sem_fit(model::Sem{O, I, L, D}) where
-    {O <: SemObs, L <: Loss, I <: Imply, D <: SemForwardDiff}
+function sem_fit(model::Sem{O, I, L, D}) where {O, I, L, D <: SemDiffOptim}
     result = Optim.optimize(
                 par -> model(par),
                 model.imply.start_val,
@@ -10,91 +14,3 @@ function sem_fit(model::Sem{O, I, L, D}) where
                 model.diff.options)
     return result
 end
-
-function sem_fit(model::Sem{O, I, L, D}) where
-    {O <: SemObs, L <: Loss, I <: Imply, D <: SemFiniteDiff}
-    result = Optim.optimize(
-                par -> model(par),
-                model.imply.start_val,
-                model.diff.algorithm,
-                model.diff.options)
-    return result
-end
-
-function sem_fit(model::Sem{O, I, L, D}) where
-    {O <: SemObs, L <: Loss, I <: Imply, D <: SemAnalyticDiff}
-    if isnothing(model.diff.hessian_functions)
-        result = Optim.optimize(
-                model,
-                (grad, par) -> model(par, grad),
-                model.imply.start_val,
-                model.diff.algorithm,
-                model.diff.options)
-    else
-        result = Optim.optimize(
-                model,
-                (grad, par) -> model(par, grad),
-                (H, par) -> model(par, H),
-                model.imply.start_val,
-                model.diff.algorithm,
-                model.diff.options)
-    end
-    return result
-end
-
-function sem_fit(model::A, g!) where
-    {A <: AbstractSem}
-    result = Optim.optimize(
-                par -> model(par),
-                g!,
-                model.imply.start_val,
-                model.diff.algorithm,
-                model.diff.options)#;
-                #inplace = false)
-    return result
-end
-
-function sem_fit(model::A, start_val::B) where
-    {A <: AbstractSem, B <: AbstractArray}
-    result = Optim.optimize(
-                par -> model(par),
-                start_val,
-                model.sem_vec[1].diff.algorithm,
-                model.sem_vec[1].diff.options)
-    return result
-end
-
-function sem_fit(model::A, g!, h!) where
-    {A <: AbstractSem}
-    result = Optim.optimize(
-                par -> model(par),
-                g!,
-                h!,
-                model.imply.start_val,
-                Newton(),
-                model.diff.options)#;
-                #inplace = false)
-    return result
-end
-
-#function sem_fit(model::Sem{O, I, L, D}) where
-#    {O <: SemObs, L <: Loss, I <: Imply, D <: SemReverseDiff}
-#    result = optimize(
-#                par -> model(par),
-#                par -> Zygote.gradient(model, par)[1],
-#                model.imply.start_val,
-#                model.diff.algorithm,
-#                model.diff.options;
-#                inplace = false)
-#    return result
-#end
-
-#function sem_fit(model::A, start_val) where
-#    {A <: AbstractSem}
-#    result = optimize(
-#                par -> model(par),
-#                start_val,
-#                model.sem_vec[1].diff.algorithm,
-#                model.sem_vec[1].diff.options)
-#    return result
-#end
