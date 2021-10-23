@@ -10,10 +10,21 @@ function neumann_series(mat::SparseMatrixCSC)
     return inverse
 end
 
+function get_Σ_symbolic_RAM(S, A, F; vech = false)
+    invia = neumann_series(A)
+    Σ_symbolic = F*invia*S*permutedims(invia)*permutedims(F)
+    Σ_symbolic = Array(Σ_symbolic)
+    Σ_symbolic = ModelingToolkit.simplify.(Σ_symbolic)
+    if vech Σ_symbolic = Σ_symbolic[tril(trues(size(F, 1), size(F, 1)))] end
+    return Σ_symbolic
+end
+
+#= 
 function make_onelement_array(A)
     isa(A, Array) ? nothing : (A = [A])
     return A
 end
+ =#
 
 function semvec(observed, imply, loss, diff)
 

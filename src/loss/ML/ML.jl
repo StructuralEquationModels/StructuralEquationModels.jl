@@ -1,17 +1,8 @@
 # Ordinary Maximum Likelihood Estimation
 
-### Type
-#= struct SemML{
-        I <: AbstractArray,
-        T <: AbstractArray,
-        U, V,
-        W <: Union{Nothing, AbstractArray}} <: LossFunction
-    imp_inv::I
-    mult::T # is this type known?
-    objective::U
-    grad::V
-    meandiff::W
-end =#
+############################################################################
+### Types
+############################################################################
 
 struct SemML{
         INV <: AbstractArray,
@@ -26,12 +17,14 @@ struct SemML{
     mult::M
     logdets::L #logdets of implied covmats
     meandiff::M2
-    #data_rowwise::DP  -> add to semobs
     objective::U
     grad::V
 end
 
-### Constructor
+############################################################################
+### Constructors
+############################################################################
+
 function SemML(observed::T, objective, grad) where {T <: SemObs}
     isnothing(observed.obs_mean) ?
         meandiff = nothing :
@@ -47,111 +40,39 @@ function SemML(observed::T, objective, grad) where {T <: SemObs}
         )
 end
 
-### Loss
-# generic (not optimized)
-function (semml::SemML)(par, model)
-    B = copy(model.imply.imp_cov)
-    C = similar(model.imply.imp_cov)
+############################################################################
+### functors
+############################################################################
 
-    a = cholesky!(Hermitian(B); check = false)
-    if !isposdef(a)
-        F = Inf
-    else
-        a_inv = inv(a)
-        mul!(C, a_inv, model.observed.obs_cov)
-        F = logdet(a) +
-             tr(C)
-        if !isnothing(model.imply.imp_mean)
-        meandiff = model.observed.obs_mean - model.imply.imp_mean
-        F_mean = meandiff'*a_inv*meandiff
-        F += F_mean
-    end
-    end
-    return F
-end
-
-# maximum speed for finite differences
-function (semml::SemML)(par, model::Sem{O, I, L, D}) where
-            {O <: SemObs, L <: Loss, I <: Imply, D <: SemFiniteDiff}
+function (semml::SemML)(par, F, G, H, model, weight = nothing)
     semml.inverses .= model.imply.imp_cov
     a = cholesky!(Symmetric(semml.inverses); check = false)
     if !isposdef(a)
-        F = Inf
-    else
-        ld = logdet(a)
-        semml.inverses .= LinearAlgebra.inv!(a)
-        #inv_cov = inv(a)
+        if !isnothing(G) G .+= 0.0 end
+        if !isnothing(H) stop("analytic hessian of ML is not implemented (yet)") end
+        if !isnothing(F) return Inf end
+    end
+    ld = logdet(a)
+    semml.inverses .= LinearAlgebra.inv!(a)
+    if !isnothing(G)
+        grad = (vec(Σ_inv)-vec(Σ_inv*model.observed.obs_cov*Σ_inv))'*model.imply.∇Σ
+        if isnothing(weight)
+            grad = weight*grad
+        end
+        G .+= grad'
+    end
+    if !isnothing(H) stop("analytic hessian of ML is not implemented (yet)") end
+    if !isnothing(F)
         mul!(semml.mult, semml.inverses, model.observed.obs_cov)
         F = ld + tr(semml.mult)
-        
-        if !isnothing(model.imply.imp_mean)
-            @. semml.meandiff = model.observed.obs_mean - model.imply.imp_mean
+        if !isnothing(model.imply.μ)
+            @. semml.meandiff = model.observed.m - model.imply.μ
             F_mean = semml.meandiff'*semml.inverses*semml.meandiff
             F += F_mean
         end
-    end
-    return F
-end
-
-# maximum speed for analytic diff
-function (semml::SemML)(par, model::Sem{O, I, L, D}) where
-            {O <: SemObs, L <: Loss, I <: Imply, D <: SemAnalyticDiff}
-    semml.inverses .= model.imply.imp_cov
-    a = cholesky!(Symmetric(semml.inverses); check = false)
-    if !isposdef(a)
-        F = Inf
-    else
-        ld = logdet(a)
-        semml.inverses .= LinearAlgebra.inv!(a)
-        #inv_cov = inv(a)
-        mul!(semml.mult, semml.inverses, model.observed.obs_cov)
-        F = ld + tr(semml.mult)
-
-        if !isnothing(model.imply.imp_mean)
-            @. semml.meandiff = model.observed.obs_mean - model.imply.imp_mean
-            F_mean = semml.meandiff'*semml.inverses*semml.meandiff
-            F += F_mean
+        if !isnothing(weight)
+            F = weight*F
         end
-    end
-    return F
-end
-
-#= # analytic differentiation
-function (semml::SemML)(par, model::Sem{O, I, L, D}, E, G) where
-            {O <: SemObs, L <: Loss, I <: Imply, D <: SemAnalyticDiff}
-
-    a = cholesky(Hermitian(model.imply.imp_cov); check = false)
-    if !isposdef(a)
-        if E != nothing
-            semml.objective .= Inf
-        end
-        if G != nothing
-            semml.grad .= 0.0
-        end
-    else
-        ld = logdet(a)
-        inv_cov = inv(a)
-        if E != nothing
-            mul!(semml.mult, inv_cov, model.observed.obs_cov)
-            semml.objective .= ld + tr(semml.mult)
-        end
-        if G != nothing
-            model.diff.B!(model.diff.B, par) # B = inv(I-A)
-            model.diff.E!(model.diff.E, par) # E = B*S*B'
-            let B = model.diff.B, E = model.diff.E,
-                Σ_inv = inv_cov, F = model.diff.F,
-                D = model.observed.obs_cov
-                for i = 1:size(par, 1)
-                    S_der = sparse(model.diff.S_ind_vec[i]..., model.diff.matsize...)
-                    A_der = sparse(model.diff.A_ind_vec[i]..., model.diff.matsize...)
-
-                    term = F*B*A_der*E*F'
-                    Σ_der = Array(F*B*S_der*B'F' + term + term')
-
-                    semml.grad[i] = tr(Σ_inv*Σ_der) + tr((-Σ_inv)*Σ_der*Σ_inv*D)
-                end
-            end
-        end
+        return F
     end
 end
- =#
