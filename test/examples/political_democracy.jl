@@ -1,9 +1,9 @@
 using SEM, CSV, DataFrames, SparseArrays, Symbolics, LineSearches, Optim, Test
 
 ## Observed Data
-dat = DataFrame(CSV.File("test/examples/data/data_dem.csv"))
-par_ml = DataFrame(CSV.File("test/examples/data/par_dem_ml.csv"))
-par_ls = DataFrame(CSV.File("test/examples/data/par_dem_ls.csv"))
+dat = DataFrame(CSV.File("examples/data/data_dem.csv"))
+par_ml = DataFrame(CSV.File("examples/data/par_dem_ml.csv"))
+par_ls = DataFrame(CSV.File("examples/data/par_dem_ls.csv"))
 
 dat = 
     select(
