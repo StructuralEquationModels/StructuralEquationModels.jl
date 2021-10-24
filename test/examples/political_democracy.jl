@@ -1,6 +1,9 @@
 using SEM, CSV, DataFrames, SparseArrays, Symbolics, LineSearches, Optim, Test
 
-## Observed Data
+############################################################################
+### observed data
+############################################################################
+
 dat = DataFrame(CSV.File("examples/data/data_dem.csv"))
 par_ml = DataFrame(CSV.File("examples/data/par_dem_ml.csv"))
 par_ls = DataFrame(CSV.File("examples/data/par_dem_ls.csv"))
@@ -13,7 +16,10 @@ dat =
         # observed
 semobserved = SemObsCommon(data = Matrix{Float64}(dat))
 
-## Model definition
+############################################################################
+### define models
+############################################################################
+
 @Symbolics.variables x[1:31]
 
 #x = rand(31)
@@ -67,23 +73,25 @@ F = sparse(F)
 
 #A
 A = sparse(A)
-    
-par_order = [collect(21:34); collect(15:20); 2;3; 5;6;7; collect(9:14)]
 
+
+### start values
+par_order = [collect(21:34); collect(15:20); 2;3; 5;6;7; collect(9:14)]
 start_val_ml = Vector{Float64}(par_ml.start[par_order])
-# start_val_ls = Vector{Float64}(par_ls.start[par_order])
+start_val_ls = Vector{Float64}(par_ls.start[par_order])
 # start_val_snlls = Vector{Float64}(par_ls.start[par_order][21:31])
 
 # loss
-loss_ml = SemLoss((SemML(semobserved, [0.0], similar(start_val_ml)),))
-# loss_ls = SemLoss([SemWLS(semobserved, [0.0], similar(start_val_ml))])
+loss_ml = SemLoss((SemML(semobserved, 1.0, similar(start_val_ml)),))
+loss_ls = SemLoss((SemWLS(semobserved),))
 # loss_snlls = SemLoss([SemSWLS(semobserved, [0.0], similar(start_val_ml))])
 
 # imply
 imply_ml = RAMSymbolic(A, S, F, x, start_val_ml)
-# imply_ls = 
+imply_ls = RAMSymbolic(A, S, F, x, start_val_ml; vech = true)
 # imply_snlls = 
 
+# diff
 diff = 
     SemDiffOptim(
         BFGS(;linesearch = BackTracking(order=3), alphaguess = InitialHagerZhang()),# m = 100), 
@@ -93,10 +101,13 @@ diff =
             ;f_tol = 1e-10, 
             x_tol = 1.5e-8))
 
-
+# models
 model_ml = Sem(semobserved, imply_ml, loss_ml, diff)
+model_ls = Sem(semobserved, imply_ls, loss_ls, diff)
 
-model_ml(start_val_ml, 1.0, nothing, nothing)
+############################################################################
+### test gradients
+############################################################################
 
 using FiniteDiff
 
@@ -110,6 +121,19 @@ using FiniteDiff
     @test grad ≈ FiniteDiff.finite_difference_gradient(x -> model_ml(x, 1.0, nothing, nothing), start_val_ml)
 end
 
+@testset "ls_gradients" begin
+    grad = similar(start_val_ls)
+    grad .= 0.0
+    model_ls(start_val_ls, 1.0, grad, nothing)
+    @test grad ≈ FiniteDiff.finite_difference_gradient(x -> model_ls(x, 1.0, nothing, nothing), start_val_ls)
+    grad .= 0.0
+    model_ls(start_val_ls, nothing, grad, nothing)
+    @test grad ≈ FiniteDiff.finite_difference_gradient(x -> model_ls(x, 1.0, nothing, nothing), start_val_ls)
+end
+
 # fit
 solution_ml = sem_fit(model_ml)
 @test SEM.compare_estimates(par_ml.est[par_order], solution_ml.minimizer, 0.01)
+
+solution_ls = sem_fit(model_ls)
+@test SEM.compare_estimates(par_ls.est[par_order], solution_ls.minimizer, 0.01)

@@ -39,13 +39,17 @@ function RAMSymbolic(
     # Σ
     Σ_symbolic = get_Σ_symbolic_RAM(S, A, F; vech = vech)
     Σ_function = eval(Symbolics.build_function(Σ_symbolic, par)[2])
-    Σ = zeros(size(F)[1], size(F)[1])
+    Σ = zeros(size(Σ_symbolic))
 
     # ∇Σ
     if gradient
         ∇Σ_symbolic = Symbolics.jacobian(vec(Σ_symbolic), par)
         ∇Σ_function = eval(Symbolics.build_function(∇Σ_symbolic, par)[2])
-        ∇Σ = zeros(size(F, 1)^2, size(par, 1))
+        if !vech 
+            ∇Σ = zeros(size(F, 1)^2, size(par, 1))
+        else
+            ∇Σ = zeros(size(Σ_symbolic, 1), size(par, 1))
+        end
     else
         ∇Σ_symbolic = nothing
         ∇Σ_function = nothing

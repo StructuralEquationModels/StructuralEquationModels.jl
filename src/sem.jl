@@ -10,10 +10,10 @@ include("helper.jl")
 include("imply/RAM.jl")
 include("loss/loss.jl")
 include("loss/ML/ML.jl")
+include("loss/regularization/ridge.jl")
+include("loss/GLS/GLS.jl")
 # include("loss/fiml.jl")
-# include("loss/WLS.jl")
 # include("loss/definition_variables.jl")
-# include("loss/regularized.jl")
 # include("loss/constant.jl")
 # include("multigroup.jl")
 include("diff/optim.jl")
@@ -26,7 +26,7 @@ export  AbstractSem,
             RAMSymbolic,
         SemLoss, 
             LossFunction, SemML, SemFIML, SemDefinition, SemLasso, SemRidge,
-            SemConstant,
+            SemConstant, SemWLS, SemRidge,
         SemDiff, 
             SemDiffOptim,
         SemObs, 
