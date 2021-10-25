@@ -235,3 +235,54 @@ using ForwardDiff, BenchmarkTools
 a = 1.0
 
 @benchmark myf1($a)
+
+####################################################################
+# SemLab
+####################################################################
+
+# Linear Regression
+
+using Distributions, BenchmarkTools, Optim
+
+# Y = Xβ + ε, Y ∼ N(Xβ, σ*I) with σ = Var(ε)
+
+β = rand(10)
+X = rand(1000, 10)
+
+σ = 0.5
+
+ε = rand(Normal(0.0, σ), 1000)
+
+Y = X*β + ε
+
+β₀ = inv(X'*X)*X'*Y
+
+(β₀ - β)'
+
+
+β = rand(10)/100
+β[2] = 0.6
+β[6] = 0.4
+
+X = rand(1000, 10)
+
+σ = 0.5
+
+ε = rand(Normal(0.0, σ), 1000)
+
+Y = X*β + ε
+
+function rss(β₀, X, Y, N, α)
+    Y₀ = X*β₀
+    diff = (Y₀ - Y).^2
+    RSS = (1/N)*sum(diff) #+ α*sum(β₀.^2)
+    return RSS
+end
+
+@benchmark rss($β₀, $X, $Y, 10000, 0.005)
+
+start_val = fill(0.5, 10)
+
+result = optimize(β -> rss(β, X, Y, 10000, 0.005), start_val, BFGS(); autodiff = :forward)
+
+result.minimizer
