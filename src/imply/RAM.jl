@@ -118,10 +118,7 @@ function (imply::RAMSymbolic)(par, F, G, H, model)
     if !isnothing(imply.μ)
         imply.imp_fun_mean(imply.μ, parameters)
     end
-    if !isnothing(G)
+    if !isnothing(G) || !isnothing(H)
         imply.∇Σ_function(imply.∇Σ, par)
     end
-    # if !isnothing(H)
-    #     imply.∇²Σ_function(imply.∇²Σ, par)
-    # end
 end
