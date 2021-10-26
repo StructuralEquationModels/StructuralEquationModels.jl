@@ -63,27 +63,6 @@ F = sparse(F)
 #A
 A = sparse(A)
 
-
-### start values
-par_order = [collect(7:21); collect(1:6); collect(28:42)]
-start_val_ml = Vector{Float64}(par_ml.start[par_order])
-start_val_ls = Vector{Float64}(par_ls.start[par_order])
-# start_val_snlls = Vector{Float64}(par_ls.start[par_order][21:31])
-
-####################################################################
-# ML estimation
-####################################################################
-
-# loss
-loss_ml = SemLoss((SemML(semobserved, 1.0, similar(start_val_ml)),))
-loss_ls = SemLoss((SemWLS(semobserved),))
-# loss_snlls = SemLoss([SemSWLS(semobserved, [0.0], similar(start_val_ml))])
-
-# imply
-imply_ml = RAMSymbolic(A, S, F, x, start_val_ml)
-imply_ls = RAMSymbolic(A, S, F, x, start_val_ml; vech = true)
-# imply_snlls = 
-
 # diff
 diff = 
     SemDiffOptim(
@@ -94,9 +73,29 @@ diff =
             ;f_tol = 1e-10, 
             x_tol = 1.5e-8))
 
+### start values
+par_order = [collect(7:21); collect(1:6); collect(28:42)]
+
+####################################################################
+# ML estimation
+####################################################################
+
+start_val_ml = Vector{Float64}(par_ml.start[par_order])
+
+# loss
+loss_ml_g1 = SemLoss((SemML(semobserved_g1, 1.0, similar(start_val_ml)),))
+loss_ml_g2 = SemLoss((SemML(semobserved_g2, 1.0, similar(start_val_ml)),))
+
+# imply
+imply_ml_g1 = RAMSymbolic(A, S1, F, x, start_val_ml)
+imply_ml_g2 = RAMSymbolic(A, S2, F, x, start_val_ml)
+
 # models
-model_ml = Sem(semobserved, imply_ml, loss_ml, diff)
-model_ls = Sem(semobserved, imply_ls, loss_ls, diff)
+model_ml_g1 = Sem(semobserved_g1, imply_ml_g1, loss_ml_g1, SemDiffOptim(nothing, nothing))
+model_ml_g2 = Sem(semobserved_g2, imply_ml_g2, loss_ml_g2, SemDiffOptim(nothing, nothing))
+
+model_ml_multigroup = SemEnsemble((model_ml_g1, model_ml_g2), diff, start_val_ml)
+
 
 ############################################################################
 ### test gradients
@@ -107,12 +106,139 @@ using FiniteDiff
 @testset "ml_gradients" begin
     grad = similar(start_val_ml)
     grad .= 0.0
-    model_ml(start_val_ml, 1.0, grad, nothing)
-    @test grad ≈ FiniteDiff.finite_difference_gradient(x -> model_ml(x, 1.0, nothing, nothing), start_val_ml)
+    model_ml_multigroup(start_val_ml, 1.0, grad, nothing)
+    @test grad ≈ FiniteDiff.finite_difference_gradient(x -> model_ml_multigroup(x, 1.0, nothing, nothing), start_val_ml)
     grad .= 0.0
-    model_ml(start_val_ml, nothing, grad, nothing)
-    @test grad ≈ FiniteDiff.finite_difference_gradient(x -> model_ml(x, 1.0, nothing, nothing), start_val_ml)
+    model_ml_multigroup(start_val_ml, nothing, grad, nothing)
+    @test grad ≈ FiniteDiff.finite_difference_gradient(x -> model_ml_multigroup(x, 1.0, nothing, nothing), start_val_ml)
 end
+
+ProfileView.@profview prof_mg(100000, start_val_ml, 1.0, nothing, nothing)
+
+function prof_mg(n, par, F, G, H)
+    for i in 1:n
+        model_ml_multigroup(par, F, G, H)
+    end
+end
+
+semtuple = model_ml_multigroup.sems
+@benchmark model_ml_multigroup(start_val_ml, 1.0, nothing, nothing)
+
+@code_warntype model_ml_multigroup(start_val_ml, 1.0, nothing, nothing)
+
+function mytupind(semtuple, n, par)
+    F = mapreduce(model -> model(par, 1.0, nothing, nothing), +, semtuple)
+    #for i in 1:n
+    #    sem = semtuple.sems[i]
+    #end
+    #F+= semtuple[1](par, 1.0, nothing, nothing)
+    #F+= semtuple[2](par, 1.0, nothing, nothing)
+    return F
+end
+
+myf = sin
+
+function wrap(sem, par, F, G, H)
+    return sem(par, F, G, H)
+end
+
+mytupind(semtuple, 2, start_val_ml)
+
+@benchmark mytupind(semtuple, 2, start_val_ml)
+@code_warntype mytupind(semtuple, 2, start_val_ml)
+
+# fit
+solution_ml = sem_fit(model_ml_multigroup)
+@test SEM.compare_estimates(par_ml.est[par_order], solution_ml.minimizer, 0.01)
+
+@benchmark solution_ml = sem_fit(model_ml_multigroup)
+
+####################################################################
+# ML estimation - without Gradients and Hessian
+####################################################################
+
+struct UserSemML <: SemLossFunction end
+
+############################################################################
+### functors
+############################################################################
+
+function (semml::UserSemML)(par, F, G, H, model, weight = nothing)
+    a = cholesky(Symmetric(model.imply.Σ); check = false)
+    if !isposdef(a)
+        if !isnothing(G) stop("analytic gradient of ML is not implemented (yet)") end
+        if !isnothing(H) stop("analytic hessian of ML is not implemented (yet)") end
+        if !isnothing(F) return Inf end
+    end
+    ld = logdet(a)
+    Σ_inv = LinearAlgebra.inv(a)
+    if !isnothing(G) stop("analytic gradient of ML is not implemented (yet)") end
+    if !isnothing(H) stop("analytic hessian of ML is not implemented (yet)") end
+    if !isnothing(F)
+        prod = Σ_inv*model.observed.obs_cov
+        F = ld + tr(prod)
+        if !isnothing(model.imply.μ) end
+        if !isnothing(weight)
+            F = weight*F
+        end
+        return F
+    end
+end
+
+start_val_ml = Vector{Float64}(par_ml.start[par_order])
+
+# loss
+loss_ml_g1 = SemLoss((SemML(semobserved_g1, 1.0, similar(start_val_ml)),))
+loss_ml_g2 = SemLoss((UserSemML(),))
+
+# imply
+imply_ml_g1 = RAMSymbolic(A, S1, F, x, start_val_ml)
+imply_ml_g2 = RAMSymbolic(A, S2, F, x, start_val_ml)
+
+# models
+model_ml_g1 = Sem(semobserved_g1, imply_ml_g1, loss_ml_g1, SemDiffOptim(nothing, nothing))
+model_ml_g2 = SemFiniteDiff(semobserved_g2, imply_ml_g2, loss_ml_g2, SemDiffOptim(nothing, nothing), false)
+
+model_ml_multigroup = SemEnsemble((model_ml_g1, model_ml_g2), diff, start_val_ml)
+
+model_ml_multigroup(start_val_ml, "give me your F value", nothing, nothing)
+
+grad = similar(start_val_ml)
+grad .= 0
+
+model_ml_multigroup(start_val_ml, "give me your F value", grad, nothing)
+
+@testset "ml_gradients" begin
+    grad = similar(start_val_ml)
+    grad .= 0.0
+    model_ml_multigroup(start_val_ml, 1.0, grad, nothing)
+    @test grad ≈ FiniteDiff.finite_difference_gradient(x -> model_ml_multigroup(x, 1.0, nothing, nothing), start_val_ml)
+    grad .= 0.0
+    model_ml_multigroup(start_val_ml, nothing, grad, nothing)
+    @test grad ≈ FiniteDiff.finite_difference_gradient(x -> model_ml_multigroup(x, 1.0, nothing, nothing), start_val_ml)
+end
+
+# fit
+solution_ml = sem_fit(model_ml_multigroup)
+@test SEM.compare_estimates(par_ml.est[par_order], solution_ml.minimizer, 0.01)
+
+@benchmark solution_ml = sem_fit(model_ml_multigroup)
+
+####################################################################
+# GLS estimation
+####################################################################
+
+start_val_ls = Vector{Float64}(par_ls.start[par_order])
+
+loss_ls_g1 = SemLoss((SemWLS(semobserved_g1),))
+loss_ls_g2 = SemLoss((SemWLS(semobserved_g2),))
+
+imply_ls_g1 = RAMSymbolic(A, S1, F, x, start_val_ls; vech = true)
+imply_ls_g2 = RAMSymbolic(A, S2, F, x, start_val_ls; vech = true)
+
+model_ls_g1 = Sem(semobserved_g1, imply_ls_g1, loss_ls_g1, diff)
+model_ls_g2 = Sem(semobserved_g2, imply_ls_g2, loss_ls_g2, diff)
+
 
 @testset "ls_gradients" begin
     grad = similar(start_val_ls)
@@ -124,9 +250,7 @@ end
     @test grad ≈ FiniteDiff.finite_difference_gradient(x -> model_ls(x, 1.0, nothing, nothing), start_val_ls)
 end
 
-# fit
-solution_ml = sem_fit(model_ml)
-@test SEM.compare_estimates(par_ml.est[par_order], solution_ml.minimizer, 0.01)
-
 solution_ls = sem_fit(model_ls)
+
+
 @test SEM.compare_estimates(par_ls.est[par_order], solution_ls.minimizer, 0.01)

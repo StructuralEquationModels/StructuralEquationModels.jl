@@ -8,7 +8,6 @@ include("types.jl")
 include("observed.jl")
 include("helper.jl")
 include("imply/RAM.jl")
-include("loss/loss.jl")
 include("loss/ML/ML.jl")
 include("loss/regularization/ridge.jl")
 include("loss/GLS/GLS.jl")
@@ -21,11 +20,11 @@ include("optimizer/optim.jl")
 # include("optimizer/nlopt.jl")
 
 export  AbstractSem, 
-            Sem, SemFiniteDiff, SemForwardDiff,
+            Sem, SemFiniteDiff, SemForwardDiff, SemEnsemble,
         SemImply, 
             RAMSymbolic,
         SemLoss, 
-            LossFunction, SemML, SemFIML, SemDefinition, SemLasso, SemRidge,
+            SemLossFunction, SemML, SemFIML, SemDefinition, SemLasso, SemRidge,
             SemConstant, SemWLS, SemRidge,
         SemDiff, 
             SemDiffOptim,

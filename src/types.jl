@@ -26,30 +26,18 @@ end
 function (model::Sem)(par, F, G, H, weight = nothing)
     model.imply(par, F, G, H, model)
     F = model.loss(par, F, G, H, model, weight)
-    if !isnothing(weight) F = weight*F end
     return F
-end
-
-function (loss::SemLoss)(par, F, G, H, model)
-    if !isnothing(F)
-        F = zero(eltype(par))
-        for lossfun in loss.functions
-            F += lossfun(par, F, G, H, model)
-        end
-        return F
-    end
-    for lossfun in loss.functions lossfun(par, F, G, H, model) end
 end
 
 function (loss::SemLoss)(par, F, G, H, model, weight)
     if !isnothing(F)
         F = zero(eltype(par))
         for lossfun in loss.functions
-            F += lossfun(par, F, G, H, model)
+            F += lossfun(par, F, G, H, model, weight)
         end
         return F
     end
-    for lossfun in loss.functions lossfun(par, F, G, H, model) end
+    for lossfun in loss.functions lossfun(par, F, G, H, model, weight) end
 end
 
 #####################################################################################################
@@ -66,7 +54,7 @@ end
 
 function (model::SemFiniteDiff)(par, F, G, H, weight = nothing)
     if !isnothing(G)
-        if has_gradient
+        if model.has_gradient
             model.imply(par, nothing, G, nothing, model)
             model.loss(par, nothing, G, nothing, model, weight)
         else
@@ -118,19 +106,29 @@ end
 # ensemble models
 #####################################################################################################
 
-struct SemEnsemble{N, T <: Tuple, V <: AbstractVector} <: AbstractSem
+struct SemEnsemble{N, T <: Tuple, V <: AbstractVector, D, S} <: AbstractSem
     n::N
     sems::T
     weights::V
+    diff::D
+    start_val::S
+end
+
+function SemEnsemble(T::Tuple, diff, start_val)
+    n = size(T, 1)
+    sems = T
+    nobs_total = sum([model.observed.n_obs for model in T])
+    weights = [(model.observed.n_obs-1)/nobs_total for model in T]
+    return SemEnsemble(n, sems, weights, diff, start_val)
 end
 
 function (ensemble::SemEnsemble)(par, F, G, H)
     if !isnothing(F)
         F = zero(eltype(par))
-        for i in 1:n
-            F += ensemble.sems[i](par, F, G, H, weights[i])
+        for i in 1:ensemble.n
+            F += ensemble.sems[i](par, F, G, H, ensemble.weights[i])
         end
         return F
     end
-    for sem in ensemble.sems sem(par, F, G, H) end
+    for i in 1:ensemble.n ensemble.sems[i](par, F, G, H, ensemble.weights[i]) end
 end
