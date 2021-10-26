@@ -1,6 +1,6 @@
 module SEM
 
-using Distributions, LinearAlgebra, Optim, Random,
+using LinearAlgebra, Optim,
     NLSolversBase, Statistics, SparseArrays, Symbolics,
     NLopt, FiniteDiff, ForwardDiff
 
