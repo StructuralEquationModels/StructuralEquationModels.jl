@@ -239,7 +239,6 @@ imply_ls_g2 = RAMSymbolic(A, S2, F, x, start_val_ls; vech = true)
 model_ls_g1 = Sem(semobserved_g1, imply_ls_g1, loss_ls_g1, diff)
 model_ls_g2 = Sem(semobserved_g2, imply_ls_g2, loss_ls_g2, diff)
 
-
 @testset "ls_gradients" begin
     grad = similar(start_val_ls)
     grad .= 0.0
