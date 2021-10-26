@@ -69,7 +69,7 @@ function (semml::SemML)(par, F, G, H, model, weight = nothing)
                 kron(semml.inverses, semml.inverses)
             hessian = model.imply.∇Σ'*H_outer*model.imply.∇Σ
             model.imply.∇²Σ_function(model.imply.∇²Σ, J, par)
-            hessian = hessian + model.imply.∇²Σ 
+            hessian = hessian + model.imply.∇²Σ
         end
         if !isnothing(weight)
             hessian = weight*hessian
