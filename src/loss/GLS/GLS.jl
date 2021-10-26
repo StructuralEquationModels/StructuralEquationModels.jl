@@ -40,14 +40,20 @@ function (semwls::SemWLS)(par, F, G, H, model, weight = nothing)
         if !isnothing(weight) grad = weight*grad end
         G .+= grad
         hessian = 2*model.imply.∇Σ'*semwls.V*model.imply.∇Σ
-        if !approx_H hessian += model.imply.∇²Σ end
+        if !semwls.approx_H
+            model.imply.∇²Σ_function(model.imply.∇²Σ, J, par)
+            hessian += model.imply.∇²Σ 
+        end
         if !isnothing(weight) hessian = weight*hessian end
         H .+= hessian
     end
     if  isnothing(G) && !isnothing(H)
-        J = (-2*(σ_diff)'*semwls.V)'
         hessian = 2*model.imply.∇Σ'*semwls.V*model.imply.∇Σ
-        if !approx_H hessian += model.imply.∇²Σ end
+        if !semwls.approx_H
+            J = (-2*(σ_diff)'*semwls.V)'
+            model.imply.∇²Σ_function(model.imply.∇²Σ, J, par)
+            hessian += model.imply.∇²Σ
+        end
         if !isnothing(weight) hessian = weight*hessian end
         H .+= hessian
     end

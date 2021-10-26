@@ -137,3 +137,95 @@ solution_ml = sem_fit(model_ml)
 
 solution_ls = sem_fit(model_ls)
 @test SEM.compare_estimates(par_ls.est[par_order], solution_ls.minimizer, 0.01)
+
+############################################################################
+### test hessians
+############################################################################
+
+# loss
+loss_ml = SemLoss((SemML(semobserved, 1.0, similar(start_val_ml)),))
+loss_ls = SemLoss((SemWLS(semobserved),))
+
+# imply
+imply_ml = RAMSymbolic(A, S, F, x, start_val_ml; hessian = true)
+imply_ls = RAMSymbolic(A, S, F, x, start_val_ml; vech = true, hessian = true)
+
+# diff
+diff = 
+    SemDiffOptim(
+        Newton(;linesearch = BackTracking(order=3), alphaguess = InitialHagerZhang()),# m = 100), 
+        #P = 0.5*inv(H0),
+        #precondprep = (P, x) -> 0.5*inv(FiniteDiff.finite_difference_hessian(model_ls_ana, x))), 
+        Optim.Options(
+            ;f_tol = 1e-10, 
+            x_tol = 1.5e-8))
+
+# models
+model_ml = Sem(semobserved, imply_ml, loss_ml, diff)
+model_ls = Sem(semobserved, imply_ls, loss_ls, diff)
+
+@testset "ml_hessians" begin
+    hessian = zeros(size(start_val_ml, 1), size(start_val_ml, 1))
+    grad = zeros(size(start_val_ml, 1))
+    
+    model_ml(start_val_ml, 1.0, nothing, hessian)
+    @test hessian ≈ FiniteDiff.finite_difference_hessian(x -> model_ml(x, 1.0, nothing, nothing), start_val_ml) rtol = 1/1000
+    
+    hessian .= 0.0
+
+    model_ml(start_val_ml, nothing, grad, hessian)
+    @test grad ≈ FiniteDiff.finite_difference_gradient(x -> model_ml(x, 1.0, nothing, nothing), start_val_ml)
+    @test hessian ≈ FiniteDiff.finite_difference_hessian(x -> model_ml(x, 1.0, nothing, nothing), start_val_ml) rtol = 1/1000
+end
+
+@testset "ls_hessians" begin
+    hessian = zeros(size(start_val_ml, 1), size(start_val_ml, 1))
+    grad = zeros(size(start_val_ml, 1))
+    
+    model_ls(start_val_ml, 1.0, nothing, hessian)
+    @test hessian ≈ FiniteDiff.finite_difference_hessian(x -> model_ls(x, 1.0, nothing, nothing), start_val_ml) rtol = 1/1000
+    
+    hessian .= 0.0
+
+    model_ls(start_val_ml, nothing, grad, hessian)
+    @test grad ≈ FiniteDiff.finite_difference_gradient(x -> model_ls(x, 1.0, nothing, nothing), start_val_ml)
+    @test hessian ≈ FiniteDiff.finite_difference_hessian(x -> model_ls(x, 1.0, nothing, nothing), start_val_ml) rtol = 1/1000
+end
+
+solution_ml = sem_fit(model_ml)
+@test SEM.compare_estimates(par_ml.est[par_order], solution_ml.minimizer, 0.01)
+
+solution_ls = sem_fit(model_ls)
+@test SEM.compare_estimates(par_ls.est[par_order], solution_ls.minimizer, 0.01)
+
+############################################################################
+### approximation of hessians
+############################################################################
+
+# loss
+loss_ml = SemLoss((SemML(semobserved, 1.0, similar(start_val_ml); approx_H = true),))
+loss_ls = SemLoss((SemWLS(semobserved; approx_H = true),))
+
+# imply
+imply_ml = RAMSymbolic(A, S, F, x, start_val_ml)
+imply_ls = RAMSymbolic(A, S, F, x, start_val_ml; vech = true)
+
+# diff
+diff = 
+    SemDiffOptim(
+        Newton(;linesearch = BackTracking(order=3), alphaguess = InitialHagerZhang()),# m = 100), 
+        #P = 0.5*inv(H0),
+        #precondprep = (P, x) -> 0.5*inv(FiniteDiff.finite_difference_hessian(model_ls_ana, x))), 
+        Optim.Options(
+            ;f_tol = 1e-10, 
+            x_tol = 1.5e-8))
+
+# models
+model_ml = Sem(semobserved, imply_ml, loss_ml, diff)
+model_ls = Sem(semobserved, imply_ls, loss_ls, diff)
+
+solution_ml = sem_fit(model_ml)
+@test SEM.compare_estimates(par_ml.est[par_order], solution_ml.minimizer, 0.01)
+
+solution_ls = sem_fit(model_ls)
+@test SEM.compare_estimates(par_ls.est[par_order], solution_ls.minimizer, 0.01)

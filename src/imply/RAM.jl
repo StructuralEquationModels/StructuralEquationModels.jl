@@ -2,16 +2,19 @@
 ### Types
 ############################################################################
 
-struct RAMSymbolic{F1, F2, A1, A2, S1, S2, V, F3, A3} <: SemImply
+struct RAMSymbolic{F1, F2, F3, A1, A2, A3, S1, S2, S3, V, F4, A4} <: SemImply
     Σ_function::F1
     ∇Σ_function::F2
+    ∇²Σ_function::F3
     Σ::A1
     ∇Σ::A2
+    ∇²Σ::A3
     Σ_symbolic::S1
     ∇Σ_symbolic::S2
+    ∇²Σ_symbolic::S3
     start_val::V
-    μ_function::F3
-    μ::A3
+    μ_function::F4
+    μ::A4
 end
 
 ############################################################################
@@ -56,6 +59,25 @@ function RAMSymbolic(
         ∇Σ = nothing
     end
 
+    if hessian
+        n_sig = length(Σ_symbolic)
+        n_par = size(par, 1)
+        ∇²Σ_symbolic_vec = [Symbolics.sparsehessian(σᵢ, par) for σᵢ in vec(Σ_symbolic)]
+
+        @variables J[1:n_sig]
+        ∇²Σ_symbolic = zeros(Num, n_par, n_par)
+        for i in 1:n_sig
+            ∇²Σ_symbolic += J[i]*∇²Σ_symbolic_vec[i]
+        end
+    
+        ∇²Σ_function = eval(Symbolics.build_function(∇²Σ_symbolic, J, par)[2])
+        ∇²Σ = zeros(n_par, n_par)
+    else
+        ∇²Σ_symbolic = nothing
+        ∇²Σ_function = nothing
+        ∇²Σ = nothing
+    end
+
     # μ
     if !isnothing(M)
         stop("means are not implemented yet")
@@ -74,10 +96,13 @@ function RAMSymbolic(
     return RAMSymbolic(
         Σ_function,
         ∇Σ_function,
+        ∇²Σ_function,
         Σ,
         ∇Σ,
+        ∇²Σ,
         Σ_symbolic,
         ∇Σ_symbolic,
+        ∇²Σ_symbolic,
         copy(start_val),
         μ_function,
         μ
