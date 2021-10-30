@@ -30,3 +30,37 @@ par_ls <- select(parTable(fit_ls), lhs, op, rhs, est, start)
 write.csv(par_ml, "test/examples/data/par_dem_ml.csv")
 write.csv(par_ls, "test/examples/data/par_dem_ls.csv")
 write.csv(data, "test/examples/data/data_dem.csv")
+
+# meanstructure
+#----lavaan----
+model <-    "# measurement model
+            ind60 =~ x1 + x2 + x3
+            dem60 =~ y1 + y2 + y3 + y4
+            dem65 =~ y5 + y6 + y7 + y8
+            # regressions
+            dem60 ~ ind60
+            dem65 ~ ind60 + dem60
+            # residual correlations
+            y1 ~~ y5
+            y2 ~~ y4 + y6
+            y3 ~~ y7
+            y4 ~~ y8
+            y6 ~~ y8
+            # meanstructure
+            y1 ~ a*1
+            y2 ~ b*1
+            y3 ~ c*1
+            y4 ~ d*1
+            y5 ~ a*1
+            y6 ~ b*1
+            y7 ~ c*1
+            y8 ~ d*1"
+
+fit_ml <- cfa(model, data, likelihood = "wishart", do.fit = TRUE)
+fit_ls <- cfa(model, data, estimator = "GLS", do.fit = TRUE)
+
+par_ml <- select(parTable(fit_ml), lhs, op, rhs, est, start)
+par_ls <- select(parTable(fit_ls), lhs, op, rhs, est, start)
+
+write.csv(par_ml, "test/examples/data/par_dem_ml_mean.csv")
+write.csv(par_ls, "test/examples/data/par_dem_ls_mean.csv")

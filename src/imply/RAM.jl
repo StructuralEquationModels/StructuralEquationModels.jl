@@ -2,7 +2,7 @@
 ### Types
 ############################################################################
 
-struct RAMSymbolic{F1, F2, F3, A1, A2, A3, S1, S2, S3, V, F4, A4} <: SemImply
+struct RAMSymbolic{F1, F2, F3, A1, A2, A3, S1, S2, S3, V, F4, A4, F5, A5} <: SemImply
     Σ_function::F1
     ∇Σ_function::F2
     ∇²Σ_function::F3
@@ -15,6 +15,8 @@ struct RAMSymbolic{F1, F2, F3, A1, A2, A3, S1, S2, S3, V, F4, A4} <: SemImply
     start_val::V
     μ_function::F4
     μ::A4
+    ∇μ_function::F5
+    ∇μ::A5
 end
 
 ############################################################################
@@ -80,17 +82,22 @@ function RAMSymbolic(
 
     # μ
     if !isnothing(M)
-        stop("means are not implemented yet")
-#=         imp_mean_sym = F*invia*M
-        imp_mean_sym = Array(imp_mean_sym)
-        imp_mean_sym = ModelingToolkit.simplify.(imp_mean_sym)
-
-        imp_fun_mean = eval(ModelingToolkit.build_function(imp_mean_sym, parameters)[2])
-
-        imp_mean = zeros(size(F)[1]) =#
+        μ_symbolic = get_μ_symbolic_RAM(M, A, F)
+        μ_function = eval(Symbolics.build_function(μ_symbolic, par)[2])
+        μ = zeros(size(μ_symbolic))
+        if gradient
+            ∇μ_symbolic = Symbolics.jacobian(μ_symbolic, par)
+            ∇μ_function = eval(Symbolics.build_function(∇μ_symbolic, par)[2])
+            ∇μ = zeros(size(F, 1), size(par, 1))
+        else
+            ∇μ_function = nothing
+            ∇μ = nothing
+        end
     else
         μ_function = nothing
         μ = nothing
+        ∇μ_function = nothing
+        ∇μ = nothing
     end
 
     return RAMSymbolic(
@@ -105,7 +112,9 @@ function RAMSymbolic(
         ∇²Σ_symbolic,
         copy(start_val),
         μ_function,
-        μ
+        μ,
+        ∇μ_function,
+        ∇μ
     )
 end
 
@@ -115,10 +124,13 @@ end
 
 function (imply::RAMSymbolic)(par, F, G, H, model)
     imply.Σ_function(imply.Σ, par)
-    if !isnothing(imply.μ)
-        imply.imp_fun_mean(imply.μ, parameters)
-    end
     if !isnothing(G) || !isnothing(H)
         imply.∇Σ_function(imply.∇Σ, par)
+    end
+    if !isnothing(imply.μ)
+        imply.μ_function(imply.μ, par)
+        if !isnothing(G) || !isnothing(H)
+            imply.∇μ_function(imply.∇μ, par)
+        end
     end
 end
