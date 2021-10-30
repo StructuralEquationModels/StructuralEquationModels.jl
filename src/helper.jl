@@ -22,6 +22,16 @@ function get_Σ_symbolic_RAM(S, A, F; vech = false)
     return Σ_symbolic
 end
 
+function get_μ_symbolic_RAM(M, A, F)
+    invia = neumann_series(A)
+    μ_symbolic = F*invia*M
+    μ_symbolic = Array(μ_symbolic)
+    Threads.@threads for i in eachindex(μ_symbolic)
+        μ_symbolic[i] = Symbolics.simplify(μ_symbolic[i])
+    end
+    return μ_symbolic
+end
+
 #= 
 function make_onelement_array(A)
     isa(A, Array) ? nothing : (A = [A])

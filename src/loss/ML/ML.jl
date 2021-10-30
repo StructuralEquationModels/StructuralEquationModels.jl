@@ -45,77 +45,99 @@ function (semml::SemML)(par, F, G, H, model, weight = nothing)
 
     if !isposdef(a)
         if !isnothing(G) G .+= 0.0 end
-        if !isnothing(H) stop("analytic hessian of ML is not implemented (yet)") end
+        if !isnothing(H) H .+= 0.0 end
         if !isnothing(F) return Inf end
     end
 
     ld = logdet(a)
     semml.inverses .= LinearAlgebra.inv!(a)
 
-    if !isnothing(G) && !isnothing(H)
-        J = (vec(semml.inverses)-vec(semml.inverses*model.observed.obs_cov*semml.inverses))'
-        grad = J*model.imply.∇Σ
-        if !isnothing(weight)
-            grad = weight*grad
+    if isnothing(model.imply.μ)
+    # without means    
+        if !isnothing(G) && !isnothing(H)
+            J = (vec(semml.inverses)-vec(semml.inverses*model.observed.obs_cov*semml.inverses))'
+            grad = J*model.imply.∇Σ
+            if !isnothing(weight)
+                grad = weight*grad
+            end
+            G .+= grad'
+            if semml.approx_H
+                hessian = 2*model.imply.∇Σ'*kron(semml.inverses, semml.inverses)*model.imply.∇Σ
+            end
+            if !semml.approx_H
+                M = semml.inverses*model.observed.obs_cov*semml.inverses
+                H_outer = 
+                    2*kron(M, semml.inverses) - 
+                    kron(semml.inverses, semml.inverses)
+                hessian = model.imply.∇Σ'*H_outer*model.imply.∇Σ
+                model.imply.∇²Σ_function(model.imply.∇²Σ, J, par)
+                hessian = hessian + model.imply.∇²Σ
+            end
+            if !isnothing(weight)
+                hessian = weight*hessian
+            end
+            H .+= hessian
         end
-        G .+= grad'
-        if semml.approx_H
-            hessian = 2*model.imply.∇Σ'*kron(semml.inverses, semml.inverses)*model.imply.∇Σ
-        end
-        if !semml.approx_H
-            M = semml.inverses*model.observed.obs_cov*semml.inverses
-            H_outer = 
-                2*kron(M, semml.inverses) - 
-                kron(semml.inverses, semml.inverses)
-            hessian = model.imply.∇Σ'*H_outer*model.imply.∇Σ
-            model.imply.∇²Σ_function(model.imply.∇²Σ, J, par)
-            hessian = hessian + model.imply.∇²Σ
-        end
-        if !isnothing(weight)
-            hessian = weight*hessian
-        end
-        H .+= hessian
-    end
 
-    if !isnothing(G) && isnothing(H)
-        grad = (vec(semml.inverses)-vec(semml.inverses*model.observed.obs_cov*semml.inverses))'*model.imply.∇Σ
-        if !isnothing(weight)
-            grad = weight*grad
+        if !isnothing(G) && isnothing(H)
+            grad = (vec(semml.inverses)-vec(semml.inverses*model.observed.obs_cov*semml.inverses))'*model.imply.∇Σ
+            if !isnothing(weight)
+                grad = weight*grad
+            end
+            G .+= grad'
         end
-        G .+= grad'
-    end
 
-    if isnothing(G) && !isnothing(H)
-        J = (vec(semml.inverses)-vec(semml.inverses*model.observed.obs_cov*semml.inverses))'
-        if semml.approx_H
-            hessian = 2*model.imply.∇Σ'*kron(semml.inverses, semml.inverses)*model.imply.∇Σ
+        if isnothing(G) && !isnothing(H)
+            J = (vec(semml.inverses)-vec(semml.inverses*model.observed.obs_cov*semml.inverses))'
+            if semml.approx_H
+                hessian = 2*model.imply.∇Σ'*kron(semml.inverses, semml.inverses)*model.imply.∇Σ
+            end
+            if !semml.approx_H
+                M = semml.inverses*model.observed.obs_cov*semml.inverses
+                H_outer = 
+                    2*kron(M, semml.inverses) - 
+                    kron(semml.inverses, semml.inverses)
+                hessian = model.imply.∇Σ'*H_outer*model.imply.∇Σ
+                model.imply.∇²Σ_function(model.imply.∇²Σ, J, par)
+                hessian = hessian + model.imply.∇²Σ 
+            end
+            if !isnothing(weight)
+                hessian = weight*hessian
+            end
+            H .+= hessian
         end
-        if !semml.approx_H
-            M = semml.inverses*model.observed.obs_cov*semml.inverses
-            H_outer = 
-                2*kron(M, semml.inverses) - 
-                kron(semml.inverses, semml.inverses)
-            hessian = model.imply.∇Σ'*H_outer*model.imply.∇Σ
-            model.imply.∇²Σ_function(model.imply.∇²Σ, J, par)
-            hessian = hessian + model.imply.∇²Σ 
-        end
-        if !isnothing(weight)
-            hessian = weight*hessian
-        end
-        H .+= hessian
-    end
 
-    if !isnothing(F)
-        mul!(semml.mult, semml.inverses, model.observed.obs_cov)
-        F = ld + tr(semml.mult)
-        if !isnothing(model.imply.μ)
-            @. semml.meandiff = model.observed.m - model.imply.μ
-            F_mean = semml.meandiff'*semml.inverses*semml.meandiff
-            F += F_mean
+        if !isnothing(F)
+            mul!(semml.mult, semml.inverses, model.observed.obs_cov)
+            F = ld + tr(semml.mult)
+            if !isnothing(weight)
+                F = weight*F
+            end
+            return F
         end
-        if !isnothing(weight)
-            F = weight*F
+    else
+    # with means
+    μ_diff = model.observed.obs_mean - model.imply.μ
+        if !isnothing(H) stop("hessian of ML + meanstructure is not implemented yet") end
+        if !isnothing(G)
+            grad = 
+                (vec(
+                    semml.inverses-
+                    semml.inverses*model.observed.obs_cov*semml.inverses
+                    -semml.inverses*μ_diff*μ_diff'*semml.inverses))'*model.imply.∇Σ -
+                2*μ_diff'*semml.inverses*model.imply.∇μ
+            if !isnothing(weight)
+                grad = weight*grad
+            end
+            G .+= grad'
         end
-        return F
+        if !isnothing(F)
+            mul!(semml.mult, semml.inverses, model.observed.obs_cov)
+            F = ld + tr(semml.mult) + μ_diff'*semml.inverses*μ_diff
+            if !isnothing(weight)
+                F = weight*F
+            end
+            return F
+        end
     end
 end
