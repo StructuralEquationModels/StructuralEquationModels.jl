@@ -118,14 +118,16 @@ function (semml::SemML)(par, F, G, H, model, weight = nothing)
     else
     # with means
     μ_diff = model.observed.obs_mean - model.imply.μ
+    diff⨉inv = μ_diff'*semml.inverses
         if !isnothing(H) stop("hessian of ML + meanstructure is not implemented yet") end
         if !isnothing(G)
             grad = 
-                (vec(
-                    semml.inverses-
-                    semml.inverses*model.observed.obs_cov*semml.inverses
-                    -semml.inverses*μ_diff*μ_diff'*semml.inverses))'*model.imply.∇Σ -
-                2*μ_diff'*semml.inverses*model.imply.∇μ
+                vec(
+                    semml.inverses*(
+                        I - 
+                        model.observed.obs_cov*semml.inverses - 
+                        μ_diff*diff⨉inv))'*model.imply.∇Σ -
+                2*diff⨉inv*model.imply.∇μ
             if !isnothing(weight)
                 grad = weight*grad
             end
@@ -133,7 +135,7 @@ function (semml::SemML)(par, F, G, H, model, weight = nothing)
         end
         if !isnothing(F)
             mul!(semml.mult, semml.inverses, model.observed.obs_cov)
-            F = ld + tr(semml.mult) + μ_diff'*semml.inverses*μ_diff
+            F = ld + tr(semml.mult) + diff⨉inv*μ_diff
             if !isnothing(weight)
                 F = weight*F
             end
