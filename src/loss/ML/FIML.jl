@@ -80,18 +80,16 @@ function (semfiml::SemFIML)(par, F, G, H, model, weight = nothing)
         if !isnothing(weight)
             @. semfiml.grad = weight*semfiml.grad
         end
-        G .+= semfiml.grad
+        @. G += semfiml.grad/model.observed.n_obs
     end
+
     if !isnothing(F)
-        F = F_FIML(zero(eltype(par)), model.observed.rows, semfiml, model)
+        F = F_FIML(zero(eltype(par)), model.observed.rows, semfiml, model)/model.observed.n_obs
         if !isnothing(weight)
             F = weight*F
         end
         return F
     end
-    F = zero(eltype(par))
-    F = F_FIML(F, model.observed.rows, semfiml, model)
-    return F
 end
 
 ############################################################################
@@ -112,9 +110,8 @@ function ∇F_one_pattern(μ_diff, Σ⁻¹, S, pattern, ∇ind, N, model)
     diff⨉inv = μ_diff'*Σ⁻¹
 
     if N > one(N)
-        in1 = Σ⁻¹*(I - S*Σ⁻¹ - μ_diff*diff⨉inv)
-        grad = vec(in1)'*model.imply.∇Σ[∇ind, :]
-        grad -= 2*diff⨉inv*model.imply.∇μ[pattern, :]
+        grad = vec(Σ⁻¹*(I - S*Σ⁻¹ - μ_diff*diff⨉inv))'*model.imply.∇Σ[∇ind, :] - 
+            2*diff⨉inv*model.imply.∇μ[pattern, :]
         grad = N*grad
     else
         grad = 
@@ -140,7 +137,7 @@ end
 function ∇F_FIML(grad, rows, semfiml, model)
     grad .= 0.0
     for i = 1:size(rows, 1)
-        grad += ∇F_one_pattern(
+        grad .+= ∇F_one_pattern(
             semfiml.meandiff[i], 
             semfiml.inverses[i], 
             model.observed.obs_cov[i], 
