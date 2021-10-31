@@ -90,12 +90,13 @@ function remove_all_missing(data)
     return data[keep, :], keep
 end
 
-#= function batch_inv!(fun::Union{LossFunction, DiffFunction}, model)
+function batch_inv!(fun, model)
     for i = 1:size(fun.inverses, 1)
         fun.inverses[i] .= LinearAlgebra.inv!(fun.choleskys[i])
     end
 end
 
+#=
 function batch_sym_inv_update!(fun::Union{LossFunction, DiffFunction}, model)
     M_inv = inv(fun.choleskys[1])
     for i = 1:size(fun.inverses, 1)
