@@ -32,7 +32,6 @@ write.csv(par_ls, "test/examples/data/par_dem_ls.csv")
 write.csv(data, "test/examples/data/data_dem.csv")
 
 # meanstructure
-#----lavaan----
 model <-    "# measurement model
             ind60 =~ x1 + x2 + x3
             dem60 =~ y1 + y2 + y3 + y4
@@ -64,3 +63,21 @@ par_ls <- select(parTable(fit_ls), lhs, op, rhs, est, start)
 
 write.csv(par_ml, "test/examples/data/par_dem_ml_mean.csv")
 write.csv(par_ls, "test/examples/data/par_dem_ls_mean.csv")
+
+# fiml
+p <- 0.2
+n <- nrow(data)
+
+data_miss <- mutate(data, 
+    across(
+        everything(), 
+        ~ifelse(rbinom(n, 1, p), NA, .x)
+        )
+    )
+
+fit_ml <- cfa(model, data_miss, missing = "fiml", likelihood = "wishart", do.fit = TRUE)
+
+par_ml <- select(parTable(fit_ml), lhs, op, rhs, est, start)
+
+write.csv(par_ml, "test/examples/data/par_dem_ml_fiml.csv")
+write.csv(data_miss, "test/examples/data/data_dem_fiml.csv")

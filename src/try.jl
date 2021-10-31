@@ -285,3 +285,26 @@ start_val = fill(0.5, 10)
 result = optimize(β -> rss(β, X, Y, 10000, 0.005), start_val, BFGS(); autodiff = :forward)
 
 result.minimizer
+
+
+#### small
+
+ind = sample(1:100, 10; replace = false)
+a = rand(100, 100)
+a_not = a[Not(ind), Not(ind)]
+der = rand(100*100,300)
+b = rand(size(vec(a_not), 1))'
+ind_after = vec(CartesianIndices(a))
+ind_after = findall(x -> !(x[1] ∈ ind || x[2] ∈ ind), ind_after)
+
+a_filtered = der[ind_after, :]
+
+function myf_1(der, b, ind)
+    res = b*der[ind, :]
+    return res
+end
+
+@benchmark myf_1($der, $b, $ind_after)
+@benchmark $b*$a_filtered
+
+vec_a == vec(a)[Not(findall(x -> (x[1] ∈ rows_del || x[2] ∈ rows_del), ind))]
