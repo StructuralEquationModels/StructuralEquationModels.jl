@@ -14,6 +14,15 @@ function sem_fit(model::Sem{O, I, L, D}) where {O, I, L, D <: SemDiffOptim}
     return result
 end
 
+function sem_fit(model::SemFiniteDiff{O, I, L, D}) where {O, I, L, D <: SemDiffOptim}
+    result = Optim.optimize(
+                Optim.only_fgh!((F, G, H, par) -> sem_wrap_optim(par, F, G, H, model)),
+                model.imply.start_val,
+                model.diff.algorithm,
+                model.diff.options)
+    return result
+end
+
 function sem_fit(model::SemEnsemble{N, T , V, D, S}) where {N, T, V, D <: SemDiffOptim, S}
     result = Optim.optimize(
                 Optim.only_fgh!((F, G, H, par) -> sem_wrap_optim(par, F, G, H, model)),
