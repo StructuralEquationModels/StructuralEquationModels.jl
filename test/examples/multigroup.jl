@@ -96,7 +96,6 @@ model_ml_g2 = Sem(semobserved_g2, imply_ml_g2, loss_ml_g2, SemDiffOptim(nothing,
 
 model_ml_multigroup = SemEnsemble((model_ml_g1, model_ml_g2), diff, start_val_ml)
 
-
 ############################################################################
 ### test gradients
 ############################################################################
@@ -113,45 +112,9 @@ using FiniteDiff
     @test grad ≈ FiniteDiff.finite_difference_gradient(x -> model_ml_multigroup(x, 1.0, nothing, nothing), start_val_ml)
 end
 
-ProfileView.@profview prof_mg(100000, start_val_ml, 1.0, nothing, nothing)
-
-function prof_mg(n, par, F, G, H)
-    for i in 1:n
-        model_ml_multigroup(par, F, G, H)
-    end
-end
-
-semtuple = model_ml_multigroup.sems
-@benchmark model_ml_multigroup(start_val_ml, 1.0, nothing, nothing)
-
-@code_warntype model_ml_multigroup(start_val_ml, 1.0, nothing, nothing)
-
-function mytupind(semtuple, n, par)
-    F = mapreduce(model -> model(par, 1.0, nothing, nothing), +, semtuple)
-    #for i in 1:n
-    #    sem = semtuple.sems[i]
-    #end
-    #F+= semtuple[1](par, 1.0, nothing, nothing)
-    #F+= semtuple[2](par, 1.0, nothing, nothing)
-    return F
-end
-
-myf = sin
-
-function wrap(sem, par, F, G, H)
-    return sem(par, F, G, H)
-end
-
-mytupind(semtuple, 2, start_val_ml)
-
-@benchmark mytupind(semtuple, 2, start_val_ml)
-@code_warntype mytupind(semtuple, 2, start_val_ml)
-
 # fit
 solution_ml = sem_fit(model_ml_multigroup)
 @test SEM.compare_estimates(par_ml.est[par_order], solution_ml.minimizer, 0.01)
-
-@benchmark solution_ml = sem_fit(model_ml_multigroup)
 
 ####################################################################
 # ML estimation - without Gradients and Hessian
@@ -201,13 +164,6 @@ model_ml_g2 = SemFiniteDiff(semobserved_g2, imply_ml_g2, loss_ml_g2, SemDiffOpti
 
 model_ml_multigroup = SemEnsemble((model_ml_g1, model_ml_g2), diff, start_val_ml)
 
-model_ml_multigroup(start_val_ml, "give me your F value", nothing, nothing)
-
-grad = similar(start_val_ml)
-grad .= 0
-
-model_ml_multigroup(start_val_ml, "give me your F value", grad, nothing)
-
 @testset "ml_gradients" begin
     grad = similar(start_val_ml)
     grad .= 0.0
@@ -221,8 +177,6 @@ end
 # fit
 solution_ml = sem_fit(model_ml_multigroup)
 @test SEM.compare_estimates(par_ml.est[par_order], solution_ml.minimizer, 0.01)
-
-@benchmark solution_ml = sem_fit(model_ml_multigroup)
 
 ####################################################################
 # GLS estimation
@@ -239,17 +193,18 @@ imply_ls_g2 = RAMSymbolic(A, S2, F, x, start_val_ls; vech = true)
 model_ls_g1 = Sem(semobserved_g1, imply_ls_g1, loss_ls_g1, diff)
 model_ls_g2 = Sem(semobserved_g2, imply_ls_g2, loss_ls_g2, diff)
 
+model_ls_multigroup = SemEnsemble((model_ls_g1, model_ls_g2), diff, start_val_ls)
+
 @testset "ls_gradients" begin
     grad = similar(start_val_ls)
     grad .= 0.0
-    model_ls(start_val_ls, 1.0, grad, nothing)
-    @test grad ≈ FiniteDiff.finite_difference_gradient(x -> model_ls(x, 1.0, nothing, nothing), start_val_ls)
+    model_ls_multigroup(start_val_ls, 1.0, grad, nothing)
+    @test grad ≈ FiniteDiff.finite_difference_gradient(x -> model_ls_multigroup(x, 1.0, nothing, nothing), start_val_ls)
     grad .= 0.0
-    model_ls(start_val_ls, nothing, grad, nothing)
-    @test grad ≈ FiniteDiff.finite_difference_gradient(x -> model_ls(x, 1.0, nothing, nothing), start_val_ls)
+    model_ls_multigroup(start_val_ls, nothing, grad, nothing)
+    @test grad ≈ FiniteDiff.finite_difference_gradient(x -> model_ls_multigroup(x, 1.0, nothing, nothing), start_val_ls)
 end
 
-solution_ls = sem_fit(model_ls)
-
+solution_ls = sem_fit(model_ls_multigroup)
 
 @test SEM.compare_estimates(par_ls.est[par_order], solution_ls.minimizer, 0.01)
