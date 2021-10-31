@@ -461,8 +461,11 @@ diff =
             ;f_tol = 1e-10, 
             x_tol = 1.5e-8))
 
+diff = 
+    SemDiffOptim(BFGS(), Optim.Options(;f_tol = 1e-10, x_tol = 1.5e-8))
 # models
 model_ml = SemFiniteDiff(semobserved, imply_ml, loss_ml, diff, false)
+model_ml = Sem(semobserved, imply_ml, loss_ml, diff)
 
 ############################################################################
 ### test gradients
@@ -484,5 +487,12 @@ end
 ### test solution
 ############################################################################
 
+grad = similar(start_val_ml)
+grad .= 0.0
+
+model_ml(start_val_ml, 1.0, grad, nothing)
+
 solution_ml = sem_fit(model_ml)
-@test SEM.compare_estimates(par_ml.est[par_order], solution_ml.minimizer, 0.01)
+@test SEM.compare_estimates(par_ml.est[par_order], solution_ml.minimizer, 0.05)
+
+@benchmark solution_ml = sem_fit(model_ml)
