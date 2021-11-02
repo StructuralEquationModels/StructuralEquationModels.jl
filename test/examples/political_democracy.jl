@@ -135,12 +135,15 @@ end
 ### test solution
 ############################################################################
 
-solution_ml = sem_fit(model_ml)
-@test SEM.compare_estimates(par_ml.est[par_order], solution_ml.minimizer, 0.01)
+@testset "ml_solution" begin
+    solution_ml = sem_fit(model_ml)
+    @test SEM.compare_estimates(par_ml.est[par_order], solution_ml.minimizer, 0.01)
+end
 
-solution_ls = sem_fit(model_ls)
-@test SEM.compare_estimates(par_ls.est[par_order], solution_ls.minimizer, 0.01)
-
+@testset "ls_solution" begin
+    solution_ls = sem_fit(model_ls)
+    @test SEM.compare_estimates(par_ls.est[par_order], solution_ls.minimizer, 0.01)
+end
 ############################################################################
 ### test hessians
 ############################################################################
@@ -195,12 +198,15 @@ end
     @test hessian ≈ FiniteDiff.finite_difference_hessian(x -> model_ls(x, 1.0, nothing, nothing), start_val_ml) rtol = 1/1000
 end
 
-solution_ml = sem_fit(model_ml)
-@test SEM.compare_estimates(par_ml.est[par_order], solution_ml.minimizer, 0.01)
+@testset "ml_solution_hessian" begin
+    solution_ml = sem_fit(model_ml)
+    @test SEM.compare_estimates(par_ml.est[par_order], solution_ml.minimizer, 0.01)
+end
 
-solution_ls = sem_fit(model_ls)
-@test SEM.compare_estimates(par_ls.est[par_order], solution_ls.minimizer, 0.01)
-
+@testset "ls_solution_hessian" begin
+    solution_ls = sem_fit(model_ls)
+    @test SEM.compare_estimates(par_ls.est[par_order], solution_ls.minimizer, 0.01)
+end
 ############################################################################
 ### approximation of hessians
 ############################################################################
@@ -227,12 +233,15 @@ diff =
 model_ml = Sem(semobserved, imply_ml, loss_ml, diff)
 model_ls = Sem(semobserved, imply_ls, loss_ls, diff)
 
-solution_ml = sem_fit(model_ml)
-@test SEM.compare_estimates(par_ml.est[par_order], solution_ml.minimizer, 0.01)
+@testset "ml_solution_apprhess" begin
+    solution_ml = sem_fit(model_ml)
+    @test SEM.compare_estimates(par_ml.est[par_order], solution_ml.minimizer, 0.01)
+end
 
-solution_ls = sem_fit(model_ls)
-@test SEM.compare_estimates(par_ls.est[par_order], solution_ls.minimizer, 0.01)
-
+@testset "ls_solution_apprhess" begin
+    solution_ls = sem_fit(model_ls)
+    @test SEM.compare_estimates(par_ls.est[par_order], solution_ls.minimizer, 0.01)
+end
 ############################################################################
 ### meanstructure
 ############################################################################
@@ -333,12 +342,15 @@ model_ls = Sem(semobserved, imply_ls, loss_ls, diff)
 ############################################################################
 ### test solution
 ############################################################################
+@testset "ml_solution_meanstructure" begin
+    solution_ml = sem_fit(model_ml)
+    @test SEM.compare_estimates(par_ml.est[par_order], solution_ml.minimizer, 0.01)
+end
 
-solution_ml = sem_fit(model_ml)
-@test SEM.compare_estimates(par_ml.est[par_order], solution_ml.minimizer, 0.01) 
-
-solution_ls = sem_fit(model_ls)
-@test SEM.compare_estimates(par_ls.est[par_order], solution_ls.minimizer, 0.01)
+@testset "ls_solution_meanstructure" begin
+    solution_ls = sem_fit(model_ls)
+    @test SEM.compare_estimates(par_ls.est[par_order], solution_ls.minimizer, 0.01)
+end
 
 ############################################################################
 ### test gradients
@@ -463,8 +475,8 @@ diff =
 
 diff = 
     SemDiffOptim(BFGS(), Optim.Options(;f_tol = 1e-10, x_tol = 1.5e-8))
-# models
-model_ml = SemFiniteDiff(semobserved, imply_ml, loss_ml, diff, false)
+
+    # models
 model_ml = Sem(semobserved, imply_ml, loss_ml, diff)
 
 ############################################################################
@@ -473,7 +485,7 @@ model_ml = Sem(semobserved, imply_ml, loss_ml, diff)
 
 using FiniteDiff
 
-@testset "ml_gradients" begin
+@testset "fiml_gradients" begin
     grad = similar(start_val_ml)
     grad .= 0.0
     model_ml(start_val_ml, 1.0, grad, nothing)
@@ -487,12 +499,7 @@ end
 ### test solution
 ############################################################################
 
-grad = similar(start_val_ml)
-grad .= 0.0
-
-model_ml(start_val_ml, 1.0, grad, nothing)
-
-solution_ml = sem_fit(model_ml)
-@test SEM.compare_estimates(par_ml.est[par_order], solution_ml.minimizer, 0.05)
-
-@benchmark solution_ml = sem_fit(model_ml)
+@testset "fiml_solution" begin
+    solution_ml = sem_fit(model_ml)
+    @test SEM.compare_estimates(par_ml.est[par_order], solution_ml.minimizer, 0.01)
+end
