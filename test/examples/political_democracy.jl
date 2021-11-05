@@ -79,11 +79,17 @@ A = sparse(A)
 par_order = [collect(21:34); collect(15:20); 2;3; 5;6;7; collect(9:14)]
 start_val_ml = Vector{Float64}(par_ml.start[par_order])
 start_val_ls = Vector{Float64}(par_ls.start[par_order])
+start_val_ridge = copy(start_val_ml)
+start_val_ridge[16:20] .= .1
+
 # start_val_snlls = Vector{Float64}(par_ls.start[par_order][21:31])
 
 # loss
 loss_ml = SemLoss((SemML(semobserved, 1.0, similar(start_val_ml)),))
 loss_ls = SemLoss((SemWLS(semobserved),))
+loss_ridge = SemLoss((SemML(semobserved, 1.0, similar(start_val_ml)), SemRidge(.001, 16:20)))
+#loss_ridge = SemLoss((SemML(semobserved, 1.0, similar(start_val_ml)), SemML(semobserved, 1.0, similar(start_val_ml))))
+
 # loss_snlls = SemLoss([SemSWLS(semobserved, [0.0], similar(start_val_ml))])
 
 # imply
@@ -104,12 +110,15 @@ diff =
 # models
 model_ml = Sem(semobserved, imply_ml, loss_ml, diff)
 model_ls = Sem(semobserved, imply_ls, loss_ls, diff)
+model_ridge = Sem(semobserved, imply_ml, loss_ridge, diff)
+
 
 ############################################################################
 ### test gradients
 ############################################################################
 
 using FiniteDiff
+
 
 @testset "ml_gradients" begin
     grad = similar(start_val_ml)
@@ -129,6 +138,16 @@ end
     grad .= 0.0
     model_ls(start_val_ls, nothing, grad, nothing)
     @test grad ≈ FiniteDiff.finite_difference_gradient(x -> model_ls(x, 1.0, nothing, nothing), start_val_ls)
+end
+
+@testset "ridge_gradients" begin
+    grad = similar(start_val_ml)
+    grad .= 0.0
+    model_ridge(start_val_ml, 1.0, grad, nothing)
+    @test grad ≈ FiniteDiff.finite_difference_gradient(x -> model_ridge(x, 1.0, nothing, nothing), start_val_ml)
+    grad .= 0.0
+    model_ridge(start_val_ml, nothing, grad, nothing)
+    @test grad ≈ FiniteDiff.finite_difference_gradient(x -> model_ridge(x, 1.0, nothing, nothing), start_val_ml)
 end
 
 ############################################################################
