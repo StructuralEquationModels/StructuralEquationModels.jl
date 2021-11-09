@@ -3,7 +3,7 @@ using SEM, CSV, DataFrames, SparseArrays, Symbolics, LineSearches, Optim, Test
 ############################################################################
 ### observed data
 ############################################################################
-
+using LinearAlgebra
 dat = DataFrame(CSV.File("examples/data/data_dem.csv"))
 par_ml = DataFrame(CSV.File("examples/data/par_dem_ml.csv"))
 par_ls = DataFrame(CSV.File("examples/data/par_dem_ls.csv"))
@@ -66,6 +66,9 @@ A =[0  0  0  0  0  0  0  0  0  0  0     1     0     0
     0  0  0  0  0  0  0  0  0  0  0     x[29] 0     0
     0  0  0  0  0  0  0  0  0  0  0     x[30] x[31] 0]
 
+start_val_fabin3 = start_fabin3(A, S, F, x, semobserved)
+start_val_simple = start_simple(A, S, F, x)
+
 S = sparse(S)
 
 #F
@@ -81,6 +84,9 @@ start_val_ml = Vector{Float64}(par_ml.start[par_order])
 start_val_ls = Vector{Float64}(par_ls.start[par_order])
 start_val_ridge = copy(start_val_ml)
 start_val_ridge[16:20] .= .1
+
+@test start_val_simple == [fill(1.0, 11); fill(0.05, 3); fill(0.0, 6); fill(0.5, 8); fill(0.0, 3)]
+@test start_val_fabin3 ≈ start_val_ml
 
 # start_val_snlls = Vector{Float64}(par_ls.start[par_order][21:31])
 
@@ -98,13 +104,13 @@ imply_ls = RAMSymbolic(A, S, F, x, start_val_ml; vech = true)
 # imply_snlls = 
 
 # diff
-diff = 
+diff =
     SemDiffOptim(
-        BFGS(;linesearch = BackTracking(order=3), alphaguess = InitialHagerZhang()),# m = 100), 
+        BFGS(;linesearch = BackTracking(order=3), alphaguess = InitialHagerZhang()),# m = 100),
         #P = 0.5*inv(H0),
-        #precondprep = (P, x) -> 0.5*inv(FiniteDiff.finite_difference_hessian(model_ls_ana, x))), 
+        #precondprep = (P, x) -> 0.5*inv(FiniteDiff.finite_difference_hessian(model_ls_ana, x))),
         Optim.Options(
-            ;f_tol = 1e-10, 
+            ;f_tol = 1e-10,
             x_tol = 1.5e-8))
 
 # models
@@ -226,6 +232,60 @@ end
     solution_ls = sem_fit(model_ls)
     @test SEM.compare_estimates(par_ls.est[par_order], solution_ls.minimizer, 0.01)
 end
+
+############################################################################
+### starting values for standardized latents
+############################################################################
+
+par_ml_stdlv = DataFrame(CSV.File("examples/data/par_dem_ml_stdlv.csv"))
+
+S2 =[x[1]  0     0     0     0     0     0     0     0     0     0     0     0     0
+    0     x[2]  0     0     0     0     0     0     0     0     0     0     0     0
+    0     0     x[3]  0     0     0     0     0     0     0     0     0     0     0
+    0     0     0     x[4]  0     0     0     x[12] 0     0     0     0     0     0
+    0     0     0     0     x[5]  0     x[13] 0     x[14] 0     0     0     0     0
+    0     0     0     0     0     x[6]  0     0     0     x[15] 0     0     0     0
+    0     0     0     0     x[13] 0     x[7]  0     0     0     x[16] 0     0     0
+    0     0     0     x[12] 0     0     0     x[8]  0     0     0     0     0     0
+    0     0     0     0     x[14] 0     0     0     x[9]  0     x[17] 0     0     0
+    0     0     0     0     0     x[15] 0     0     0     x[10] 0     0     0     0
+    0     0     0     0     0     0     x[16] 0     x[17] 0     x[11] 0     0     0
+    0     0     0     0     0     0     0     0     0     0     0     1     0     0
+    0     0     0     0     0     0     0     0     0     0     0     0     1     0
+    0     0     0     0     0     0     0     0     0     0     0     0     0     1]
+
+F2 =[1.0 0 0 0 0 0 0 0 0 0 0 0 0 0
+    0 1 0 0 0 0 0 0 0 0 0 0 0 0
+    0 0 1 0 0 0 0 0 0 0 0 0 0 0
+    0 0 0 1 0 0 0 0 0 0 0 0 0 0
+    0 0 0 0 1 0 0 0 0 0 0 0 0 0
+    0 0 0 0 0 1 0 0 0 0 0 0 0 0
+    0 0 0 0 0 0 1 0 0 0 0 0 0 0
+    0 0 0 0 0 0 0 1 0 0 0 0 0 0
+    0 0 0 0 0 0 0 0 1 0 0 0 0 0
+    0 0 0 0 0 0 0 0 0 1 0 0 0 0
+    0 0 0 0 0 0 0 0 0 0 1 0 0 0]
+
+A2 =[0  0  0  0  0  0  0  0  0  0  0    x[18] 0     0
+    0  0  0  0  0  0  0  0  0  0  0     x[19] 0     0
+    0  0  0  0  0  0  0  0  0  0  0     x[20] 0     0
+    0  0  0  0  0  0  0  0  0  0  0     0     x[21] 0
+    0  0  0  0  0  0  0  0  0  0  0     0     x[22] 0
+    0  0  0  0  0  0  0  0  0  0  0     0     x[23] 0
+    0  0  0  0  0  0  0  0  0  0  0     0     x[24] 0
+    0  0  0  0  0  0  0  0  0  0  0     0     0     x[25]
+    0  0  0  0  0  0  0  0  0  0  0     0     0     x[26]
+    0  0  0  0  0  0  0  0  0  0  0     0     0     x[27]
+    0  0  0  0  0  0  0  0  0  0  0     0     0     x[28]
+    0  0  0  0  0  0  0  0  0  0  0     0     0     0
+    0  0  0  0  0  0  0  0  0  0  0     x[29] 0     0
+    0  0  0  0  0  0  0  0  0  0  0     x[30] x[31] 0]
+
+start_val_fabin3 = start_fabin3(A2, S2, F2, x, semobserved)
+
+par_order = [collect(21:31); collect(15:20); collect(1:14)]
+@test start_val_fabin3 ≈ par_ml_stdlv.start[par_order]
+
 ############################################################################
 ### approximation of hessians
 ############################################################################
@@ -405,6 +465,15 @@ end
 
 dat = DataFrame(CSV.read("examples/data/data_dem_fiml.csv", DataFrame; missingstring = "NA"))
 par_ml = DataFrame(CSV.read("examples/data/par_dem_ml_fiml.csv", DataFrame))
+
+using Distributions
+
+Σ = rand(12,12)
+Σ = Σ*Σ'
+
+loglikelihood(MvNormal(fill(1, 12), Σ), Matrix(dat)')
+
+fit_mle(MvNormal, Matrix(dat))
 
 dat = 
     select(
