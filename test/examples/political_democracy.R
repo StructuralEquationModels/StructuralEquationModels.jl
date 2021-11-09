@@ -31,6 +31,12 @@ write.csv(par_ml, "test/examples/data/par_dem_ml.csv")
 write.csv(par_ls, "test/examples/data/par_dem_ls.csv")
 write.csv(data, "test/examples/data/data_dem.csv")
 
+# starting values for fixed variances
+fit_ml <- cfa(model, data, likelihood = "wishart", do.fit = FALSE, std.lv = TRUE)
+par_ml_stdlv <- select(parTable(fit_ml), lhs, op, rhs, est, start)
+
+write.csv(par_ml_stdlv, "test/examples/data/par_dem_ml_stdlv.csv")
+
 # meanstructure
 model <-    "# measurement model
             ind60 =~ x1 + x2 + x3
