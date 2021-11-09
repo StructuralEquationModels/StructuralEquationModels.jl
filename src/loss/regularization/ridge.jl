@@ -32,7 +32,7 @@ function (ridge::SemRidge)(par, F, G, H, model, weight = nothing)
         G[ridge.which] .+= grad
     end
     if !isnothing(H)
-        @views @. @inbounds H[which_H] += ridge.α*2.0
+        @views @. @inbounds H[ridge.which_H] += ridge.α*2.0
     end
     if !isnothing(F)
         F = ridge.α*sum(par[ridge.which].^2)
