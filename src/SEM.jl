@@ -18,6 +18,7 @@ include("loss/GLS/GLS.jl")
 # include("multigroup.jl")
 include("diff/optim.jl")
 include("optimizer/optim.jl")
+include("start_val.jl")
 # include("optimizer/nlopt.jl")
 
 export  AbstractSem, 
