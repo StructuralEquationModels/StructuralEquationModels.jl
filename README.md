@@ -18,7 +18,7 @@ Models you can fit include
 - Multigroup SEM
 - Sums of arbitrary loss functions (everything the optimizer can handle).
 
-We provide fast objective functions, gradients and, for some cases hessians as well as approximations thereof.
+We provide fast objective functions, gradients, and for some cases hessians as well as approximations thereof.
 As a user, you can easily define custom loss functions.
 For those, you can decide to provide analytical gradients or use finite difference approximation / automatic differentiation.
 You can choose to mix and match loss functions natively found in this package and those you provide.
