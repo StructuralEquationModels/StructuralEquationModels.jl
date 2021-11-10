@@ -4,6 +4,8 @@
 [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://sem-jl/sem.jl/dev)
 [![Build Status](https://travis-ci.org/sem-jl/sem.jl.svg?branch=master)](https://travis-ci.org/sem-jl/sem.jl)
 [![Codecov](https://codecov.io/gh/sem-jl/sem.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/sem-jl/sem.jl)
+[![Project Status: WIP – Initial development is in progress, but there has not yet been a stable, usable release suitable for the public.](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
+
 
 <img src="images/g5014.png" width = 250>
 
