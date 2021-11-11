@@ -285,6 +285,7 @@ start_val_fabin3 = start_fabin3(A2, S2, F2, x, semobserved)
 
 par_order = [collect(21:31); collect(15:20); collect(1:14)]
 @test start_val_fabin3 ≈ par_ml_stdlv.start[par_order]
+par_order = [collect(21:34); collect(15:20); 2;3; 5;6;7; collect(9:14)]
 
 ############################################################################
 ### approximation of hessians
