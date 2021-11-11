@@ -1,5 +1,5 @@
 ###################### starting values FABIN 3
-function fabin3(A, S, F, parameters, observed)
+function start_fabin3(A, S, F, parameters, observed)
     n_latent = size(F, 2) - size(F, 1)
     n_var = size(F, 1)
     parameters = [parameters...]
