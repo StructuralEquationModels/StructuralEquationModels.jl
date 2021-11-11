@@ -467,15 +467,6 @@ end
 dat = DataFrame(CSV.read("examples/data/data_dem_fiml.csv", DataFrame; missingstring = "NA"))
 par_ml = DataFrame(CSV.read("examples/data/par_dem_ml_fiml.csv", DataFrame))
 
-using Distributions
-
-Σ = rand(12,12)
-Σ = Σ*Σ'
-
-loglikelihood(MvNormal(fill(1, 12), Σ), Matrix(dat)')
-
-fit_mle(MvNormal, Matrix(dat))
-
 dat = 
     select(
         dat,
