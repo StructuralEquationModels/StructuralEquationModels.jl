@@ -17,7 +17,9 @@ include("loss/GLS/GLS.jl")
 # include("loss/constant.jl")
 # include("multigroup.jl")
 include("diff/optim.jl")
+include("diff/NLopt.jl")
 include("optimizer/optim.jl")
+include("optimizer/NLopt.jl")
 include("start_val.jl")
 # include("optimizer/nlopt.jl")
 
@@ -30,7 +32,7 @@ export  AbstractSem,
             SemLossFunction, SemML, SemFIML, SemDefinition, SemLasso, SemRidge,
             SemConstant, SemWLS, SemRidge,
         SemDiff, 
-            SemDiffOptim,
+            SemDiffOptim, SemDiffNLopt,
         SemObs, 
             SemObsCommon, SemObsMissing,
         sem_fit
