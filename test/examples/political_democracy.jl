@@ -1,5 +1,9 @@
 using SEM, CSV, DataFrames, SparseArrays, Symbolics, LineSearches, Optim, Test
 
+@testset "multithreading_enabled" begin
+    @test Threads.nthreads() == 8
+end
+
 ############################################################################
 ### observed data
 ############################################################################

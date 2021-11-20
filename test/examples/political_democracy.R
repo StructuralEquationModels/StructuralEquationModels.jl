@@ -71,13 +71,13 @@ write.csv(par_ml, "test/examples/data/par_dem_ml_mean.csv")
 write.csv(par_ls, "test/examples/data/par_dem_ls_mean.csv")
 
 # fiml
-p <- 0.2
-n <- nrow(data)
+p_miss <- 0.2
+n_obs <- nrow(data)
 
 data_miss <- mutate(data, 
     across(
         everything(), 
-        ~ifelse(rbinom(n, 1, p), NA, .x)
+        ~ifelse(rbinom(n_obs, 1, p), NA, .x)
         )
     )
 
