@@ -48,8 +48,8 @@ function RAMSymbolic(
 
     # ∇Σ
     if gradient
-        ∇Σ_symbolic = Symbolics.sparsejacobian(vec(Σ_symbolic), par)
-        ∇Σ_function = eval(Symbolics.build_function(∇Σ_symbolic)[2])
+        ∇Σ_symbolic = Symbolics.sparsejacobian(vec(Σ_symbolic), [par...])
+        ∇Σ_function = eval(Symbolics.build_function(∇Σ_symbolic, par)[2])
         constr = findnz(∇Σ_symbolic)
         ∇Σ = sparse(constr[1], constr[2], fill(1.0, nnz(∇Σ_symbolic)))
     else
