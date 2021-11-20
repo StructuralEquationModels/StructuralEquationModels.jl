@@ -43,7 +43,7 @@ function start_fabin3(A, S, F, parameters, observed)
         if in_S
             if index[1] == index[2]
                 if index[1] <= n_var
-                    start_val[i] = Σ[i, i]/2
+                    start_val[i] = Σ[index]/2
                 else
                     start_val[i] = 0.05
                 end
@@ -130,13 +130,15 @@ function start_fabin3(A, S, F, parameters, observed)
     return start_val
 end
 
-function start_simple(A, S, F, parameters; 
-    loadings = 0.5, 
+function start_simple(A, S, F, parameters;
+    M = nothing,
+    loadings = 0.5,
     regressions = 0.0,
-    variances_observed = 1, 
+    variances_observed = 1,
     variances_latent = 0.05,
     covariances_observed = 0.0,
-    covariances_latent = 0.0)
+    covariances_latent = 0.0,
+    means = 0.0)
 
     parameters = [parameters...]
     n_par = size(parameters, 1)
@@ -170,6 +172,13 @@ function start_simple(A, S, F, parameters;
                     start_val[i] = regressions
                 end
             end 
+        end
+        if !isnothing(M)
+            for index in CartesianIndices(M)
+                if isequal(par, M[index]) 
+                    start_val[i] = means
+                end 
+            end
         end
     end
 
