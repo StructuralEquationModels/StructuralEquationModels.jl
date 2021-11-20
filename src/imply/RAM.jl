@@ -61,7 +61,7 @@ function RAMSymbolic(
     if hessian
         n_sig = length(Σ_symbolic)
         n_par = size(par, 1)
-        ∇²Σ_symbolic_vec = [Symbolics.sparsehessian(σᵢ, par) for σᵢ in vec(Σ_symbolic)]
+        ∇²Σ_symbolic_vec = [Symbolics.sparsehessian(σᵢ, [par...]) for σᵢ in vec(Σ_symbolic)]
 
         @variables J[1:n_sig]
         ∇²Σ_symbolic = zeros(Num, n_par, n_par)
