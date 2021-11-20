@@ -546,9 +546,7 @@ imply_ml = RAMSymbolic(A, S, F, x, start_val_ml; M = M)
 # diff
 diff = 
     SemDiffOptim(
-        BFGS(;linesearch = BackTracking(order=3), alphaguess = InitialHagerZhang()),# m = 100), 
-        #P = 0.5*inv(H0),
-        #precondprep = (P, x) -> 0.5*inv(FiniteDiff.finite_difference_hessian(model_ls_ana, x))), 
+        BFGS(;linesearch = BackTracking(order=3), alphaguess = InitialHagerZhang()),
         Optim.Options(
             ;f_tol = 1e-10, 
             x_tol = 1.5e-8))
