@@ -54,6 +54,8 @@ pwalk(results,
             n_factors,
             "_n_items_",
             n_items,
+            "_meanstructure_",
+            meanstructure,
             ".csv")
         )
         )

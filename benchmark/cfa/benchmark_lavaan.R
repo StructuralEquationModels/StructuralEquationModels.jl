@@ -43,7 +43,7 @@ results <- mutate(
   n_repetitions = round(const/(n_par^2)))
 
 #!!!
-results$n_repetitions <- 2
+results$n_repetitions <- 30
 ##
 
 benchmarks <- pmap(
@@ -63,16 +63,8 @@ benchmark_summary <- rename_with(benchmark_summary, ~str_c(.x, "_lav"))
 
 results <- bind_cols(results, benchmark_summary)
 
-results <-
-  rename(
-    results,
-    mean_time_lav = mean_time,
-    median_time_lav = median_time,
-    sd_time_lav = sd_time
-    )
-
-# results %>% ggplot(aes(x = n_factors*n_items, y = mean_time_lav, color = Estimator)) +
-#   geom_point() + theme_minimal() + geom_line(aes(linetype = as.factor(meanstructure)))
+results %>% ggplot(aes(x = n_factors*n_items, y = mean_time_lav, color = Estimator)) +
+   geom_point() + theme_minimal() + geom_line(aes(linetype = as.factor(meanstructure)))
 
 
 write_csv2(select(
@@ -91,3 +83,11 @@ write_csv2(select(
   messages_lav), "results/benchmarks_lavaan.csv")
 
 write_rds(results, "results.rds")
+
+
+data <- read_csv("data/n_factors_5_n_items_5_meanstructure_0.csv")
+
+fit <- cfa(results$model_lavaan[[3]],
+           data,
+           estimator = "ml",
+           std.lv = TRUE)

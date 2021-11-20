@@ -1,4 +1,4 @@
-pacman::p_load(OpenMx, dplyr, purrr, readr, umx, microbenchmark)
+pacman::p_load(OpenMx, dplyr, purrr, readr, umx, microbenchmark, lubridate)
 set.seed(85425301)
 source("functions.R")
 
@@ -6,44 +6,53 @@ mxOption(NULL, "Default optimizer", "CSOLNP")
 mxOption(NULL, "Calculate Hessian", "No")
 mxOption(NULL, "Standard Errors", "No")
 mxOption(NULL, "Number of Threads", omxDetectCores() - 1)
+mxOption(NULL, "Analytic Gradients", "Yes")
 
 results <- readr::read_rds("results.rds")
 
 results <- mutate(
   results,
-  omx_model = 
+  model_omx = 
     pmap(results, 
          ~with(
            list(...), 
            omx_model(n_factors, n_items, data, meanstructure, start)))
 )
 
-lavpar <- results$start[[7]]
-filter(lavpar, op == "~1")
+benchmarks <- pmap(
+  results, 
+  ~with(list(...),
+        benchmark_omx(
+          model_omx, 
+          n_repetitions, 
+          Estimator)
+  )
+)
 
-fit <- mxRun(results$omx_model[[6]])
-fit@output$frontendTime
-fit@output$backendTime
-fit@output$evaluations
+benchmark_summary <- map_dfr(benchmarks, extract_results)
+benchmark_summary <- rename_with(benchmark_summary, ~str_c(.x, "_omx"))
 
-fit_lav <- cfa(
-  results$model_lavaan[[1]],
-  results$data[[1]],
-  estimator = "ml",
-  std.lv = TRUE,
-  se = "none", test = "none",
-  baseline = F, loglik = F, h1 = F)
+results <- bind_cols(results, benchmark_summary)
 
-benchmarks <- 
-  purrr::pmap_dfr(
-    filter(results, Estimator == "ML"),
-    ~with(list(...), 
-          summary(microbenchmark(
-            mxRun(omx_model), times = 1, unit = "s"))))
+results <- bind_cols(select(results,
+                            -ends_with("_omx")), benchmark_summary)
 
-benchmarks <- 
-  bind_cols(
-    select(results, nfact_vec, nitem_vec, nobs),
-    select(benchmarks, -c(expr)))
+results %>% 
 
-readr::write_csv2(benchmarks, "benchmarks/benchmarks_omx.csv")
+write_csv2(select(
+  results, 
+  Estimator, 
+  n_factors, 
+  n_items, 
+  meanstructure,
+  n_repetitions,
+  n_obs,
+  mean_time_omx,
+  median_time_omx,
+  sd_time_omx,
+  error_omx,
+  warnings_omx,
+  messages_omx), "results/benchmarks_omx.csv")
+
+write_rds(results, "results.rds")
+write_rds(benchmarks, "results/benchmarks_omx.rds")

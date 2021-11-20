@@ -70,7 +70,12 @@ lavaan_model <- function(n_factors, n_items, meanstructure){
 }
 
 omx_model <- function(n_factors, n_items, data, meanstructure, lavpar){
-  dataRaw <- mxData(observed=cov(data), type="cov", numObs = nrow(data))
+  
+  if(meanstructure){
+    dataRaw <- mxData(observed=data, type="raw")
+  }else{
+    dataRaw <- mxData(observed=cov(data), type="cov", numObs = nrow(data))
+  }
   
   nobs = n_factors*n_items
   lat_vars <- str_c("f", 1:n_factors)
@@ -84,13 +89,6 @@ omx_model <- function(n_factors, n_items, data, meanstructure, lavpar){
       op == "~~",
       str_detect(lhs, "^x"))$start
   
-  start_lat <- 
-    filter(
-      lavpar,
-      op == "~~",
-      lhs != rhs,
-      str_detect(lhs, "^f"))$start
-  
   start_load <- 
     map(1:n_factors,
         ~filter(
@@ -102,8 +100,8 @@ omx_model <- function(n_factors, n_items, data, meanstructure, lavpar){
   # residual variances
   resVars <- mxPath( from=unlist(observed_vars), arrows=2,
                      free=TRUE,
-                     values=start_res,
-                     labels=str_c("e", 1:nobs) )
+                     labels=str_c("e", 1:nobs),
+                     values = start_res)
   # latent variances and covariance
   nvoc <- n_factors*(n_factors+1)/2
   
@@ -125,14 +123,14 @@ omx_model <- function(n_factors, n_items, data, meanstructure, lavpar){
   if(meanstructure){
     means <- mxPath( from="one", c(unlist(observed_vars), lat_vars),
                      arrows=1,
-                     free=c(rep(T, nobs), rep(F, n_factors)), 
-                     labels = rep(str_c("mean_", 1:n_items), n_factors),
-                     values=0.5 )
+                     free=c(rep(T, nobs), rep(F, n_factors)),
+                     values=c(colMeans(data), rep(0, n_factors)) )
   }else{
     means <- NULL
   }
   
-  funML <- mxFitFunctionML()
+  #funML <- mxFitFunctionML()
+  #expML <- mxExpectationNormal(covariance = "dataRaw")
   
   model <- 
     mxModel(
@@ -146,8 +144,7 @@ omx_model <- function(n_factors, n_items, data, meanstructure, lavpar){
       type="RAM",
       manifestVars=observed_vars,
       latentVars=lat_vars,
-      dataRaw, resVars, latVars, latCov, splice(loadings), means,
-      funML)
+      dataRaw, resVars, latVars, latCov, splice(loadings), means)
   return(model)
 }
 
@@ -178,8 +175,9 @@ time_omx <- function(model, estimator){
   if(tolower(estimator) != "ml"){
     return(NA)
   }else{
-   mxRun(model) 
+   time <- mxRun(model)@output$backendTime
   }
+  return(time)
 }
 
 benchmark_lavaan <- function(model, data, n_repetitions, estimator){
@@ -190,6 +188,18 @@ benchmark_lavaan <- function(model, data, n_repetitions, estimator){
         time_lavaan,
         model,
         data,
+        estimator)
+    )
+  return(out)
+}
+
+benchmark_omx <- function(model, n_repetitions, estimator){
+  out <- 
+    map_dfr(
+      1:n_repetitions, 
+      ~safe_and_quiet(
+        time_omx,
+        model,
         estimator)
     )
   return(out)
@@ -221,9 +231,9 @@ null_to_na <- function(obj){
 }
 
 extract_results <- function(df){
-  mean_time <- mean(df$result, na.rm = TRUE)
-  median_time <- median(df$result, na.rm = TRUE)
-  sd_time <- sd(df$result, na.rm = TRUE)
+  mean_time <- mean(as.double(df$result, units = "secs"), na.rm = TRUE)
+  median_time <- median(as.double(df$result, units = "secs"), na.rm = TRUE)
+  sd_time <- sd(as.double(df$result, units = "secs"), na.rm = TRUE)
   error = unique(df$error)
   warnings = unique(df$warnings)
   messages = unique(df$messages)
