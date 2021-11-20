@@ -51,7 +51,7 @@ function RAMSymbolic(
         ∇Σ_symbolic = Symbolics.sparsejacobian(vec(Σ_symbolic), [par...])
         ∇Σ_function = eval(Symbolics.build_function(∇Σ_symbolic, par)[2])
         constr = findnz(∇Σ_symbolic)
-        ∇Σ = sparse(constr[1], constr[2], fill(1.0, nnz(∇Σ_symbolic)))
+        ∇Σ = sparse(constr[1], constr[2], fill(1.0, nnz(∇Σ_symbolic)), size(∇Σ_symbolic)...)
     else
         ∇Σ_symbolic = nothing
         ∇Σ_function = nothing
