@@ -83,7 +83,7 @@ function RAMSymbolic(
         μ_function = eval(Symbolics.build_function(μ_symbolic, par)[2])
         μ = zeros(size(μ_symbolic))
         if gradient
-            ∇μ_symbolic = Symbolics.jacobian(μ_symbolic, par)
+            ∇μ_symbolic = Symbolics.jacobian(μ_symbolic, [par...])
             ∇μ_function = eval(Symbolics.build_function(∇μ_symbolic, par)[2])
             ∇μ = zeros(size(F, 1), size(par, 1))
         else
