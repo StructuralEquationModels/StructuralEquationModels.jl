@@ -31,13 +31,15 @@ function (ridge::SemRidge)(par, F, G, H, model, weight = nothing)
         if !isnothing(weight) grad = weight*grad end
         G[ridge.which] .+= grad
     end
+
     if !isnothing(H)
         @views @. @inbounds H[ridge.which_H] += ridge.α*2.0
     end
+
     if !isnothing(F)
         F = ridge.α*sum(par[ridge.which].^2)
         if !isnothing(weight) F = weight*F end
         return F
     end
+    
 end
-
