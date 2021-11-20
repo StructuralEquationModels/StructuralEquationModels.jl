@@ -5,11 +5,8 @@ lavaan_true_model <- function(
   n_items, 
   mean_load, 
   sd_load,
-  mean_cov,
-  sd_cov,
-  mean_mean,
-  sd_mean,
-  meanstructure){
+  mean_reg,
+  sd_reg){
   model <- c()
   for(i in 1:n_factors){
     load <- rnorm(n_items, mean_load, sd_load)
@@ -24,22 +21,17 @@ lavaan_true_model <- function(
         "\n ")
   }
   for(i in 1:n_factors){
-    for(j in 1:i){
-      if(i != j){
-        par <- rnorm(1, mean_cov, sd_cov)
-        model <- append(model, str_c("f", i, "~~ ", par, "*f", j, "\n"))
-      }else{
-        model <- append(model, str_c("f", i, "~~ 1*f", j, "\n"))
-      }
+    for(j in 1:n_items){
+      item <- str_c("x_", i, "_", j)
+      model <- append(model, str_c(item, "~~ 0.25*", item, " \n"))
     }
   }
-  if(meanstructure){
-    means <- rnorm(n_items, mean_mean, sd_mean)
-    for(i in 1:n_factors){
-      for(j in 1:n_items){
-        model <- append(model, str_c("x_", i, "_", j, " ~ " , means[j], "*1 \n"))
-      }
-    }
+  for(i in 1:n_factors){
+    model <- append(model, str_c("f", i, "~~ 1*f", i, "\n"))
+  }
+  for(i in 1:(n_factors-1)){
+      par <- rnorm(1, mean_reg, sd_reg)
+      model <- append(model, str_c("f", i+1, "~ ", par, "*f", i, "\n"))
   }
   model <- paste(model, collapse = "")
   return(model)
@@ -58,79 +50,50 @@ lavaan_model <- function(n_factors, n_items, meanstructure){
           end = -3),
         "\n ")
   }
-  if(meanstructure){
-    for(i in 1:n_factors){
-      for(j in 1:n_items){
-        model <- append(model, str_c("x_", i, "_", j, " ~ " , letters[j], "*1 \n"))
-      }
-    }
+  for(i in 1:(n_factors-1)){
+    model <- append(model, str_c("f", i+1, "~f", i, "\n"))
   }
   model <- paste(model, collapse = "")
   return(model)
 }
 
-omx_model <- function(n_factors, n_items, data, meanstructure, lavpar){
+omx_model <- function(n_factors, n_items, data){
   
-  if(meanstructure){
-    dataRaw <- mxData(observed=data, type="raw")
-  }else{
-    dataRaw <- mxData(observed=cov(data), type="cov", numObs = nrow(data))
-  }
+  dataRaw <- mxData(observed=data, type="raw")
   
   nobs = n_factors*n_items
   lat_vars <- str_c("f", 1:n_factors)
   observed_vars <- str_c("x_", 1:n_factors, "_")
   observed_vars <- map(observed_vars, ~str_c(.x, 1:n_items))
   
-  start_res <- 
-    filter(
-      lavpar, 
-      lhs == rhs, 
-      op == "~~",
-      str_detect(lhs, "^x"))$start
-  
-  start_load <- 
-    map(1:n_factors,
-        ~filter(
-          lavpar, 
-          op == "=~", 
-          lhs == str_c("f", .x)
-          )$start)
+  lat_from <- str_c("f", 1:(n_factors-1))
+  lat_to <- str_c("f", 2:n_factors)
   
   # residual variances
   resVars <- mxPath( from=unlist(observed_vars), arrows=2,
                      free=TRUE,
                      labels=str_c("e", 1:nobs),
-                     values = start_res)
+                     values = 1)
   # latent variances and covariance
-  nvoc <- n_factors*(n_factors+1)/2
-  
   latVars <- mxPath( lat_vars, arrows=2, connect="single",
                      free=FALSE, values = 1)
-  latCov <- mxPath( lat_vars, arrows=2, connect="unique.bivariate",
-                    free=TRUE, values = 0.0 )
+  
+  latCov <- mxPath( lat_from, lat_to, arrows=1, connect="single",
+                    free=TRUE, values = 0)
 
-  loadings <- pmap(list(lat_vars, observed_vars, start_load), 
+  loadings <- pmap(list(lat_vars, observed_vars), 
                    ~mxPath(
                      from = ..1, 
                      to = ..2,
                      arrows = 1,
-                     values = ..3,
+                     values = 1,
                      free = rep(T, n_items),
                      labels = str_c("l_", .y)))
   
-  # means
-  if(meanstructure){
-    means <- mxPath( from="one", c(unlist(observed_vars), lat_vars),
-                     arrows=1,
-                     free=c(rep(T, nobs), rep(F, n_factors)),
-                     values=c(colMeans(data), rep(0, n_factors)) )
-  }else{
-    means <- NULL
-  }
-  
-  #funML <- mxFitFunctionML()
-  #expML <- mxExpectationNormal(covariance = "dataRaw")
+  means <- mxPath(from = 'one', to = unlist(observed_vars), 
+                  arrows=1,
+                  free=TRUE,
+                  values = 0)
   
   model <- 
     mxModel(
@@ -138,9 +101,7 @@ omx_model <- function(n_factors, n_items, data, meanstructure, lavpar){
         "factor_model_n_factors_",
         n_factors,
         "_n_items_",
-        n_items,
-        "meanstructure_",
-        meanstructure),
+        n_items),
       type="RAM",
       manifestVars=observed_vars,
       latentVars=lat_vars,
@@ -148,59 +109,40 @@ omx_model <- function(n_factors, n_items, data, meanstructure, lavpar){
   return(model)
 }
 
-time_lavaan <- function(model, data, estimator){
-  cfa(
+time_lavaan <- function(model, data){
+  sem(
     model,
     data,
-    estimator = tolower(estimator),
     std.lv = TRUE,
     se = "none", test = "none",
+    missing = "fiml",
+    start = "simple",
     baseline = F, loglik = F, h1 = F)@timing$optim
 }
 
-benchmark_lavaan <- function(model, data, n_repetitions, estimator){
+benchmark_lavaan <- function(model, data, n_repetitions){
   out <- 
     map_dfr(
       1:n_repetitions, 
       ~safe_and_quiet(
         time_lavaan,
         model,
-        data,
-        estimator)
+        data)
       )
   return(out)
 }
 
-time_omx <- function(model, estimator){
-  if(tolower(estimator) != "ml"){
-    return(NA)
-  }else{
-   time <- mxRun(model)@output$backendTime
-  }
-  return(time)
+time_omx <- function(model){
+  mxRun(model)@output$backendTime
 }
 
-benchmark_lavaan <- function(model, data, n_repetitions, estimator){
-  out <- 
-    map_dfr(
-      1:n_repetitions, 
-      ~safe_and_quiet(
-        time_lavaan,
-        model,
-        data,
-        estimator)
-    )
-  return(out)
-}
-
-benchmark_omx <- function(model, n_repetitions, estimator){
+benchmark_omx <- function(model, n_repetitions){
   out <- 
     map_dfr(
       1:n_repetitions, 
       ~safe_and_quiet(
         time_omx,
-        model,
-        estimator)
+        model)
     )
   return(out)
 }
@@ -245,4 +187,16 @@ extract_results <- function(df){
     warnings = warnings,
     messages = messages
   ))
+}
+
+induce_missing <- function(data, p){
+  data <- 
+    mutate(
+      data, 
+      across(
+        everything(),
+        ~ifelse(rbinom(length(.x), 1, p), NA, .x)
+        )
+      )
+  return(data)
 }

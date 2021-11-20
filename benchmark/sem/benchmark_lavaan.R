@@ -13,29 +13,6 @@ results <-
                list(...),
                lavaan_model(n_factors, n_items, meanstructure))))
 
-results$model_lavaan[[24]] <- str_remove_all(results$model_lavaan[[24]], "NA")
-results$model_lavaan[[12]] <- str_remove_all(results$model_lavaan[[12]], "NA")
-
-results <-
-  mutate(results,
-         start =
-           pmap(
-             results,
-             ~with(
-               list(...),
-               cfa(model_lavaan,
-                 data,
-                 estimator = "ml",
-                 std.lv = TRUE,
-                 do.fit = FALSE))))
-
-results <-
-  mutate(results,
-         start =
-           map(
-             start,
-             parTable))
-
 const <- 3*(results$n_par[length(results$n_par)]^2)
 
 results <- mutate(
@@ -43,7 +20,7 @@ results <- mutate(
   n_repetitions = round(const/(n_par^2)))
 
 #!!!
-results$n_repetitions <- 30
+results$n_repetitions <- 2
 ##
 
 benchmarks <- pmap(
@@ -52,27 +29,32 @@ benchmarks <- pmap(
         benchmark_lavaan(
           model_lavaan, 
           data, 
-          n_repetitions, 
-          Estimator)
+          n_repetitions)
         )
   )
 
 benchmark_summary <- map_dfr(benchmarks, extract_results)
 benchmark_summary <- rename_with(benchmark_summary, ~str_c(.x, "_lav"))
 
-
 results <- bind_cols(results, benchmark_summary)
 
-results %>% ggplot(aes(x = n_factors*n_items, y = mean_time_lav, color = Estimator)) +
-   geom_point() + theme_minimal() + geom_line(aes(linetype = as.factor(meanstructure)))
-
+results %>%
+  ggplot(aes(
+    x = n_factors * n_items,
+    y = mean_time_lav,
+    color = as.factor(missingness)
+  )) +
+  geom_line() +
+  geom_point() +
+  theme_minimal()
+  
 
 write_csv2(select(
   results, 
   Estimator, 
   n_factors, 
   n_items, 
-  meanstructure,
+  missingness,
   n_repetitions,
   n_obs,
   mean_time_lav,
@@ -83,11 +65,3 @@ write_csv2(select(
   messages_lav), "results/benchmarks_lavaan.csv")
 
 write_rds(results, "results.rds")
-
-
-data <- read_csv("data/n_factors_5_n_items_5_meanstructure_0.csv")
-
-fit <- cfa(results$model_lavaan[[3]],
-           data,
-           estimator = "ml",
-           std.lv = TRUE)

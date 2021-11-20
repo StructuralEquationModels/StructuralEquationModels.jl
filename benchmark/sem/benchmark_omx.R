@@ -2,7 +2,7 @@ pacman::p_load(OpenMx, dplyr, purrr, readr, umx, microbenchmark, lubridate)
 set.seed(85425301)
 source("functions.R")
 
-mxOption(NULL, "Default optimizer", "CSOLNP")
+mxOption(NULL, "Default optimizer", "NPSOL")
 mxOption(NULL, "Calculate Hessian", "No")
 mxOption(NULL, "Standard Errors", "No")
 mxOption(NULL, "Number of Threads", omxDetectCores() - 1)
@@ -16,7 +16,7 @@ results <- mutate(
     pmap(results, 
          ~with(
            list(...), 
-           omx_model(n_factors, n_items, data, meanstructure, start)))
+           omx_model(n_factors, n_items, data)))
 )
 
 benchmarks <- pmap(
@@ -24,8 +24,7 @@ benchmarks <- pmap(
   ~with(list(...),
         benchmark_omx(
           model_omx, 
-          n_repetitions, 
-          Estimator)
+          n_repetitions)
   )
 )
 
@@ -34,17 +33,12 @@ benchmark_summary <- rename_with(benchmark_summary, ~str_c(.x, "_omx"))
 
 results <- bind_cols(results, benchmark_summary)
 
-results <- bind_cols(select(results,
-                            -ends_with("_omx")), benchmark_summary)
-
-results %>% 
-
 write_csv2(select(
   results, 
   Estimator, 
   n_factors, 
-  n_items, 
-  meanstructure,
+  n_items,
+  missingness,
   n_repetitions,
   n_obs,
   mean_time_omx,
@@ -56,3 +50,12 @@ write_csv2(select(
 
 write_rds(results, "results.rds")
 write_rds(benchmarks, "results/benchmarks_omx.rds")
+
+
+fit_omx <- mxRun(results$model_omx[[1]])
+fit_lav <- 
+  sem(
+    results$model_lavaan[[1]], 
+    results$data[[1]], 
+    missing = "fiml",
+    std.lv = TRUE)
