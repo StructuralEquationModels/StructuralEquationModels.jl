@@ -149,9 +149,7 @@ function ∇F_FIML(grad, rows, semfiml, model)
             JΣ)
     end
     grad .= 0.0
-    t1 = JΣ'*model.imply.∇Σ
-    t2 = Jμ'*model.imply.∇μ
-    @. grad += (t1-t2)'
+    grad .+= (JΣ'*model.imply.∇Σ-Jμ'*model.imply.∇μ)'
 end
 
 function copy_per_pattern!(inverses, source_inverses, means, source_means, patterns)
