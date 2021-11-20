@@ -624,3 +624,23 @@ if !vech
 else
     ∇Σ = zeros(size(Σ_symbolic, 1), size(par, 1))
 end
+
+
+### Symbolics MWE unexpected behaviour
+using Symbolics, SparseArrays
+
+@variables x[1:5]
+
+A = [x[1] 0 x[2]
+    x[3]  0 0
+    0     0 0]
+
+I + A
+
+A = sparse([1, 1, 2], [1, 3, 1], x[1:3], 3, 3)
+
+A + B
+
+A = sparse([1, 1, 2], [1, 3, 1], Symbolics.scalarize(x[1:3]), 3, 3)
+
+I + A
