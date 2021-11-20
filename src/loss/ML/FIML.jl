@@ -106,20 +106,18 @@ function F_one_pattern(meandiff, inverse, obs_cov, logdet, N)
     return F
 end
 
-function ∇F_one_pattern(μ_diff, Σ⁻¹, S, pattern, ∇ind, N, model)
+function ∇F_one_pattern(μ_diff, Σ⁻¹, S, pattern, ∇ind, N, model, Jμ, JΣ)
     diff⨉inv = μ_diff'*Σ⁻¹
 
     if N > one(N)
-        grad = vec(Σ⁻¹*(I - S*Σ⁻¹ - μ_diff*diff⨉inv))'*model.imply.∇Σ[∇ind, :] - 
-            2*diff⨉inv*model.imply.∇μ[pattern, :]
-        grad = N*grad
+        JΣ[∇ind] .+= N*vec(Σ⁻¹*(I - S*Σ⁻¹ - μ_diff*diff⨉inv))
+        @. Jμ[pattern] += (N*2*diff⨉inv)'
+
     else
-        grad = 
-        vec(
-            Σ⁻¹*(I - μ_diff*diff⨉inv))'*model.imply.∇Σ[∇ind, :] -
-            2*diff⨉inv*model.imply.∇μ[pattern, :]
+        JΣ[∇ind] .+= vec(Σ⁻¹*(I - μ_diff*diff⨉inv))
+        @. Jμ[pattern] += (2*diff⨉inv)'
     end
-    return grad'
+
 end
 
 function F_FIML(F, rows, semfiml, model)
@@ -135,17 +133,25 @@ function F_FIML(F, rows, semfiml, model)
 end
 
 function ∇F_FIML(grad, rows, semfiml, model)
-    grad .= 0.0
+    Jμ = zeros(Int64(model.observed.n_man))
+    JΣ = zeros(Int64(model.observed.n_man^2))
+    
     for i = 1:size(rows, 1)
-        grad .+= ∇F_one_pattern(
+        ∇F_one_pattern(
             semfiml.meandiff[i], 
             semfiml.inverses[i], 
             model.observed.obs_cov[i], 
             model.observed.patterns[i],
             semfiml.∇ind[i],
             model.observed.pattern_n_obs[i],
-            model)
+            model,
+            Jμ,
+            JΣ)
     end
+    grad .= 0.0
+    t1 = JΣ'*model.imply.∇Σ
+    t2 = Jμ'*model.imply.∇μ
+    @. grad += (t1-t2)'
 end
 
 function copy_per_pattern!(inverses, source_inverses, means, source_means, patterns)
