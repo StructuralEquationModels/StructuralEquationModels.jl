@@ -40,21 +40,18 @@ function RAMSymbolic(
             Spa4 <: Union{Nothing, AbstractArray}
             }
 
-    par = [par...]
     # Σ
     Σ_symbolic = get_Σ_symbolic_RAM(S, A, F; vech = vech)
+    #print(Symbolics.build_function(Σ_symbolic)[2])
     Σ_function = eval(Symbolics.build_function(Σ_symbolic, par)[2])
     Σ = zeros(size(Σ_symbolic))
 
     # ∇Σ
     if gradient
-        ∇Σ_symbolic = Symbolics.jacobian(vec(Σ_symbolic), par)
-        ∇Σ_function = eval(Symbolics.build_function(∇Σ_symbolic, par)[2])
-        if !vech 
-            ∇Σ = zeros(size(F, 1)^2, size(par, 1))
-        else
-            ∇Σ = zeros(size(Σ_symbolic, 1), size(par, 1))
-        end
+        ∇Σ_symbolic = Symbolics.sparsejacobian(vec(Σ_symbolic), par)
+        ∇Σ_function = eval(Symbolics.build_function(∇Σ_symbolic)[2])
+        constr = findnz(∇Σ_symbolic)
+        ∇Σ = sparse(constr[1], constr[2], fill(1.0, nnz(∇Σ_symbolic)))
     else
         ∇Σ_symbolic = nothing
         ∇Σ_function = nothing
