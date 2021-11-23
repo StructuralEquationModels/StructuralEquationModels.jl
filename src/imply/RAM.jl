@@ -45,6 +45,7 @@ function RAMSymbolic(
     #print(Symbolics.build_function(Σ_symbolic)[2])
     Σ_function = eval(Symbolics.build_function(Σ_symbolic, par)[2])
     Σ = zeros(size(Σ_symbolic))
+    precompile(Σ_function, (typeof(Σ), Vector{Float64}))
 
     # ∇Σ
     if gradient
@@ -52,6 +53,7 @@ function RAMSymbolic(
         ∇Σ_function = eval(Symbolics.build_function(∇Σ_symbolic, par)[2])
         constr = findnz(∇Σ_symbolic)
         ∇Σ = sparse(constr[1], constr[2], fill(1.0, nnz(∇Σ_symbolic)), size(∇Σ_symbolic)...)
+        precompile(∇Σ_function, (typeof(∇Σ), Vector{Float64}))
     else
         ∇Σ_symbolic = nothing
         ∇Σ_function = nothing

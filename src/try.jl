@@ -562,7 +562,7 @@ nnod = nfact+nobs
 n_latcov = Int64(nfact*(nfact-1)/2)
 npar = 2nobs + n_latcov
 Symbolics.@variables x[1:npar]
-x = [x...]
+#x = [x...]
 
 #F
 Ind = collect(1:nobs)
@@ -573,13 +573,13 @@ F = sparse(Ind, Jnd, V, nobs, nnod)
 #A
 Ind = collect(1:nobs)
 Jnd = vcat([fill(nobs+i, nitem) for i in 1:nfact]...)
-V = x[1:nobs]
+V = [x...][1:nobs]
 A = sparse(Ind, Jnd, V, nnod, nnod)
 
 #S
 Ind = collect(1:nnod)
 Jnd = collect(1:nnod)
-V = [x[nobs+1:2nobs]; fill(1.0, nfact)]
+V = [[x...][nobs+1:2nobs]; fill(1.0, nfact)]
 S = sparse(Ind, Jnd, V, nnod, nnod)
 xind = 2nobs+1
 for i in nobs+1:nnod
@@ -591,14 +591,14 @@ for i in nobs+1:nnod
 end
 
 Σ_symbolic = SEM.get_Σ_symbolic_RAM(S, A, F)
-    #print(Symbolics.build_function(Σ_symbolic)[2])
 Σ_function = eval(Symbolics.build_function(Σ_symbolic, x)[2])
-Σ = zeros(size(Σ_symbolic))
+# Σ = zeros(size(Σ_symbolic))
 
 # ∇Σ
 ∇Σ_symbolic = Symbolics.sparsejacobian(vec(Σ_symbolic), [x...])
-∇Σ_symbolic
 ∇Σ_function = eval(Symbolics.build_function(∇Σ_symbolic, x)[2])
+
+precompile(∇Σ_function, (typeof(∇pre),Vector{Float64}))
 
 pre = zeros(200, 200)
 randpar = rand(410)
@@ -606,6 +606,66 @@ randpar = rand(410)
 constr = findnz(∇Σ_symbolic)
 ∇pre = sparse(constr[1], constr[2], fill(1.0, nnz(∇Σ_symbolic)))
 
+∇Σ_function(∇pre, randpar)
+
+## split compilation
+function eval_build(ex, x)
+    eval(build_function(ex, x)[2])
+end
+
+function compose(fun1, fun2)
+    function(pre, par)
+        fun1(pre, par)
+        fun2(pre, par)
+        nothing
+    end
+end
+
+equalind(length,n) = [i:min(i+n-1, length) for i in 1:n:length]
+
+function get_sparse_batch(M, ind)
+    B = copy(M)
+    temp = B.nzval[ind]
+    B.nzval .= 0
+    B.nzval[ind] .= temp
+    return B
+end
+
+function batched_build_fun(sym, batch, par)
+    ind = equalind(nnz(sym), batch)
+    batched = [get_sparse_batch(sym, i) for i in ind]
+    broadcast(batched -> eval_build(batched, par), batched)
+end
+
+function reduce_funs(funs)
+    reduce((f1, f2) -> compose(f1, f2), funs)
+end
+
+function batched_reduce_funs(funs, batch)
+    ind = equalind(length(funs), batch)
+    batched = [funs[i] for i in ind]
+    reduce_funs(inline_reduce_funs.(batched))
+end
+
+
+batched_build_fun(∇Σ_symbolic, 1000, x)
+
+ind = equalind(nnz(∇Σ_symbolic), batch)
+batched = [get_sparse_batch(sym, i) for i in ind]
+
+
+
+@variables x[1:Int(1e6)]
+
+xs = [x...]
+xs = xs + xs .+ 5
+
+# have to figure out ideal batch size
+funs = batched_build_fun(xs, 250)
+
+#fun = reduce_funs(funs)
+# have to figure out ideal batch size
+fun2 = batched_reduce_funs(funs, 5)
 
 # vec multiply
 a = rand(200, 200)
@@ -644,3 +704,267 @@ A + B
 A = sparse([1, 1, 2], [1, 3, 1], Symbolics.scalarize(x[1:3]), 3, 3)
 
 I + A
+
+######### parsing
+using Symbolics, SparseArrays
+
+lat_vars = "f".*string.(1:3)
+
+obs_vars = "x".*string.(1:9)
+
+model_free = """
+f1 =~ x1 + x2 + x3
+f2 =~ x4 + x5 + x6
+f3 =~ x7 + x8 + x9
+f1 ~~ f2
+f3 ~ f1
+"""
+
+model_fixed = """
+f1 =~ 1*x1 + x2 + x3
+f2 =~ 1*x4 + x5 + x6
+f3 =~ 1*x7 + x8 + x9
+f1 ~~ 0.5*f2
+f3 ~ f1
+"""
+
+model_equal = """
+f1 =~ 1*x1 + x2 + x3
+f2 =~ 1*x4 + a*x5 + x6
+f3 =~ 1*x7 + a*x8 + x9
+f1 ~~ 0.5*f2
+f3 ~ f1
+"""
+
+# functions
+
+function get_parameter_type(string)
+    if occursin("~~", string)
+        return "~~" 
+    elseif occursin("=~", string)
+        return "=~"
+    elseif occursin("~", string)
+        return "~" 
+    else
+        return nothing
+    end
+end
+
+function strip_nopar(string_vec)
+    parameter_type = get_parameter_type.(string_vec)
+    is_par = .!isnothing.(parameter_type)
+
+    string_vec = string_vec[is_par]
+    parameter_type = parameter_type[is_par]
+
+    return (string_vec, parameter_type)
+end
+
+function expand_model_line(string, parameter_type)
+    from, to = split(string, parameter_type)
+    to = split(to, "+")
+
+    from = remove_all_whitespace(from)
+    to = last.(split.(remove_all_whitespace.(to), "*"))
+
+    free = check_free.(to)
+    value_fixed = get_fixed_value.(to, free)
+    label = get_label.(to, free)
+
+    from = fill(from, size(to, 1))
+
+    if parameter_type == "=~"
+        from, to = copy(to), copy(from)
+        parameter_type = "~"
+    end
+
+    parameter_type = fill(parameter_type, size(to, 1))
+
+    return from, parameter_type, to, free, value_fixed, label
+end
+
+remove_all_whitespace(string) = replace(string, r"\s" => "")
+
+function get_partable(model_vec, parameter_type_in)
+
+    from = Vector{String}()
+    to = Vector{String}()
+    parameter_type_out = Vector{String}()
+    free = Vector{Bool}()
+    value_fixed = Vector{Float64}()
+    label = Vector{String}()
+
+    for (model_line, parameter_type) in zip(model_vec, parameter_type_in)
+
+        from_new, parameter_type_new, to_new, free_new, value_fixed_new, label_new = 
+            expand_model_line(model_line, parameter_type)
+
+        from = vcat(from, from_new)
+        parameter_type_out = vcat(parameter_type_out, parameter_type_new)
+        to = vcat(to, to_new)
+        free = vcat(free, free_new)
+        label = vcat(label, label_new)
+        value_fixed = vcat(value_fixed, value_fixed_new)
+
+    end
+
+    estimate = copy(value_fixed)
+
+    return from, parameter_type_out, to, free, value_fixed, label, estimate
+end
+
+function check_free(to)
+    if !occursin("*", to) 
+        return true
+    else
+        fact = split(to, "*")[1]
+        fact = remove_all_whitespace(fact)
+        if check_str_number(fact)
+            return false
+        else
+            return true
+        end
+    end
+end
+
+function get_label(to, free)
+    if !occursin("*", to) || !free
+        return ""
+    else
+        label = split(to, "*")[1]
+        return label
+    end
+end
+
+function get_fixed_value(to, free)
+    if free
+        return 0.0
+    else
+        fact = split(to, "*")[1]
+        fact = remove_all_whitespace(fact)
+        fact = parse(Float64, fact)
+        return fact
+    end
+end
+
+function check_str_number(string)
+    return tryparse(Float64, string) !== nothing
+end
+
+function parse_sem(model)
+    model_vec = split(model, "\n")
+    model_vec, parameter_type = strip_nopar(model_vec)
+    return get_partable(model_vec, parameter_type)
+end
+
+mutable struct ParameterTable
+    latent_vars
+    observed_vars
+    from
+    parameter_type
+    to
+    free
+    value_fixed
+    label
+    start
+    estimate
+end
+
+Base.getindex(partable::ParameterTable, i::Int) =
+    (partable.from[i], 
+    partable.parameter_type[i], 
+    partable.to[i], 
+    partable.free[i], 
+    partable.value_fixed[i], 
+    partable.label[i])
+
+Base.length(partable::ParameterTable) = length(partable.from)
+
+
+function get_RAM(partable, parname; to_sparse = true)
+    n_labels_unique = size(unique(partable.label), 1) - 1
+    n_labels = sum(.!(partable.label .== ""))
+    n_parameters = sum(partable.free) - n_labels + n_labels_unique
+
+    parameters = (Symbolics.@variables $parname[1:n_parameters])[1]
+
+    n_observed = size(partable.observed_vars, 1)
+    n_latent = size(partable.latent_vars, 1)
+    n_node = n_observed + n_latent
+
+    A = zeros(Num, n_node, n_node)
+    S = zeros(Num, n_node, n_node)
+    F = zeros(Num, n_observed, n_node)
+    F[LinearAlgebra.diagind(F)] .= 1.0
+
+    positions = Dict(zip([partable.observed_vars; partable.latent_vars], collect(1:n_observed+n_latent)))
+    
+    # fill Matrices
+    known_labels = Dict{String, Int64}()
+    par_ind = 1
+
+    for i in 1:length(partable)
+
+        from, parameter_type, to, free, value_fixed, label = partable[i]
+
+        row_ind = positions[from]
+        col_ind = positions[to]
+
+        if !free
+            if parameter_type == "~"
+                A[row_ind, col_ind] = value_fixed
+            else
+                S[row_ind, col_ind] = value_fixed
+                S[col_ind, row_ind] = value_fixed
+            end
+        else
+            if label == ""
+                set_RAM_index(A, S, parameter_type, row_ind, col_ind, parameters[par_ind])
+                par_ind += 1
+            else
+                if haskey(known_labels, label)
+                    known_ind = known_labels["label"]
+                    set_RAM_index(A, S, parameter_type, row_ind, col_ind, parameters[known_ind])
+                else
+                    known_labels[label] = par_ind
+                    set_RAM_index(A, S, parameter_type, row_ind, col_ind, parameters[par_ind])
+                    par_ind +=1
+                end
+            end
+        end
+
+    end
+
+    if to_sparse
+        A = sparse(A)
+        S = sparse(S)
+        F = sparse(F)
+    end
+
+    return A, S, F, parameters
+end
+
+function set_RAM_index(A, S, parameter_type, row_ind, col_ind, parameter)
+    if parameter_type == "~"
+        A[row_ind, col_ind] = parameter
+    else
+        S[row_ind, col_ind] = parameter
+        S[col_ind, row_ind] = parameter
+    end
+end
+
+
+
+# do it
+my_partable = ParameterTable(lat_vars, obs_vars, parse_sem(model_equal)...)
+
+A, S, F, parameters = get_RAM(my_partable, :x)
+
+using DataFrames
+
+show(io::IO, partable::ParameterTable) = 
+    show(io, DataFrame([partable.from, partable.parameter_type, partable.to], ["from", "op", "to"]))
+
+sem(model)
+
+sem_lavaan()
