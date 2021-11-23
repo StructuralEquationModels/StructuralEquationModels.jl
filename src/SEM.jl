@@ -5,8 +5,9 @@ using LinearAlgebra, Optim,
     NLopt, FiniteDiff, ForwardDiff
 
 include("types.jl")
-include("observed.jl")
-include("helper.jl")
+include("observed/common.jl")
+include("observed/missing.jl")
+include("additional_functions/helper.jl")
 include("imply/RAM.jl")
 include("loss/ML/ML.jl")
 include("loss/ML/FIML.jl")
@@ -20,7 +21,7 @@ include("diff/optim.jl")
 include("diff/NLopt.jl")
 include("optimizer/optim.jl")
 include("optimizer/NLopt.jl")
-include("start_val.jl")
+include("additional_functions/start_val.jl")
 # include("optimizer/nlopt.jl")
 
 export  AbstractSem, 
