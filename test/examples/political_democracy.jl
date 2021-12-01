@@ -95,9 +95,9 @@ start_val_ridge[16:20] .= .1
 # start_val_snlls = Vector{Float64}(par_ls.start[par_order][21:31])
 
 # loss
-loss_ml = SemLoss((SemML(semobserved, 1.0, similar(start_val_ml)),))
-loss_ls = SemLoss((SemWLS(semobserved),))
-loss_ridge = SemLoss((SemML(semobserved, 1.0, similar(start_val_ml)), SemRidge(.001, 16:20)))
+loss_ml = SemLoss((SemML(semobserved, length(start_val_ml)),))
+loss_ls = SemLoss((SemWLS(semobserved, length(start_val_ml)),))
+loss_ridge = SemLoss((SemML(semobserved, length(start_val_ml)), SemRidge(.001, 16:20, length(start_val_ml))))
 #loss_ridge = SemLoss((SemML(semobserved, 1.0, similar(start_val_ml)), SemML(semobserved, 1.0, similar(start_val_ml))))
 
 # loss_snlls = SemLoss([SemSWLS(semobserved, [0.0], similar(start_val_ml))])
@@ -178,8 +178,8 @@ end
 ############################################################################
 
 # loss
-loss_ml = SemLoss((SemML(semobserved, 1.0, similar(start_val_ml)),))
-loss_ls = SemLoss((SemWLS(semobserved),))
+loss_ml = SemLoss((SemML(semobserved, length(start_val_ml)),))
+loss_ls = SemLoss((SemWLS(semobserved, length(start_val_ml)),))
 
 # imply
 imply_ml = RAMSymbolic(A, S, F, x, start_val_ml; hessian = true)
@@ -296,8 +296,8 @@ par_order = [collect(21:34); collect(15:20); 2;3; 5;6;7; collect(9:14)]
 ############################################################################
 
 # loss
-loss_ml = SemLoss((SemML(semobserved, 1.0, similar(start_val_ml); approx_H = true),))
-loss_ls = SemLoss((SemWLS(semobserved; approx_H = true),))
+loss_ml = SemLoss((SemML(semobserved, length(start_val_ml); approx_H = true),))
+loss_ls = SemLoss((SemWLS(semobserved, length(start_val_ml); approx_H = true),))
 
 # imply
 imply_ml = RAMSymbolic(A, S, F, x, start_val_ml)
@@ -400,8 +400,8 @@ start_val_ls = Vector{Float64}(par_ls.start[par_order])
 # start_val_snlls = Vector{Float64}(par_ls.start[par_order][21:31])
 
 # loss
-loss_ml = SemLoss((SemML(semobserved, 1.0, similar(start_val_ml)),))
-loss_ls = SemLoss((SemWLS(semobserved; meanstructure = true),))
+loss_ml = SemLoss((SemML(semobserved, length(start_val_ml)),))
+loss_ls = SemLoss((SemWLS(semobserved, length(start_val_ml); meanstructure = true),))
 # loss_snlls = SemLoss([SemSWLS(semobserved, [0.0], similar(start_val_ml))])
 
 # imply
@@ -542,7 +542,7 @@ par_order = [collect(29:42); collect(15:20); 2;3; 5;6;7; collect(9:14); collect(
 start_val_ml = Vector{Float64}(par_ml.start[par_order])
 
 # loss
-loss_ml = SemLoss((SEM.SemFIML(semobserved, 1.0, similar(start_val_ml)),))
+loss_ml = SemLoss((SEM.SemFIML(semobserved, length(start_val_ml)),))
 
 # imply
 imply_ml = RAMSymbolic(A, S, F, x, start_val_ml; M = M)

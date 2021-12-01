@@ -83,8 +83,8 @@ par_order = [collect(7:21); collect(1:6); collect(28:42)]
 start_val_ml = Vector{Float64}(par_ml.start[par_order])
 
 # loss
-loss_ml_g1 = SemLoss((SemML(semobserved_g1, 1.0, similar(start_val_ml)),))
-loss_ml_g2 = SemLoss((SemML(semobserved_g2, 1.0, similar(start_val_ml)),))
+loss_ml_g1 = SemLoss((SemML(semobserved_g1, length(start_val_ml)),))
+loss_ml_g2 = SemLoss((SemML(semobserved_g2, length(start_val_ml)),))
 
 # imply
 imply_ml_g1 = RAMSymbolic(A, S1, F, x, start_val_ml)
@@ -151,7 +151,7 @@ end
 start_val_ml = Vector{Float64}(par_ml.start[par_order])
 
 # loss
-loss_ml_g1 = SemLoss((SemML(semobserved_g1, 1.0, similar(start_val_ml)),))
+loss_ml_g1 = SemLoss((SemML(semobserved_g1, length(start_val_ml)),))
 loss_ml_g2 = SemLoss((UserSemML(),))
 
 # imply
@@ -184,8 +184,8 @@ solution_ml = sem_fit(model_ml_multigroup)
 
 start_val_ls = Vector{Float64}(par_ls.start[par_order])
 
-loss_ls_g1 = SemLoss((SemWLS(semobserved_g1),))
-loss_ls_g2 = SemLoss((SemWLS(semobserved_g2),))
+loss_ls_g1 = SemLoss((SemWLS(semobserved_g1), length(start_val_ls)))
+loss_ls_g2 = SemLoss((SemWLS(semobserved_g2), length(start_val_ls)))
 
 imply_ls_g1 = RAMSymbolic(A, S1, F, x, start_val_ls; vech = true)
 imply_ls_g2 = RAMSymbolic(A, S2, F, x, start_val_ls; vech = true)

@@ -18,25 +18,17 @@ abstract type SemImply end
 
 struct Sem{O <: SemObs, I <: SemImply, L <: SemLoss, D <: SemDiff} <: AbstractSem
     observed::O
-    imply::I 
-    loss::L 
+    imply::I
+    loss::L
     diff::D
 end
 
 function (model::Sem)(par, F, G, H, weight = nothing)
     model.imply(par, F, G, H, model)
-    F = model.loss(par, F, G, H, model, weight)
-    return F
+    model.loss(par, F, G, H, model, weight)
 end
 
 function (loss::SemLoss)(par, F, G, H, model, weight)
-    if !isnothing(F)
-        F = zero(eltype(par))
-        for lossfun in loss.functions
-            F += lossfun(par, F, G, H, model, weight)
-        end
-        return F
-    end
     for lossfun in loss.functions lossfun(par, F, G, H, model, weight) end
 end
 
