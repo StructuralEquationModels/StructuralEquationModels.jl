@@ -2,7 +2,7 @@
 ### Types
 ############################################################################
 
-struct SemFIML{INV, C, L, O, M, IM, I, T, U, V, W} <: SemLossFunction
+struct SemFIML{INV, C, L, O, M, IM, I, T, W, FT, GT, HT} <: SemLossFunction
     inverses::INV #preallocated inverses of imp_cov
     choleskys::C #preallocated choleskys
     logdets::L #logdets of implied covmats
@@ -11,16 +11,18 @@ struct SemFIML{INV, C, L, O, M, IM, I, T, U, V, W} <: SemLossFunction
     meandiff::M
     imp_inv::I
     mult::T
-    objective::U
-    grad::V
     interaction::W
+
+    F::FT
+    G::GT
+    H::HT
 end
 
 ############################################################################
 ### Constructors
 ############################################################################
 
-function SemFIML(observed::O where {O <: SemObs}, objective, grad)
+function SemFIML(observed::O where {O <: SemObs}, n_par; parameter_type = Float64)
 
     inverses = broadcast(x -> zeros(x, x), Int64.(observed.pattern_nvar_obs))
     choleskys = Array{Cholesky{Float64,Array{Float64,2}},1}(undef, length(inverses))
@@ -47,9 +49,11 @@ function SemFIML(observed::O where {O <: SemObs}, objective, grad)
     meandiff,
     imp_inv,
     mult,
-    copy(objective),  
-    copy(grad),
-    nothing
+    nothing,
+
+    zeros(parameter_type, 1),
+    zeros(parameter_type, n_par),
+    zeros(parameter_type, n_par, n_par)
     )
 end
 
@@ -57,13 +61,13 @@ end
 ### functors
 ############################################################################
 
-function (semfiml::SemFIML)(par, F, G, H, model, weight = nothing)
+function (semfiml::SemFIML)(par, F, G, H, model)
 
-    if !isnothing(H) stop("hessian for ML is not implemented (yet)") end
+    if !isnothing(H) stop("hessian for FIML is not implemented (yet)") end
 
     if !check_fiml(semfiml, model)
-        if !isnothing(G) G .+= 1.0 end
-        if !isnothing(F) return Inf end
+        if !isnothing(G) semfiml.G .+= 1.0 end
+        if !isnothing(F) semfiml.F[1] = Inf end
     end
 
     copy_per_pattern!(semfiml, model)
@@ -76,19 +80,12 @@ function (semfiml::SemFIML)(par, F, G, H, model, weight = nothing)
     #semfiml.logdets .= -logdet.(semfiml.inverses)
 
     if !isnothing(G)
-        ∇F_FIML(semfiml.grad, model.observed.rows, semfiml, model)
-        if !isnothing(weight)
-            @. semfiml.grad = weight*semfiml.grad
-        end
-        @. G += semfiml.grad/model.observed.n_obs
+        ∇F_FIML(semfiml.G, model.observed.rows, semfiml, model)
+        @. semfiml.G = semfiml.G/model.observed.n_obs
     end
 
     if !isnothing(F)
-        F = F_FIML(zero(eltype(par)), model.observed.rows, semfiml, model)/model.observed.n_obs
-        if !isnothing(weight)
-            F = weight*F
-        end
-        return F
+        F_FIML(semfiml.F, model.observed.rows, semfiml, model)/model.observed.n_obs
     end
 end
 
@@ -121,18 +118,18 @@ function ∇F_one_pattern(μ_diff, Σ⁻¹, S, pattern, ∇ind, N, model, Jμ, J
 end
 
 function F_FIML(F, rows, semfiml, model)
+    F[1] = zero(eltype(F))
     for i = 1:size(rows, 1)
-        F += F_one_pattern(
+        F[1] += F_one_pattern(
             semfiml.meandiff[i], 
             semfiml.inverses[i], 
             model.observed.obs_cov[i], 
             semfiml.logdets[i], 
             model.observed.pattern_n_obs[i])
     end
-    return F
 end
 
-function ∇F_FIML(grad, rows, semfiml, model)
+function ∇F_FIML(G, rows, semfiml, model)
     Jμ = zeros(Int64(model.observed.n_man))
     JΣ = zeros(Int64(model.observed.n_man^2))
     
@@ -148,8 +145,7 @@ function ∇F_FIML(grad, rows, semfiml, model)
             Jμ,
             JΣ)
     end
-    grad .= 0.0
-    grad .+= (JΣ'*model.imply.∇Σ-Jμ'*model.imply.∇μ)'
+    G .= (JΣ'*model.imply.∇Σ-Jμ'*model.imply.∇μ)'
 end
 
 function copy_per_pattern!(inverses, source_inverses, means, source_means, patterns)

@@ -48,7 +48,7 @@ x = transpose(rand(true_dist, 100000))
 semobserved = SEM.SemObsCommon(data = x)
 
 
-loss_ml = SemLoss((SEM.SemML(semobserved, [0.0], similar(start_val)), ))
+loss_ml = SemLoss((SEM.SemML(semobserved, length(start_val_ml)), ))
 diff = 
     SemDiffOptim(
         BFGS(;linesearch = BackTracking(order=3), alphaguess = InitialHagerZhang()),# m = 100), 

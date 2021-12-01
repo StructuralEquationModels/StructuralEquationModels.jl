@@ -4,42 +4,51 @@
 ### Types
 ############################################################################
 
-struct SemRidge{P, W1, W2} <: SemLossFunction
+struct SemRidge{P, W1, W2, FT, GT, HT} <: SemLossFunction
     α::P
     which::W1
     which_H::W2
+
+    F::FT
+    G::GT
+    H::HT
 end
 
 ############################################################################
 ### Constructors
 ############################################################################
 
-function SemRidge(α, which_vec)
+function SemRidge(α, which_vec, n_par; parameter_type = Float64)
     which = [CartesianIndex(x) for x in which_vec]
     which_H = [CartesianIndex(x, x) for x in which_vec]
-    return SemRidge(α, which, which_H)
+    return SemRidge(
+        α,
+        which,
+        which_H,
+
+        zeros(parameter_type, 1),
+        zeros(parameter_type, n_par),
+        zeros(parameter_type, n_par, n_par))
 end
 
 ############################################################################
 ### functors
 ############################################################################
 
-function (ridge::SemRidge)(par, F, G, H, model, weight = nothing)
+function (ridge::SemRidge)(par, F, G, H, model)
 
     if !isnothing(G)
-        grad = 2*ridge.α*par[ridge.which]
-        if !isnothing(weight) grad = weight*grad end
-        G[ridge.which] .+= grad
+        G = 2*ridge.α*par[ridge.which]
+        ridge.G[ridge.which] .= G
     end
 
     if !isnothing(H)
-        @views @. @inbounds H[ridge.which_H] += ridge.α*2.0
+        @views @. ridge.H[ridge.which_H] += ridge.α*2.0
     end
 
     if !isnothing(F)
         F = ridge.α*sum(par[ridge.which].^2)
-        if !isnothing(weight) F = weight*F end
-        return F
+        ridge.F[1] = F
     end
     
 end
