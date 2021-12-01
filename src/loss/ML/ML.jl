@@ -4,22 +4,24 @@
 ### Types
 ############################################################################
 
-struct SemML{INV,C,L,M,M2,U,V,B} <: SemLossFunction
+struct SemML{INV,C,L,M,M2,B,FT,GT,HT} <: SemLossFunction
     inverses::INV #preallocated inverses of imp_cov
     choleskys::C #preallocated choleskys
     mult::M
     logdets::L #logdets of implied covmats
     meandiff::M2
-    objective::U
-    grad::V
     approx_H::B
+
+    F::FT
+    G::GT
+    H::HT
 end
 
 ############################################################################
 ### Constructors
 ############################################################################
 
-function SemML(observed::T, objective, grad; approx_H = false) where {T <: SemObs}
+function SemML(observed::T, n_par; approx_H = false, parameter_type = Float64) where {T <: SemObs}
     isnothing(observed.obs_mean) ?
         meandiff = nothing :
         meandiff = copy(observed.obs_mean)
@@ -29,9 +31,11 @@ function SemML(observed::T, objective, grad; approx_H = false) where {T <: SemOb
         copy(observed.obs_cov),
         nothing,
         meandiff,
-        copy(objective),
-        copy(grad),
-        approx_H
+        approx_H,
+
+        zeros(parameter_type, 1),
+        zeros(parameter_type, n_par),
+        zeros(parameter_type, n_par, n_par)
         )
 end
 
@@ -39,107 +43,87 @@ end
 ### functors
 ############################################################################
 
-function (semml::SemML)(par, F, G, H, model, weight = nothing)
+function (semml::SemML)(par, F, G, H, model)
     semml.inverses .= model.imply.Σ
     a = cholesky!(Symmetric(semml.inverses); check = false)
 
     if !isposdef(a)
-        if !isnothing(G) G .+= 0.0 end
-        if !isnothing(H) H .+= 0.0 end
-        if !isnothing(F) return Inf end
-    end
-
-    ld = logdet(a)
-    semml.inverses .= LinearAlgebra.inv!(a)
-
-    if isnothing(model.imply.μ)
-    # without means    
-        if !isnothing(G) && !isnothing(H)
-            J = (vec(semml.inverses)-vec(semml.inverses*model.observed.obs_cov*semml.inverses))'
-            grad = J*model.imply.∇Σ
-            if !isnothing(weight)
-                grad = weight*grad
-            end
-            G .+= grad'
-            if semml.approx_H
-                hessian = 2*model.imply.∇Σ'*kron(semml.inverses, semml.inverses)*model.imply.∇Σ
-            end
-            if !semml.approx_H
-                M = semml.inverses*model.observed.obs_cov*semml.inverses
-                H_outer = 
-                    2*kron(M, semml.inverses) - 
-                    kron(semml.inverses, semml.inverses)
-                hessian = model.imply.∇Σ'*H_outer*model.imply.∇Σ
-                model.imply.∇²Σ_function(model.imply.∇²Σ, J, par)
-                hessian = hessian + model.imply.∇²Σ
-            end
-            if !isnothing(weight)
-                hessian = weight*hessian
-            end
-            H .+= hessian
-        end
-
-        if !isnothing(G) && isnothing(H)
-            grad = (vec(semml.inverses)-vec(semml.inverses*model.observed.obs_cov*semml.inverses))'*model.imply.∇Σ
-            if !isnothing(weight)
-                grad = weight*grad
-            end
-            G .+= grad'
-        end
-
-        if isnothing(G) && !isnothing(H)
-            J = (vec(semml.inverses)-vec(semml.inverses*model.observed.obs_cov*semml.inverses))'
-            if semml.approx_H
-                hessian = 2*model.imply.∇Σ'*kron(semml.inverses, semml.inverses)*model.imply.∇Σ
-            end
-            if !semml.approx_H
-                M = semml.inverses*model.observed.obs_cov*semml.inverses
-                H_outer = 
-                    2*kron(M, semml.inverses) - 
-                    kron(semml.inverses, semml.inverses)
-                hessian = model.imply.∇Σ'*H_outer*model.imply.∇Σ
-                model.imply.∇²Σ_function(model.imply.∇²Σ, J, par)
-                hessian = hessian + model.imply.∇²Σ 
-            end
-            if !isnothing(weight)
-                hessian = weight*hessian
-            end
-            H .+= hessian
-        end
-
-        if !isnothing(F)
-            mul!(semml.mult, semml.inverses, model.observed.obs_cov)
-            F = ld + tr(semml.mult)
-            if !isnothing(weight)
-                F = weight*F
-            end
-            return F
-        end
+        if !isnothing(G) semml.G .= 0.0 end
+        if !isnothing(H) semml.H .= 0.0 end
+        if !isnothing(F) semml.F[1] = Inf end
     else
-    # with means
-    μ_diff = model.observed.obs_mean - model.imply.μ
-    diff⨉inv = μ_diff'*semml.inverses
-        if !isnothing(H) stop("hessian of ML + meanstructure is not implemented yet") end
-        if !isnothing(G)
-            grad = 
-                vec(
-                    semml.inverses*(
-                        I - 
-                        model.observed.obs_cov*semml.inverses - 
-                        μ_diff*diff⨉inv))'*model.imply.∇Σ -
-                2*diff⨉inv*model.imply.∇μ
-            if !isnothing(weight)
-                grad = weight*grad
+        ld = logdet(a)
+        semml.inverses .= LinearAlgebra.inv!(a)
+
+        # without means
+        if isnothing(model.imply.μ)
+
+            if !isnothing(G) && !isnothing(H)
+                J = (vec(semml.inverses)-vec(semml.inverses*model.observed.obs_cov*semml.inverses))'
+                G = J*model.imply.∇Σ
+                semml.G .= G'
+                if semml.approx_H
+                    H = 2*model.imply.∇Σ'*kron(semml.inverses, semml.inverses)*model.imply.∇Σ
+                end
+                if !semml.approx_H
+                    M = semml.inverses*model.observed.obs_cov*semml.inverses
+                    H_outer = 
+                        2*kron(M, semml.inverses) - 
+                        kron(semml.inverses, semml.inverses)
+                    H = model.imply.∇Σ'*H_outer*model.imply.∇Σ
+                    model.imply.∇²Σ_function(model.imply.∇²Σ, J, par)
+                    H = H + model.imply.∇²Σ
+                end
+                semml.H .= H
             end
-            G .+= grad'
-        end
-        if !isnothing(F)
-            mul!(semml.mult, semml.inverses, model.observed.obs_cov)
-            F = ld + tr(semml.mult) + diff⨉inv*μ_diff
-            if !isnothing(weight)
-                F = weight*F
+
+            if !isnothing(G) && isnothing(H)
+                G = (vec(semml.inverses)-vec(semml.inverses*model.observed.obs_cov*semml.inverses))'*model.imply.∇Σ
+                semml.G .= G'
             end
-            return F
+
+            if isnothing(G) && !isnothing(H)
+                J = (vec(semml.inverses)-vec(semml.inverses*model.observed.obs_cov*semml.inverses))'
+                if semml.approx_H
+                    H = 2*model.imply.∇Σ'*kron(semml.inverses, semml.inverses)*model.imply.∇Σ
+                end
+                if !semml.approx_H
+                    M = semml.inverses*model.observed.obs_cov*semml.inverses
+                    H_outer = 
+                        2*kron(M, semml.inverses) - 
+                        kron(semml.inverses, semml.inverses)
+                    H = model.imply.∇Σ'*H_outer*model.imply.∇Σ
+                    model.imply.∇²Σ_function(model.imply.∇²Σ, J, par)
+                    H += model.imply.∇²Σ 
+                end
+                semml.H .= H
+            end
+
+            if !isnothing(F)
+                mul!(semml.mult, semml.inverses, model.observed.obs_cov)
+                F = ld + tr(semml.mult)
+                semml.F[1] = F
+            end
+        else
+        # with means
+        μ_diff = model.observed.obs_mean - model.imply.μ
+        diff⨉inv = μ_diff'*semml.inverses
+            if !isnothing(H) stop("hessian of ML + meanstructure is not implemented yet") end
+            if !isnothing(G)
+                G = 
+                    vec(
+                        semml.inverses*(
+                            I - 
+                            model.observed.obs_cov*semml.inverses - 
+                            μ_diff*diff⨉inv))'*model.imply.∇Σ -
+                    2*diff⨉inv*model.imply.∇μ
+                semml.G .= G'
+            end
+            if !isnothing(F)
+                mul!(semml.mult, semml.inverses, model.observed.obs_cov)
+                F = ld + tr(semml.mult) + diff⨉inv*μ_diff
+                semml.F[1] = F
+            end
         end
     end
 end
