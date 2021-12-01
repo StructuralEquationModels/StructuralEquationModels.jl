@@ -37,7 +37,6 @@ function gen_model(nfact, nitem, data, estimator, backend)
     n_latcov = Int64(nfact*(nfact-1)/2)
     npar = 2nobs + n_latcov
     Symbolics.@variables x[1:npar]
-    x = [x...]
 
     #F
     Ind = collect(1:nobs)
@@ -48,13 +47,13 @@ function gen_model(nfact, nitem, data, estimator, backend)
     #A
     Ind = collect(1:nobs)
     Jnd = vcat([fill(nobs+i, nitem) for i in 1:nfact]...)
-    V = x[1:nobs]
+    V = [x...][1:nobs]
     A = sparse(Ind, Jnd, V, nnod, nnod)
 
     #S
     Ind = collect(1:nnod)
     Jnd = collect(1:nnod)
-    V = [x[nobs+1:2nobs]; fill(1.0, nfact)]
+    V = [[x...][nobs+1:2nobs]; fill(1.0, nfact)]
     S = sparse(Ind, Jnd, V, nnod, nnod)
     xind = 2nobs+1
     for i in nobs+1:nnod
@@ -67,9 +66,7 @@ function gen_model(nfact, nitem, data, estimator, backend)
 
     start_val = start_fabin3(Matrix(A), Matrix(S), Matrix(F), x, semobserved)
 
-    # imply
-    
-
+    # imply and loss
     if estimator == "ML"
         semimply = RAMSymbolic(A, S, F, x, start_val; gradient = true)   
         semloss = SemLoss((SemML(semobserved, 1.0, similar(start_val)),))

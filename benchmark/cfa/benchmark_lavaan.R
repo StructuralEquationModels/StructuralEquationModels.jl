@@ -43,7 +43,7 @@ results <- mutate(
   n_repetitions = round(const/(n_par^2)))
 
 #!!!
-results$n_repetitions <- 30
+results$n_repetitions <- 10
 ##
 
 benchmarks <- pmap(

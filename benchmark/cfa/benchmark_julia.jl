@@ -21,12 +21,12 @@ config2.backend .= "NLopt.jl"
 
 config = [config; config2]
 
-config = filter(row -> row.Estimator == "ML", config)
+config = filter(row -> (row.Estimator == "ML") & (row.meanstructure == 0), config)
 
 config = filter(
     row -> (row.Estimator == "ML") & 
     (row.n_factors == 5) & (row.n_items == 40) & (row.meanstructure == 0) & 
-    (row.backend == "Optim.jl"),
+    (row.backend == "NLopt.jl"),
     config)
 
 data_vec = read_files("data", get_data_paths(config))
@@ -47,7 +47,18 @@ for model in models
     push!(benchmarks, bm)
 end
 
+@benchmark sem_fit(models[1])
 
+#ProfileView.@profview sem_fit(models[1])
+
+function profile_fit(model, n)
+    for i in 1:n
+        sem_fit(model)
+    end
+end
+
+
+ProfileView.@profview profile_fit(models[1], 100)
 
 results = select(config, :Estimator, :n_factors, :n_items, :meanstructure, :backend)
 
