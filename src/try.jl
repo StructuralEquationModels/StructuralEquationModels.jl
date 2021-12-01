@@ -1124,6 +1124,13 @@ end
 
 inst = teststr2(1.0, 2.0)
 
-inst.a = "hi"
 
-typeof(inst)
+a = rand(10, 10)
+
+b = rand(10, 10)
+
+d = rand(10, 10)
+
+using BenchmarkTools
+
+@benchmark mul!($c, $a, $b)
