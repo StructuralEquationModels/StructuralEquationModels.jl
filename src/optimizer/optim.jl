@@ -1,8 +1,9 @@
 ## connect do Optim.jl as backend
 function sem_wrap_optim(par, F, G, H, sem::AbstractSem)
-    if !isnothing(G) fill!(G, zero(eltype(G))) end
-    if !isnothing(H) fill!(H, zero(eltype(H))) end
-    return sem(par, F, G, H)
+    sem(par, F, G, H)
+    if !isnothing(G) G .= gradient(sem) end
+    if !isnothing(H) H .= hessian(sem) end
+    if !isnothing(F) return objective(sem) end
 end
 
 function sem_fit(model::Sem{O, I, L, D}) where {O, I, L, D <: SemDiffOptim}
