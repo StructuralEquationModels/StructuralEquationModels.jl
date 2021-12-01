@@ -14,7 +14,7 @@ struct SemLoss{F <: Tuple, FT, GT, HT}
     H::HT
 end
 
-function SemLoss(functions)
+function SemLoss(functions; parameter_type = Float64)
 
     n_par = length(functions[1].G)
 
