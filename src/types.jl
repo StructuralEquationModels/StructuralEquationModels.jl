@@ -88,7 +88,7 @@ function (model::SemFiniteDiff)(par, F, G, H)
         model.imply(par, F, G, nothing, model)
         model.loss(par, F, G, nothing, model)
     else
-        
+
         if !isnothing(G)
             model.loss.G .= FiniteDiff.finite_difference_gradient(x -> objective!(model, x), par)
         end
