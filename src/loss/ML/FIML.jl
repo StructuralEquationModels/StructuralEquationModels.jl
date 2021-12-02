@@ -68,26 +68,28 @@ function (semfiml::SemFIML)(par, F, G, H, model)
     if !check_fiml(semfiml, model)
         if !isnothing(G) semfiml.G .+= 1.0 end
         if !isnothing(F) semfiml.F[1] = Inf end
-    end
+    else
+        copy_per_pattern!(semfiml, model)
+        batch_cholesky!(semfiml, model)
+        #batch_sym_inv_update!(semfiml, model)
+        batch_inv!(semfiml, model)
+        for i in 1:size(model.observed.pattern_n_obs, 1)
+            @. semfiml.meandiff[i] = model.observed.obs_mean[i] - semfiml.imp_mean[i]
+        end
+        #semfiml.logdets .= -logdet.(semfiml.inverses)
 
-    copy_per_pattern!(semfiml, model)
-    batch_cholesky!(semfiml, model)
-    #batch_sym_inv_update!(semfiml, model)
-    batch_inv!(semfiml, model)
-    for i in 1:size(model.observed.pattern_n_obs, 1)
-        @. semfiml.meandiff[i] = model.observed.obs_mean[i] - semfiml.imp_mean[i]
-    end
-    #semfiml.logdets .= -logdet.(semfiml.inverses)
+        if !isnothing(G)
+            ∇F_FIML(semfiml.G, model.observed.rows, semfiml, model)
+            @. semfiml.G = semfiml.G/model.observed.n_obs
+        end
 
-    if !isnothing(G)
-        ∇F_FIML(semfiml.G, model.observed.rows, semfiml, model)
-        @. semfiml.G = semfiml.G/model.observed.n_obs
-    end
+        if !isnothing(F)
+            F_FIML(semfiml.F, model.observed.rows, semfiml, model)
+            semfiml.F[1] = semfiml.F[1]/model.observed.n_obs
+        end
 
-    if !isnothing(F)
-        F_FIML(semfiml.F, model.observed.rows, semfiml, model)
-        semfiml.F[1] = semfiml.F[1]/model.observed.n_obs
     end
+    
 end
 
 ############################################################################
