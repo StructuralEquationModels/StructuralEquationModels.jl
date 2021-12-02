@@ -36,6 +36,7 @@ export  AbstractSem,
             SemDiffOptim, SemDiffNLopt,
         SemObs, 
             SemObsCommon, SemObsMissing,
-        sem_fit
+        sem_fit,
+        objective, objective!, gradient, gradient!, hessian, hessian!
 
 end # module
