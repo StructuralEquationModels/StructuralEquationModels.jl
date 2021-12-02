@@ -144,7 +144,7 @@ end
 
 struct SemEnsemble{N, T <: Tuple, V <: AbstractVector, D, S, FT, GT, HT} <: AbstractSem
     n::N
-    models::T
+    sems::T
     weights::V
     diff::D
     start_val::S
