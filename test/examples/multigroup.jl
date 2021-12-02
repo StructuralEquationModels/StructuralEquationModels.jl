@@ -1,4 +1,5 @@
 using SEM, CSV, DataFrames, SparseArrays, Symbolics, LineSearches, Optim, Test, LinearAlgebra
+include("test_helpers.jl")
 
 ############################################################################
 ### observed data
