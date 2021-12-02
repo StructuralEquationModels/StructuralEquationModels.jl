@@ -183,8 +183,8 @@ end
 
 start_val_ls = Vector{Float64}(par_ls.start[par_order])
 
-loss_ls_g1 = SemLoss((SemWLS(semobserved_g1), length(start_val_ls)))
-loss_ls_g2 = SemLoss((SemWLS(semobserved_g2), length(start_val_ls)))
+loss_ls_g1 = SemLoss((SemWLS(semobserved_g1, length(start_val_ls)),))
+loss_ls_g2 = SemLoss((SemWLS(semobserved_g2, length(start_val_ls)),))
 
 imply_ls_g1 = RAMSymbolic(A, S1, F, x, start_val_ls; vech = true)
 imply_ls_g2 = RAMSymbolic(A, S2, F, x, start_val_ls; vech = true)
