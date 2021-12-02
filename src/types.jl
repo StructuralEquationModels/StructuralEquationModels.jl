@@ -88,7 +88,10 @@ function (model::SemFiniteDiff)(par, F, G, H)
         model.imply(par, F, G, nothing, model)
         model.loss(par, F, G, nothing, model)
     else
-        model.loss.G .= FiniteDiff.finite_difference_gradient(x -> model(x, 0.0), par)
+        
+        if !isnothing(G)
+            model.loss.G .= FiniteDiff.finite_difference_gradient(x -> objective!(model, x), par)
+        end
 
         if !isnothing(F)
             model.imply(par, F, nothing, nothing, model)
@@ -97,11 +100,6 @@ function (model::SemFiniteDiff)(par, F, G, H)
 
     end
 
-end
-
-function (model::SemFiniteDiff)(par, F)
-    model(par, F, nothing, nothing)
-    return objective(model)
 end
 
 struct SemForwardDiff{O <: SemObs, I <: SemImply, L <: SemLoss, D <: SemDiff, G} <: AbstractSem
