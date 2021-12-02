@@ -196,3 +196,33 @@ hessian(model::AbstractSem) = model.loss.H
 objective(model::SemEnsemble) = model.F[1]
 gradient(model::SemEnsemble) = model.G
 hessian(model::SemEnsemble) = model.H
+
+function objective!(model::AbstractSem, parameters)
+    model(parameters, 1.0, nothing, nothing)
+    return model.loss.F[1]
+end
+
+function gradient!(model::AbstractSem, parameters)
+    model(parameters, nothing, 1.0, nothing)
+    return model.loss.G
+end
+
+function hessian!(model::AbstractSem, parameters)
+    model(parameters, nothing, nothing, 1.0)
+    return model.loss.H
+end
+
+function objective!(model::SemEnsemble, parameters)
+    model(parameters, 1.0, nothing, nothing)
+    return model.F[1]
+end
+
+function gradient!(model::SemEnsemble, parameters)
+    model(parameters, nothing, 1.0, nothing)
+    return model.G
+end
+
+function hessian!(model::SemEnsemble, parameters)
+    model(parameters, nothing, nothing, 1.0)
+    return model.H
+end
