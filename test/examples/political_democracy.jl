@@ -1,8 +1,6 @@
-using SEM, CSV, DataFrames, SparseArrays, Symbolics, LineSearches, Optim, Test
+using SEM, CSV, DataFrames, SparseArrays, Symbolics, LineSearches, Optim, Test, FiniteDiff
 
-@testset "multithreading_enabled" begin
-    @test Threads.nthreads() == 8
-end
+include("test_helpers.jl")
 
 ############################################################################
 ### observed data
@@ -127,37 +125,17 @@ model_ridge = Sem(semobserved, imply_ml, loss_ridge, diff)
 ### test gradients
 ############################################################################
 
-using FiniteDiff
-
 
 @testset "ml_gradients" begin
-    grad = similar(start_val_ml)
-    grad .= 0.0
-    model_ml(start_val_ml, 1.0, grad, nothing)
-    @test grad ≈ FiniteDiff.finite_difference_gradient(x -> model_ml(x, 1.0, nothing, nothing), start_val_ml)
-    grad .= 0.0
-    model_ml(start_val_ml, nothing, grad, nothing)
-    @test grad ≈ FiniteDiff.finite_difference_gradient(x -> model_ml(x, 1.0, nothing, nothing), start_val_ml)
+    @test test_gradient(model_ml, start_val_ml)
 end
 
 @testset "ls_gradients" begin
-    grad = similar(start_val_ls)
-    grad .= 0.0
-    model_ls(start_val_ls, 1.0, grad, nothing)
-    @test grad ≈ FiniteDiff.finite_difference_gradient(x -> model_ls(x, 1.0, nothing, nothing), start_val_ls)
-    grad .= 0.0
-    model_ls(start_val_ls, nothing, grad, nothing)
-    @test grad ≈ FiniteDiff.finite_difference_gradient(x -> model_ls(x, 1.0, nothing, nothing), start_val_ls)
+    @test test_gradient(model_ls, start_val_ls)
 end
 
 @testset "ridge_gradients" begin
-    grad = similar(start_val_ml)
-    grad .= 0.0
-    model_ridge(start_val_ml, 1.0, grad, nothing)
-    @test grad ≈ FiniteDiff.finite_difference_gradient(x -> model_ridge(x, 1.0, nothing, nothing), start_val_ml)
-    grad .= 0.0
-    model_ridge(start_val_ml, nothing, grad, nothing)
-    @test grad ≈ FiniteDiff.finite_difference_gradient(x -> model_ridge(x, 1.0, nothing, nothing), start_val_ml)
+    @test test_gradient(model_ridge, start_val_ml)
 end
 
 ############################################################################
@@ -200,31 +178,11 @@ model_ml = Sem(semobserved, imply_ml, loss_ml, diff)
 model_ls = Sem(semobserved, imply_ls, loss_ls, diff)
 
 @testset "ml_hessians" begin
-    hessian = zeros(size(start_val_ml, 1), size(start_val_ml, 1))
-    grad = zeros(size(start_val_ml, 1))
-    
-    model_ml(start_val_ml, 1.0, nothing, hessian)
-    @test hessian ≈ FiniteDiff.finite_difference_hessian(x -> model_ml(x, 1.0, nothing, nothing), start_val_ml) rtol = 1/1000
-    
-    hessian .= 0.0
-
-    model_ml(start_val_ml, nothing, grad, hessian)
-    @test grad ≈ FiniteDiff.finite_difference_gradient(x -> model_ml(x, 1.0, nothing, nothing), start_val_ml)
-    @test hessian ≈ FiniteDiff.finite_difference_hessian(x -> model_ml(x, 1.0, nothing, nothing), start_val_ml) rtol = 1/1000
+    @test test_hessian(model_ml, start_val_ml)
 end
 
 @testset "ls_hessians" begin
-    hessian = zeros(size(start_val_ml, 1), size(start_val_ml, 1))
-    grad = zeros(size(start_val_ml, 1))
-    
-    model_ls(start_val_ml, 1.0, nothing, hessian)
-    @test hessian ≈ FiniteDiff.finite_difference_hessian(x -> model_ls(x, 1.0, nothing, nothing), start_val_ml) rtol = 1/1000
-    
-    hessian .= 0.0
-
-    model_ls(start_val_ml, nothing, grad, hessian)
-    @test grad ≈ FiniteDiff.finite_difference_gradient(x -> model_ls(x, 1.0, nothing, nothing), start_val_ml)
-    @test hessian ≈ FiniteDiff.finite_difference_hessian(x -> model_ls(x, 1.0, nothing, nothing), start_val_ml) rtol = 1/1000
+    @test test_hessian(model_ls, start_val_ml)
 end
 
 @testset "ml_solution_hessian" begin
@@ -441,23 +399,11 @@ end
 ############################################################################
 
 @testset "ml_gradients_meanstructure" begin
-    grad = similar(start_val_ml)
-    grad .= 0.0
-    model_ml(start_val_ml, 1.0, grad, nothing)
-    @test grad ≈ FiniteDiff.finite_difference_gradient(x -> model_ml(x, 1.0, nothing, nothing), start_val_ml)
-    grad .= 0.0
-    model_ml(start_val_ml, nothing, grad, nothing)
-    @test grad ≈ FiniteDiff.finite_difference_gradient(x -> model_ml(x, 1.0, nothing, nothing), start_val_ml)
+    @test test_gradient(model_ml, start_val_ml)
 end
 
 @testset "ls_gradients_meanstructure" begin
-    grad = similar(start_val_ls)
-    grad .= 0.0
-    model_ls(start_val_ls, 1.0, grad, nothing)
-    @test grad ≈ FiniteDiff.finite_difference_gradient(x -> model_ls(x, 1.0, nothing, nothing), start_val_ls)
-    grad .= 0.0
-    model_ls(start_val_ls, nothing, grad, nothing)
-    @test grad ≈ FiniteDiff.finite_difference_gradient(x -> model_ls(x, 1.0, nothing, nothing), start_val_ls)
+    @test test_gradient(model_ls, start_val_ls)
 end
 
 ############################################################################
@@ -567,14 +513,8 @@ model_ml = Sem(semobserved, imply_ml, loss_ml, diff)
 
 using FiniteDiff
 
-@testset "fiml_gradients" begin
-    grad = similar(start_val_ml)
-    grad .= 0.0
-    model_ml(start_val_ml, 1.0, grad, nothing)
-    @test grad ≈ FiniteDiff.finite_difference_gradient(x -> model_ml(x, 1.0, nothing, nothing), start_val_ml)
-    grad .= 0.0
-    model_ml(start_val_ml, nothing, grad, nothing)
-    @test grad ≈ FiniteDiff.finite_difference_gradient(x -> model_ml(x, 1.0, nothing, nothing), start_val_ml)
+@testset "fiml_gradient" begin
+    @test test_gradient(model_ml, start_val_ml)
 end
 
 ############################################################################
