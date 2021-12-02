@@ -102,19 +102,15 @@ model_ml_multigroup = SemEnsemble((model_ml_g1, model_ml_g2), diff, start_val_ml
 
 using FiniteDiff
 
-@testset "ml_gradients" begin
-    grad = similar(start_val_ml)
-    grad .= 0.0
-    model_ml_multigroup(start_val_ml, 1.0, grad, nothing)
-    @test grad ≈ FiniteDiff.finite_difference_gradient(x -> model_ml_multigroup(x, 1.0, nothing, nothing), start_val_ml)
-    grad .= 0.0
-    model_ml_multigroup(start_val_ml, nothing, grad, nothing)
-    @test grad ≈ FiniteDiff.finite_difference_gradient(x -> model_ml_multigroup(x, 1.0, nothing, nothing), start_val_ml)
+@testset "ml_gradients_multigroup" begin
+    @test test_gradient(model_ml_multigroup, start_val_ml)
 end
 
 # fit
-solution_ml = sem_fit(model_ml_multigroup)
-@test SEM.compare_estimates(par_ml.est[par_order], solution_ml.minimizer, 0.01)
+@testset "ml_solution_multigroup" begin
+    solution_ml = sem_fit(model_ml_multigroup)
+    @test SEM.compare_estimates(par_ml.est[par_order], solution_ml.minimizer, 0.01)
+end
 
 ####################################################################
 # ML estimation - without Gradients and Hessian
@@ -164,19 +160,15 @@ model_ml_g2 = SemFiniteDiff(semobserved_g2, imply_ml_g2, loss_ml_g2, SemDiffOpti
 
 model_ml_multigroup = SemEnsemble((model_ml_g1, model_ml_g2), diff, start_val_ml)
 
-@testset "ml_gradients" begin
-    grad = similar(start_val_ml)
-    grad .= 0.0
-    model_ml_multigroup(start_val_ml, 1.0, grad, nothing)
-    @test grad ≈ FiniteDiff.finite_difference_gradient(x -> model_ml_multigroup(x, 1.0, nothing, nothing), start_val_ml)
-    grad .= 0.0
-    model_ml_multigroup(start_val_ml, nothing, grad, nothing)
-    @test grad ≈ FiniteDiff.finite_difference_gradient(x -> model_ml_multigroup(x, 1.0, nothing, nothing), start_val_ml)
+@testset "gradients_user_defined_loss" begin
+    @test test_gradient(model_ml_multigroup, start_val_ml)
 end
 
 # fit
-solution_ml = sem_fit(model_ml_multigroup)
-@test SEM.compare_estimates(par_ml.est[par_order], solution_ml.minimizer, 0.01)
+@testset "solution_user_defined_loss" begin
+    solution_ml = sem_fit(model_ml_multigroup)
+    @test SEM.compare_estimates(par_ml.est[par_order], solution_ml.minimizer, 0.01)
+end
 
 ####################################################################
 # GLS estimation
@@ -195,16 +187,11 @@ model_ls_g2 = Sem(semobserved_g2, imply_ls_g2, loss_ls_g2, diff)
 
 model_ls_multigroup = SemEnsemble((model_ls_g1, model_ls_g2), diff, start_val_ls)
 
-@testset "ls_gradients" begin
-    grad = similar(start_val_ls)
-    grad .= 0.0
-    model_ls_multigroup(start_val_ls, 1.0, grad, nothing)
-    @test grad ≈ FiniteDiff.finite_difference_gradient(x -> model_ls_multigroup(x, 1.0, nothing, nothing), start_val_ls)
-    grad .= 0.0
-    model_ls_multigroup(start_val_ls, nothing, grad, nothing)
-    @test grad ≈ FiniteDiff.finite_difference_gradient(x -> model_ls_multigroup(x, 1.0, nothing, nothing), start_val_ls)
+@testset "ls_gradients_multigroup" begin
+    @test test_gradient(model_ls_multigroup, start_val_ls)
 end
 
-solution_ls = sem_fit(model_ls_multigroup)
-
-@test SEM.compare_estimates(par_ls.est[par_order], solution_ls.minimizer, 0.01)
+@testset "ls_solution_multigroup" begin
+    solution_ls = sem_fit(model_ls_multigroup)
+    @test SEM.compare_estimates(par_ls.est[par_order], solution_ls.minimizer, 0.01)
+end

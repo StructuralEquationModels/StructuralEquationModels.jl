@@ -1122,7 +1122,7 @@ mutable struct teststr2{A, B}
     b::B
 end
 
-inst = teststr2(1.0, 2.0)
+inst = teststr2(zeros(10,10), zeros(10,10))
 
 
 a = rand(10, 10)
