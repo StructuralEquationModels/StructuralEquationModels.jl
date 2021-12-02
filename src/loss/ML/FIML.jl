@@ -85,7 +85,8 @@ function (semfiml::SemFIML)(par, F, G, H, model)
     end
 
     if !isnothing(F)
-        F_FIML(semfiml.F, model.observed.rows, semfiml, model)/model.observed.n_obs
+        F_FIML(semfiml.F, model.observed.rows, semfiml, model)
+        semfiml.F[1] = semfiml.F[1]/model.observed.n_obs
     end
 end
 
