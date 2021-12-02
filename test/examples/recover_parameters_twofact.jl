@@ -1,4 +1,5 @@
 using SEM, Symbolics, SparseArrays, Distributions, Optim, LineSearches
+include("test_helpers.jl")
 
 @variables x[1:13]
 
@@ -48,7 +49,7 @@ x = transpose(rand(true_dist, 100000))
 semobserved = SEM.SemObsCommon(data = x)
 
 
-loss_ml = SemLoss((SEM.SemML(semobserved, length(start_val_ml)), ))
+loss_ml = SemLoss((SEM.SemML(semobserved, length(start_val)), ))
 diff = 
     SemDiffOptim(
         BFGS(;linesearch = BackTracking(order=3), alphaguess = InitialHagerZhang()),# m = 100), 

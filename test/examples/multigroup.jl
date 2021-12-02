@@ -117,31 +117,37 @@ end
 # ML estimation - without Gradients and Hessian
 ####################################################################
 
-struct UserSemML <: SemLossFunction end
+struct UserSemML <: SemLossFunction
+    F
+    G
+    H
+end 
+
+############################################################################
+### constructor
+############################################################################
+
+UserSemML(n_par) = UserSemML([1.0], zeros(n_par), zeros(n_par, n_par)) 
 
 ############################################################################
 ### functors
 ############################################################################
 
-function (semml::UserSemML)(par, F, G, H, model, weight = nothing)
-    a = cholesky(Symmetric(model.imply.Σ); check = false)
-    if !isposdef(a)
-        if !isnothing(G) stop("analytic gradient of ML is not implemented (yet)") end
-        if !isnothing(H) stop("analytic hessian of ML is not implemented (yet)") end
-        if !isnothing(F) return Inf end
-    end
-    ld = logdet(a)
-    Σ_inv = LinearAlgebra.inv(a)
+function (semml::UserSemML)(par, F, G, H, model)
     if !isnothing(G) stop("analytic gradient of ML is not implemented (yet)") end
     if !isnothing(H) stop("analytic hessian of ML is not implemented (yet)") end
-    if !isnothing(F)
-        prod = Σ_inv*model.observed.obs_cov
-        F = ld + tr(prod)
-        if !isnothing(model.imply.μ) end
-        if !isnothing(weight)
-            F = weight*F
+
+    a = cholesky(Symmetric(model.imply.Σ); check = false)
+    if !isposdef(a)
+        semml.F[1] = Inf
+    else
+        ld = logdet(a)
+        Σ_inv = LinearAlgebra.inv(a)
+        if !isnothing(F)
+            prod = Σ_inv*model.observed.obs_cov
+            F = ld + tr(prod)
+            semml.F[1] = F
         end
-        return F
     end
 end
 
@@ -149,7 +155,7 @@ start_val_ml = Vector{Float64}(par_ml.start[par_order])
 
 # loss
 loss_ml_g1 = SemLoss((SemML(semobserved_g1, length(start_val_ml)),))
-loss_ml_g2 = SemLoss((UserSemML(),))
+loss_ml_g2 = SemLoss((UserSemML(length(start_val_ml)),))
 
 # imply
 imply_ml_g1 = RAMSymbolic(A, S1, F, x, start_val_ml)
