@@ -1,5 +1,5 @@
 function test_gradient(model, parameters)
-    true_grad = FiniteDiff.finite_difference_gradient(x -> objective!(model, parameters))
+    true_grad = FiniteDiff.finite_difference_gradient(x -> objective!(model, x))
 
     # F and G
     gradient(model) .= 0
@@ -16,7 +16,7 @@ end
 
 function test_hessian(model, parameters)
     H = one(length(parameters), length(parameters))
-    true_hessian = FiniteDiff.finite_difference_hessian(x -> objective!(model, parameters))
+    true_hessian = FiniteDiff.finite_difference_hessian(x -> objective!(model, x))
 
     # F and H
     hessian(model) .= 0
