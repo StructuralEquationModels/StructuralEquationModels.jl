@@ -152,7 +152,7 @@ struct SemEnsemble{N, T <: Tuple, V <: AbstractVector, D, S, FT, GT, HT} <: Abst
     H::HT
 end
 
-function SemEnsemble(T::Tuple, diff, start_val; weights = nothing, parameter_type = Float64)
+function SemEnsemble(T::Tuple, semdiff, start_val; weights = nothing, parameter_type = Float64)
     n = size(T, 1)
     sems = T
     nobs_total = sum([model.observed.n_obs for model in T])
@@ -164,7 +164,7 @@ function SemEnsemble(T::Tuple, diff, start_val; weights = nothing, parameter_typ
         n,
         sems,
         weights,
-        diff,
+        semdiff,
         start_val,
 
         zeros(parameter_type, 1),
