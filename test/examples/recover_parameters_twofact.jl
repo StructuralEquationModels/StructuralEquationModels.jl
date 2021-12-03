@@ -1,4 +1,5 @@
-using SEM, Symbolics, SparseArrays, Distributions, Optim, LineSearches
+using StructuralEquationModels, Symbolics, SparseArrays, Distributions, Optim, LineSearches
+import StructuralEquationModels as SEM
 include("test_helpers.jl")
 
 @variables x[1:13]
