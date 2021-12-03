@@ -1,4 +1,4 @@
-name = "SEM"
+name = "StructuralEquationModels"
 uuid = "383ca8c5-e4ff-4104-b0a9-f7b279deed53"
 authors = ["Maximilian Ernst", "Aaron Peikert"]
 version = "0.1.0"
