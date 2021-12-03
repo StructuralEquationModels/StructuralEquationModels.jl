@@ -37,7 +37,6 @@ function gen_model(nfact, nitem, data, backend)
     nnod = nfact+nobs
     npar = 3nobs + nfact-1
     Symbolics.@variables x[1:npar]
-    x = [x...]
 
     #F
     Ind = collect(1:nobs)
