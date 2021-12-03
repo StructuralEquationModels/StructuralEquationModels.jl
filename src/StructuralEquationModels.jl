@@ -1,4 +1,4 @@
-module SEM
+module StructuralEquationModels
 
 using LinearAlgebra, Optim,
     NLSolversBase, Statistics, SparseArrays, Symbolics,
