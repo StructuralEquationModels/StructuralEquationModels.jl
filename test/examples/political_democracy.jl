@@ -5,6 +5,7 @@ include("test_helpers.jl")
 ############################################################################
 ### observed data
 ############################################################################
+
 using LinearAlgebra
 dat = DataFrame(CSV.File("examples/data/data_dem.csv"))
 par_ml = DataFrame(CSV.File("examples/data/par_dem_ml.csv"))
@@ -96,6 +97,7 @@ start_val_ridge[16:20] .= .1
 loss_ml = SemLoss((SemML(semobserved, length(start_val_ml)),))
 loss_ls = SemLoss((SemWLS(semobserved, length(start_val_ml)),))
 loss_ridge = SemLoss((SemML(semobserved, length(start_val_ml)), SemRidge(.001, 16:20, length(start_val_ml))))
+loss_constant = SemLoss((SemML(semobserved, length(start_val_ml)), SemConstant(3.465, length(start_val_ml))))
 #loss_ridge = SemLoss((SemML(semobserved, 1.0, similar(start_val_ml)), SemML(semobserved, 1.0, similar(start_val_ml))))
 
 # loss_snlls = SemLoss([SemSWLS(semobserved, [0.0], similar(start_val_ml))])
@@ -119,12 +121,12 @@ diff =
 model_ml = Sem(semobserved, imply_ml, loss_ml, diff)
 model_ls = Sem(semobserved, imply_ls, loss_ls, diff)
 model_ridge = Sem(semobserved, imply_ml, loss_ridge, diff)
+model_constant = Sem(semobserved, imply_ml, loss_constant, diff)
 
 
 ############################################################################
 ### test gradients
 ############################################################################
-
 
 @testset "ml_gradients" begin
     @test test_gradient(model_ml, start_val_ml)
@@ -136,6 +138,10 @@ end
 
 @testset "ridge_gradients" begin
     @test test_gradient(model_ridge, start_val_ml)
+end
+
+@testset "constant_gradients" begin
+    @test test_gradient(model_constant, start_val_ml)
 end
 
 ############################################################################
@@ -151,6 +157,18 @@ end
     solution_ls = sem_fit(model_ls)
     @test SEM.compare_estimates(par_ls.est[par_order], solution_ls.minimizer, 0.01)
 end
+
+@testset "constant_solution" begin
+    solution_constant = sem_fit(model_constant)
+    @test SEM.compare_estimates(par_ml.est[par_order], solution_constant.minimizer, 0.01)
+end
+
+# test constant objective value
+@testset "constant_objective_and_gradient" begin
+    @test (objective!(model_constant, start_val_ml) - 3.465) ≈ objective!(model_ml, start_val_ml)
+    @test gradient!(model_constant, start_val_ml) ≈ gradient!(model_ml, start_val_ml)
+end
+
 ############################################################################
 ### test hessians
 ############################################################################
