@@ -1,4 +1,5 @@
-using SEM, CSV, DataFrames, SparseArrays, Symbolics, LineSearches, Optim, Test, FiniteDiff
+using StructuralEquationModels, CSV, DataFrames, SparseArrays, Symbolics, LineSearches, Optim, Test, FiniteDiff
+import StructuralEquationModels as SEM
 include("test_helpers.jl")
 
 ############################################################################
