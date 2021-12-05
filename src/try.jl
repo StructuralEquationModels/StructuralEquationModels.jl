@@ -1134,3 +1134,238 @@ d = rand(10, 10)
 using BenchmarkTools
 
 @benchmark mul!($c, $a, $b)
+
+########################### 
+
+using Pkg
+
+Pkg.activate("test")
+
+using CSV
+
+Pkg.activate(".")
+
+using DataFrames, StructuralEquationModels, Symbolics, 
+    LinearAlgebra, SparseArrays, Optim, LineSearches,
+    BenchmarkTools
+
+import StructuralEquationModels as SEM
+
+data = DataFrame(CSV.File("benchmark/regsem/data.csv"))
+
+data = select(data, Not(:Column1))
+
+semobserved = SemObsCommon(data = Matrix{Float64}(data))
+
+############################################################################
+### define models
+############################################################################
+
+include(pwd()*"/src/frontend/parser.jl")
+
+lat_vars = ["f1"]
+
+obs_vars = "x".*string.(1:9)
+
+model = """
+f1 =~ 1*x1 + x2 + x3 + x4 + x5 + x6 + x7 + x8 + x9
+x1 ~~ x1
+x2 ~~ x2
+x3 ~~ x3
+x4 ~~ x4
+x5 ~~ x5
+x6 ~~ x6
+x7 ~~ x7
+x8 ~~ x8
+x9 ~~ x9
+f1 ~~ f1
+"""
+
+# do it
+my_partable = ParameterTable(
+    lat_vars, 
+    obs_vars, 
+    parse_sem(model)...)
+
+A, S, F, parameters = get_RAM(my_partable, :x)
+
+start_val = start_simple(Matrix(A), Matrix(S), Matrix(F), parameters)
+
+imply = RAMSymbolic(A, S, F, parameters, start_val)
+
+semdiff =
+    SemDiffOptim(
+        BFGS(;
+        linesearch = BackTracking(order=3),
+        alphaguess = InitialHagerZhang()),
+        Optim.Options(
+            ;f_tol = 1e-10,
+            x_tol = 1.5e-8))
+
+lossfun_ml = SemML(semobserved, length(start_val))
+lossfun_c = SemConstant(-(logdet(semobserved.obs_cov) + 18), length(start_val))
+
+loss_ml = SemLoss(
+    (
+        lossfun_ml,
+    )
+)
+
+model_ml = Sem(semobserved, imply, loss_ml, semdiff)
+
+solution = sem_fit(model_ml)
+
+imply = RAMSymbolic(A, S, F, parameters, start_val)
+
+A, S, F, parameters = get_RAM(my_partable, :x)
+
+A = Matrix(A)
+S = Matrix(S)
+F = Matrix(F)
+M = [parameters[1], parameters[2], 1.0, 0.0]
+
+A_indices = []
+S_indices = []
+
+for parameter in parameters
+
+    A_indices_par = []
+    S_indices_par = []
+
+    for index in eachindex(A)
+        if isequal(parameter, A[index])
+            push!(A_indices_par, index)
+        end
+    end
+
+    for index in eachindex(S)
+        if isequal(parameter, S[index])
+            push!(S_indices_par, index)
+        end
+    end
+
+    push!(A_indices, A_indices_par)
+    push!(S_indices, S_indices_par)
+end
+
+A_indices = [convert(Vector{Int}, indices) for indices in A_indices]
+S_indices = [convert(Vector{Int}, indices) for indices in S_indices]
+
+A_pre = zeros(size(A)...)
+S_pre = zeros(size(S)...)
+
+for index in eachindex(A)
+    δ = tryparse(Float64, string(A[index]))
+    if !iszero(A[index]) & (δ !== nothing)
+        A_pre[index] = -δ
+    end
+end
+
+for index in eachindex(S)
+    δ = tryparse(Float64, string(S[index]))
+    if !iszero(S[index]) & (δ !== nothing)
+        S_pre[index] = -δ
+    end
+end
+
+n_par = length(parameters)
+randpar = rand(n_par)
+
+# fill the arrays
+function fill_A_S(A_pre, S_pre, A_indices, S_indices, parameters)
+    for (iA, iS, par) in zip(A_indices, S_indices, parameters)
+        for index_A in iA
+            A_pre[index_A] = -par
+        end
+        for index_S in iS
+            S_pre[index_S] = -par
+        end
+    end
+end
+
+# @benchmark fill_A_S($A_pre, $S_pre, $A_indices, $S_indices, $randpar)
+
+fill_A_S(A_pre, S_pre, A_indices, S_indices, randpar)
+
+acyclic = isone(det(I-A_pre))
+
+if iszero(A_pre[.!tril(ones(Bool,10,10))])
+    A_pre = LowerTriangular(A_pre)
+elseif iszero(A_pre[.!tril(ones(Bool,10,10))'])
+    A_pre = UpperTriangular(A_pre)
+end
+
+inviat = LowerTriangular(permutedims(invia))
+Ft = permutedims(F)
+
+function Σ_RAM!(Σ, At, Ft, S, pre1, pre2)
+    ldiv!(pre1, At, Ft)
+    mul!(pre2, S, pre1)
+    mul!(Σ, pre1', pre2)
+end
+
+Σₜ = F*inv(invia)*S_pre*inv(invia')*F'
+
+Σ = zeros(9, 9)
+pre1 = zeros(10, 9)
+pre2 = zeros(10, 9)
+
+Σ_RAM!(Σ, inviat, Ft, S_pre, pre1, pre2)
+
+Σ ≈ Σₜ
+
+@benchmark F*inv(invia)*S_pre*inv(invia')*F'
+
+@benchmark Σ_RAM!(Σ, inviat, Ft, S_pre, pre1, pre2)
+
+using LinearAlgebra, MKL, Random, SparseArrays, BenchmarkTools
+
+A = I+sprand(100, 100, 0.1)
+
+B = Matrix(copy(A))
+
+C = I
+
+D = rand(100, 100)
+
+@benchmark B\I
+
+@benchmark B\D
+
+######################
+M_indices = []
+
+
+for parameter in parameters
+
+    M_indices_par = []
+
+    for index in eachindex(M)
+        if isequal(parameter, M[index])
+            push!(M_indices_par, index)
+        end
+    end
+
+    push!(M_indices, M_indices_par)
+
+end
+
+M_indices = [convert(Vector{Int}, indices) for indices in M_indices]
+
+M_pre = zeros(size(M)...)
+
+for index in eachindex(M)
+    δ = tryparse(Float64, string(M[index]))
+    if !iszero(M[index]) & (δ !== nothing)
+        M_pre[index] = δ
+    end
+end
+
+S_ind = [findall(!iszero, S[:, i]) for i in 1:size(S, 2)]
+
+S_ind
+
+grad = zeros(20)
+n_par = 20
+
+@benchmark $grad .= (vec($A)'*$S)'
