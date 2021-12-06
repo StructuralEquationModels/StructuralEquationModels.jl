@@ -159,6 +159,20 @@ function elimination_matrix(nobs)
     return L
 end
 
+function commutation_matrix(n)
+
+    M = zeros(n^2, n^2)
+
+    for i = 1:n
+        for j = 1:n
+            M[i + n*(j - 1), j + n*(i - 1)] = 1.0
+        end
+    end
+
+    return M
+
+end
+
 function compare_estimates(solution_true, solution_sus, tol)
     margin = tol*abs.(solution_true)
     is_close = all(abs.(solution_sus - solution_true) .< margin)
