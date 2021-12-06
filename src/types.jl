@@ -187,6 +187,10 @@ function (ensemble::SemEnsemble)(par, F, G, H)
 
 end
 
+#####################################################################################################
+# helpers
+#####################################################################################################
+
 objective(model::AbstractSem) = model.loss.F[1]
 gradient(model::AbstractSem) = model.loss.G
 hessian(model::AbstractSem) = model.loss.H
@@ -223,4 +227,22 @@ end
 function hessian!(model::SemEnsemble, parameters)
     model(parameters, nothing, nothing, 1.0)
     return model.H
+end
+
+#objective(model::AbstractSem, parameters) = objective!(model, parameters)
+#gradient(model::AbstractSem, parameters) = gradient!(model, parameters)
+#hessian(model::AbstractSem, parameters) = hessian!(model, parameters)
+
+#objective(model::SemEnsemble, parameters) = objective!(model, parameters)
+#gradient(model::SemEnsemble, parameters) = gradient!(model, parameters)
+#hessian(model::SemEnsemble, parameters) = hessian!(model, parameters)
+
+function objective_gradient!(model::AbstractSem, parameters)
+    model(parameters, 1.0, 1.0, nothing)
+    return model.loss.F[1], model.loss.G
+end
+
+function objective_gradient!(model::SemEnsemble, parameters)
+    model(parameters, 1.0, 1.0, nothing)
+    return model.F[1], model.G
 end
