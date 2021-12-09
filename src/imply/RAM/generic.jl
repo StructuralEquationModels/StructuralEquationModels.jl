@@ -2,11 +2,11 @@
 ### Types
 ############################################################################
 
-struct RAM{A1, A2, A3, A4, A5, A6, V, I1, I2, I3, M1, M2, M3, S1, S2} <: SemImply
+struct RAM{A1, A2, A3, A4, A5, A6, V, I1, I2, I3, M1, M2, M3, S1, S2, S3} <: SemImply
     Σ::A1
-    Aᵀ::A2
+    A::A2
     S::A3
-    Fᵀ::A4
+    F::A4
     μ::A5
     M::A6
 
@@ -20,8 +20,9 @@ struct RAM{A1, A2, A3, A4, A5, A6, V, I1, I2, I3, M1, M2, M3, S1, S2} <: SemImpl
     F⨉I_A⁻¹S::M2
     I_A::M3
 
-    ∇A::S1
+    ∇Aᵀ::S1
     ∇S::S2
+    ∇Σ::S3
 end
 
 ############################################################################
@@ -47,20 +48,20 @@ function RAM(
     n_var = size(F, 1)
     n_nod = size(F, 2)
         
-    Aᵀ = permutedims(Matrix(A))
+    A = Matrix(A)
     S = Matrix(S)
-    Fᵀ = permutedims(Matrix(F))
+    F = Matrix(F)
 
-    A_indices = get_parameter_indices(parameters, Aᵀ)
+    A_indices = get_parameter_indices(parameters, A)
     S_indices = get_parameter_indices(parameters, S)
 
     A_indices = [convert(Vector{Int}, indices) for indices in A_indices]
     S_indices = [convert(Vector{Int}, indices) for indices in S_indices]
 
-    A_pre = zeros(size(Aᵀ)...)
+    A_pre = zeros(size(A)...)
     S_pre = zeros(size(S)...)
 
-    set_constants!(Aᵀ, A_pre)
+    set_constants!(A, A_pre)
     set_constants!(S, S_pre)
 
     acyclic = isone(det(I-A_pre))
