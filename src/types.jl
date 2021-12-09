@@ -239,10 +239,10 @@ end
 
 function objective_gradient!(model::AbstractSem, parameters)
     model(parameters, 1.0, 1.0, nothing)
-    return model.loss.F[1], model.loss.G
+    return model.loss.F[1], copy(model.loss.G)
 end
 
 function objective_gradient!(model::SemEnsemble, parameters)
     model(parameters, 1.0, 1.0, nothing)
-    return model.F[1], model.G
+    return model.F[1], copy(model.G)
 end

@@ -1369,3 +1369,89 @@ grad = zeros(20)
 n_par = 20
 
 @benchmark $grad .= (vec($A)'*$S)'
+
+using BenchmarkTools, LinearAlgebra, SparseArrays, MKL
+
+function kronecker_I(A, n, pre)
+    for i in 1:n
+        for j in 1:n
+            for k in 1:n
+                pre[] = A[i, j]
+            end
+        end
+    end
+end
+
+n = 3
+
+A = rand(n, n)
+
+B = one(A)
+
+SB = sparse(B)
+
+@benchmark kron($A, $SB)
+
+@benchmark kron($A, $B)
+
+SC = kron(SB, A)
+#SC = kron(A, SB)
+
+
+pre = copy(SC)
+
+function kronecker_I_M(M, n, pre)
+    n2 = n^2
+    for i = 1:n
+        copyto!(pre.nzval, (i-1)*n2+1, M, 1, n2)
+        # pre.nzval[(i-1)*n2+1:i*n2] .= vec(M)
+    end
+    return nothing
+end
+
+kronecker_I_M(A, n, pre)
+
+pre == SC
+
+@benchmark kron(SB, A)
+
+@benchmark kronecker_I_M($A, $n, $pre)
+
+Kₙ = sparse(commutation_matrix(n))
+
+p = 90
+
+∇A = sprand(n^2, p, 0.01)
+
+@benchmark Kₙ*pre*∇A
+
+n_var = 80
+
+a = sprand(100, 100, 0.05)
+b = Matrix(a)
+
+@benchmark kron($a, $a)
+
+@benchmark $a*$a
+
+@benchmark kron($b, $b)
+
+@benchmark $b*$b
+
+FIA = rand()
+
+A = [0 0 0 0 0 0 1 0 0
+    0 0 0 0 0 0 1 0 0
+    0 0 0 0 0 0 1 0 0
+    0 0 0 0 0 0 0 1 0
+    0 0 0 0 0 0 0 1 0
+    0 0 0 0 0 0 0 1 0
+    0 0 0 0 0 0 0 0 1
+    0 0 0 0 0 0 0 0 1
+    0 0 0 0 0 0 0 0 0]
+
+A = I-A
+
+A_inv = inv(A)
+
+sparse(A_inv)
