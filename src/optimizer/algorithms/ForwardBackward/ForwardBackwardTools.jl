@@ -16,7 +16,7 @@ end
 
 function lower_bound_smoothness_constant(f, A, x)
     Ax = A * x
-    grad_f_Axeps = copy(gradient!(f, Ax))
+    grad_f_Ax = copy(gradient!(f, Ax))
     return lower_bound_smoothness_constant(f, A, x, grad_f_Ax)
 end
 
@@ -40,6 +40,7 @@ function backtrack_stepsize!(
     f_Az = _gradient!(grad_f_Az, f, Az)
     tol = 10 * eps(R) * (1 + abs(f_Az))
     while f_Az > f_Az_upp + tol && gamma >= minimum_gamma
+    #while f_Az > f_Ax && gamma >= minimum_gamma
         gamma /= 2
         y .= x .- gamma .* At_grad_f_Ax
         g_z = prox!(z, g, y, gamma)
