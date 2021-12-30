@@ -64,12 +64,13 @@ semdiff =
             x_tol = 1.5e-8))
 
 lossfun_ml = SemML(semobserved, length(start_val))
-lossfun_c = SemConstant(-(logdet(semobserved.obs_cov) + 18), length(start_val))
+
+#lossfun_c = SemConstant(-(logdet(semobserved.obs_cov) + 18), length(start_val))
 
 loss_ridge = SemLoss(
     (
         lossfun_ml,
-        lossfun_c,
+        #lossfun_c,
         SemRidge(.02, [1, 2, 6, 7, 8], length(start_val))
     )
 )
@@ -265,12 +266,36 @@ using Cthulhu
 ######################################################
 # proximal algorithms
 ######################################################
+using Pkg
+
+Pkg.activate("test")
+
+using CSV
+
+Pkg.activate(".")
+
+using DataFrames, StructuralEquationModels, Symbolics, 
+    LinearAlgebra, SparseArrays, Optim, LineSearches,
+    BenchmarkTools
+
+import StructuralEquationModels as SEM
+
+data = DataFrame(CSV.File("benchmark/regsem/data.csv"))
+
+data = select(data, Not(:Column1))
+
+semobserved = SemObsCommon(data = Matrix{Float64}(data))
+
 using ProximalOperators
 import StructuralEquationModels: sem_fit, gradient, gradient!, objective, objective!, objective_gradient!
 
-include(pwd()*"/src/optimizer/algorithms/ForwardBackwardTools.jl")
-include(pwd()*"/src/optimizer/algorithms/IterationTools.jl")
-include(pwd()*"/src/optimizer/algorithms/ProximalGradient.jl")
+include(pwd()*"/src/optimizer/algorithms/ForwardBackward/ForwardBackwardTools.jl")
+include(pwd()*"/src/optimizer/algorithms/ForwardBackward/IterationTools.jl")
+include(pwd()*"/src/optimizer/algorithms/ForwardBackward/ProximalGradient.jl")
+include(pwd()*"/src/optimizer/algorithms/PANOC/traits.jl")
+include(pwd()*"/src/optimizer/algorithms/PANOC/LBFGS.jl")
+include(pwd()*"/src/optimizer/algorithms/PANOC/PANOC.jl")
+
 include(pwd()*"/src/diff//Proximal.jl")
 include(pwd()*"/src/optimizer/Proximal.jl")
 
@@ -322,7 +347,7 @@ loss_ridge = SemLoss(
     (
         lossfun_ml,
         lossfun_c,
-        SemRidge(.02, [1, 2, 6, 7, 8], length(start_val))
+        SemRidge(.1, [1, 2, 6, 7, 8], length(start_val))
     )
 )
 
@@ -336,21 +361,74 @@ model_ridge = Sem(semobserved, imply, loss_ridge, semdiff)
 model_ml = Sem(semobserved, imply, loss_ml, semdiff)
 
 
-solution = sem_fit(model_ml)
+solution_ridge = sem_fit(model_ridge)
+solution_ml = sem_fit(model_ml)
 
 # with proximal algorithm
 
+α = zeros(18)
+α[[1, 2, 6, 7, 8]] .= 0.2
+
 diff_proximal = SemDiffProximal(
-    ForwardBackward(maxit = 100),
+    ForwardBackward(maxit = 1000),
+    #ForwardBackward(maxit = 10000),
     (;),
-    NormL1(0.0)
+    NormL1(α)
 )
 
 model_lasso = Sem(semobserved, imply, loss_ml, diff_proximal)
 
 solution_lasso, iterations = sem_fit(model_lasso)
 
-model_lasso(start_val.+1, 1.0, 1.0, nothing)
+include(pwd()*"/src/optimizer/algorithms/ProximalGradient/ProximalGradient.jl")
+
+solution, converged, iterations = proximalgradient(model_lasso, model_lasso.diff.g; tolerance = 0.0001, maxit = 10000)
+
+### plot
+λ = collect(0:0.01:0.2)
+
+function fit_λ(λ, model, g)
+    α = zeros(18)
+    α[[1, 2, 6, 7, 8]] .= λ
+    g = g(α)
+    solution, converged, iterations = proximalgradient(model, g; tolerance = 0.0001, maxit = 10000)
+    return solution
+end
+
+
+using MKL
+
+
+solutions_lasso = []
+solutions_ridge = []
+
+
+@time for λ ∈ λ
+    solution = fit_λ(λ, model_lasso, NormL1)
+    push!(solutions_lasso, solution)
+end
+
+solutions_lasso = hcat(solutions_lasso...)
+
+solutions_lasso = solutions_lasso[[1, 2, 6, 7, 8], :]
+
+using Plots
+
+plot(λ, solutions_lasso'; ylims = [0, Inf])
+
+
+for λ ∈ λ
+    solution = fit_λ(λ, model_lasso, SqrNormL2)
+    push!(solutions_ridge, solution)
+end
+
+solutions_ridge = hcat(solutions_ridge...)
+
+solutions_ridge = solutions_ridge[[1, 2, 6, 7, 8], :]
+
+using Plots
+
+plot(λ, solutions_ridge'; ylims = [0, Inf])
 
 ###############
 using Distributions
