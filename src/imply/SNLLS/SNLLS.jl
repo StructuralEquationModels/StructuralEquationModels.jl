@@ -2,79 +2,140 @@
 ### Types
 ############################################################################
 
-struct ImplySymbolicSWLS{
-    F <: Any,
-    A <: AbstractArray,
-    S <: Array{Float64}} <: Imply
-    imp_fun::F
-    G::A
-    start_val::S
+struct SNLLS{N1, N2, N3, I1, I2, I3, M1, M2, M3, M4} <: Imply
+
+    q_directed::N1,
+    q_undirected::N2,
+    size_σ::N3,
+
+    A_indices_linear::I1,
+    A_indices_cartesian::I2,
+    S_indices::I3,
+
+    A_pre::M1,
+    I_A::M2,
+    G::M3,
+    ∇G::M4
+
 end
 
 ############################################################################
 ### Constructors
 ############################################################################
 
-function ImplySymbolicSWLS(
-        A::Spa1,
-        S::Spa2,
-        F::Spa3,
-        parameters,
-        start_val
-            ) where {
-            Spa1 <: SparseMatrixCSC,
-            Spa2 <: SparseMatrixCSC,
-            Spa3 <: SparseMatrixCSC,
-            Spa4 <: Union{Nothing, AbstractArray}
-            }
+function SNLLS(
+    A::Spa1,
+    S::Spa2,
+    F::Spa3,
+    parameters,
+    start_val;
 
-    nobs, ntot = size(F)
-    nlat = ntot - nobs
+    M::Spa4 = nothing,
+    gradient = true
 
-    # Selection matrices
-    ind = findall(tril(trues(nobs, nobs)))
-    Es = []
-    for i in ind
-        E = zeros(Bool, nobs, nobs)
-        E[i] = true
-        E = vec(E)
-        push!(Es, E)
+        ) where {
+        Spa1 <: SparseMatrixCSC,
+        Spa2 <: SparseMatrixCSC,
+        Spa3 <: SparseMatrixCSC,
+        Spa4 <: Union{Nothing, AbstractArray}
+        }
+
+    n_var, n_nod = size(F)
+
+    A = Matrix(A)
+    S = Matrix(S)
+    F = Matrix(F); F = convert(Matrix{Float64}, F)
+
+    if check_constants(S)
+        @error "constant variance/covariance parameters different from zero are not allowed in SNLLS"
     end
-    L = hcat(Es...)
-    K = L*inv(transpose(L)*L)
-    K = sparse(K)
 
-    ind = findall(!iszero, S)
-    ind = filter(x -> (x[1] >= x[2]), ind)
-    Es = []
-    for i in ind
-        E = zeros(Bool, nobs+nlat, nobs+nlat)
-        E[i] = true
-        E = vec(E)
-        push!(Es, E)
+    # store the indices of the parameters
+    A_indices = get_parameter_indices(parameters, A)
+    S_indices = get_parameter_indices(parameters, S; index_function = eachindex_lower, linear_indices = true)
+
+    A_indices = [convert(Vector{Int}, indices) for indices in A_indices]
+    S_indices = [convert(Vector{Int}, indices) for indices in S_indices]
+
+    A_pars, S_pars = get_partition(A_indices, S_indices)
+
+    # dimension of undirected and directed parameters
+    q = size(start_val)
+    q_undirected = length(S_pars)
+    q_directed = length(A_pars)
+
+    A_indices_linear = A_indices[A_pars]
+    A_indices_cartesian = linear2cartesian.(A_indices_linear, [A])
+
+    S_indices = linear2cartesian.(S_indices, [S])
+    S_indices = S_indices[S_pars]
+
+    # A matrix
+    A_pre = zeros(size(A)...)
+    set_constants!(A, A_pre)
+
+    acyclic = isone(det(I-A_pre))
+
+    # check if A is lower or upper triangular
+    if iszero(A_pre[.!tril(ones(Bool,10,10))])
+        A_pre = LowerTriangular(A_pre)
+    elseif iszero(A_pre[.!tril(ones(Bool,10,10))'])
+        A_pre = UpperTriangular(A_pre)
+    elseif acyclic
+        @info "Your model is acyclic, specifying the A Matrix as either Upper or Lower Triangular can have great performance benefits."
     end
-    L_Ω = hcat(Es...)
-    L_Ω = sparse(L_Ω)
 
-    #Model-implied covmat
-    A = neumann_series(A)
+    I_A = zeros(n_nod, n_nod)
 
-    G = transpose(K)*(kron(F, F)*kron(A, A))*L_Ω
-    G = Array(G)
-    G = ModelingToolkit.simplify.(G)
+    size_σ = Int(0.5*(n_obs^2+n_obs))
+    G = zeros(size_σ, q_undirected)
+    # TODO: analyze sparsity pattern of G
 
-    imp_fun =
-        eval(ModelingToolkit.build_function(
-            G,
-            parameters
-        )[2])
+    if gradient
+        ∇G = zeros(size_σ*q_undirected, q_directed)
+        # TODO: analyze sparsity pattern of ∇G
+    else
+        ∇G = nothing
+    end
 
-    G = zeros(size(G))
+    # μ
+    if !isnothing(M)
 
-    return ImplySymbolicSWLS(
-        imp_fun,
+        @error "no meanstructure allowed for SNLLS"
+
+        if check_constants(M)
+            @error "constant mean parameters different from zero are not allowed in SNLLS"
+        end
+
+        M_indices = get_parameter_indices(parameters, M)
+        M_indices = [convert(Vector{Int}, indices) for indices in M_indices]
+
+        M_pre = zeros(size(M)...)
+
+        if gradient
+
+        else
+            M_indices = nothing
+            M_pre = nothing
+        end
+
+    else
+
+    end
+
+    return SNLLS(
+        q_directed,
+        q_undirected,
+        size_σ,
+
+        A_indices_linear,
+        A_indices_cartesian,
+        S_indices,
+
+        A_pre,
+        I_A,
         G,
-        copy(start_val)
+        ∇G
     )
 end
 
@@ -82,10 +143,79 @@ end
 ### functors
 ############################################################################
 
-function (imply::ImplySymbolicSWLS)(parameters, model)
-    imply.imp_fun(imply.G, parameters)
+function (imply::SNLLS)(par, F, G, H, model)
+
+    fill_matrix(
+        imply.A,
+        imply.A_indices,
+        par)
+
+    imply.I_A .= inv(I - imply.A)
+
+    fill_G!(
+        imply.G,
+        imply.q_undirected,
+        imply.size_σ,
+        imply.S_indices,
+        imply.σ_indices,
+        imply.I_A)
+
+    if !isnothing(imply.μ)
+        @error "meanstructure for SNLLS not implemented"
+    end
+
+    if !isnothing(G)
+        fill_∇G!(
+            imply.∇G,
+            imply.q_undirected,
+            imply.size_σ,
+            imply.q_directed,
+            imply.S_indices,
+            imply.σ_indices,
+            imply.A_indices,
+            imply.I_A)
+    end
+
 end
 
 ############################################################################
 ### additional functions
 ############################################################################
+
+function fill_G!(G, q_undirected, size_σ, S_indices, σ_indices, I_A)
+
+    for s in 1:q_undirected
+        l, k = S_indices[s][1], S_indices[s][2]
+        # rows
+        for r in 1:size_σ
+            i, j = σ_indices[r][1], σ_indices[r][2]
+            G[r, s] = I_A[i, l]*I_A[j, k]
+            if l != k
+                G[r, s] += I_A[i, k]*I_A[j, l]
+            end
+        end
+    end
+end
+
+function fill_∇G!(∇G, q_undirected, size_σ, q_directed, S_indices, σ_indices, A_indices, I_A)
+
+    for s in 1:q_undirected
+        l, k = S_indices[s][1], S_indices[s][2]
+
+        for r in 1:size_σ
+            i, j = σ_indices[r][1], σ_indices[r][2]
+            t = (s-1)*size_σ + r
+
+            for m in 1:q_directed
+                u, v = A_indices[m][1], A_indices[m][2]
+                ∇G[t, m] = I_A[i, u]*I_A[v, l]*I_A[j, k] + I_A[i, l]*I_A[j, u]*I_A[v, k]
+                if l != k
+                    ∇G[t, m] += I_A[i, u]*I_A[v, k]*I_A[j, l] + I_A[i, k]*I_A[j, u]*I_A[v, l]
+                end
+            end
+
+        end
+
+    end
+
+end
