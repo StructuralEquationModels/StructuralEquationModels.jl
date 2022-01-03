@@ -186,3 +186,35 @@ function get_partition(A_indices, S_indices)
     return first_A:last_A, first_S:last_S
 
 end
+
+function get_partition(M_indices)
+
+    n_par = length(M_indices)
+
+    first_M = "a"
+    last_M = "a"
+    
+    for i in 1:n_par
+        if length(M_indices[i]) != 0
+            first_M = i
+            break
+        end
+    end
+
+    for i in n_par+1 .- (1:n_par)
+        if length(M_indices[i]) != 0
+            last_M = i
+            break
+        end
+    end
+
+    for i in first_M:last_M
+        if length(M_indices[i]) == 0
+            @error "Your parameter vector is not partitioned into directed, undirected and mean effects"
+            return nothing
+        end
+    end
+
+    return first_M:last_M
+
+end
