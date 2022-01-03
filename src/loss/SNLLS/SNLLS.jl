@@ -25,24 +25,36 @@ function SemSNLLS(
     meanstructure = false,
     parameter_type = Float64) where {T <: SemObs}
     
-    ind = findall(!iszero, LowerTriangular(S))
-    s = S[ind]
+    ind = findall(!iszero, LowerTriangular(observed.obs_cov))
+    s = observed.obs_cov[ind]
 
     # compute V
     if isnothing(V)
-        D = duplication_matrix(observed.n_man)
-        S = inv(observed.obs_cov)
-        S = kron(S, S)
-        V = 0.5*(D'*S*D)
+        if !meanstructure
+            D = duplication_matrix(observed.n_man)
+            S = inv(observed.obs_cov)
+            S = kron(S, S)
+            V = 0.5*(D'*S*D)
+        else
+            D = duplication_matrix(observed.n_man)
+            S = inv(observed.obs_cov)
+            S = kron(S, S)
+            V_σ = 0.5*(D'*S*D)
+            V_μ = S
+            a, b = size(V_σ)
+            c, d = size(V_μ)
+            V = [V_σ            zeros(a, d)
+                zeros(c, b)     V_μ]
+        end
+    end
+
+    if meanstructure
+        s = vcat(s, observed.obs_mean)
     end
 
     sᵀV = transpose(s)*V
 
-    #if meanstructure
 
-    #else
-
-    #end
 
     return SemSNLLS(
         V, 
