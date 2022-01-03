@@ -101,16 +101,15 @@ function SNLLS(
     # μ
     if !isnothing(M)
 
-        @error "no meanstructure allowed for SNLLS"
-
         if check_constants(M)
             @error "constant mean parameters different from zero are not allowed in SNLLS"
         end
 
         M_indices = get_parameter_indices(parameters, M)
-        M_indices = [convert(Vector{Int}, indices) for indices in M_indices]
+        #M_indices = [convert(Vector{Int}, indices) for indices in M_indices]
+        #M_pre = zeros(size(M)...)
 
-        M_pre = zeros(size(M)...)
+        M_indices
 
         if gradient
 
@@ -161,7 +160,12 @@ function (imply::SNLLS)(par, F, G, H, model)
         imply.I_A)
 
     if !isnothing(imply.μ)
-        @error "meanstructure for SNLLS not implemented"
+
+        fill_G_μ!(imply.G_μ,
+        imply.q_mean, 
+        imply.M_indices, 
+        imply.F*imply.I_A)
+        
     end
 
     if !isnothing(G)
@@ -195,6 +199,17 @@ function fill_G!(G, q_undirected, size_σ, S_indices, σ_indices, I_A)
             end
         end
     end
+
+end
+
+function fill_G_μ!(G_μ, q_mean, M_indices, FI_A)
+
+    for i in 1:q_mean
+        for j in M_indices[i]
+            G_μ[:, i] += FI_A[:, j]
+        end
+    end
+
 end
 
 function fill_∇G!(∇G, q_undirected, size_σ, q_directed, S_indices, σ_indices, A_indices, I_A)
