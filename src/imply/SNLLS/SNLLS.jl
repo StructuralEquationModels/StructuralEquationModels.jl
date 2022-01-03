@@ -2,7 +2,7 @@
 ### Types
 ############################################################################
 
-struct SNLLS{N1, N2, N3, I1, I2, I3, M1, M2, M3, M4} <: Imply
+struct SNLLS{N1, N2, N3, I1, I2, I3, M1, M2, M3, M4, N4, I4, M5, I5} <: Imply
 
     q_directed::N1,
     q_undirected::N2,
@@ -15,7 +15,12 @@ struct SNLLS{N1, N2, N3, I1, I2, I3, M1, M2, M3, M4} <: Imply
     A_pre::M1,
     I_A::M2,
     G::M3,
-    ∇G::M4
+    ∇G::M4,
+
+    q_mean::N4,
+    M_indices::I4,
+    G_μ::M5,
+    G_μ_indices::I5
 
 end
 
@@ -88,38 +93,50 @@ function SNLLS(
     I_A = zeros(n_nod, n_nod)
 
     size_σ = Int(0.5*(n_obs^2+n_obs))
-    G = zeros(size_σ, q_undirected)
-    # TODO: analyze sparsity pattern of G
 
-    if gradient
-        ∇G = zeros(size_σ*q_undirected, q_directed)
-        # TODO: analyze sparsity pattern of ∇G
-    else
-        ∇G = nothing
-    end
-
-    # μ
     if !isnothing(M)
 
         if check_constants(M)
             @error "constant mean parameters different from zero are not allowed in SNLLS"
         end
-
+    
         M_indices = get_parameter_indices(parameters, M)
-        #M_indices = [convert(Vector{Int}, indices) for indices in M_indices]
-        #M_pre = zeros(size(M)...)
-
-        M_indices
-
+        M_indices = [convert(Vector{Int}, indices) for indices in M_indices]
+        M_pars = get_partition(M_indices)
+        M_indices = M_indices[M_pars]
+        q_mean = length(M_pars)
+    
+        G = zeros(size_σ+n_var, q_undirected+q_mean)
+    
+        G_μ = zeros(n_var, q_mean)
+    
+        G_μ_indices = CartesianIndices((size_σ .+ (1:n_var), q_undirected .+ (1:q_mean)))
+        # TODO: analyze sparsity pattern of G
+    
         if gradient
-
+            ∇G = zeros((size_σ+n_var)*(q_undirected+q_mean), q_directed)
+            # TODO: analyze sparsity pattern of ∇G
         else
-            M_indices = nothing
-            M_pre = nothing
+            ∇G = nothing
         end
-
+    
     else
-
+        
+        q_mean = nothing
+        M_indices = nothing
+        G_μ = nothing
+        G_μ_indices = nothing
+    
+        G = zeros(size_σ, q_undirected)
+        # TODO: analyze sparsity pattern of G
+    
+        if gradient
+            ∇G = zeros(size_σ*q_undirected, q_directed)
+            # TODO: analyze sparsity pattern of ∇G
+        else
+            ∇G = nothing
+        end
+    
     end
 
     return SNLLS(
@@ -134,7 +151,12 @@ function SNLLS(
         A_pre,
         I_A,
         G,
-        ∇G
+        ∇G,
+
+        q_mean,
+        M_indices,
+        G_μ,
+        G_μ_indices
     )
 end
 
@@ -159,13 +181,17 @@ function (imply::SNLLS)(par, F, G, H, model)
         imply.σ_indices,
         imply.I_A)
 
-    if !isnothing(imply.μ)
+    if !isnothing(imply.M_indices)
+
+        FI_A = imply.F*imply.I_A
 
         fill_G_μ!(imply.G_μ,
         imply.q_mean, 
         imply.M_indices, 
-        imply.F*imply.I_A)
-        
+        FI_A)
+
+        copyto!(imply.G, imply.G_μ_indices, imply.G_μ, CartesianIndices(imply.G_μ))
+
     end
 
     if !isnothing(G)
@@ -177,7 +203,10 @@ function (imply::SNLLS)(par, F, G, H, model)
             imply.S_indices,
             imply.σ_indices,
             imply.A_indices,
-            imply.I_A)
+            imply.I_A,
+            imply.q_mean,
+            imply.M_indices,
+            model.observed.n_man)
     end
 
 end
@@ -188,14 +217,18 @@ end
 
 function fill_G!(G, q_undirected, size_σ, S_indices, σ_indices, I_A)
 
+    fill!(G, zero(eltype(G)))
+
     for s in 1:q_undirected
-        l, k = S_indices[s][1], S_indices[s][2]
-        # rows
-        for r in 1:size_σ
-            i, j = σ_indices[r][1], σ_indices[r][2]
-            G[r, s] = I_A[i, l]*I_A[j, k]
-            if l != k
-                G[r, s] += I_A[i, k]*I_A[j, l]
+        for ind in S_indices[s]
+            l, k = ind[1], ind[2]
+            # rows
+            for r in 1:size_σ
+                i, j = σ_indices[r][1], σ_indices[r][2]
+                G[r, s] += I_A[i, l]*I_A[j, k]
+                if l != k
+                    G[r, s] += I_A[i, k]*I_A[j, l]
+                end
             end
         end
     end
@@ -203,6 +236,8 @@ function fill_G!(G, q_undirected, size_σ, S_indices, σ_indices, I_A)
 end
 
 function fill_G_μ!(G_μ, q_mean, M_indices, FI_A)
+
+    fill!(G_μ, zero(eltype(G_μ)))
 
     for i in 1:q_mean
         for j in M_indices[i]
@@ -212,25 +247,74 @@ function fill_G_μ!(G_μ, q_mean, M_indices, FI_A)
 
 end
 
-function fill_∇G!(∇G, q_undirected, size_σ, q_directed, S_indices, σ_indices, A_indices, I_A)
+function fill_∇G!(∇G, q_undirected, size_σ, q_directed, S_indices, σ_indices, A_indices, I_A, q_mean::Nothing, M_indices::Nothing, n_var)
+
+    fill!(∇G, zero(eltype(∇G)))
 
     for s in 1:q_undirected
-        l, k = S_indices[s][1], S_indices[s][2]
 
-        for r in 1:size_σ
-            i, j = σ_indices[r][1], σ_indices[r][2]
-            t = (s-1)*size_σ + r
+        for c ∈ S_indices[s]
+            l, k = c[1], c[2]
 
-            for m in 1:q_directed
-                u, v = A_indices[m][1], A_indices[m][2]
-                ∇G[t, m] = I_A[i, u]*I_A[v, l]*I_A[j, k] + I_A[i, l]*I_A[j, u]*I_A[v, k]
-                if l != k
-                    ∇G[t, m] += I_A[i, u]*I_A[v, k]*I_A[j, l] + I_A[i, k]*I_A[j, u]*I_A[v, l]
+            for r in 1:size_σ
+                i, j = σ_indices[r][1], σ_indices[r][2]
+                t = (s-1)*size_σ + r
+
+                for m in 1:q_directed
+                    u, v = A_indices[m][1], A_indices[m][2]
+                    ∇G[t, m] += I_A[i, u]*I_A[v, l]*I_A[j, k] + I_A[i, l]*I_A[j, u]*I_A[v, k]
+                    if l != k
+                        ∇G[t, m] += I_A[i, u]*I_A[v, k]*I_A[j, l] + I_A[i, k]*I_A[j, u]*I_A[v, l]
+                    end
                 end
+
             end
 
         end
 
+    end
+
+end
+
+function fill_∇G!(∇G, q_undirected, size_σ, q_directed, S_indices, σ_indices, A_indices, I_A, q_mean, M_indices, n_var)
+
+    fill!(∇G, zero(eltype(∇G)))
+
+    size_G_rows = size_σ + n_var
+
+    for s in 1:q_undirected
+        
+        for c ∈ S_indices[s]
+            l, k = c[1], c[2]
+
+            for r in 1:size_σ
+                i, j = σ_indices[r][1], σ_indices[r][2]
+                t = (s-1)*size_G_rows + r
+
+                for m in 1:q_directed
+                    u, v = A_indices[m][1], A_indices[m][2]
+                    ∇G[t, m] += I_A[i, u]*I_A[v, l]*I_A[j, k] + I_A[i, l]*I_A[j, u]*I_A[v, k]
+                    if l != k
+                        ∇G[t, m] += I_A[i, u]*I_A[v, k]*I_A[j, l] + I_A[i, k]*I_A[j, u]*I_A[v, l]
+                    end
+                end
+            end
+        end
+    end
+
+    for s in 1:q_mean
+        
+        for k ∈ M_indices[s]
+
+            for r in 1:n_var
+                t = (s-1)*size_G_rows + r + size_σ
+
+                for m in 1:q_directed
+                    u, v = A_indices[m][1], A_indices[m][2]
+                    ∇G[t, m] += I_A[r, u] + I_A[v, k]
+                end
+            end
+        end
     end
 
 end
