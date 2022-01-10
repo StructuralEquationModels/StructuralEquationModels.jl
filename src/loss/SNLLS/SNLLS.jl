@@ -38,8 +38,8 @@ function SemSNLLS(
         else
             D = duplication_matrix(observed.n_man)
             S = inv(observed.obs_cov)
-            S = kron(S, S)
-            V_σ = 0.5*(D'*S*D)
+            Sk = kron(S, S)
+            V_σ = 0.5*(D'*Sk*D)
             V_μ = S
             a, b = size(V_σ)
             c, d = size(V_μ)
@@ -87,7 +87,7 @@ function (semsnlls::SemSNLLS)(par, F, G, H, model)
     end
 
     if !isnothing(G)
-        semsnlls.G .= 2*vec((semsnlls.V*model.imply.G*a - semsnlls.V*semsnlls.s)*a')'*model.imply.∇G
+        semsnlls.G .= transpose(2*vec((semsnlls.V*model.imply.G*a - semsnlls.V*semsnlls.s)*a')'*model.imply.∇G)
     end
 
 end
