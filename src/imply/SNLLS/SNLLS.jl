@@ -2,25 +2,28 @@
 ### Types
 ############################################################################
 
-struct SNLLS{N1, N2, N3, I1, I2, I3, M1, M2, M3, M4, N4, I4, M5, I5} <: Imply
+struct SNLLS{N1, N2, N3, I1, I2, I3, I6, M1, M2, M3, M4, N4, I4, M5, I5, V1} <: SemImply
 
-    q_directed::N1,
-    q_undirected::N2,
-    size_σ::N3,
+    q_directed::N1
+    q_undirected::N2
+    size_σ::N3
 
-    A_indices_linear::I1,
-    A_indices_cartesian::I2,
-    S_indices::I3,
+    A_indices_linear::I1
+    A_indices_cartesian::I2
+    S_indices::I3
+    σ_indices::I6
 
-    A_pre::M1,
-    I_A::M2,
-    G::M3,
-    ∇G::M4,
+    A_pre::M1
+    I_A::M2
+    G::M3
+    ∇G::M4
 
-    q_mean::N4,
-    M_indices::I4,
-    G_μ::M5,
+    q_mean::N4
+    M_indices::I4
+    G_μ::M5
     G_μ_indices::I5
+
+    start_val::V1
 
 end
 
@@ -55,6 +58,8 @@ function SNLLS(
         @error "constant variance/covariance parameters different from zero are not allowed in SNLLS"
     end
 
+    σ_indices = findall(isone, LowerTriangular(ones(n_var, n_var)))
+
     # store the indices of the parameters
     A_indices = get_parameter_indices(parameters, A)
     S_indices = get_parameter_indices(parameters, S; index_function = eachindex_lower, linear_indices = true)
@@ -79,12 +84,20 @@ function SNLLS(
     A_pre = zeros(size(A)...)
     set_constants!(A, A_pre)
 
-    acyclic = isone(det(I-A_pre))
+    A_rand = copy(A_pre)
+    randpar = rand(length(start_val))
+
+    fill_matrix(
+        A_rand,
+        A_indices_linear,
+        randpar)
+
+    acyclic = isone(det(I-A_rand))
 
     # check if A is lower or upper triangular
-    if iszero(A_pre[.!tril(ones(Bool,10,10))])
+    if iszero(A_rand[.!tril(ones(Bool, size(A)...))])
         A_pre = LowerTriangular(A_pre)
-    elseif iszero(A_pre[.!tril(ones(Bool,10,10))'])
+    elseif iszero(A_rand[.!tril(ones(Bool, size(A)...))'])
         A_pre = UpperTriangular(A_pre)
     elseif acyclic
         @info "Your model is acyclic, specifying the A Matrix as either Upper or Lower Triangular can have great performance benefits."
@@ -92,7 +105,7 @@ function SNLLS(
 
     I_A = zeros(n_nod, n_nod)
 
-    size_σ = Int(0.5*(n_obs^2+n_obs))
+    size_σ = Int(0.5*(n_var^2+n_var))
 
     if !isnothing(M)
 
@@ -147,6 +160,7 @@ function SNLLS(
         A_indices_linear,
         A_indices_cartesian,
         S_indices,
+        σ_indices,
 
         A_pre,
         I_A,
@@ -156,7 +170,9 @@ function SNLLS(
         q_mean,
         M_indices,
         G_μ,
-        G_μ_indices
+        G_μ_indices,
+
+        start_val
     )
 end
 
@@ -167,11 +183,11 @@ end
 function (imply::SNLLS)(par, F, G, H, model)
 
     fill_matrix(
-        imply.A,
-        imply.A_indices,
+        imply.A_pre,
+        imply.A_indices_linear,
         par)
 
-    imply.I_A .= inv(I - imply.A)
+    imply.I_A .= inv(I - imply.A_pre)
 
     fill_G!(
         imply.G,
@@ -183,12 +199,13 @@ function (imply::SNLLS)(par, F, G, H, model)
 
     if !isnothing(imply.M_indices)
 
-        FI_A = imply.F*imply.I_A
+        FI_A = imply.I_A[1:Int(model.observed.n_man), :]
 
-        fill_G_μ!(imply.G_μ,
-        imply.q_mean, 
-        imply.M_indices, 
-        FI_A)
+        fill_G_μ!(
+            imply.G_μ,
+            imply.q_mean, 
+            imply.M_indices, 
+            FI_A)
 
         copyto!(imply.G, imply.G_μ_indices, imply.G_μ, CartesianIndices(imply.G_μ))
 
@@ -202,7 +219,7 @@ function (imply::SNLLS)(par, F, G, H, model)
             imply.q_directed,
             imply.S_indices,
             imply.σ_indices,
-            imply.A_indices,
+            imply.A_indices_cartesian,
             imply.I_A,
             imply.q_mean,
             imply.M_indices,
@@ -241,7 +258,7 @@ function fill_G_μ!(G_μ, q_mean, M_indices, FI_A)
 
     for i in 1:q_mean
         for j in M_indices[i]
-            G_μ[:, i] += FI_A[:, j]
+            G_μ[:, i] .+= FI_A[:, j]
         end
     end
 
@@ -261,7 +278,7 @@ function fill_∇G!(∇G, q_undirected, size_σ, q_directed, S_indices, σ_indic
                 t = (s-1)*size_σ + r
 
                 for m in 1:q_directed
-                    u, v = A_indices[m][1], A_indices[m][2]
+                    u, v = A_indices[m][1][1], A_indices[m][1][2]
                     ∇G[t, m] += I_A[i, u]*I_A[v, l]*I_A[j, k] + I_A[i, l]*I_A[j, u]*I_A[v, k]
                     if l != k
                         ∇G[t, m] += I_A[i, u]*I_A[v, k]*I_A[j, l] + I_A[i, k]*I_A[j, u]*I_A[v, l]
@@ -280,7 +297,7 @@ function fill_∇G!(∇G, q_undirected, size_σ, q_directed, S_indices, σ_indic
 
     fill!(∇G, zero(eltype(∇G)))
 
-    size_G_rows = size_σ + n_var
+    size_G_rows = size_σ + Int(n_var)
 
     for s in 1:q_undirected
         
@@ -292,7 +309,7 @@ function fill_∇G!(∇G, q_undirected, size_σ, q_directed, S_indices, σ_indic
                 t = (s-1)*size_G_rows + r
 
                 for m in 1:q_directed
-                    u, v = A_indices[m][1], A_indices[m][2]
+                    u, v = A_indices[m][1][1], A_indices[m][1][2]
                     ∇G[t, m] += I_A[i, u]*I_A[v, l]*I_A[j, k] + I_A[i, l]*I_A[j, u]*I_A[v, k]
                     if l != k
                         ∇G[t, m] += I_A[i, u]*I_A[v, k]*I_A[j, l] + I_A[i, k]*I_A[j, u]*I_A[v, l]
@@ -306,12 +323,12 @@ function fill_∇G!(∇G, q_undirected, size_σ, q_directed, S_indices, σ_indic
         
         for k ∈ M_indices[s]
 
-            for r in 1:n_var
-                t = (s-1)*size_G_rows + r + size_σ
+            for r in 1:Int(n_var)
+                t =  (q_undirected + s - 1)*size_G_rows + size_σ + r
 
                 for m in 1:q_directed
-                    u, v = A_indices[m][1], A_indices[m][2]
-                    ∇G[t, m] += I_A[r, u] + I_A[v, k]
+                    u, v = A_indices[m][1][1], A_indices[m][1][2]
+                    ∇G[t, m] += I_A[r, u]*I_A[v, k]
                 end
             end
         end
