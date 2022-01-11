@@ -61,15 +61,25 @@ function RAM(
     A_pre = zeros(size(A)...)
     S_pre = zeros(size(S)...)
 
-    set_constants!(A, A_pre)
     set_constants!(S, S_pre)
 
-    acyclic = isone(det(I-A_pre))
+    # A matrix
+    set_constants!(A, A_pre)
+
+    A_rand = copy(A_pre)
+    randpar = rand(length(start_val))
+
+    fill_matrix(
+        A_rand,
+        A_indices_linear,
+        randpar)
+
+    acyclic = isone(det(I-A_rand))
 
     # check if A is lower or upper triangular
-    if iszero(A_pre[.!tril(ones(Bool,10,10))])
+    if iszero(A_rand[.!tril(ones(Bool, size(A)...))])
         A_pre = LowerTriangular(A_pre)
-    elseif iszero(A_pre[.!tril(ones(Bool,10,10))'])
+    elseif iszero(A_rand[.!tril(ones(Bool, size(A)...))'])
         A_pre = UpperTriangular(A_pre)
     elseif acyclic
         @info "Your model is acyclic, specifying the A Matrix as either Upper or Lower Triangular can have great performance benefits."
@@ -92,7 +102,7 @@ function RAM(
 
     # μ
     if !isnothing(M)
-
+    
         M_indices = get_parameter_indices(parameters, M)
         M_indices = [convert(Vector{Int}, indices) for indices in M_indices]
     
@@ -103,12 +113,12 @@ function RAM(
         if gradient
             
         else
-           M_indices = nothing
-           M_pre = nothing
+           
         end
 
     else
-        
+        M_indices = nothing
+        M_pre = nothing
     end
 
     return RAM(
@@ -161,12 +171,14 @@ function (imply::RAMSymbolic)(parameters, F, G, H, model)
     if !isnothing(G)
         
     end
+
     if !isnothing(imply.μ)
         μ_RAM!(imply.μ, imply.F⨉I_A⁻¹, imply.M)
         if !isnothing(G)
             
         end
     end
+    
 end
 
 ############################################################################

@@ -1455,3 +1455,28 @@ A = I-A
 A_inv = inv(A)
 
 sparse(A_inv)
+
+
+
+
+
+
+using Symbolics, SparseArrays, LinearAlgebra
+
+@variables ω[1:3], ω_12, λ_13, λ_23
+
+Ω = [ω[1]   ω_12    0
+    ω_12    ω[2]    0
+    0       0       ω[3]]
+
+Λ = [0      0   0
+    0       0   0
+    λ_13    λ_23 0]
+
+Ω = sparse(Ω)
+
+Λ = sparse(Λ)
+
+Σ = (I + Λ)*Ω*permutedims(I + Λ)
+
+Σ[1,3]

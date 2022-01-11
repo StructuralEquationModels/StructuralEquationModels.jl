@@ -43,6 +43,7 @@ end
 ### functors
 ############################################################################
 
+# for symbolic imply type
 function (semml::SemML)(par, F, G, H, model)
     semml.inverses .= model.imply.Σ
     a = cholesky!(Symmetric(semml.inverses); check = false)
@@ -126,4 +127,69 @@ function (semml::SemML)(par, F, G, H, model)
             end
         end
     end
+end
+
+# for non-symbolic imply type
+function (semml::SemML)(par, F, G, H, model::Sem{O, I, F, D}) where {D <: RAM}
+
+    if !isnothing(H)
+        stop("Hessian for ML estimation with non-symbolic imply type is not implemented")
+    end
+
+    semml.inverses .= model.imply.Σ
+    a = cholesky!(Symmetric(semml.inverses); check = false)
+
+    if !isposdef(a)
+        if !isnothing(G) semml.G .= 0.0 end
+        if !isnothing(H) semml.H .= 0.0 end
+        if !isnothing(F) semml.F[1] = Inf end
+    else
+        ld = logdet(a)
+        semml.inverses .= LinearAlgebra.inv!(a)
+
+        # without means
+        if isnothing(model.imply.μ)
+
+            if !isnothing(G)
+                G = 2*vec(model.imply.F⨉I_A⁻¹'*(I - model.observed.obs_cov*))
+                semml.G .= G'
+            end
+
+            if !isnothing(F)
+                mul!(semml.mult, semml.inverses, model.observed.obs_cov)
+                F = ld + tr(semml.mult)
+                semml.F[1] = F
+            end
+        else
+        # with means
+        μ_diff = model.observed.obs_mean - model.imply.μ
+        diff⨉inv = μ_diff'*semml.inverses
+            
+            if !isnothing(G)
+                G = 
+                    vec(
+                        semml.inverses*(
+                            I - 
+                            model.observed.obs_cov*semml.inverses - 
+                            μ_diff*diff⨉inv))'*model.imply.∇Σ -
+                    2*diff⨉inv*model.imply.∇μ
+                semml.G .= G'
+            end
+
+            if !isnothing(F)
+                mul!(semml.mult, semml.inverses, model.observed.obs_cov)
+                F = ld + tr(semml.mult) + diff⨉inv*μ_diff
+                semml.F[1] = F
+            end
+
+        end
+    end
+end
+
+############################################################################
+### additional functions
+############################################################################
+
+function SemML_gradient_A(F⨉I_A⁻¹, S, Σ⁻¹, Ω, ∇A)
+    2*vec()
 end
