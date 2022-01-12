@@ -130,7 +130,7 @@ function (semml::SemML)(par, F, G, H, model)
 end
 
 # for non-symbolic imply type
-function (semml::SemML)(par, F, G, H, model::Sem{O, I, F, D}) where {D <: RAM}
+#= function (semml::SemML)(par, F, G, H, model::Sem{O, I, F, D}) where {D <: RAM}
 
     if !isnothing(H)
         stop("Hessian for ML estimation with non-symbolic imply type is not implemented")
@@ -151,7 +151,7 @@ function (semml::SemML)(par, F, G, H, model::Sem{O, I, F, D}) where {D <: RAM}
         if isnothing(model.imply.μ)
 
             if !isnothing(G)
-                G = 2*vec(model.imply.F⨉I_A⁻¹'*(I - model.observed.obs_cov*))
+                G = 2*vec(model.imply.F⨉I_A⁻¹'*(I - model.observed.obs_cov))
                 semml.G .= G'
             end
 
@@ -184,7 +184,7 @@ function (semml::SemML)(par, F, G, H, model::Sem{O, I, F, D}) where {D <: RAM}
 
         end
     end
-end
+end =#
 
 ############################################################################
 ### additional functions
