@@ -2,7 +2,7 @@
 ### Types
 ############################################################################
 
-struct RAM{A1, A2, A3, A4, A5, A6, V, I1, I2, I3, M1, M2, M3, S1, S2, S3} <: SemImply
+struct RAM{A1, A2, A3, A4, A5, A6, V, I1, I2, I3, I4, M1, M2, M3, S1, S2, S3} <: SemImply
     Σ::A1
     A::A2
     S::A3
@@ -15,14 +15,14 @@ struct RAM{A1, A2, A3, A4, A5, A6, V, I1, I2, I3, M1, M2, M3, S1, S2, S3} <: Sem
     A_indices::I1
     S_indices::I2
     M_indices::I3
+    I_A_indices::I4
 
     F⨉I_A⁻¹::M1
     F⨉I_A⁻¹S::M2
     I_A::M3
 
-    ∇Aᵀ::S1
+    ∇A::S1
     ∇S::S2
-    ∇Σ::S3
 end
 
 ############################################################################
@@ -45,12 +45,12 @@ function RAM(
             Spa4 <: Union{Nothing, AbstractArray}
             }
 
-    n_var = size(F, 1)
-    n_nod = size(F, 2)
+    n_var, n_nod = size(F)
         
     A = Matrix(A)
     S = Matrix(S)
-    F = Matrix(F)
+    F = Matrix(F); F = convert(Matrix{Float64}, F)
+    I_A_indices = CartesianIndices(F)
 
     A_indices = get_parameter_indices(parameters, A)
     S_indices = get_parameter_indices(parameters, S)
@@ -62,10 +62,9 @@ function RAM(
     S_pre = zeros(size(S)...)
 
     set_constants!(S, S_pre)
-
-    # A matrix
     set_constants!(A, A_pre)
-
+    
+    # fill copy of a matrix with random parameters
     A_rand = copy(A_pre)
     randpar = rand(length(start_val))
 
@@ -74,6 +73,7 @@ function RAM(
         A_indices_linear,
         randpar)
 
+    # check if the model is acyclic
     acyclic = isone(det(I-A_rand))
 
     # check if A is lower or upper triangular
@@ -85,14 +85,15 @@ function RAM(
         @info "Your model is acyclic, specifying the A Matrix as either Upper or Lower Triangular can have great performance benefits."
     end
 
-    F = convert(Matrix{Float64}, F)
-
+    # pre-allocate some matrices
     Σ = zeros(n_var, n_var)
     F⨉I_A⁻¹ = zeros(n_nod, n_var)
     F⨉I_A⁻¹S = zeros(n_nod, n_var)
     I_A = zeros(n_nod, n_nod)
 
     if gradient
+        # we could enforce the parameters to be partitioned and
+        # compute apartitioned jacobian?
         ∇A = get_matrix_derivative(A_indices, parameters, n_nod^2)
         ∇S = get_matrix_derivative(S_indices, parameters, n_nod^2)
     else
@@ -107,7 +108,6 @@ function RAM(
         M_indices = [convert(Vector{Int}, indices) for indices in M_indices]
     
         M_pre = zeros(size(M)...)
-    
         set_constants!(M, M_pre)
     
         if gradient
@@ -134,6 +134,7 @@ function RAM(
         A_indices,
         S_indices,
         M_indices,
+        I_A_indices,
 
         F⨉I_A⁻¹,
         F⨉I_A⁻¹S,
@@ -148,7 +149,7 @@ end
 ### functors
 ############################################################################
 
-function (imply::RAMSymbolic)(parameters, F, G, H, model)
+function (imply::RAM)(parameters, F, G, H, model)
 
     fill_A_S_M(
         imply.A, 
@@ -160,17 +161,24 @@ function (imply::RAMSymbolic)(parameters, F, G, H, model)
         parameters)
     
     imply.I_A .= I - imply.A
-    rdiv!(imply.F⨉I_A⁻¹, F, I_A)
+    
+    if isnothing(G)
+        copyto!(imply.F⨉I_A⁻¹, F)
+        rdiv!(imply.F⨉I_A⁻¹, I_A)
+    else
+        LinearAlgebra.inv!(imply.I_A)
+        copyto!(
+            imply.F⨉I_A⁻¹,
+            I_A_indices,
+            I_A,
+            I_A_indices)
+    end
 
     Σ_RAM!(
-        imply.Σ, 
-        F⨉I_A⁻¹, 
-        imply.S, 
+        imply.Σ,
+        F⨉I_A⁻¹,
+        imply.S,
         F⨉I_A⁻¹S)
-    
-    if !isnothing(G)
-        
-    end
 
     if !isnothing(imply.μ)
         μ_RAM!(imply.μ, imply.F⨉I_A⁻¹, imply.M)

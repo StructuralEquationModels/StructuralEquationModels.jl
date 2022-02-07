@@ -44,7 +44,12 @@ end
 ############################################################################
 
 # for symbolic imply type
-function (semml::SemML)(par, F, G, H, model)
+function (semml::SemML)(
+    par, 
+    F, 
+    G, 
+    H, 
+    model::Sem{O, I, L, D}) where {I <: SemImplySymbolic}
     semml.inverses .= model.imply.Σ
     a = cholesky!(Symmetric(semml.inverses); check = false)
 
@@ -130,7 +135,7 @@ function (semml::SemML)(par, F, G, H, model)
 end
 
 # for non-symbolic imply type
-#= function (semml::SemML)(par, F, G, H, model::Sem{O, I, F, D}) where {D <: RAM}
+function (semml::SemML)(par, F, G, H, model::Sem{O, I, F, D}) where {D <: RAM}
 
     if !isnothing(H)
         stop("Hessian for ML estimation with non-symbolic imply type is not implemented")
@@ -151,7 +156,12 @@ end
         if isnothing(model.imply.μ)
 
             if !isnothing(G)
-                G = 2*vec(model.imply.F⨉I_A⁻¹'*(I - model.observed.obs_cov))
+                M = SemML_gradient_common(
+                    model.imply.F⨉I_A⁻¹, 
+                    model.observed.obs_cov, 
+                    semml.inverses)
+                G = 2*vec(M*model.imply.S*model.imply.I_A)*model.imply.∇A + 
+                    vec(M)*model.imply.∇S
                 semml.G .= G'
             end
 
@@ -162,6 +172,7 @@ end
             end
         else
         # with means
+        stop("meanstructure + ML for non-symbolic imply not implemented")
         μ_diff = model.observed.obs_mean - model.imply.μ
         diff⨉inv = μ_diff'*semml.inverses
             
@@ -184,7 +195,7 @@ end
 
         end
     end
-end =#
+end
 
 ############################################################################
 ### additional functions
@@ -192,4 +203,9 @@ end =#
 
 function SemML_gradient_A(F⨉I_A⁻¹, S, Σ⁻¹, Ω, ∇A)
     2*vec()
+end
+
+function SemML_gradient_common(F⨉I_A⁻¹, S, Σ⁻¹)
+    M = F⨉I_A⁻¹'*(LinearAlgebra.I-S*Σ⁻¹)*Σ⁻¹*F⨉I_A⁻¹
+    return M
 end
