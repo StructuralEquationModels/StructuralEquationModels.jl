@@ -962,6 +962,9 @@ A, S, F, parameters = get_RAM(my_partable, :x)
 
 using DataFrames
 
+DataFrame(partable::ParameterTable) = 
+    DataFrame([partable.from, partable.parameter_type, partable.to, partable.start], ["from", "op", "to", "start"])
+
 show(io::IO, partable::ParameterTable) = 
     show(io, DataFrame([partable.from, partable.parameter_type, partable.to], ["from", "op", "to"]))
 
@@ -1480,3 +1483,5 @@ using Symbolics, SparseArrays, LinearAlgebra
 Σ = (I + Λ)*Ω*permutedims(I + Λ)
 
 Σ[1,3]
+
+using StructuralEquationModels
