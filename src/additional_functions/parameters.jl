@@ -57,19 +57,13 @@ function eachindex_lower(M; linear_indices = false, kwargs...)
 end
 
 function cartesian2linear(ind_cart, dims)
-
     ind_lin = LinearIndices(dims)[ind_cart]
-
     return ind_lin
-
 end
 
 function linear2cartesian(ind_lin, dims)
-
     ind_cart = CartesianIndices(dims)[ind_lin]
-
     return ind_cart
-
 end
 
 cartesian2linear(ind_cart, A::AbstractArray) = cartesian2linear(ind_cart, size(A))

@@ -2,7 +2,7 @@
 ### Types
 ############################################################################
 
-struct RAMSymbolic{F1, F2, F3, A1, A2, A3, S1, S2, S3, V, F4, A4, F5, A5} <: SemImply
+struct RAMSymbolic{F1, F2, F3, A1, A2, A3, S1, S2, S3, V, F4, A4, F5, A5} <: SemImplySymbolic
     Σ_function::F1
     ∇Σ_function::F2
     ∇²Σ_function::F3

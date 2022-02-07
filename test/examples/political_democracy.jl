@@ -105,6 +105,7 @@ loss_constant = SemLoss((SemML(semobserved, length(start_val_ml)), SemConstant(3
 # imply
 imply_ml = RAMSymbolic(A, S, F, x, start_val_ml)
 imply_ls = RAMSymbolic(A, S, F, x, start_val_ml; vech = true)
+imply_ml_nonsymbolic = RAM(A, S, F, x, start_val_ml)
 # imply_snlls = 
 
 # diff
@@ -122,6 +123,7 @@ model_ml = Sem(semobserved, imply_ml, loss_ml, diff)
 model_ls = Sem(semobserved, imply_ls, loss_ls, diff)
 model_ridge = Sem(semobserved, imply_ml, loss_ridge, diff)
 model_constant = Sem(semobserved, imply_ml, loss_constant, diff)
+model_ml_nonsymbolic = Sem(semobserved, imply_ml_nonsymbolic, loss_ml, diff)
 
 
 ############################################################################
@@ -142,6 +144,10 @@ end
 
 @testset "constant_gradients" begin
     @test test_gradient(model_constant, start_val_ml)
+end
+
+@testset "ml_nonsymbolic_gradients" begin
+    @test test_gradient(model_ml_nonsymbolic, start_val_ml)
 end
 
 ############################################################################
@@ -167,6 +173,11 @@ end
 @testset "constant_objective_and_gradient" begin
     @test (objective!(model_constant, start_val_ml) - 3.465) ≈ objective!(model_ml, start_val_ml)
     @test gradient!(model_constant, start_val_ml) ≈ gradient!(model_ml, start_val_ml)
+end
+
+@testset "ml_nonsymbolic_solution" begin
+    solution_ml_nonsymbolic = sem_fit(model_ml_nonsymbolic)
+    @test SEM.compare_estimates(par_ml.est[par_order], solution_ml_nonsymbolic.minimizer, 0.01)
 end
 
 ############################################################################

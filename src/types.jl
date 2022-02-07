@@ -32,6 +32,8 @@ abstract type SemObs end
 
 abstract type SemImply end
 
+abstract type SemImplySymbolic <: SemImply end
+
 struct Sem{O <: SemObs, I <: SemImply, L <: SemLoss, D <: SemDiff} <: AbstractSem
     observed::O
     imply::I
