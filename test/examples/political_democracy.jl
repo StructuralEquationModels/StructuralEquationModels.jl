@@ -118,6 +118,11 @@ diff =
             ;f_tol = 1e-10,
             x_tol = 1.5e-8))
 
+diff =
+    SemDiffOptim(
+        BFGS(),
+        Optim.Options())
+
 # models
 model_ml = Sem(semobserved, imply_ml, loss_ml, diff)
 model_ls = Sem(semobserved, imply_ls, loss_ls, diff)
@@ -179,6 +184,23 @@ end
     solution_ml_nonsymbolic = sem_fit(model_ml_nonsymbolic)
     @test SEM.compare_estimates(par_ml.est[par_order], solution_ml_nonsymbolic.minimizer, 0.01)
 end
+
+randpar = rand(31)
+
+grad_ml = copy(gradient!(model_ml, start_val_ml))
+
+grad_ml_ns = copy(gradient!(model_ml_nonsymbolic, start_val_ml))
+
+obj_ml = copy(objective!(model_ml, start_val_ml))
+
+obj_ml_ns = copy(objective!(model_ml_nonsymbolic, start_val_ml))
+
+
+model_ml(start_val_ml, 1.0, 1.0, nothing)
+
+model_ml_nonsymbolic(start_val_ml, 1.0, 1.0, nothing)
+
+objective(model_ml) ≈ objective(model_ml_nonsymbolic)
 
 ############################################################################
 ### test hessians

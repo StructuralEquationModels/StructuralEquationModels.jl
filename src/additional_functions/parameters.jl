@@ -1,6 +1,6 @@
 function fill_A_S_M(A, S, M, A_indices, S_indices, M_indices, parameters)
 
-    for (iA, iS, iM, par) in zip(A_indices, S_indices, M_indices, parameters)
+    for (iA, iS, par) in zip(A_indices, S_indices, parameters)
 
         for index_A in iA
             A[index_A] = par
@@ -10,7 +10,11 @@ function fill_A_S_M(A, S, M, A_indices, S_indices, M_indices, parameters)
             S[index_S] = par
         end
 
-        if !isnothing(M)
+    end
+
+    if !isnothing(M)
+
+        for iM in M_indices
 
             for index_M in iM
                 M[index_M] = par
@@ -19,6 +23,7 @@ function fill_A_S_M(A, S, M, A_indices, S_indices, M_indices, parameters)
         end
 
     end
+
 end
 
 function get_parameter_indices(parameters, M; index_function = eachindex, kwargs...)

@@ -1371,7 +1371,7 @@ S_ind
 grad = zeros(20)
 n_par = 20
 
-@benchmark $grad .= (vec($A)'*$S)'
+@benchmark $grad .= transpose(vec($A)'*$S)
 
 using BenchmarkTools, LinearAlgebra, SparseArrays, MKL
 
@@ -1485,3 +1485,8 @@ using Symbolics, SparseArrays, LinearAlgebra
 Σ[1,3]
 
 using StructuralEquationModels
+
+
+function myf(a::Array{b}) where {b <: Float64}
+    return a
+end

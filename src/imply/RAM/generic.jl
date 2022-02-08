@@ -2,7 +2,7 @@
 ### Types
 ############################################################################
 
-struct RAM{A1, A2, A3, A4, A5, A6, V, I1, I2, I3, I4, M1, M2, M3, S1, S2, S3} <: SemImply
+struct RAM{A1, A2, A3, A4, A5, A6, V, I1, I2, I3, I4, M1, M2, M3, S1, S2} <: SemImply
     Σ::A1
     A::A2
     S::A3
@@ -70,7 +70,7 @@ function RAM(
 
     fill_matrix(
         A_rand,
-        A_indices_linear,
+        A_indices,
         randpar)
 
     # check if the model is acyclic
@@ -87,8 +87,8 @@ function RAM(
 
     # pre-allocate some matrices
     Σ = zeros(n_var, n_var)
-    F⨉I_A⁻¹ = zeros(n_nod, n_var)
-    F⨉I_A⁻¹S = zeros(n_nod, n_var)
+    F⨉I_A⁻¹ = zeros(n_var, n_nod)
+    F⨉I_A⁻¹S = zeros(n_var, n_nod)
     I_A = zeros(n_nod, n_nod)
 
     if gradient
@@ -119,6 +119,7 @@ function RAM(
     else
         M_indices = nothing
         M_pre = nothing
+        μ = nothing
     end
 
     return RAM(
@@ -163,22 +164,22 @@ function (imply::RAM)(parameters, F, G, H, model)
     imply.I_A .= I - imply.A
     
     if isnothing(G)
-        copyto!(imply.F⨉I_A⁻¹, F)
-        rdiv!(imply.F⨉I_A⁻¹, I_A)
+        copyto!(imply.F⨉I_A⁻¹, imply.F)
+        rdiv!(imply.F⨉I_A⁻¹, factorize(imply.I_A))
     else
-        LinearAlgebra.inv!(imply.I_A)
+        LinearAlgebra.inv!(factorize(imply.I_A))
         copyto!(
             imply.F⨉I_A⁻¹,
-            I_A_indices,
-            I_A,
-            I_A_indices)
+            imply.I_A_indices,
+            imply.I_A,
+            imply.I_A_indices)
     end
 
     Σ_RAM!(
         imply.Σ,
-        F⨉I_A⁻¹,
+        imply.F⨉I_A⁻¹,
         imply.S,
-        F⨉I_A⁻¹S)
+        imply.F⨉I_A⁻¹S)
 
     if !isnothing(imply.μ)
         μ_RAM!(imply.μ, imply.F⨉I_A⁻¹, imply.M)
