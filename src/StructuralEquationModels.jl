@@ -15,6 +15,7 @@ include("additional_functions/parameters.jl")
 include("additional_functions/start_val.jl")
 # imply
 include("imply/RAM/symbolic.jl")
+include("imply/RAM/generic.jl")
 include("imply/empty.jl")
 include("imply/SNLLS/SNLLS.jl")
 # loss
@@ -35,7 +36,7 @@ include("optimizer/NLopt.jl")
 export  AbstractSem, 
             Sem, SemFiniteDiff, SemForwardDiff, SemEnsemble,
         SemImply, 
-            RAMSymbolic, SNLLS,
+            RAMSymbolic, RAM, SNLLS,
         start_fabin3, start_simple,
         SemLoss, 
             SemLossFunction, SemML, SemFIML, SemDefinition, SemLasso, SemRidge,

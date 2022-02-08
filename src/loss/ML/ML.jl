@@ -49,7 +49,7 @@ function (semml::SemML)(
     F, 
     G, 
     H, 
-    model::Sem{O, I, L, D}) where {I <: SemImplySymbolic}
+    model::Sem{O, I, L, D}) where {O, I <: SemImplySymbolic, L, D}
     semml.inverses .= model.imply.Σ
     a = cholesky!(Symmetric(semml.inverses); check = false)
 
@@ -135,7 +135,7 @@ function (semml::SemML)(
 end
 
 # for non-symbolic imply type
-function (semml::SemML)(par, F, G, H, model::Sem{O, I, F, D}) where {D <: RAM}
+function (semml::SemML)(par, F, G, H, model::Sem{O, I, L, D}) where {O, I <: RAM, L, D}
 
     if !isnothing(H)
         stop("Hessian for ML estimation with non-symbolic imply type is not implemented")
@@ -160,8 +160,8 @@ function (semml::SemML)(par, F, G, H, model::Sem{O, I, F, D}) where {D <: RAM}
                     model.imply.F⨉I_A⁻¹, 
                     model.observed.obs_cov, 
                     semml.inverses)
-                G = 2*vec(M*model.imply.S*model.imply.I_A)*model.imply.∇A + 
-                    vec(M)*model.imply.∇S
+                G = 2*vec(M*model.imply.S*model.imply.I_A')'*model.imply.∇A + 
+                    vec(M)'*model.imply.∇S
                 semml.G .= G'
             end
 
@@ -170,6 +170,7 @@ function (semml::SemML)(par, F, G, H, model::Sem{O, I, F, D}) where {D <: RAM}
                 F = ld + tr(semml.mult)
                 semml.F[1] = F
             end
+            
         else
         # with means
         stop("meanstructure + ML for non-symbolic imply not implemented")
@@ -201,11 +202,11 @@ end
 ### additional functions
 ############################################################################
 
-function SemML_gradient_A(F⨉I_A⁻¹, S, Σ⁻¹, Ω, ∇A)
+#= function SemML_gradient_A(F⨉I_A⁻¹, S, Σ⁻¹, Ω, ∇A)
     2*vec()
-end
+end =#
 
 function SemML_gradient_common(F⨉I_A⁻¹, S, Σ⁻¹)
-    M = F⨉I_A⁻¹'*(LinearAlgebra.I-S*Σ⁻¹)*Σ⁻¹*F⨉I_A⁻¹
+    M = transpose(F⨉I_A⁻¹)*transpose(LinearAlgebra.I-S*Σ⁻¹)*Σ⁻¹*F⨉I_A⁻¹
     return M
 end
