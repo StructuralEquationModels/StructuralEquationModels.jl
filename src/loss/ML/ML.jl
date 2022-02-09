@@ -162,7 +162,8 @@ function (semml::SemML)(par, F, G, H, model::Sem{O, I, L, D}) where {O, I <: RAM
                     semml.inverses, 
                     model.imply.I_A, 
                     model.imply.∇A, 
-                    model.imply.∇S)
+                    model.imply.∇S,
+                    model.observed.obs_cov)
                 semml.G .= G'
             end
 
@@ -184,7 +185,8 @@ function (semml::SemML)(par, F, G, H, model::Sem{O, I, L, D}) where {O, I <: RAM
                         semml.inverses, 
                         model.imply.I_A, 
                         model.imply.∇A, 
-                        model.imply.∇S) +
+                        model.imply.∇S,
+                        model.observed.obs_cov) +
                     SemML_gradient_meanstructure(
                         diff⨉inv, 
                         model.imply.F⨉I_A⁻¹, 
@@ -213,13 +215,13 @@ end
     2*vec()
 end =#
 
-function SemML_gradient_common(F⨉I_A⁻¹, S, Σ⁻¹)
-    M = transpose(F⨉I_A⁻¹)*transpose(LinearAlgebra.I-S*Σ⁻¹)*Σ⁻¹*F⨉I_A⁻¹
+function SemML_gradient_common(F⨉I_A⁻¹, obs_cov, Σ⁻¹)
+    M = transpose(F⨉I_A⁻¹)*transpose(LinearAlgebra.I-obs_cov*Σ⁻¹)*Σ⁻¹*F⨉I_A⁻¹
     return M
 end
 
-function SemML_gradient(S, F⨉I_A⁻¹, Σ⁻¹, I_A⁻¹, ∇A, ∇S)
-    M = SemML_gradient_common(F⨉I_A⁻¹, S, Σ⁻¹)
+function SemML_gradient(S, F⨉I_A⁻¹, Σ⁻¹, I_A⁻¹, ∇A, ∇S, obs_cov)
+    M = SemML_gradient_common(F⨉I_A⁻¹, obs_cov, Σ⁻¹)
     G = 2*vec(M*S*I_A⁻¹')'*∇A + vec(M)'*∇S
     return G
 end
