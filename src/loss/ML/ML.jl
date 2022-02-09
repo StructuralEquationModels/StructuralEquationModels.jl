@@ -119,7 +119,7 @@ function (semml::SemML)(
                 G = 
                     vec(
                         semml.inverses*(
-                            I - 
+                            LinearAlgebra.I - 
                             model.observed.obs_cov*semml.inverses - 
                             μ_diff*diff⨉inv))'*model.imply.∇Σ -
                     2*diff⨉inv*model.imply.∇μ
@@ -156,12 +156,12 @@ function (semml::SemML)(par, F, G, H, model::Sem{O, I, L, D}) where {O, I <: RAM
         if isnothing(model.imply.μ)
 
             if !isnothing(G)
-                M = SemML_gradient_common(
-                    model.imply.F⨉I_A⁻¹, 
-                    model.observed.obs_cov, 
-                    semml.inverses)
-                G = 2*vec(M*model.imply.S*model.imply.I_A')'*model.imply.∇A + 
-                    vec(M)'*model.imply.∇S
+                G = SemML_gradient(
+                    model.imply.S, model.imply.F⨉I_A⁻¹, 
+                    model.imply.Σ⁻¹, 
+                    model.imply.I_A⁻¹, 
+                    model.imply.∇A, 
+                    model.imply.∇S)
                 semml.G .= G'
             end
 
@@ -179,12 +179,7 @@ function (semml::SemML)(par, F, G, H, model::Sem{O, I, L, D}) where {O, I <: RAM
             
             if !isnothing(G)
                 G = 
-                    vec(
-                        semml.inverses*(
-                            I - 
-                            model.observed.obs_cov*semml.inverses - 
-                            μ_diff*diff⨉inv))'*model.imply.∇Σ -
-                    2*diff⨉inv*model.imply.∇μ
+                    -2*diff⨉inv*model.imply.F⨉I_A⁻¹*model.imply.∇M
                 semml.G .= G'
             end
 
@@ -209,4 +204,10 @@ end =#
 function SemML_gradient_common(F⨉I_A⁻¹, S, Σ⁻¹)
     M = transpose(F⨉I_A⁻¹)*transpose(LinearAlgebra.I-S*Σ⁻¹)*Σ⁻¹*F⨉I_A⁻¹
     return M
+end
+
+function SemML_gradient(S, F⨉I_A⁻¹, Σ⁻¹, I_A⁻¹, ∇A, ∇S)
+    M = SemML_gradient_common(F⨉I_A⁻¹, S, Σ⁻¹)
+    G = 2*vec(M*S*I_A⁻¹')'*∇A + vec(M)'*∇S
+    return G
 end
