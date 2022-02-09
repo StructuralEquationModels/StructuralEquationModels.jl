@@ -313,6 +313,7 @@ end
     solution_ls = sem_fit(model_ls)
     @test SEM.compare_estimates(par_ls.est[par_order], solution_ls.minimizer, 0.01)
 end
+
 ############################################################################
 ### meanstructure
 ############################################################################
@@ -394,7 +395,7 @@ loss_ls = SemLoss((SemWLS(semobserved, length(start_val_ml); meanstructure = tru
 # imply
 imply_ml = RAMSymbolic(A, S, F, x, start_val_ml; M = M)
 imply_ls = RAMSymbolic(A, S, F, x, start_val_ml; M = M, vech = true)
-# imply_snlls = 
+imply_ml_nonsymbolic = RAMSymbolic(A, S, F, x, start_val_ml; M = M)
 
 # diff
 diff = 
@@ -409,10 +410,12 @@ diff =
 # models
 model_ml = Sem(semobserved, imply_ml, loss_ml, diff)
 model_ls = Sem(semobserved, imply_ls, loss_ls, diff)
+model_ml_nonsymbolic = Sem(semobserved, imply_ml_nonsymbolic, loss_ml, diff)
 
 ############################################################################
 ### test solution
 ############################################################################
+
 @testset "ml_solution_meanstructure" begin
     solution_ml = sem_fit(model_ml)
     @test SEM.compare_estimates(par_ml.est[par_order], solution_ml.minimizer, 0.01)
@@ -421,6 +424,11 @@ end
 @testset "ls_solution_meanstructure" begin
     solution_ls = sem_fit(model_ls)
     @test SEM.compare_estimates(par_ls.est[par_order], solution_ls.minimizer, 0.01)
+end
+
+@testset "ml_solution_meanstructure_nonsymbolic" begin
+    solution_ml_nonsymbolic = sem_fit(model_ml_nonsymbolic)
+    @test SEM.compare_estimates(par_ml.est[par_order], solution_ml_nonsymbolic.minimizer, 0.01)
 end
 
 ############################################################################
@@ -433,6 +441,10 @@ end
 
 @testset "ls_gradients_meanstructure" begin
     @test test_gradient(model_ls, start_val_ls)
+end
+
+@testset "ml_gradients_meanstructure_nonsymbolic" begin
+    @test test_gradient(model_ml_nonsymbolic, start_val_ml)
 end
 
 ############################################################################

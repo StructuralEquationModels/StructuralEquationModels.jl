@@ -2,7 +2,7 @@
 ### Types
 ############################################################################
 
-struct RAM{A1, A2, A3, A4, A5, A6, V, I1, I2, I3, I4, M1, M2, M3, S1, S2} <: SemImply
+struct RAM{A1, A2, A3, A4, A5, A6, V, I1, I2, I3, I4, M1, M2, M3, S1, S2, S3} <: SemImply
     Σ::A1
     A::A2
     S::A3
@@ -23,6 +23,7 @@ struct RAM{A1, A2, A3, A4, A5, A6, V, I1, I2, I3, I4, M1, M2, M3, S1, S2} <: Sem
 
     ∇A::S1
     ∇S::S2
+    ∇M::S3
 end
 
 ############################################################################
@@ -92,8 +93,6 @@ function RAM(
     I_A = zeros(n_nod, n_nod)
 
     if gradient
-        # we could enforce the parameters to be partitioned and
-        # compute apartitioned jacobian?
         ∇A = get_matrix_derivative(A_indices, parameters, n_nod^2)
         ∇S = get_matrix_derivative(S_indices, parameters, n_nod^2)
     else
@@ -111,10 +110,12 @@ function RAM(
         set_constants!(M, M_pre)
     
         if gradient
-            
+            ∇M = get_matrix_derivative(M_indices, parameters, n_nod)
         else
-           
+            ∇M = nothing
         end
+
+        μ = zeros(n_var)
 
     else
         M_indices = nothing
@@ -142,7 +143,8 @@ function RAM(
         I_A,
 
         ∇A,
-        ∇S
+        ∇S,
+        ∇M
     )
 end
 
@@ -183,9 +185,6 @@ function (imply::RAM)(parameters, F, G, H, model)
 
     if !isnothing(imply.μ)
         μ_RAM!(imply.μ, imply.F⨉I_A⁻¹, imply.M)
-        if !isnothing(G)
-            
-        end
     end
     
 end
