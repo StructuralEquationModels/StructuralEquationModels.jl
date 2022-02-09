@@ -157,8 +157,9 @@ function (semml::SemML)(par, F, G, H, model::Sem{O, I, L, D}) where {O, I <: RAM
 
             if !isnothing(G)
                 G = SemML_gradient(
-                    model.imply.S, model.imply.F⨉I_A⁻¹, 
-                    model.imply.Σ⁻¹, 
+                    model.imply.S, 
+                    model.imply.F⨉I_A⁻¹, 
+                    semml.inverses, 
                     model.imply.I_A⁻¹, 
                     model.imply.∇A, 
                     model.imply.∇S)
@@ -178,8 +179,13 @@ function (semml::SemML)(par, F, G, H, model::Sem{O, I, L, D}) where {O, I <: RAM
         diff⨉inv = μ_diff'*semml.inverses
             
             if !isnothing(G)
+                k = diff⨉inv*model.imply.F⨉I_A⁻¹
+                Q = model.imply.I_A*model.imply.S*model.imply.I_A'
+                B = k'*k*Q
                 G = 
-                    -2*diff⨉inv*model.imply.F⨉I_A⁻¹*model.imply.∇M
+                    -2*k*model.imply.∇M -
+                    2*vec(B)'*model.imply.∇A +
+                    vec(k'*k)'*∇S
                 semml.G .= G'
             end
 
