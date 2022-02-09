@@ -121,6 +121,7 @@ function RAM(
         M_indices = nothing
         M_pre = nothing
         μ = nothing
+        ∇M = nothing
     end
 
     return RAM(
