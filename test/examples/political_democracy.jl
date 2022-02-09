@@ -118,11 +118,6 @@ diff =
             ;f_tol = 1e-10,
             x_tol = 1.5e-8))
 
-diff =
-    SemDiffOptim(
-        BFGS(),
-        Optim.Options())
-
 # models
 model_ml = Sem(semobserved, imply_ml, loss_ml, diff)
 model_ls = Sem(semobserved, imply_ls, loss_ls, diff)
