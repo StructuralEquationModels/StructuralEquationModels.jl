@@ -160,7 +160,7 @@ function (semml::SemML)(par, F, G, H, model::Sem{O, I, L, D}) where {O, I <: RAM
                     model.imply.S, 
                     model.imply.F⨉I_A⁻¹, 
                     semml.inverses, 
-                    model.imply.I_A⁻¹, 
+                    model.imply.I_A, 
                     model.imply.∇A, 
                     model.imply.∇S)
                 semml.G .= G'
@@ -174,18 +174,24 @@ function (semml::SemML)(par, F, G, H, model::Sem{O, I, L, D}) where {O, I <: RAM
             
         else
         # with means
-        stop("meanstructure + ML for non-symbolic imply not implemented")
         μ_diff = model.observed.obs_mean - model.imply.μ
         diff⨉inv = μ_diff'*semml.inverses
             
             if !isnothing(G)
-                k = diff⨉inv*model.imply.F⨉I_A⁻¹
-                Q = model.imply.I_A*model.imply.S*model.imply.I_A'
-                B = k'*k*Q
-                G = 
-                    -2*k*model.imply.∇M -
-                    2*vec(B)'*model.imply.∇A +
-                    vec(k'*k)'*∇S
+                G = SemML_gradient(
+                        model.imply.S, 
+                        model.imply.F⨉I_A⁻¹, 
+                        semml.inverses, 
+                        model.imply.I_A, 
+                        model.imply.∇A, 
+                        model.imply.∇S) +
+                    SemML_gradient_meanstructure(
+                        diff⨉inv, 
+                        model.imply.F⨉I_A⁻¹, 
+                        model.imply.I_A, 
+                        model.imply.S, 
+                        model.imply.∇M, 
+                        model.imply.∇A)
                 semml.G .= G'
             end
 
@@ -215,5 +221,13 @@ end
 function SemML_gradient(S, F⨉I_A⁻¹, Σ⁻¹, I_A⁻¹, ∇A, ∇S)
     M = SemML_gradient_common(F⨉I_A⁻¹, S, Σ⁻¹)
     G = 2*vec(M*S*I_A⁻¹')'*∇A + vec(M)'*∇S
+    return G
+end
+
+function SemML_gradient_meanstructure(diff⨉inv, F⨉I_A⁻¹, I_A⁻¹, S, ∇M, ∇A)
+    k = diff⨉inv*F⨉I_A⁻¹
+    Q = I_A⁻¹*S*I_A⁻¹'
+    c = k*I_A⁻¹
+    G = -2*k*∇M - 2*vec(k'*k*Q)'*∇A + vec(c'*c)'*∇S
     return G
 end
