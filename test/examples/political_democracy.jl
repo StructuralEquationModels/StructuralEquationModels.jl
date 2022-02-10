@@ -567,3 +567,8 @@ end
     solution_ml = sem_fit(model_ml)
     @test SEM.compare_estimates(par_ml.est[par_order], solution_ml.minimizer, 0.01)
 end
+
+@testset "fiml_solution_nonsymbolic" begin
+    solution_ml_nonsymbolic = sem_fit(model_ml_nonsymbolic)
+    @test SEM.compare_estimates(par_ml.est[par_order], solution_ml_nonsymbolic.minimizer, 0.01)
+end
