@@ -191,9 +191,11 @@ function (semml::SemML)(par, F, G, H, model::Sem{O, I, L, D}) where {O, I <: RAM
                         diff⨉inv, 
                         model.imply.F⨉I_A⁻¹, 
                         model.imply.I_A, 
-                        model.imply.S, 
+                        model.imply.S,
+                        model.imply.M, 
                         model.imply.∇M, 
-                        model.imply.∇A)
+                        model.imply.∇A,
+                        model.imply.∇S)
                 semml.G .= G'
             end
 
@@ -222,14 +224,12 @@ end
 
 function SemML_gradient(S, F⨉I_A⁻¹, Σ⁻¹, I_A⁻¹, ∇A, ∇S, obs_cov)
     M = SemML_gradient_common(F⨉I_A⁻¹, obs_cov, Σ⁻¹)
-    G = 2*vec(M*S*I_A⁻¹')'*∇A + vec(M)'*∇S
+    G = 2vec(M*S*I_A⁻¹')'∇A + vec(M)'∇S
     return G
 end
 
-function SemML_gradient_meanstructure(diff⨉inv, F⨉I_A⁻¹, I_A⁻¹, S, ∇M, ∇A)
+function SemML_gradient_meanstructure(diff⨉inv, F⨉I_A⁻¹, I_A⁻¹, S, M, ∇M, ∇A, ∇S)
     k = diff⨉inv*F⨉I_A⁻¹
-    Q = I_A⁻¹*S*I_A⁻¹'
-    c = k*I_A⁻¹
-    G = -2*k*∇M - 2*vec(k'*k*Q)'*∇A + vec(c'*c)'*∇S
+    G = -2k*∇M - 2vec(k'M'I_A⁻¹')'∇A - 2vec(k'k*S*I_A⁻¹')'∇A - vec(k'k)'∇S
     return G
 end

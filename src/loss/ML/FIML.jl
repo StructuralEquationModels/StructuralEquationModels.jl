@@ -161,6 +161,7 @@ function ∇F_fiml_outer(JΣ, Jμ, imply, model)
     Q = kron(imply.F⨉I_A⁻¹, imply.F⨉I_A⁻¹)
     M = kron(imply.S*imply.I_A', Iₙ)
     ∇Σ = K*(imply.∇S + (Q + commutation_matrix(size(A, 1); sparse = true)*Q)*imply.∇A)
+    ∇μ = kron(Iₙ, imply.F⨉I_A⁻¹)*imply.∇M + kron((imply.I_A*imply.M)', )
     G = transpose(JΣ'*∇Σ-Jμ'*∇μ)
     return G
 end
