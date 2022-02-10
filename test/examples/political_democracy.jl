@@ -395,7 +395,7 @@ loss_ls = SemLoss((SemWLS(semobserved, length(start_val_ml); meanstructure = tru
 # imply
 imply_ml = RAMSymbolic(A, S, F, x, start_val_ml; M = M)
 imply_ls = RAMSymbolic(A, S, F, x, start_val_ml; M = M, vech = true)
-imply_ml_nonsymbolic = RAMSymbolic(A, S, F, x, start_val_ml; M = M)
+imply_ml_nonsymbolic = RAM(A, S, F, x, start_val_ml; M = M)
 
 # diff
 diff = 
@@ -533,6 +533,7 @@ loss_ml = SemLoss((SEM.SemFIML(semobserved, length(start_val_ml)),))
 
 # imply
 imply_ml = RAMSymbolic(A, S, F, x, start_val_ml; M = M)
+imply_ml_nonsymbolic = RAM(A, S, F, x, start_val_ml; M = M)
 
 # diff
 diff = 
@@ -542,20 +543,20 @@ diff =
             ;f_tol = 1e-10, 
             x_tol = 1.5e-8))
 
-diff = 
-    SemDiffOptim(BFGS(), Optim.Options(;f_tol = 1e-10, x_tol = 1.5e-8))
-
-    # models
+# models
 model_ml = Sem(semobserved, imply_ml, loss_ml, diff)
+model_ml_nonsymbolic = Sem(semobserved, imply_ml_nonsymbolic, loss_ml, diff)
 
 ############################################################################
 ### test gradients
 ############################################################################
 
-using FiniteDiff
-
 @testset "fiml_gradient" begin
     @test test_gradient(model_ml, start_val_ml)
+end
+
+@testset "fiml_gradient_nonsymbolic" begin
+    @test test_gradient(model_ml_nonsymbolic, start_val_ml)
 end
 
 ############################################################################

@@ -14,7 +14,7 @@ function fill_A_S_M(A, S, M, A_indices, S_indices, M_indices, parameters)
 
     if !isnothing(M)
 
-        for iM in M_indices
+        for (iM, par) in zip(M_indices, parameters)
 
             for index_M in iM
                 M[index_M] = par
