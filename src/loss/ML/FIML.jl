@@ -61,7 +61,38 @@ end
 ### functors
 ############################################################################
 
-function (semfiml::SemFIML)(par, F, G, H, model)
+function (semfiml::SemFIML)(par, F, G, H, model::Sem{O, I, L, D}) where {O, I <: SemImplySymbolic, L, D}
+
+    if !isnothing(H) stop("hessian for FIML is not implemented (yet)") end
+
+    if !check_fiml(semfiml, model)
+        if !isnothing(G) semfiml.G .+= 1.0 end
+        if !isnothing(F) semfiml.F[1] = Inf end
+    else
+        copy_per_pattern!(semfiml, model)
+        batch_cholesky!(semfiml, model)
+        #batch_sym_inv_update!(semfiml, model)
+        batch_inv!(semfiml, model)
+        for i in 1:size(model.observed.pattern_n_obs, 1)
+            @. semfiml.meandiff[i] = model.observed.obs_mean[i] - semfiml.imp_mean[i]
+        end
+        #semfiml.logdets .= -logdet.(semfiml.inverses)
+
+        if !isnothing(G)
+            ∇F_FIML(semfiml.G, model.observed.rows, semfiml, model)
+            @. semfiml.G = semfiml.G/model.observed.n_obs
+        end
+
+        if !isnothing(F)
+            F_FIML(semfiml.F, model.observed.rows, semfiml, model)
+            semfiml.F[1] = semfiml.F[1]/model.observed.n_obs
+        end
+
+    end
+    
+end
+
+function (semfiml::SemFIML)(par, F, G, H, model::Sem{O, I, L, D}) where {O, I <: RAM, L, D}
 
     if !isnothing(H) stop("hessian for FIML is not implemented (yet)") end
 
@@ -106,7 +137,7 @@ function F_one_pattern(meandiff, inverse, obs_cov, logdet, N)
     return F
 end
 
-function ∇F_one_pattern(μ_diff, Σ⁻¹, S, pattern, ∇ind, N, model, Jμ, JΣ)
+function ∇F_one_pattern(μ_diff, Σ⁻¹, S, pattern, ∇ind, N, Jμ, JΣ, model)
     diff⨉inv = μ_diff'*Σ⁻¹
 
     if N > one(N)
@@ -118,6 +149,20 @@ function ∇F_one_pattern(μ_diff, Σ⁻¹, S, pattern, ∇ind, N, model, Jμ, J
         @. Jμ[pattern] += (2*diff⨉inv)'
     end
 
+end
+
+function ∇F_fiml_outer(JΣ, Jμ, imply::SemImplySymbolic, model)
+    G = transpose(JΣ'*imply.∇Σ-Jμ'*imply.∇μ)
+    return G
+end
+
+function ∇F_fiml_outer(JΣ, Jμ, imply, model)
+    Iₙ = sparse(1.0I, size(imply.A)...)
+    Q = kron(imply.F⨉I_A⁻¹, imply.F⨉I_A⁻¹)
+    M = kron(imply.S*imply.I_A', Iₙ)
+    ∇Σ = K*(imply.∇S + (Q + commutation_matrix(size(A, 1); sparse = true)*Q)*imply.∇A)
+    G = transpose(JΣ'*∇Σ-Jμ'*∇μ)
+    return G
 end
 
 function F_FIML(F, rows, semfiml, model)
@@ -144,11 +189,11 @@ function ∇F_FIML(G, rows, semfiml, model)
             model.observed.patterns[i],
             semfiml.∇ind[i],
             model.observed.pattern_n_obs[i],
-            model,
             Jμ,
-            JΣ)
+            JΣ,
+            model)
     end
-    G .= (JΣ'*model.imply.∇Σ-Jμ'*model.imply.∇μ)'
+    G .= ∇F_fiml_outer(JΣ, Jμ, model.imply, model)
 end
 
 function copy_per_pattern!(inverses, source_inverses, means, source_means, patterns)
@@ -165,7 +210,7 @@ function copy_per_pattern!(inverses, source_inverses, means, source_means, patte
     end
 end
 
-function copy_per_pattern!(inverses, source_inverses, means, source_means, patterns, which_source_pattern)
+#= function copy_per_pattern!(inverses, source_inverses, means, source_means, patterns, which_source_pattern)
     @views for i = 1:size(patterns, 1)
         inverses[i] .=
             source_inverses[which_source_pattern[i]][
@@ -177,7 +222,7 @@ function copy_per_pattern!(inverses, source_inverses, means, source_means, patte
         means[i] .=
             source_means[which_source_pattern[i]][patterns[i]]
     end
-end
+end =#
 
 copy_per_pattern!(
     semfiml, 

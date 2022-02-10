@@ -159,7 +159,7 @@ function elimination_matrix(nobs)
     return L
 end
 
-function commutation_matrix(n)
+function commutation_matrix(n; sparse = false)
 
     M = zeros(n^2, n^2)
 
@@ -168,6 +168,8 @@ function commutation_matrix(n)
             M[i + n*(j - 1), j + n*(i - 1)] = 1.0
         end
     end
+
+    if sparse M = sparse(M) end
 
     return M
 
