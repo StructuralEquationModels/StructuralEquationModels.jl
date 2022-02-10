@@ -159,7 +159,7 @@ function elimination_matrix(nobs)
     return L
 end
 
-function commutation_matrix(n; sparse = false)
+function commutation_matrix(n; tosparse = false)
 
     M = zeros(n^2, n^2)
 
@@ -169,7 +169,7 @@ function commutation_matrix(n; sparse = false)
         end
     end
 
-    if sparse M = sparse(M) end
+    if tosparse M = sparse(M) end
 
     return M
 
