@@ -24,8 +24,8 @@ dat_g2 = select(filter(row -> row.school == "Grant-White", dat), Not(:school))
 dat = select(dat, Not(:school))
 
 # observed
-semobserved_g1 = SemObsCommon(data = Matrix{Float64}(dat_g1))
-semobserved_g2 = SemObsCommon(data = Matrix{Float64}(dat_g2))
+dat_g1 = Matrix{Float64}(dat_g1)
+dat_g2 = Matrix{Float64}(dat_g2)
 
 ############################################################################
 ### define models
@@ -55,25 +55,8 @@ S2[10, 11] = x[34]; S2[11, 10] = x[34]
 S2[10, 12] = x[35]; S2[12, 10] = x[35]
 S2[12, 11] = x[36]; S2[11, 12] = x[36]
 
-# S
-S1 = sparse(S1)
-S2 = sparse(S2)
-
-#F
-F = sparse(F)
-
-#A
-A = sparse(A)
-
-# diff
-diff = 
-    SemDiffOptim(
-        BFGS(;linesearch = BackTracking(order=3), alphaguess = InitialHagerZhang()),# m = 100), 
-        #P = 0.5*inv(H0),
-        #precondprep = (P, x) -> 0.5*inv(FiniteDiff.finite_difference_hessian(model_ls_ana, x))), 
-        Optim.Options(
-            ;f_tol = 1e-10, 
-            x_tol = 1.5e-8))
+ram_matrices_g1 = RAMMatrices(; A = A, S = S1, F = F, parameters = x)
+ram_matrices_g2 = RAMMatrices(; A = A, S = S2, F = F, parameters = x)
 
 ### start values
 par_order = [collect(7:21); collect(1:6); collect(28:42)]
@@ -84,19 +67,21 @@ par_order = [collect(7:21); collect(1:6); collect(28:42)]
 
 start_val_ml = Vector{Float64}(par_ml.start[par_order])
 
-# loss
-loss_ml_g1 = SemLoss((SemML(semobserved_g1, length(start_val_ml)),))
-loss_ml_g2 = SemLoss((SemML(semobserved_g2, length(start_val_ml)),))
+model_g1 = Sem(
+    ram_matrices = ram_matrices_g1,
+    data = dat_g1,
+    imply = RAMSymbolic,
+    start_val = start_val_ml
+)
 
-# imply
-imply_ml_g1 = RAMSymbolic(A, S1, F, x, start_val_ml)
-imply_ml_g2 = RAMSymbolic(A, S2, F, x, start_val_ml)
+model_g2 = Sem(
+    ram_matrices = ram_matrices_g2,
+    data = dat_g2,
+    imply = RAMSymbolic,
+    start_val = start_val_ml
+)
 
-# models
-model_ml_g1 = Sem(semobserved_g1, imply_ml_g1, loss_ml_g1, SemDiffOptim(nothing, nothing))
-model_ml_g2 = Sem(semobserved_g2, imply_ml_g2, loss_ml_g2, SemDiffOptim(nothing, nothing))
-
-model_ml_multigroup = SemEnsemble((model_ml_g1, model_ml_g2), diff, start_val_ml)
+model_ml_multigroup = SemEnsemble((model_g1, model_g2), SemDiffOptim(), start_val_ml)
 
 ############################################################################
 ### test gradients
@@ -128,7 +113,7 @@ end
 ### constructor
 ############################################################################
 
-UserSemML(n_par) = UserSemML([1.0], zeros(n_par), zeros(n_par, n_par)) 
+UserSemML(;n_par, kwargs...) = UserSemML([1.0], zeros(n_par), zeros(n_par, n_par)) 
 
 ############################################################################
 ### functors
@@ -154,19 +139,25 @@ end
 
 start_val_ml = Vector{Float64}(par_ml.start[par_order])
 
-# loss
-loss_ml_g1 = SemLoss((SemML(semobserved_g1, length(start_val_ml)),))
 loss_ml_g2 = SemLoss((UserSemML(length(start_val_ml)),))
 
-# imply
-imply_ml_g1 = RAMSymbolic(A, S1, F, x, start_val_ml)
-imply_ml_g2 = RAMSymbolic(A, S2, F, x, start_val_ml)
-
 # models
-model_ml_g1 = Sem(semobserved_g1, imply_ml_g1, loss_ml_g1, SemDiffOptim(nothing, nothing))
-model_ml_g2 = SemFiniteDiff(semobserved_g2, imply_ml_g2, loss_ml_g2, SemDiffOptim(nothing, nothing), false)
+model_g1 = Sem(
+    ram_matrices = ram_matrices_g1,
+    data = dat_g1,
+    imply = RAMSymbolic,
+    start_val = start_val_ml
+)
 
-model_ml_multigroup = SemEnsemble((model_ml_g1, model_ml_g2), diff, start_val_ml)
+model_g2 = SemFiniteDiff(
+    ram_matrices = ram_matrices_g2,
+    data = dat_g2,
+    imply = RAMSymbolic,
+    loss = (UserSemML,),
+    start_val = start_val_ml
+)
+
+model_ml_multigroup = SemEnsemble((model_g1, model_g2), SemDiffOptim(), start_val_ml)
 
 @testset "gradients_user_defined_loss" begin
     @test test_gradient(model_ml_multigroup, start_val_ml)
@@ -182,18 +173,23 @@ end
 # GLS estimation
 ####################################################################
 
-start_val_ls = Vector{Float64}(par_ls.start[par_order])
+model_ls_g1 = Sem(
+    ram_matrices = ram_matrices_g1,
+    data = dat_g1,
+    imply = RAMSymbolic,
+    loss = (SemWLS,),
+    start_val = start_val_ml
+)
 
-loss_ls_g1 = SemLoss((SemWLS(semobserved_g1, length(start_val_ls)),))
-loss_ls_g2 = SemLoss((SemWLS(semobserved_g2, length(start_val_ls)),))
+model_ls_g2 = Sem(
+    ram_matrices = ram_matrices_g2,
+    data = dat_g2,
+    imply = RAMSymbolic,
+    loss = (SemWLS,),
+    start_val = start_val_ml
+)
 
-imply_ls_g1 = RAMSymbolic(A, S1, F, x, start_val_ls; vech = true)
-imply_ls_g2 = RAMSymbolic(A, S2, F, x, start_val_ls; vech = true)
-
-model_ls_g1 = Sem(semobserved_g1, imply_ls_g1, loss_ls_g1, diff)
-model_ls_g2 = Sem(semobserved_g2, imply_ls_g2, loss_ls_g2, diff)
-
-model_ls_multigroup = SemEnsemble((model_ls_g1, model_ls_g2), diff, start_val_ls)
+model_ls_multigroup = SemEnsemble((model_ls_g1, model_ls_g2), SemDiffOptim(), start_val_ls)
 
 @testset "ls_gradients_multigroup" begin
     @test test_gradient(model_ls_multigroup, start_val_ls)
