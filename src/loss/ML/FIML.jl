@@ -22,7 +22,7 @@ end
 ### Constructors
 ############################################################################
 
-function SemFIML(;observed, n_par, parameter_type = Float64)
+function SemFIML(;observed, n_par, parameter_type = Float64, kwargs...)
 
     inverses = broadcast(x -> zeros(x, x), Int64.(observed.pattern_nvar_obs))
     choleskys = Array{Cholesky{Float64,Array{Float64,2}},1}(undef, length(inverses))

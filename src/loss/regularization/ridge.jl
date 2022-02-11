@@ -18,11 +18,11 @@ end
 ### Constructors
 ############################################################################
 
-function SemRidge(α, which_vec, n_par; parameter_type = Float64)
-    which = [CartesianIndex(x) for x in which_vec]
-    which_H = [CartesianIndex(x, x) for x in which_vec]
+function SemRidge(;α_ridge, which_ridge, n_par, parameter_type = Float64, kwargs...)
+    which = [CartesianIndex(x) for x in which_ridge]
+    which_H = [CartesianIndex(x, x) for x in which_ridge]
     return SemRidge(
-        α,
+        α_ridge,
         which,
         which_H,
 

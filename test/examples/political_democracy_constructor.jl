@@ -1,4 +1,4 @@
-using StructuralEquationModels, CSV, DataFrames, SparseArrays, Symbolics, LineSearches, Optim, Test, FiniteDiff
+using StructuralEquationModels, CSV, DataFrames, SparseArrays, Symbolics, LineSearches, Optim, Test, FiniteDiff, LinearAlgebra
 import StructuralEquationModels as SEM
 include("test_helpers.jl")
 
@@ -6,7 +6,6 @@ include("test_helpers.jl")
 ### observed data
 ############################################################################
 
-using LinearAlgebra
 dat = DataFrame(CSV.File("examples/data/data_dem.csv"))
 par_ml = DataFrame(CSV.File("examples/data/par_dem_ml.csv"))
 par_ls = DataFrame(CSV.File("examples/data/par_dem_ls.csv"))
@@ -16,16 +15,13 @@ dat =
         dat,
         [:x1, :x2, :x3, :y1, :y2, :y3, :y4, :y5, :y6, :y7, :y8])
 
-        # observed
-semobserved = SemObsCommon(data = Matrix{Float64}(dat))
+dat = Matrix{Float64}(dat)
 
 ############################################################################
 ### define models
 ############################################################################
 
 @Symbolics.variables x[1:31]
-
-#x = rand(31)
 
 S =[x[1]  0     0     0     0     0     0     0     0     0     0     0     0     0
     0     x[2]  0     0     0     0     0     0     0     0     0     0     0     0
@@ -69,60 +65,49 @@ A =[0  0  0  0  0  0  0  0  0  0  0     1     0     0
     0  0  0  0  0  0  0  0  0  0  0     x[29] 0     0
     0  0  0  0  0  0  0  0  0  0  0     x[30] x[31] 0]
 
-start_val_fabin3 = start_fabin3(A, S, F, x, semobserved)
-start_val_simple = start_simple(A, S, F, x)
-
-S = sparse(S)
-
-#F
-F = sparse(F)
-
-#A
-A = sparse(A)
-
-
-### start values
-par_order = [collect(21:34); collect(15:20); 2;3; 5;6;7; collect(9:14)]
-start_val_ml = Vector{Float64}(par_ml.start[par_order])
-start_val_ls = Vector{Float64}(par_ls.start[par_order])
-start_val_ridge = copy(start_val_ml)
-start_val_ridge[16:20] .= .1
-
-@test start_val_simple == [fill(1.0, 11); fill(0.05, 3); fill(0.0, 6); fill(0.5, 8); fill(0.0, 3)]
-@test start_val_fabin3 ≈ start_val_ml
-
-# start_val_snlls = Vector{Float64}(par_ls.start[par_order][21:31])
-
-# loss
-loss_ml = SemLoss((SemML(semobserved, length(start_val_ml)),))
-loss_ls = SemLoss((SemWLS(semobserved, length(start_val_ml)),))
-loss_ridge = SemLoss((SemML(semobserved, length(start_val_ml)), SemRidge(.001, 16:20, length(start_val_ml))))
-loss_constant = SemLoss((SemML(semobserved, length(start_val_ml)), SemConstant(3.465, length(start_val_ml))))
-#loss_ridge = SemLoss((SemML(semobserved, 1.0, similar(start_val_ml)), SemML(semobserved, 1.0, similar(start_val_ml))))
-
-# loss_snlls = SemLoss([SemSWLS(semobserved, [0.0], similar(start_val_ml))])
-
-# imply
-imply_ml = RAMSymbolic(A, S, F, x, start_val_ml)
-imply_ls = RAMSymbolic(A, S, F, x, start_val_ml; vech = true)
-imply_ml_nonsymbolic = RAM(A, S, F, x, start_val_ml)
-# imply_snlls = 
-
-# diff
-diff =
-    SemDiffOptim(
-        BFGS(;linesearch = BackTracking(order=3), alphaguess = InitialHagerZhang()),
-        Optim.Options(
-            ;f_tol = 1e-10,
-            x_tol = 1.5e-8))
+ram_matrices = RAMMatrices(;A = A, S = S, F = F, parameters = x)
 
 # models
-model_ml = Sem(semobserved, imply_ml, loss_ml, diff)
-model_ls = Sem(semobserved, imply_ls, loss_ls, diff)
-model_ridge = Sem(semobserved, imply_ml, loss_ridge, diff)
-model_constant = Sem(semobserved, imply_ml, loss_constant, diff)
-model_ml_nonsymbolic = Sem(semobserved, imply_ml_nonsymbolic, loss_ml, diff)
+model_ml = Sem(
+    ram_matrices = ram_matrices,
+    data = dat
+)
 
+model_ls_sym = Sem(
+    ram_matrices = ram_matrices,
+    data = dat,
+    imply = RAMSymbolic,
+    loss = (SemWLS, ),
+    start_val = start_simple
+)
+
+model_ml_sym = Sem(
+    ram_matrices = ram_matrices,
+    data = dat,
+    imply = RAMSymbolic
+)
+
+model_ridge = Sem(
+    ram_matrices = ram_matrices,
+    data = dat,
+    loss = (SemML, SemRidge,),
+    α_ridge = .001,
+    which_ridge = 16:20
+)
+
+model_constant = Sem(
+    ram_matrices = ram_matrices,
+    data = dat,
+    loss = (SemML, SemConstant,),
+    constant_loss = 3.465
+)
+
+############################################################################
+### test starting values
+############################################################################
+
+@test model_ls_sym.imply.start_val == [fill(1.0, 11); fill(0.05, 3); fill(0.0, 6); fill(0.5, 8); fill(0.0, 3)]
+@test model_ml.imply.start_val ≈ start_val_ml
 
 ############################################################################
 ### test gradients
@@ -133,7 +118,7 @@ model_ml_nonsymbolic = Sem(semobserved, imply_ml_nonsymbolic, loss_ml, diff)
 end
 
 @testset "ls_gradients" begin
-    @test test_gradient(model_ls, start_val_ls)
+    @test test_gradient(model_ls_sym, start_val_ml)
 end
 
 @testset "ridge_gradients" begin
@@ -144,8 +129,8 @@ end
     @test test_gradient(model_constant, start_val_ml)
 end
 
-@testset "ml_nonsymbolic_gradients" begin
-    @test test_gradient(model_ml_nonsymbolic, start_val_ml)
+@testset "ml_symbolic_gradients" begin
+    @test test_gradient(model_ml_sym, start_val_ml)
 end
 
 ############################################################################
@@ -158,7 +143,7 @@ end
 end
 
 @testset "ls_solution" begin
-    solution_ls = sem_fit(model_ls)
+    solution_ls = sem_fit(model_ls_sym)
     @test SEM.compare_estimates(par_ls.est[par_order], solution_ls.minimizer, 0.01)
 end
 
@@ -173,36 +158,33 @@ end
     @test gradient!(model_constant, start_val_ml) ≈ gradient!(model_ml, start_val_ml)
 end
 
-@testset "ml_nonsymbolic_solution" begin
-    solution_ml_nonsymbolic = sem_fit(model_ml_nonsymbolic)
-    @test SEM.compare_estimates(par_ml.est[par_order], solution_ml_nonsymbolic.minimizer, 0.01)
+@testset "ml_symbolic_solution" begin
+    solution_ml_symbolic = sem_fit(model_ml_sym)
+    @test SEM.compare_estimates(par_ml.est[par_order], solution_ml_symbolic.minimizer, 0.01)
 end
 
 ############################################################################
 ### test hessians
 ############################################################################
 
-# loss
-loss_ml = SemLoss((SemML(semobserved, length(start_val_ml)),))
-loss_ls = SemLoss((SemWLS(semobserved, length(start_val_ml)),))
+model_ls = Sem(
+    ram_matrices = ram_matrices,
+    data = dat,
+    imply = RAMSymbolic,
+    loss = (SemWLS, ),
+    hessian = true,
+    algorithm = Newton(
+        ;linesearch = BackTracking(order=3), 
+        alphaguess = InitialHagerZhang())
+)
 
-# imply
-imply_ml = RAMSymbolic(A, S, F, x, start_val_ml; hessian = true)
-imply_ls = RAMSymbolic(A, S, F, x, start_val_ml; vech = true, hessian = true)
-
-# diff
-diff = 
-    SemDiffOptim(
-        Newton(;linesearch = BackTracking(order=3), alphaguess = InitialHagerZhang()),# m = 100), 
-        #P = 0.5*inv(H0),
-        #precondprep = (P, x) -> 0.5*inv(FiniteDiff.finite_difference_hessian(model_ls_ana, x))), 
-        Optim.Options(
-            ;f_tol = 1e-10, 
-            x_tol = 1.5e-8))
-
-# models
-model_ml = Sem(semobserved, imply_ml, loss_ml, diff)
-model_ls = Sem(semobserved, imply_ls, loss_ls, diff)
+model_ml = Sem(
+    ram_matrices = ram_matrices,
+    data = dat,
+    imply = RAMSymbolic,
+    hessian = true,
+    algorithm = Newton()
+)
 
 @testset "ml_hessians" begin
     @test test_hessian(model_ml, start_val_ml)
@@ -218,96 +200,6 @@ end
 end
 
 @testset "ls_solution_hessian" begin
-    solution_ls = sem_fit(model_ls)
-    @test SEM.compare_estimates(par_ls.est[par_order], solution_ls.minimizer, 0.01)
-end
-
-############################################################################
-### starting values for standardized latents
-############################################################################
-
-par_ml_stdlv = DataFrame(CSV.File("examples/data/par_dem_ml_stdlv.csv"))
-
-S2 =[x[1]  0     0     0     0     0     0     0     0     0     0     0     0     0
-    0     x[2]  0     0     0     0     0     0     0     0     0     0     0     0
-    0     0     x[3]  0     0     0     0     0     0     0     0     0     0     0
-    0     0     0     x[4]  0     0     0     x[12] 0     0     0     0     0     0
-    0     0     0     0     x[5]  0     x[13] 0     x[14] 0     0     0     0     0
-    0     0     0     0     0     x[6]  0     0     0     x[15] 0     0     0     0
-    0     0     0     0     x[13] 0     x[7]  0     0     0     x[16] 0     0     0
-    0     0     0     x[12] 0     0     0     x[8]  0     0     0     0     0     0
-    0     0     0     0     x[14] 0     0     0     x[9]  0     x[17] 0     0     0
-    0     0     0     0     0     x[15] 0     0     0     x[10] 0     0     0     0
-    0     0     0     0     0     0     x[16] 0     x[17] 0     x[11] 0     0     0
-    0     0     0     0     0     0     0     0     0     0     0     1     0     0
-    0     0     0     0     0     0     0     0     0     0     0     0     1     0
-    0     0     0     0     0     0     0     0     0     0     0     0     0     1]
-
-F2 =[1.0 0 0 0 0 0 0 0 0 0 0 0 0 0
-    0 1 0 0 0 0 0 0 0 0 0 0 0 0
-    0 0 1 0 0 0 0 0 0 0 0 0 0 0
-    0 0 0 1 0 0 0 0 0 0 0 0 0 0
-    0 0 0 0 1 0 0 0 0 0 0 0 0 0
-    0 0 0 0 0 1 0 0 0 0 0 0 0 0
-    0 0 0 0 0 0 1 0 0 0 0 0 0 0
-    0 0 0 0 0 0 0 1 0 0 0 0 0 0
-    0 0 0 0 0 0 0 0 1 0 0 0 0 0
-    0 0 0 0 0 0 0 0 0 1 0 0 0 0
-    0 0 0 0 0 0 0 0 0 0 1 0 0 0]
-
-A2 =[0  0  0  0  0  0  0  0  0  0  0    x[18] 0     0
-    0  0  0  0  0  0  0  0  0  0  0     x[19] 0     0
-    0  0  0  0  0  0  0  0  0  0  0     x[20] 0     0
-    0  0  0  0  0  0  0  0  0  0  0     0     x[21] 0
-    0  0  0  0  0  0  0  0  0  0  0     0     x[22] 0
-    0  0  0  0  0  0  0  0  0  0  0     0     x[23] 0
-    0  0  0  0  0  0  0  0  0  0  0     0     x[24] 0
-    0  0  0  0  0  0  0  0  0  0  0     0     0     x[25]
-    0  0  0  0  0  0  0  0  0  0  0     0     0     x[26]
-    0  0  0  0  0  0  0  0  0  0  0     0     0     x[27]
-    0  0  0  0  0  0  0  0  0  0  0     0     0     x[28]
-    0  0  0  0  0  0  0  0  0  0  0     0     0     0
-    0  0  0  0  0  0  0  0  0  0  0     x[29] 0     0
-    0  0  0  0  0  0  0  0  0  0  0     x[30] x[31] 0]
-
-start_val_fabin3 = start_fabin3(A2, S2, F2, x, semobserved)
-
-par_order = [collect(21:31); collect(15:20); collect(1:14)]
-@test start_val_fabin3 ≈ par_ml_stdlv.start[par_order]
-par_order = [collect(21:34); collect(15:20); 2;3; 5;6;7; collect(9:14)]
-
-############################################################################
-### approximation of hessians
-############################################################################
-
-# loss
-loss_ml = SemLoss((SemML(semobserved, length(start_val_ml); approx_H = true),))
-loss_ls = SemLoss((SemWLS(semobserved, length(start_val_ml); approx_H = true),))
-
-# imply
-imply_ml = RAMSymbolic(A, S, F, x, start_val_ml)
-imply_ls = RAMSymbolic(A, S, F, x, start_val_ml; vech = true)
-
-# diff
-diff = 
-    SemDiffOptim(
-        Newton(;linesearch = BackTracking(order=3), alphaguess = InitialHagerZhang()),# m = 100), 
-        #P = 0.5*inv(H0),
-        #precondprep = (P, x) -> 0.5*inv(FiniteDiff.finite_difference_hessian(model_ls_ana, x))), 
-        Optim.Options(
-            ;f_tol = 1e-10, 
-            x_tol = 1.5e-8))
-
-# models
-model_ml = Sem(semobserved, imply_ml, loss_ml, diff)
-model_ls = Sem(semobserved, imply_ls, loss_ls, diff)
-
-@testset "ml_solution_apprhess" begin
-    solution_ml = sem_fit(model_ml)
-    @test SEM.compare_estimates(par_ml.est[par_order], solution_ml.minimizer, 0.01)
-end
-
-@testset "ls_solution_apprhess" begin
     solution_ls = sem_fit(model_ls)
     @test SEM.compare_estimates(par_ls.est[par_order], solution_ls.minimizer, 0.01)
 end

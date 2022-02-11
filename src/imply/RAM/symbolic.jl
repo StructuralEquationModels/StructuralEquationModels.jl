@@ -25,6 +25,7 @@ end
 
 function RAMSymbolic(;
         ram_matrices,
+        loss_types,
         start_val = start_fabin3,
         vech = false,
         gradient = true,
@@ -33,6 +34,14 @@ function RAMSymbolic(;
 
     A, S, F, M, par = 
         ram_matrices.A, ram_matrices.S, ram_matrices.F, ram_matrices.M, ram_matrices.parameters
+
+    if !isa(start_val, Vector)
+        start_val = start_val(;ram_matrices = ram_matrices, kwargs...)
+    end
+
+    A, S, F = sparse(A), sparse(S), sparse(F)
+
+    any(loss_types .<: SemWLS) ? vech = true : nothing
 
     # Σ
     Σ_symbolic = get_Σ_symbolic_RAM(S, A, F; vech = vech)
