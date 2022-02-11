@@ -1,4 +1,4 @@
-using StructuralEquationModels, Symbolics, SparseArrays, Distributions, Optim, LineSearches
+using StructuralEquationModels, Symbolics, SparseArrays, Distributions, Optim, LineSearches, Random
 import StructuralEquationModels as SEM
 include("test_helpers.jl")
 
@@ -29,9 +29,7 @@ A = [0 0 0 0 0 0 1.0   0
      0 0 0 0 0 0 0     0
      0 0 0 0 0 0 0     0]
 
-S = sparse(S)
-F = sparse(F)
-A = sparse(A)
+ram_matrices = RAMMatrices(;A = A, S = S, F = F, parameters = x)
 
 true_val = [repeat([1], 8)
             0.4
@@ -40,17 +38,18 @@ true_val = [repeat([1], 8)
 start_val = [repeat([1], 9)
              repeat([0.5], 4)]
 
-imply_ml = RAMSymbolic(A, S, F, x, start_val)
+imply_ml = RAMSymbolic(;ram_matrices = ram_matrices, start_val = start_val)
 
 imply_ml.Σ_function(imply_ml.Σ, true_val)
 
 true_dist = MultivariateNormal(imply_ml.Σ)
 
+Random.seed!(1234)
 x = transpose(rand(true_dist, 100000))
-semobserved = SEM.SemObsCommon(data = x)
+semobserved = SemObsCommon(data = x)
 
+loss_ml = SemLoss((SEM.SemML(;observed = semobserved, n_par = length(start_val)), ))
 
-loss_ml = SemLoss((SEM.SemML(semobserved, length(start_val)), ))
 diff = 
     SemDiffOptim(
         BFGS(;linesearch = BackTracking(order=3), alphaguess = InitialHagerZhang()),# m = 100), 
@@ -58,8 +57,8 @@ diff =
             ;f_tol = 1e-10, 
             x_tol = 1.5e-8))
 
-model_ml = SEM.Sem(semobserved, imply_ml, loss_ml, diff)
+model_ml = Sem(semobserved, imply_ml, loss_ml, diff)
 model_ml(true_val, 1.0, nothing, nothing)
-solution = SEM.sem_fit(model_ml)
+solution = sem_fit(model_ml)
 
 @test SEM.compare_estimates(true_val, solution.minimizer, .05)
