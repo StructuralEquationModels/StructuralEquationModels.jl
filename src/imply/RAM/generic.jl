@@ -30,22 +30,17 @@ end
 ### Constructors
 ############################################################################
 
-function RAM(
-        A::Spa1,
-        S::Spa2,
-        F::Spa3,
-        parameters,
-        start_val;
-        M::Spa4 = nothing,
+function RAM(;
+        ram_matrices,
+        start_val = start_fabin3,
+        M = nothing,
         vech = false,
-        gradient = true
-            ) where {
-            Spa1 <: SparseMatrixCSC,
-            Spa2 <: SparseMatrixCSC,
-            Spa3 <: SparseMatrixCSC,
-            Spa4 <: Union{Nothing, AbstractArray}
-            }
+        gradient = true,
+        kwargs...)
 
+    A, S, F, M, parameters = 
+        ram_matrices.A, ram_matrices.S, ram_matrices.F, ram_matrices.M, ram_matrices.parameters
+    
     n_var, n_nod = size(F)
         
     A = Matrix(A)

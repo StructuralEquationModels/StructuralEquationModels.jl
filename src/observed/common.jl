@@ -17,7 +17,8 @@ function SemObsCommon(;
         data = nothing,
         obs_cov = nothing,
         meanstructure = false,
-        rowwise = false)
+        rowwise = false,
+        kwargs...)
     # if no cov. matrix was given, compute one
     if isnothing(obs_cov) obs_cov = Statistics.cov(data) end
     isnothing(data) ? n_obs = nothing : n_obs = convert(Float64, size(data, 1))

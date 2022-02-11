@@ -19,7 +19,7 @@ end
 ### Constructors
 ############################################################################
 
-function SemWLS(observed::T, n_par; V = nothing, meanstructure = false, V_μ = nothing, approx_H = false, parameter_type = Float64) where {T <: SemObs}
+function SemWLS(;observed, n_par, V = nothing, meanstructure = false, V_μ = nothing, approx_H = false, parameter_type = Float64)
     ind = CartesianIndices(observed.obs_cov)
     ind = filter(x -> (x[1] >= x[2]), ind)
     s = observed.obs_cov[ind]

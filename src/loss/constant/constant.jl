@@ -14,9 +14,9 @@ end
 ### Constructors
 ############################################################################
 
-function SemConstant(C, n_par; parameter_type = Float64)
+function SemConstant(;constant_loss, n_par, parameter_type = Float64)
     return SemConstant(
-        [C],
+        [constant_loss],
         zeros(parameter_type, n_par),
         zeros(parameter_type, n_par, n_par))
 end
