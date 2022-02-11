@@ -9,6 +9,8 @@ include("types.jl")
 # observed
 include("observed/common.jl")
 include("observed/missing.jl")
+# constructor
+include("sem.jl")
 # helper functions
 include("additional_functions/helper.jl")
 include("additional_functions/parameters.jl")
@@ -22,7 +24,7 @@ include("imply/SNLLS/SNLLS.jl")
 include("loss/ML/ML.jl")
 include("loss/ML/FIML.jl")
 include("loss/regularization/ridge.jl")
-include("loss/GLS/GLS.jl")
+include("loss/WLS/WLS.jl")
 include("loss/constant/constant.jl")
 include("loss/SNLLS/SNLLS.jl")
 # diff
@@ -36,7 +38,7 @@ include("optimizer/NLopt.jl")
 export  AbstractSem, 
             Sem, SemFiniteDiff, SemForwardDiff, SemEnsemble,
         SemImply, 
-            RAMSymbolic, RAM, SNLLS,
+            RAMSymbolic, RAM, SNLLS, RAMMatrices,
         start_fabin3, start_simple,
         SemLoss, 
             SemLossFunction, SemML, SemFIML, SemDefinition, SemLasso, SemRidge,

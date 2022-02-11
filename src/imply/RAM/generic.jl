@@ -33,13 +33,16 @@ end
 function RAM(;
         ram_matrices,
         start_val = start_fabin3,
-        M = nothing,
         vech = false,
         gradient = true,
         kwargs...)
 
     A, S, F, M, parameters = 
         ram_matrices.A, ram_matrices.S, ram_matrices.F, ram_matrices.M, ram_matrices.parameters
+
+    if !isa(start_val, Vector)
+        start_val = start_val(;ram_matrices = ram_matrices, kwargs...)
+    end
     
     n_var, n_nod = size(F)
         
