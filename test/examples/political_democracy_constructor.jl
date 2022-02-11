@@ -211,9 +211,6 @@ end
 par_ml = DataFrame(CSV.File("examples/data/par_dem_ml_mean.csv"))
 par_ls = DataFrame(CSV.File("examples/data/par_dem_ls_mean.csv"))
 
-# observed
-semobserved = SemObsCommon(data = Matrix{Float64}(dat); meanstructure = true)
-
 @Symbolics.variables x[1:38]
 
 #x = rand(31)
@@ -262,46 +259,37 @@ A =[0  0  0  0  0  0  0  0  0  0  0     1     0     0
 
 M = [x[32]; x[33]; x[34]; x[35]; x[36]; x[37]; x[38]; x[35]; x[36]; x[37]; x[38]; 0.0; 0.0; 0.0]
 
-S = sparse(S)
-
-#F
-F = sparse(F)
-
-#A
-A = sparse(A)
-
+ram_matrices = RAMMatrices(A, S, F, M, x)
 
 ### start values
 par_order = [collect(29:42); collect(15:20); 2;3; 5;6;7; collect(9:14); collect(43:45); collect(21:24)]
 start_val_ml = Vector{Float64}(par_ml.start[par_order])
 start_val_ls = Vector{Float64}(par_ls.start[par_order])
-# start_val_snlls = Vector{Float64}(par_ls.start[par_order][21:31])
-
-# loss
-loss_ml = SemLoss((SemML(semobserved, length(start_val_ml)),))
-loss_ls = SemLoss((SemWLS(semobserved, length(start_val_ml); meanstructure = true),))
-# loss_snlls = SemLoss([SemSWLS(semobserved, [0.0], similar(start_val_ml))])
-
-# imply
-imply_ml = RAMSymbolic(A, S, F, x, start_val_ml; M = M)
-imply_ls = RAMSymbolic(A, S, F, x, start_val_ml; M = M, vech = true)
-imply_ml_nonsymbolic = RAM(A, S, F, x, start_val_ml; M = M)
-
-# diff
-diff = 
-    SemDiffOptim(
-        BFGS(;linesearch = BackTracking(order=3), alphaguess = InitialHagerZhang()),# m = 100), 
-        #P = 0.5*inv(H0),
-        #precondprep = (P, x) -> 0.5*inv(FiniteDiff.finite_difference_hessian(model_ls_ana, x))), 
-        Optim.Options(
-            ;f_tol = 1e-10, 
-            x_tol = 1.5e-8))
 
 # models
-model_ml = Sem(semobserved, imply_ml, loss_ml, diff)
-model_ls = Sem(semobserved, imply_ls, loss_ls, diff)
-model_ml_nonsymbolic = Sem(semobserved, imply_ml_nonsymbolic, loss_ml, diff)
+model_ls = Sem(
+    ram_matrices = ram_matrices,
+    data = dat,
+    imply = RAMSymbolic,
+    loss = (SemWLS, ),
+    meanstructure = true,
+    start_val = start_val_ls
+)
 
+model_ml = Sem(
+    ram_matrices = ram_matrices,
+    data = dat,
+    meanstructure = true,
+    start_val = start_val_ml
+)
+
+model_ml_sym = Sem(
+    ram_matrices = ram_matrices,
+    data = dat,
+    imply = RAMSymbolic,
+    meanstructure = true,
+    start_val = start_val_ml
+)
 ############################################################################
 ### test solution
 ############################################################################
@@ -316,9 +304,9 @@ end
     @test SEM.compare_estimates(par_ls.est[par_order], solution_ls.minimizer, 0.01)
 end
 
-@testset "ml_solution_meanstructure_nonsymbolic" begin
-    solution_ml_nonsymbolic = sem_fit(model_ml_nonsymbolic)
-    @test SEM.compare_estimates(par_ml.est[par_order], solution_ml_nonsymbolic.minimizer, 0.01)
+@testset "ml_solution_meanstructure_nsymbolic" begin
+    solution_ml_symbolic = sem_fit(model_ml_sym)
+    @test SEM.compare_estimates(par_ml.est[par_order], solution_ml_symbolic.minimizer, 0.01)
 end
 
 ############################################################################
@@ -333,8 +321,8 @@ end
     @test test_gradient(model_ls, start_val_ls)
 end
 
-@testset "ml_gradients_meanstructure_nonsymbolic" begin
-    @test test_gradient(model_ml_nonsymbolic, start_val_ml)
+@testset "ml_gradients_meanstructure_symbolic" begin
+    @test test_gradient(model_ml_sym, start_val_ml)
 end
 
 ############################################################################
@@ -353,8 +341,7 @@ dat =
         dat,
         [:x1, :x2, :x3, :y1, :y2, :y3, :y4, :y5, :y6, :y7, :y8])
 
-# observed
-semobserved = SemObsMissing(Matrix(dat))
+dat = Matrix(dat)
 
 ############################################################################
 ### define models
@@ -406,36 +393,29 @@ A =[0  0  0  0  0  0  0  0  0  0  0     1     0     0
 
 M = [x[32]; x[33]; x[34]; x[35]; x[36]; x[37]; x[38]; x[35]; x[36]; x[37]; x[38]; 0.0; 0.0; 0.0]
 
-S = sparse(S)
-
-#F
-F = sparse(F)
-
-#A
-A = sparse(A)
+ram_matrices = RAMMatrices(A, S, F, M, x)
 
 ### start values
 par_order = [collect(29:42); collect(15:20); 2;3; 5;6;7; collect(9:14); collect(43:45); collect(21:24)]
 start_val_ml = Vector{Float64}(par_ml.start[par_order])
 
-# loss
-loss_ml = SemLoss((SEM.SemFIML(semobserved, length(start_val_ml)),))
-
-# imply
-imply_ml = RAMSymbolic(A, S, F, x, start_val_ml; M = M)
-imply_ml_nonsymbolic = RAM(A, S, F, x, start_val_ml; M = M)
-
-# diff
-diff = 
-    SemDiffOptim(
-        BFGS(;linesearch = BackTracking(order=3), alphaguess = InitialHagerZhang()),
-        Optim.Options(
-            ;f_tol = 1e-10, 
-            x_tol = 1.5e-8))
-
 # models
-model_ml = Sem(semobserved, imply_ml, loss_ml, diff)
-model_ml_nonsymbolic = Sem(semobserved, imply_ml_nonsymbolic, loss_ml, diff)
+model_ml = Sem(
+    ram_matrices = ram_matrices,
+    data = dat,
+    observed = SemObsMissing,
+    loss = (SemFIML,),
+    start_val = start_val_ml
+)
+
+model_ml_sym = Sem(
+    ram_matrices = ram_matrices,
+    data = dat,
+    observed = SemObsMissing,
+    imply = RAMSymbolic,
+    loss = (SemFIML,),
+    start_val = start_val_ml
+)
 
 ############################################################################
 ### test gradients
@@ -445,8 +425,8 @@ model_ml_nonsymbolic = Sem(semobserved, imply_ml_nonsymbolic, loss_ml, diff)
     @test test_gradient(model_ml, start_val_ml)
 end
 
-@testset "fiml_gradient_nonsymbolic" begin
-    @test test_gradient(model_ml_nonsymbolic, start_val_ml)
+@testset "fiml_gradient_symbolic" begin
+    @test test_gradient(model_ml_sym, start_val_ml)
 end
 
 ############################################################################
@@ -458,7 +438,7 @@ end
     @test SEM.compare_estimates(par_ml.est[par_order], solution_ml.minimizer, 0.01)
 end
 
-@testset "fiml_solution_nonsymbolic" begin
-    solution_ml_nonsymbolic = sem_fit(model_ml_nonsymbolic)
-    @test SEM.compare_estimates(par_ml.est[par_order], solution_ml_nonsymbolic.minimizer, 0.01)
+@testset "fiml_solution_symbolic" begin
+    solution_ml_symbolic = sem_fit(model_ml_sym)
+    @test SEM.compare_estimates(par_ml.est[par_order], solution_ml_symbolic.minimizer, 0.01)
 end
