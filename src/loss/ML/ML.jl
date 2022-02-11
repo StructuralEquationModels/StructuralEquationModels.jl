@@ -21,7 +21,7 @@ end
 ### Constructors
 ############################################################################
 
-function SemML(observed::T, n_par; approx_H = false, parameter_type = Float64) where {T <: SemObs}
+function SemML(; observed, n_par, approx_H = false, parameter_type = Float64)
     isnothing(observed.obs_mean) ?
         meandiff = nothing :
         meandiff = copy(observed.obs_mean)

@@ -24,7 +24,7 @@ struct SemObsMissing{
     obs_cov::A3
 end
 
-function SemObsMissing(data)
+function SemObsMissing(;data, kwargs...)
 
     # remove persons with only missings
     keep = Vector{Int64}()

@@ -23,22 +23,16 @@ end
 ### Constructors
 ############################################################################
 
-function RAMSymbolic(
-        A::Spa1,
-        S::Spa2,
-        F::Spa3,
-        par,
-        start_val;
-        M::Spa4 = nothing,
+function RAMSymbolic(;
+        ram_matrices,
+        start_val = start_fabin3,
         vech = false,
         gradient = true,
-        hessian = false
-            ) where {
-            Spa1 <: SparseMatrixCSC,
-            Spa2 <: SparseMatrixCSC,
-            Spa3 <: SparseMatrixCSC,
-            Spa4 <: Union{Nothing, AbstractArray}
-            }
+        hessian = false,
+        kwargs...)
+
+    A, S, F, M, par = 
+        ram_matrices.A, ram_matrices.S, ram_matrices.F, ram_matrices.M, ram_matrices.parameters
 
     # Σ
     Σ_symbolic = get_Σ_symbolic_RAM(S, A, F; vech = vech)
