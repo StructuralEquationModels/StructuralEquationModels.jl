@@ -139,8 +139,6 @@ end
 
 start_val_ml = Vector{Float64}(par_ml.start[par_order])
 
-loss_ml_g2 = SemLoss((UserSemML(length(start_val_ml)),))
-
 # models
 model_g1 = Sem(
     ram_matrices = ram_matrices_g1,
