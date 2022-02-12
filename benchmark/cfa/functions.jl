@@ -135,3 +135,28 @@ function get_fits(models)
     end
     return fits
 end
+
+function compare_estimates(fits, par_vec, config)
+    correct = 
+        [compare_estimate(fit, estimate, n_factors, n_items) for 
+                (fit, estimate, n_factors, n_items) in zip(fits, par_vec, config.n_factors, config.n_items)]
+    return correct
+end
+
+function compare_estimate(fit, estimate, n_factors, n_items)
+    
+    nfact = Int64(n_factors)
+    nitem = Int64(n_items)
+
+    nobs = nfact*nitem
+    nnod = nfact+nobs
+
+    nrows = size(estimate, 1)
+
+    solution = fit.minimizer
+    cov_ind = Int(nrows-nfact*(nfact-1)/2+1):nrows
+    par_ind = [1:2nobs..., cov_ind...]
+
+    return StructuralEquationModels.compare_estimates(estimate.est[par_ind], solution, 0.01)
+
+end
