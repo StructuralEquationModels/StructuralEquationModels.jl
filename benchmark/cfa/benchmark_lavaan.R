@@ -1,5 +1,10 @@
-pacman::p_load(lavaan, dplyr, purrr, readr)
+library(lavaan)
+library(dplyr)
+library(purrr)
+library(readr)
+
 set.seed(73647820)
+setwd("./benchmark/cfa")
 source("functions.R")
 
 results <- readr::read_rds("results.rds")
@@ -43,7 +48,9 @@ results <- mutate(
   n_repetitions = round(const/(n_par^2)))
 
 #!!!
-results$n_repetitions <- 10
+# results$n_repetitions <- 10
+
+results <- filter(results, meanstructure == 0)
 ##
 
 benchmarks <- pmap(
@@ -60,12 +67,7 @@ benchmarks <- pmap(
 benchmark_summary <- map_dfr(benchmarks, extract_results)
 benchmark_summary <- rename_with(benchmark_summary, ~str_c(.x, "_lav"))
 
-
 results <- bind_cols(results, benchmark_summary)
-
-results %>% ggplot(aes(x = n_factors*n_items, y = mean_time_lav, color = Estimator)) +
-   geom_point() + theme_minimal() + geom_line(aes(linetype = as.factor(meanstructure)))
-
 
 write_csv2(select(
   results, 
@@ -83,11 +85,3 @@ write_csv2(select(
   messages_lav), "results/benchmarks_lavaan.csv")
 
 write_rds(results, "results.rds")
-
-
-data <- read_csv("data/n_factors_5_n_items_5_meanstructure_0.csv")
-
-fit <- cfa(results$model_lavaan[[3]],
-           data,
-           estimator = "ml",
-           std.lv = TRUE)

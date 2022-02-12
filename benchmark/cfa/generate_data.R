@@ -6,7 +6,7 @@ library(purrr)
 set.seed(193273)
 setwd("./benchmark/cfa")
 source("functions.R")
-config <- read_csv2("config.csv")
+config <- read_csv("config.csv")
 
 results <- config
 
