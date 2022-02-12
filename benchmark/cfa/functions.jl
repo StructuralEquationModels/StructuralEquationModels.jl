@@ -24,12 +24,9 @@ function read_files(dir, data_paths)
     return data
 end
 
-function gen_model(nfact, nitem, data, estimator, backend)
+function gen_CFA_RAM(nfact, nitem)
     nfact = Int64(nfact)
     nitem = Int64(nitem)
-
-    # observed
-    semobserved = SemObsCommon(data = data)
 
     ## Model definition
     nobs = nfact*nitem
@@ -64,19 +61,13 @@ function gen_model(nfact, nitem, data, estimator, backend)
         end
     end
 
-    start_val = start_fabin3(Matrix(A), Matrix(S), Matrix(F), x, semobserved)
+    return RAMMatrices(;A = A, S = S, F = F, parameters = x)
+end
 
-    # imply and loss
-    if estimator == "ML"
-        semimply = RAMSymbolic(A, S, F, x, start_val; gradient = true)   
-        semloss = SemLoss((SemML(semobserved, 1.0, similar(start_val)),))
-    elseif estimator == "GLS"
-        semimply = RAMSymbolic(A, S, F, x, start_val; vech = true)
-        semloss =  SemLoss((SemWLS(semobserved),))
-    else
-        stop("unknown estimator")
-    end
-    
+function gen_model(nfact, nitem, data, estimator, backend)
+
+    ram_matrices = gen_CFA_RAM(nfact, nitem)
+
     if backend == "Optim.jl"
         semdiff = SemDiffOptim(
             LBFGS(
@@ -93,8 +84,28 @@ function gen_model(nfact, nitem, data, estimator, backend)
             nothing
             )
     end
+
+    # imply and loss
+    if estimator == "ML"
+        model = Sem(
+            ram_matrices = ram_matrices,
+            data = data,
+            imply = RAM,
+            diff = semdiff
+        )
+    elseif estimator == "GLS"
+        model = Sem(
+            ram_matrices = ram_matrices,
+            data = data,
+            imply = RAM,
+            loss = (SemWLS, ),
+            diff = semdiff
+        )
+    else
+        error("unknown estimator")
+    end
                 
-    return Sem(semobserved, semimply, semloss, semdiff)
+    return model
 end
 
 function gen_models(config, data_vec)
@@ -110,8 +121,7 @@ end
 function benchmark_models(models)
     benchmarks = []
     for model in models
-        model = model
-        bm = @benchmark sem_fit(model)
+        bm = @benchmark sem_fit($model)
         push!(benchmarks, bm)
     end
     return benchmarks

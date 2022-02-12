@@ -1,4 +1,4 @@
-Base.@kwdef struct SemDiffOptim{A, B} <: SemDiff
+struct SemDiffOptim{A, B} <: SemDiff
     algorithm::A
     options::B
 end

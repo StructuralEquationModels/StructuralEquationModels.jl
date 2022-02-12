@@ -1,2 +1,2 @@
 Estimator;n_factors;n_items;meanstructure;backend;mean_time_jl
-ML;5;40;0;NLopt.jl;0.23573909545454547
+ML;5;40;0;Optim.jl;4.184322303333333e8
