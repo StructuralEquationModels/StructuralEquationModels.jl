@@ -2,7 +2,9 @@ using DataFrames, StructuralEquationModels, Symbolics,
     LinearAlgebra, SparseArrays, Optim, LineSearches,
     BenchmarkTools, CSV
 
-cd("benchmark/cfa")
+date = string(ARGS...)
+
+cd("cfa")
 
 include("functions.jl")
 
@@ -38,4 +40,4 @@ results = select(config, :Estimator, :n_factors, :n_items, :meanstructure, :back
 
 results.median_time_jl = median.(getfield.(benchmarks, :times))
 
-CSV.write("results/benchmarks_julia.csv", results, delim = ";")
+CSV.write("results/benchmarks_julia_"*date*.csv", results, delim = ";")

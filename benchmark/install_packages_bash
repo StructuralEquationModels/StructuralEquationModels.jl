@@ -1,0 +1,3 @@
+#!/bin/bash
+
+singularity exec --writable sem-writ.simg julia install_packages.jl

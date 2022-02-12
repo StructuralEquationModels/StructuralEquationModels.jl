@@ -1,0 +1,5 @@
+#!/bin/bash
+
+singularity pull docker://registry.git.mpib-berlin.mpg.de/peikert/sem-jl-docker:latest
+
+singularity build --sandbox sem-writ.simg sem-jl-docker_latest.sif

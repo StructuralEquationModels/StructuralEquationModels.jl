@@ -12,3 +12,4 @@
 /benchmark/cfa/results/
 /benchmark/cfa/*.csv
 /benchmark/cfa/*.rds
+/benchmark/sem-writ.simg/
