@@ -18,7 +18,7 @@ results <-
                list(...),
                lavaan_model(n_factors, n_items, meanstructure))))
 
-results$model_lavaan[[24]] <- str_remove_all(results$model_lavaan[[24]], "NA")
+# results$model_lavaan[[24]] <- str_remove_all(results$model_lavaan[[24]], "NA")
 results$model_lavaan[[12]] <- str_remove_all(results$model_lavaan[[12]], "NA")
 
 results <-
