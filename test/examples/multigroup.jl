@@ -187,6 +187,8 @@ model_ls_g2 = Sem(
     start_val = start_val_ml
 )
 
+start_val_ls = Vector{Float64}(par_ls.start[par_order])
+
 model_ls_multigroup = SemEnsemble((model_ls_g1, model_ls_g2), SemDiffOptim(), start_val_ls)
 
 @testset "ls_gradients_multigroup" begin
