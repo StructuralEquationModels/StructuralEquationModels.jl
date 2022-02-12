@@ -6,8 +6,8 @@
 /dev/
 /docs/build/
 /docs/site/
-benchmark/cfa/.Rhistory
-benchmark/cfa/data/
-benchmark/cfa/results/
-benchmark/cfa/*.csv
-benchmark/cfa/*.rds
+/benchmark/cfa/.Rhistory
+/benchmark/cfa/data/
+/benchmark/cfa/results/
+/benchmark/cfa/*.csv
+/benchmark/cfa/*.rds
