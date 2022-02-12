@@ -1,9 +1,9 @@
-pacman::p_load(stringr)
+library(stringr)
 
 lavaan_true_model <- function(
-  n_factors, 
-  n_items, 
-  mean_load, 
+  n_factors,
+  n_items,
+  mean_load,
   sd_load,
   mean_cov,
   sd_cov,
@@ -11,21 +11,21 @@ lavaan_true_model <- function(
   sd_mean,
   meanstructure){
   model <- c()
-  for(i in 1:n_factors){
+  for(i in 1:n_factors) {
     load <- rnorm(n_items, mean_load, sd_load)
-    model[i] <- 
+    model[i] <-
       str_c(
-        "f", 
-        i, 
-        "=~", 
+        "f",
+        i,
+        "=~",
         str_sub(
           paste(str_c(load, "*x_", i, "_", 1:n_items, " + "), collapse = ""),
           end = -3),
         "\n ")
   }
-  for(i in 1:n_factors){
-    for(j in 1:i){
-      if(i != j){
+  for (i in 1:n_factors) {
+    for (j in 1:i) {
+      if (i != j) {
         par <- rnorm(1, mean_cov, sd_cov)
         model <- append(model, str_c("f", i, "~~ ", par, "*f", j, "\n"))
       }else{
@@ -156,19 +156,6 @@ time_lavaan <- function(model, data, estimator){
     std.lv = TRUE,
     se = "none", test = "none",
     baseline = F, loglik = F, h1 = F)@timing$optim
-}
-
-benchmark_lavaan <- function(model, data, n_repetitions, estimator){
-  out <- 
-    map_dfr(
-      1:n_repetitions, 
-      ~safe_and_quiet(
-        time_lavaan,
-        model,
-        data,
-        estimator)
-      )
-  return(out)
 }
 
 time_omx <- function(model, estimator){

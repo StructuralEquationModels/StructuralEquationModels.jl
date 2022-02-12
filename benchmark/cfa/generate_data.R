@@ -1,5 +1,10 @@
-pacman::p_load(lavaan, readr, dplyr, purrr)
+library(lavaan)
+library(readr)
+library(dplyr)
+library(purrr)
+
 set.seed(193273)
+setwd("./benchmark/cfa")
 source("functions.R")
 config <- read_csv2("config.csv")
 
