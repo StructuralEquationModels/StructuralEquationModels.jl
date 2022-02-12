@@ -106,6 +106,9 @@ model_constant = Sem(
 ### test starting values
 ############################################################################
 
+par_order = [collect(29:42); collect(15:20); 2;3; 5;6;7; collect(9:14); collect(43:45); collect(21:24)]
+start_val_ml = Vector{Float64}(par_ml.start[par_order])
+
 @test model_ls_sym.imply.start_val == [fill(1.0, 11); fill(0.05, 3); fill(0.0, 6); fill(0.5, 8); fill(0.0, 3)]
 @test model_ml.imply.start_val ≈ start_val_ml
 
