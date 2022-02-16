@@ -327,3 +327,12 @@ function fill_∇G!(∇G, q_undirected, size_σ, q_directed, S_indices, σ_indic
     end
 
 end
+
+############################################################################
+### Pretty Printing
+############################################################################
+
+function Base.show(io::IO, struct_inst::SNLLS)
+    print_type_name(io, struct_inst)
+    print_field_types(io, struct_inst)
+end

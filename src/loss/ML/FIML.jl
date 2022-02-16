@@ -274,3 +274,12 @@ function check_fiml(semfiml, model)
     a = cholesky!(Symmetric(semfiml.imp_inv); check = false)
     return isposdef(a)
 end
+
+############################################################################
+### Pretty Printing
+############################################################################
+
+function Base.show(io::IO, struct_inst::SemFIML)
+    print_type_name(io, struct_inst)
+    print_field_types(io, struct_inst)
+end

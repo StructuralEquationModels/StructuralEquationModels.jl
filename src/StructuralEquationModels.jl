@@ -6,10 +6,13 @@ using LinearAlgebra, Optim,
 
 # type hierarchy
 include("types.jl")
+# pretty printing
+include("frontend/pretty_printing.jl")
 # observed
 include("observed/common.jl")
 include("observed/missing.jl")
 # constructor
+include("frontend/RAMMatrices.jl")
 include("sem.jl")
 # helper functions
 include("additional_functions/helper.jl")
@@ -38,7 +41,7 @@ include("optimizer/NLopt.jl")
 export  AbstractSem, 
             Sem, SemFiniteDiff, SemForwardDiff, SemEnsemble,
         SemImply, 
-            RAMSymbolic, RAM, SNLLS, RAMMatrices,
+            RAMSymbolic, RAM, SNLLS, RAMMatrices, ImplyEmpty,
         start_fabin3, start_simple,
         SemLoss, 
             SemLossFunction, SemML, SemFIML, SemDefinition, SemLasso, SemRidge,

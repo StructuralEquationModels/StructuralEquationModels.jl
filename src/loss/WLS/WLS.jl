@@ -101,3 +101,12 @@ function (semwls::SemWLS)(par, F, G, H, model)
         end
     end
 end
+
+############################################################################
+### Pretty Printing
+############################################################################
+
+function Base.show(io::IO, struct_inst::SemWLS)
+    print_type_name(io, struct_inst)
+    print_field_types(io, struct_inst)
+end

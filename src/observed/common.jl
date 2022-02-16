@@ -32,3 +32,12 @@ function SemObsCommon(;
         data_rowwise = nothing
     return SemObsCommon(data, obs_cov, obs_mean, n_man, n_obs, data_rowwise)
 end
+
+############################################################################
+### Pretty Printing
+############################################################################
+
+function Base.show(io::IO, struct_inst::SemObsCommon)
+    print_type_name(io, struct_inst)
+    print_field_types(io, struct_inst)
+end

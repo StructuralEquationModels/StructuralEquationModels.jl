@@ -84,3 +84,12 @@ function SemObsMissing(;data, kwargs...)
     rows, data_rowwise, Float64.(pattern_n_obs), Float64.(pattern_nvar_obs),
     obs_mean, obs_cov)
 end
+
+############################################################################
+### Pretty Printing
+############################################################################
+
+function Base.show(io::IO, struct_inst::SemObsMissing)
+    print_type_name(io, struct_inst)
+    print_field_types(io, struct_inst)
+end

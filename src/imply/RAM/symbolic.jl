@@ -165,3 +165,12 @@ function get_μ_symbolic_RAM(M, A, F)
     end
     return μ_symbolic
 end
+
+############################################################################
+### Pretty Printing
+############################################################################
+
+function Base.show(io::IO, struct_inst::RAMSymbolic)
+    print_type_name(io, struct_inst)
+    print_field_types(io, struct_inst)
+end
