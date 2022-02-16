@@ -61,4 +61,4 @@ model_ml = Sem(semobserved, imply_ml, loss_ml, diff)
 model_ml(true_val, 1.0, nothing, nothing)
 solution = sem_fit(model_ml)
 
-@test SEM.compare_estimates(true_val, solution.minimizer, .05)
+@test SEM.compare_estimates(true_val, solution.solution, .05)
