@@ -1190,7 +1190,10 @@ my_partable = ParameterTable(
     obs_vars, 
     parse_sem(model)...)
 
+
 A, S, F, parameters = get_RAM(my_partable, :x)
+
+pretty_table(Dict(my_partable))
 
 start_val = start_simple(Matrix(A), Matrix(S), Matrix(F), parameters)
 
