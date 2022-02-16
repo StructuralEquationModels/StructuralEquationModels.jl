@@ -269,6 +269,6 @@ end
 mutable struct SemFit
     minimum
     solution
-    loss_function_types
+    model
     optimization_result
 end
