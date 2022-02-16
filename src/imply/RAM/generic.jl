@@ -81,7 +81,7 @@ function RAM(;
     elseif iszero(A_rand[.!tril(ones(Bool, size(A)...))'])
         A_pre = UpperTriangular(A_pre)
     elseif acyclic
-        @info "Your model is acyclic, specifying the A Matrix as either Upper or Lower Triangular can have great performance benefits."
+        @info "Your model is acyclic, specifying the A Matrix as either Upper or Lower Triangular can have great performance benefits.\n"
     end
 
     # pre-allocate some matrices
@@ -199,4 +199,13 @@ end
 
 function μ_RAM!(μ, F⨉I_A⁻¹, M)
     mul!(μ, F⨉I_A⁻¹, M)
+end
+
+############################################################################
+### Pretty Printing
+############################################################################
+
+function Base.show(io::IO, struct_inst::RAM)
+    print_type_name(io, struct_inst)
+    print_field_types(io, struct_inst)
 end
