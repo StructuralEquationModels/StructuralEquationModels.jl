@@ -96,7 +96,7 @@ end
 # fit
 @testset "ml_solution_multigroup" begin
     solution_ml = sem_fit(model_ml_multigroup)
-    @test SEM.compare_estimates(par_ml.est[par_order], solution_ml.minimizer, 0.01)
+    @test SEM.compare_estimates(par_ml.est[par_order], solution_ml.solution, 0.01)
 end
 
 ####################################################################
@@ -164,7 +164,7 @@ end
 # fit
 @testset "solution_user_defined_loss" begin
     solution_ml = sem_fit(model_ml_multigroup)
-    @test SEM.compare_estimates(par_ml.est[par_order], solution_ml.minimizer, 0.01)
+    @test SEM.compare_estimates(par_ml.est[par_order], solution_ml.solution, 0.01)
 end
 
 ####################################################################
@@ -197,5 +197,5 @@ end
 
 @testset "ls_solution_multigroup" begin
     solution_ls = sem_fit(model_ls_multigroup)
-    @test SEM.compare_estimates(par_ls.est[par_order], solution_ls.minimizer, 0.01)
+    @test SEM.compare_estimates(par_ls.est[par_order], solution_ls.solution, 0.01)
 end

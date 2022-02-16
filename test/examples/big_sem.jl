@@ -84,5 +84,5 @@ end
 
 @testset "ml_solution_big_sem" begin
     solution_ml = sem_fit(model_ml)
-    @test SEM.compare_estimates(par_ml.est[par_order], solution_ml.minimizer, 0.01)
+    @test SEM.compare_estimates(par_ml.est[par_order], solution_ml.solution, 0.01)
 end

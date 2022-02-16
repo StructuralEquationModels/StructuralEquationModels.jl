@@ -142,17 +142,17 @@ end
 
 @testset "ml_solution" begin
     solution_ml = sem_fit(model_ml)
-    @test SEM.compare_estimates(par_ml.est[par_order], solution_ml.minimizer, 0.01)
+    @test SEM.compare_estimates(par_ml.est[par_order], solution_ml.solution, 0.01)
 end
 
 @testset "ls_solution" begin
     solution_ls = sem_fit(model_ls_sym)
-    @test SEM.compare_estimates(par_ls.est[par_order], solution_ls.minimizer, 0.01)
+    @test SEM.compare_estimates(par_ls.est[par_order], solution_ls.solution, 0.01)
 end
 
 @testset "constant_solution" begin
     solution_constant = sem_fit(model_constant)
-    @test SEM.compare_estimates(par_ml.est[par_order], solution_constant.minimizer, 0.01)
+    @test SEM.compare_estimates(par_ml.est[par_order], solution_constant.solution, 0.01)
 end
 
 # test constant objective value
@@ -163,7 +163,7 @@ end
 
 @testset "ml_symbolic_solution" begin
     solution_ml_symbolic = sem_fit(model_ml_sym)
-    @test SEM.compare_estimates(par_ml.est[par_order], solution_ml_symbolic.minimizer, 0.01)
+    @test SEM.compare_estimates(par_ml.est[par_order], solution_ml_symbolic.solution, 0.01)
 end
 
 ############################################################################
@@ -199,12 +199,12 @@ end
 
 @testset "ml_solution_hessian" begin
     solution_ml = sem_fit(model_ml)
-    @test SEM.compare_estimates(par_ml.est[par_order], solution_ml.minimizer, 0.01)
+    @test SEM.compare_estimates(par_ml.est[par_order], solution_ml.solution, 0.01)
 end
 
 @testset "ls_solution_hessian" begin
     solution_ls = sem_fit(model_ls)
-    @test SEM.compare_estimates(par_ls.est[par_order], solution_ls.minimizer, 0.01)
+    @test SEM.compare_estimates(par_ls.est[par_order], solution_ls.solution, 0.01)
 end
 
 ############################################################################
@@ -299,17 +299,17 @@ model_ml_sym = Sem(
 
 @testset "ml_solution_meanstructure" begin
     solution_ml = sem_fit(model_ml)
-    @test SEM.compare_estimates(par_ml.est[par_order], solution_ml.minimizer, 0.01)
+    @test SEM.compare_estimates(par_ml.est[par_order], solution_ml.solution, 0.01)
 end
 
 @testset "ls_solution_meanstructure" begin
     solution_ls = sem_fit(model_ls)
-    @test SEM.compare_estimates(par_ls.est[par_order], solution_ls.minimizer, 0.01)
+    @test SEM.compare_estimates(par_ls.est[par_order], solution_ls.solution, 0.01)
 end
 
 @testset "ml_solution_meanstructure_nsymbolic" begin
     solution_ml_symbolic = sem_fit(model_ml_sym)
-    @test SEM.compare_estimates(par_ml.est[par_order], solution_ml_symbolic.minimizer, 0.01)
+    @test SEM.compare_estimates(par_ml.est[par_order], solution_ml_symbolic.solution, 0.01)
 end
 
 ############################################################################
@@ -438,10 +438,10 @@ end
 
 @testset "fiml_solution" begin
     solution_ml = sem_fit(model_ml)
-    @test SEM.compare_estimates(par_ml.est[par_order], solution_ml.minimizer, 0.01)
+    @test SEM.compare_estimates(par_ml.est[par_order], solution_ml.solution, 0.01)
 end
 
 @testset "fiml_solution_symbolic" begin
     solution_ml_symbolic = sem_fit(model_ml_sym)
-    @test SEM.compare_estimates(par_ml.est[par_order], solution_ml_symbolic.minimizer, 0.01)
+    @test SEM.compare_estimates(par_ml.est[par_order], solution_ml_symbolic.solution, 0.01)
 end

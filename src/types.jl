@@ -261,3 +261,14 @@ function objective_gradient!(grad, model::SemEnsemble, parameters)
     copyto!(grad, model.G)
     return model.F[1]
 end
+
+#####################################################################################################
+# fitted objects
+#####################################################################################################
+
+mutable struct SemFit
+    minimum
+    solution
+    loss_function_types
+    optimization_result
+end

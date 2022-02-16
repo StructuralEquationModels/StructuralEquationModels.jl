@@ -6,6 +6,15 @@ function sem_wrap_nlopt(par, G, sem::AbstractSem)
     if !isnothing(F) return objective(sem) end
 end
 
+function SemFit_NLopt(optimization_result, model::AbstractSem)
+    return SemFit(
+        optimization_result[1],
+        optimization_result[2].minimizer,
+        model,
+        optimization_result
+    )
+end
+
 function sem_fit(
             model::Sem{O, I, L, D}; 
             ftol_rel = 1e-10,
@@ -25,5 +34,5 @@ function sem_fit(
     !isnothing(upper) ? opt.upper_bounds = upper : nothing
     !isnothing(local_algo) ? opt.local_optimizer = NLopt.Opt(local_algo, length(model.imply.start_val)) : nothing
     result = NLopt.optimize(opt, model.imply.start_val)
-    return result
+    return SemFit_NLopt(result, model)
 end

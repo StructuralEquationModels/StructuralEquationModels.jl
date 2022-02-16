@@ -6,13 +6,31 @@ function sem_wrap_optim(par, F, G, H, sem::AbstractSem)
     if !isnothing(F) return objective(sem) end
 end
 
+function SemFit(optimization_result::Optim.MultivariateOptimizationResults, model::AbstractSem)
+    return SemFit(
+        optimization_result.minimum,
+        optimization_result.minimizer,
+        typeof.(model.loss.functions),
+        optimization_result
+    )
+end
+
+function SemFit(optimization_result::Optim.MultivariateOptimizationResults, model::AbstractSem)
+    return SemFit(
+        optimization_result.minimum,
+        optimization_result.minimizer,
+        model,
+        optimization_result
+    )
+end
+
 function sem_fit(model::Sem{O, I, L, D}) where {O, I, L, D <: SemDiffOptim}
     result = Optim.optimize(
                 Optim.only_fgh!((F, G, H, par) -> sem_wrap_optim(par, F, G, H, model)),
                 model.imply.start_val,
                 model.diff.algorithm,
                 model.diff.options)
-    return result
+    return SemFit(result, model)
 end
 
 function sem_fit(model::SemFiniteDiff{O, I, L, D}) where {O, I, L, D <: SemDiffOptim}
@@ -21,7 +39,7 @@ function sem_fit(model::SemFiniteDiff{O, I, L, D}) where {O, I, L, D <: SemDiffO
                 model.imply.start_val,
                 model.diff.algorithm,
                 model.diff.options)
-    return result
+    return SemFit(result, model)
 end
 
 function sem_fit(model::SemEnsemble{N, T , V, D, S}) where {N, T, V, D <: SemDiffOptim, S}
@@ -30,5 +48,5 @@ function sem_fit(model::SemEnsemble{N, T , V, D, S}) where {N, T, V, D <: SemDif
                 model.start_val,
                 model.diff.algorithm,
                 model.diff.options)
-    return result
+    return SemFit(result, model)
 end

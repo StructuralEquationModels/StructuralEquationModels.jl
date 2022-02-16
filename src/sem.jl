@@ -181,18 +181,6 @@ function Base.show(io::IO, sem::Sem{O, I, L, D})  where {O, I, L, D}
     print(io, "   diff:      $(nameof(D)) \n")
 end
 
-function Base.show(io::IO, sem::Sem{O, I, L, D})  where {O, I, L, D}
-    lossfuntypes = @. string(nameof(typeof(sem.loss.functions)))
-    lossfuntypes = "   ".*lossfuntypes.*("\n")
-    print(io, "Structural Equation Model \n")
-    print(io, "- Loss Functions \n")
-    print(io, lossfuntypes...)
-    print(io, "- Fields \n")
-    print(io, "   observed:  $(nameof(O)) \n")
-    print(io, "   imply:     $(nameof(I)) \n")
-    print(io, "   diff:      $(nameof(D)) \n")
-end
-
 function Base.show(io::IO, sem::SemFiniteDiff{O, I, L, D})  where {O, I, L, D}
     lossfuntypes = @. string(nameof(typeof(sem.loss.functions)))
     lossfuntypes = "   ".*lossfuntypes.*("\n")
@@ -250,4 +238,15 @@ function Base.show(io::IO, models::SemEnsemble)
         print(io, "----------- ", i, " -----------", "\n")
         print(io, model)
     end
+end
+
+function Base.show(io::IO, semfit::SemFit)
+    print(io, "Fitted Structural Equation Model \n \n")
+    print(io, "================================ \n")
+    print(io, "---------- Model ---------- \n")
+    print(io, semfit.model)
+    print(io, "\n")
+    #print(io, "Objective value: $(round(semfit.minimum, digits = 4)) \n")
+    print(io, "----- Optimization result ------ \n")
+    print(io, semfit.optimization_result)
 end
