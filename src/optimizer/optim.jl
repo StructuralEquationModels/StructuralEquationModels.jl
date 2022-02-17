@@ -10,15 +10,6 @@ function SemFit(optimization_result::Optim.MultivariateOptimizationResults, mode
     return SemFit(
         optimization_result.minimum,
         optimization_result.minimizer,
-        typeof.(model.loss.functions),
-        optimization_result
-    )
-end
-
-function SemFit(optimization_result::Optim.MultivariateOptimizationResults, model::AbstractSem)
-    return SemFit(
-        optimization_result.minimum,
-        optimization_result.minimizer,
         model,
         optimization_result
     )
