@@ -48,14 +48,14 @@ function RAMSymbolic(;
     # Σ
     Σ_symbolic = get_Σ_symbolic_RAM(S, A, F; vech = vech)
     #print(Symbolics.build_function(Σ_symbolic)[2])
-    Σ_function = eval(Symbolics.build_function(Σ_symbolic, par)[2])
+    Σ_function = Symbolics.build_function(Σ_symbolic, par, expression=Val{false})[2]
     Σ = zeros(size(Σ_symbolic))
     precompile(Σ_function, (typeof(Σ), Vector{Float64}))
 
     # ∇Σ
     if gradient
         ∇Σ_symbolic = Symbolics.sparsejacobian(vec(Σ_symbolic), [par...])
-        ∇Σ_function = eval(Symbolics.build_function(∇Σ_symbolic, par)[2])
+        ∇Σ_function = Symbolics.build_function(∇Σ_symbolic, par, expression=Val{false})[2]
         constr = findnz(∇Σ_symbolic)
         ∇Σ = sparse(constr[1], constr[2], fill(1.0, nnz(∇Σ_symbolic)), size(∇Σ_symbolic)...)
         precompile(∇Σ_function, (typeof(∇Σ), Vector{Float64}))
@@ -76,7 +76,7 @@ function RAMSymbolic(;
             ∇²Σ_symbolic += J[i]*∇²Σ_symbolic_vec[i]
         end
     
-        ∇²Σ_function = eval(Symbolics.build_function(∇²Σ_symbolic, J, par)[2])
+        ∇²Σ_function = Symbolics.build_function(∇²Σ_symbolic, J, par, expression=Val{false})[2]
         ∇²Σ = zeros(n_par, n_par)
     else
         ∇²Σ_symbolic = nothing
@@ -87,11 +87,11 @@ function RAMSymbolic(;
     # μ
     if !isnothing(M)
         μ_symbolic = get_μ_symbolic_RAM(M, A, F)
-        μ_function = eval(Symbolics.build_function(μ_symbolic, par)[2])
+        μ_function = Symbolics.build_function(μ_symbolic, par, expression=Val{false})[2]
         μ = zeros(size(μ_symbolic))
         if gradient
             ∇μ_symbolic = Symbolics.jacobian(μ_symbolic, [par...])
-            ∇μ_function = eval(Symbolics.build_function(∇μ_symbolic, par)[2])
+            ∇μ_function = Symbolics.build_function(∇μ_symbolic, par, expression=Val{false})[2]
             ∇μ = zeros(size(F, 1), size(par, 1))
         else
             ∇μ_function = nothing
