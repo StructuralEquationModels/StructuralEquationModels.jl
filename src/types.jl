@@ -48,19 +48,19 @@ end
 
 function (loss::SemLoss)(par, F, G, H, model)
     for lossfun in loss.functions lossfun(par, F, G, H, model) end
-    if !isnothing(H)
+    if H
         loss.H .= 0.0
         for lossfun in loss.functions
             loss.H .+= lossfun.H
         end
     end
-    if !isnothing(G)
+    if G
         loss.G .= 0.0
         for lossfun in loss.functions
             loss.G .+= lossfun.G
         end
     end
-    if !isnothing(F)
+    if F
         loss.F[1] = 0.0
         for lossfun in loss.functions
             loss.F[1] += lossfun.F[1]
@@ -82,22 +82,22 @@ end
 
 function (model::SemFiniteDiff)(par, F, G, H)
 
-    if !isnothing(H)
-        model.loss.H .= FiniteDiff.finite_difference_hessian(x -> model(x, 0.0), par)
+    if H
+        model.loss.H .= FiniteDiff.finite_difference_hessian(x -> objective!(model, x), par)
     end
 
     if model.has_gradient
-        model.imply(par, F, G, nothing, model)
-        model.loss(par, F, G, nothing, model)
+        model.imply(par, F, G, false, model)
+        model.loss(par, F, G, false, model)
     else
 
-        if !isnothing(G)
+        if G
             model.loss.G .= FiniteDiff.finite_difference_gradient(x -> objective!(model, x), par)
         end
 
-        if !isnothing(F)
-            model.imply(par, F, nothing, nothing, model)
-            model.loss(par, F, nothing, nothing, model)
+        if F
+            model.imply(par, F, false, false, model)
+            model.loss(par, F, false, false, model)
         end
 
     end
@@ -114,28 +114,26 @@ end
 
 function (model::SemForwardDiff)(par, F, G, H)
 
-    if !isnothing(H)
-        model.loss.H .= ForwardDiff.hessian(x -> model(x, 0.0), par)
+    if H
+        model.loss.H .= ForwardDiff.hessian(x -> objective!(model, x), par)
     end
 
     if model.has_gradient
-        model.imply(par, F, G, nothing, model)
-        model.loss(par, F, G, nothing, model)
+        model.imply(par, F, G, false, model)
+        model.loss(par, F, G, false, model)
     else
-        model.loss.G .= ForwardDiff.gradient(x -> model(x, 0.0), par)
 
-        if !isnothing(F)
-            model.imply(par, F, nothing, nothing, model)
-            model.loss(par, F, nothing, nothing, model)
+        if G
+            model.loss.G .= ForwardDiff.gradient(x -> objective!(model, x), par)
+        end
+
+        if F
+            model.imply(par, F, false, false, model)
+            model.loss(par, F, false, false, model)
         end
         
     end
-    
-end
 
-function (model::SemForwardDiff)(par, F)
-    model(par, F, nothing, nothing)
-    return objective(model)
 end
 
 #####################################################################################################
@@ -176,15 +174,15 @@ end
 
 function (ensemble::SemEnsemble)(par, F, G, H)
 
-    if !isnothing(H) ensemble.H .= 0.0 end
-    if !isnothing(G) ensemble.G .= 0.0 end
-    if !isnothing(F) ensemble.F .= 0.0 end
+    if H ensemble.H .= 0.0 end
+    if G ensemble.G .= 0.0 end
+    if F ensemble.F .= 0.0 end
             
     for (model, weight) in zip(ensemble.sems, ensemble.weights)
         model(par, F, G, H)
-        if !isnothing(H) ensemble.H .+= weight*hessian(model) end
-        if !isnothing(G) ensemble.G .+= weight*gradient(model) end
-        if !isnothing(F) ensemble.F .+= weight*objective(model) end
+        if H ensemble.H .+= weight*hessian(model) end
+        if G ensemble.G .+= weight*gradient(model) end
+        if F ensemble.F .+= weight*objective(model) end
     end
 
 end
@@ -202,32 +200,32 @@ gradient(model::SemEnsemble) = model.G
 hessian(model::SemEnsemble) = model.H
 
 function objective!(model::AbstractSem, parameters)
-    model(parameters, 1.0, nothing, nothing)
+    model(parameters, true, false, false)
     return model.loss.F[1]
 end
 
 function gradient!(model::AbstractSem, parameters)
-    model(parameters, nothing, 1.0, nothing)
+    model(parameters, false, true, false)
     return model.loss.G
 end
 
 function hessian!(model::AbstractSem, parameters)
-    model(parameters, nothing, nothing, 1.0)
+    model(parameters, false, false, true)
     return model.loss.H
 end
 
 function objective!(model::SemEnsemble, parameters)
-    model(parameters, 1.0, nothing, nothing)
+    model(parameters, true, false, false)
     return model.F[1]
 end
 
 function gradient!(model::SemEnsemble, parameters)
-    model(parameters, nothing, 1.0, nothing)
+    model(parameters, false, true, false)
     return model.G
 end
 
 function hessian!(model::SemEnsemble, parameters)
-    model(parameters, nothing, nothing, 1.0)
+    model(parameters, false, false, true)
     return model.H
 end
 
@@ -240,24 +238,24 @@ end
 #hessian(model::SemEnsemble, parameters) = hessian!(model, parameters)
 
 function objective_gradient!(model::AbstractSem, parameters)
-    model(parameters, 1.0, 1.0, nothing)
+    model(parameters, true, true, false)
     return model.loss.F[1], copy(model.loss.G)
 end
 
 function objective_gradient!(model::SemEnsemble, parameters)
-    model(parameters, 1.0, 1.0, nothing)
+    model(parameters, true, true, false)
     return model.F[1], copy(model.G)
 end
 
 
 function objective_gradient!(grad, model::AbstractSem, parameters)
-    model(parameters, 1.0, 1.0, nothing)
+    model(parameters, true, true, false)
     copyto!(grad, model.loss.G)
     return model.loss.F[1]
 end
 
 function objective_gradient!(grad, model::SemEnsemble, parameters)
-    model(parameters, 1.0, 1.0, nothing)
+    model(parameters, true, true, false)
     copyto!(grad, model.G)
     return model.F[1]
 end
