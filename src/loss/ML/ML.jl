@@ -54,9 +54,9 @@ function (semml::SemML)(
     a = cholesky!(Symmetric(semml.inverses); check = false)
 
     if !isposdef(a)
-        if !isnothing(G) semml.G .= 0.0 end
-        if !isnothing(H) semml.H .= 0.0 end
-        if !isnothing(F) semml.F[1] = Inf end
+        if G semml.G .= 0.0 end
+        if H semml.H .= 0.0 end
+        if F semml.F[1] = Inf end
     else
         ld = logdet(a)
         semml.inverses .= LinearAlgebra.inv!(a)
@@ -64,7 +64,7 @@ function (semml::SemML)(
         # without means
         if isnothing(model.imply.μ)
 
-            if !isnothing(G) && !isnothing(H)
+            if G && H
                 J = (vec(semml.inverses)-vec(semml.inverses*model.observed.obs_cov*semml.inverses))'
                 G = J*model.imply.∇Σ
                 semml.G .= G'
@@ -83,12 +83,12 @@ function (semml::SemML)(
                 semml.H .= H
             end
 
-            if !isnothing(G) && isnothing(H)
+            if G && !H
                 G = (vec(semml.inverses)-vec(semml.inverses*model.observed.obs_cov*semml.inverses))'*model.imply.∇Σ
                 semml.G .= G'
             end
 
-            if isnothing(G) && !isnothing(H)
+            if !G && H
                 J = (vec(semml.inverses)-vec(semml.inverses*model.observed.obs_cov*semml.inverses))'
                 if semml.approx_H
                     H = 2*model.imply.∇Σ'*kron(semml.inverses, semml.inverses)*model.imply.∇Σ
@@ -105,7 +105,7 @@ function (semml::SemML)(
                 semml.H .= H
             end
 
-            if !isnothing(F)
+            if F
                 mul!(semml.mult, semml.inverses, model.observed.obs_cov)
                 F = ld + tr(semml.mult)
                 semml.F[1] = F
@@ -114,8 +114,8 @@ function (semml::SemML)(
         # with means
         μ_diff = model.observed.obs_mean - model.imply.μ
         diff⨉inv = μ_diff'*semml.inverses
-            if !isnothing(H) stop("hessian of ML + meanstructure is not implemented yet") end
-            if !isnothing(G)
+            if H stop("hessian of ML + meanstructure is not implemented yet") end
+            if G
                 G = 
                     vec(
                         semml.inverses*(
@@ -125,7 +125,7 @@ function (semml::SemML)(
                     2*diff⨉inv*model.imply.∇μ
                 semml.G .= G'
             end
-            if !isnothing(F)
+            if F
                 mul!(semml.mult, semml.inverses, model.observed.obs_cov)
                 F = ld + tr(semml.mult) + diff⨉inv*μ_diff
                 semml.F[1] = F
@@ -137,7 +137,7 @@ end
 # for non-symbolic imply type
 function (semml::SemML)(par, F, G, H, model::Sem{O, I, L, D}) where {O, I <: RAM, L, D}
 
-    if !isnothing(H)
+    if H
         stop("Hessian for ML estimation with non-symbolic imply type is not implemented")
     end
 
@@ -145,9 +145,9 @@ function (semml::SemML)(par, F, G, H, model::Sem{O, I, L, D}) where {O, I <: RAM
     a = cholesky!(Symmetric(semml.inverses); check = false)
 
     if !isposdef(a)
-        if !isnothing(G) semml.G .= 0.0 end
-        if !isnothing(H) semml.H .= 0.0 end
-        if !isnothing(F) semml.F[1] = Inf end
+        if !G semml.G .= 0.0 end
+        if !H semml.H .= 0.0 end
+        if !F semml.F[1] = Inf end
     else
         ld = logdet(a)
         semml.inverses .= LinearAlgebra.inv!(a)
@@ -155,7 +155,7 @@ function (semml::SemML)(par, F, G, H, model::Sem{O, I, L, D}) where {O, I <: RAM
         # without means
         if isnothing(model.imply.μ)
 
-            if !isnothing(G)
+            if G
                 G = SemML_gradient(
                     model.imply.S, 
                     model.imply.F⨉I_A⁻¹, 
@@ -167,7 +167,7 @@ function (semml::SemML)(par, F, G, H, model::Sem{O, I, L, D}) where {O, I <: RAM
                 semml.G .= G'
             end
 
-            if !isnothing(F)
+            if F
                 mul!(semml.mult, semml.inverses, model.observed.obs_cov)
                 F = ld + tr(semml.mult)
                 semml.F[1] = F
@@ -178,7 +178,7 @@ function (semml::SemML)(par, F, G, H, model::Sem{O, I, L, D}) where {O, I <: RAM
         μ_diff = model.observed.obs_mean - model.imply.μ
         diff⨉inv = μ_diff'*semml.inverses
             
-            if !isnothing(G)
+            if G
                 G = SemML_gradient(
                         model.imply.S, 
                         model.imply.F⨉I_A⁻¹, 
@@ -199,7 +199,7 @@ function (semml::SemML)(par, F, G, H, model::Sem{O, I, L, D}) where {O, I <: RAM
                 semml.G .= G'
             end
 
-            if !isnothing(F)
+            if F
                 mul!(semml.mult, semml.inverses, model.observed.obs_cov)
                 F = ld + tr(semml.mult) + diff⨉inv*μ_diff
                 semml.F[1] = F

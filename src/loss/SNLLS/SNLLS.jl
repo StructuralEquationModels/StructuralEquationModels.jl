@@ -72,7 +72,7 @@ end
 
 function (semsnlls::SemSNLLS)(par, F, G, H, model)
 
-    if !isnothing(H)
+    if H
         @error "analytic hessian not implemented for SNLLS" 
     end
     
@@ -82,11 +82,11 @@ function (semsnlls::SemSNLLS)(par, F, G, H, model)
 
     # without meanstructure
 
-    if !isnothing(F)
+    if F
         semsnlls.F[1] = -outer*a
     end
 
-    if !isnothing(G)
+    if G
         semsnlls.G .= transpose(2*vec((semsnlls.V*model.imply.G*a - semsnlls.V*semsnlls.s)*a')'*model.imply.∇G)
     end
 

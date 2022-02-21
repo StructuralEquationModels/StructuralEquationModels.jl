@@ -63,11 +63,11 @@ end
 
 function (semfiml::SemFIML)(par, F, G, H, model::Sem{O, I, L, D}) where {O, I <: SemImplySymbolic, L, D}
 
-    if !isnothing(H) stop("hessian for FIML is not implemented (yet)") end
+    if H stop("hessian for FIML is not implemented (yet)") end
 
     if !check_fiml(semfiml, model)
-        if !isnothing(G) semfiml.G .+= 1.0 end
-        if !isnothing(F) semfiml.F[1] = Inf end
+        if G semfiml.G .+= 1.0 end
+        if F semfiml.F[1] = Inf end
     else
         copy_per_pattern!(semfiml, model)
         batch_cholesky!(semfiml, model)
@@ -78,12 +78,12 @@ function (semfiml::SemFIML)(par, F, G, H, model::Sem{O, I, L, D}) where {O, I <:
         end
         #semfiml.logdets .= -logdet.(semfiml.inverses)
 
-        if !isnothing(G)
+        if G
             ∇F_FIML(semfiml.G, model.observed.rows, semfiml, model)
             @. semfiml.G = semfiml.G/model.observed.n_obs
         end
 
-        if !isnothing(F)
+        if F
             F_FIML(semfiml.F, model.observed.rows, semfiml, model)
             semfiml.F[1] = semfiml.F[1]/model.observed.n_obs
         end
@@ -94,11 +94,11 @@ end
 
 function (semfiml::SemFIML)(par, F, G, H, model::Sem{O, I, L, D}) where {O, I <: RAM, L, D}
 
-    if !isnothing(H) stop("hessian for FIML is not implemented (yet)") end
+    if H stop("hessian for FIML is not implemented (yet)") end
 
     if !check_fiml(semfiml, model)
-        if !isnothing(G) semfiml.G .+= 1.0 end
-        if !isnothing(F) semfiml.F[1] = Inf end
+        if G semfiml.G .+= 1.0 end
+        if F semfiml.F[1] = Inf end
     else
         copy_per_pattern!(semfiml, model)
         batch_cholesky!(semfiml, model)
@@ -109,12 +109,12 @@ function (semfiml::SemFIML)(par, F, G, H, model::Sem{O, I, L, D}) where {O, I <:
         end
         #semfiml.logdets .= -logdet.(semfiml.inverses)
 
-        if !isnothing(G)
+        if G
             ∇F_FIML(semfiml.G, model.observed.rows, semfiml, model)
             @. semfiml.G = semfiml.G/model.observed.n_obs
         end
 
-        if !isnothing(F)
+        if F
             F_FIML(semfiml.F, model.observed.rows, semfiml, model)
             semfiml.F[1] = semfiml.F[1]/model.observed.n_obs
         end

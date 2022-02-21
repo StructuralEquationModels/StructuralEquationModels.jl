@@ -203,7 +203,7 @@ function (imply::SNLLS)(par, F, G, H, model)
 
     end
 
-    if !isnothing(G)
+    if G
         fill_∇G!(
             imply.∇G,
             imply.q_undirected,

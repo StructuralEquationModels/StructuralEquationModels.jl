@@ -128,12 +128,12 @@ end
 
 function (imply::RAMSymbolic)(par, F, G, H, model)
     imply.Σ_function(imply.Σ, par)
-    if !isnothing(G) || !isnothing(H)
+    if G || H
         imply.∇Σ_function(imply.∇Σ, par)
     end
     if !isnothing(imply.μ)
         imply.μ_function(imply.μ, par)
-        if !isnothing(G) || !isnothing(H)
+        if G || H
             imply.∇μ_function(imply.∇μ, par)
         end
     end
