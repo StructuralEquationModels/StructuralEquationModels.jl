@@ -37,18 +37,16 @@ end
 
 function (ridge::SemRidge)(par, F, G, H, model)
 
-    if !isnothing(G)
-        G = 2*ridge.α*par[ridge.which]
-        ridge.G[ridge.which] .= G
+    if G
+        ridge.G[ridge.which] .= 2*ridge.α*par[ridge.which]
     end
 
-    if !isnothing(H)
+    if H
         @views @. ridge.H[ridge.which_H] += ridge.α*2.0
     end
 
-    if !isnothing(F)
-        F = ridge.α*sum(par[ridge.which].^2)
-        ridge.F[1] = F
+    if F
+        ridge.F[1] = ridge.α*sum(par[ridge.which].^2)
     end
     
 end
