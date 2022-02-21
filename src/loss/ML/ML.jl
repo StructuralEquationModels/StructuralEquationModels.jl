@@ -66,49 +66,48 @@ function (semml::SemML)(
 
             if G && H
                 J = (vec(semml.inverses)-vec(semml.inverses*model.observed.obs_cov*semml.inverses))'
-                G = J*model.imply.∇Σ
-                semml.G .= G'
+                gradient = J*model.imply.∇Σ
+                semml.G .= gradient'
                 if semml.approx_H
-                    H = 2*model.imply.∇Σ'*kron(semml.inverses, semml.inverses)*model.imply.∇Σ
+                    hessian = 2*model.imply.∇Σ'*kron(semml.inverses, semml.inverses)*model.imply.∇Σ
                 end
                 if !semml.approx_H
                     M = semml.inverses*model.observed.obs_cov*semml.inverses
                     H_outer = 
                         2*kron(M, semml.inverses) - 
                         kron(semml.inverses, semml.inverses)
-                    H = model.imply.∇Σ'*H_outer*model.imply.∇Σ
+                    hessian = model.imply.∇Σ'*H_outer*model.imply.∇Σ
                     model.imply.∇²Σ_function(model.imply.∇²Σ, J, par)
-                    H = H + model.imply.∇²Σ
+                    hessian += model.imply.∇²Σ
                 end
-                semml.H .= H
+                semml.H .= hessian
             end
 
             if G && !H
-                G = (vec(semml.inverses)-vec(semml.inverses*model.observed.obs_cov*semml.inverses))'*model.imply.∇Σ
-                semml.G .= G'
+                gradient = (vec(semml.inverses)-vec(semml.inverses*model.observed.obs_cov*semml.inverses))'*model.imply.∇Σ
+                semml.G .= gradient'
             end
 
             if !G && H
                 J = (vec(semml.inverses)-vec(semml.inverses*model.observed.obs_cov*semml.inverses))'
                 if semml.approx_H
-                    H = 2*model.imply.∇Σ'*kron(semml.inverses, semml.inverses)*model.imply.∇Σ
+                    hessian = 2*model.imply.∇Σ'*kron(semml.inverses, semml.inverses)*model.imply.∇Σ
                 end
                 if !semml.approx_H
                     M = semml.inverses*model.observed.obs_cov*semml.inverses
                     H_outer = 
                         2*kron(M, semml.inverses) - 
                         kron(semml.inverses, semml.inverses)
-                    H = model.imply.∇Σ'*H_outer*model.imply.∇Σ
+                    hessian = model.imply.∇Σ'*H_outer*model.imply.∇Σ
                     model.imply.∇²Σ_function(model.imply.∇²Σ, J, par)
-                    H += model.imply.∇²Σ 
+                    hessian += model.imply.∇²Σ 
                 end
-                semml.H .= H
+                semml.H .= hessian
             end
 
             if F
                 mul!(semml.mult, semml.inverses, model.observed.obs_cov)
-                F = ld + tr(semml.mult)
-                semml.F[1] = F
+                semml.F[1] = ld + tr(semml.mult)
             end
         else
         # with means
@@ -116,19 +115,18 @@ function (semml::SemML)(
         diff⨉inv = μ_diff'*semml.inverses
             if H stop("hessian of ML + meanstructure is not implemented yet") end
             if G
-                G = 
+                gradient = 
                     vec(
                         semml.inverses*(
                             LinearAlgebra.I - 
                             model.observed.obs_cov*semml.inverses - 
                             μ_diff*diff⨉inv))'*model.imply.∇Σ -
                     2*diff⨉inv*model.imply.∇μ
-                semml.G .= G'
+                semml.G .= gradient'
             end
             if F
                 mul!(semml.mult, semml.inverses, model.observed.obs_cov)
-                F = ld + tr(semml.mult) + diff⨉inv*μ_diff
-                semml.F[1] = F
+                semml.F[1] = ld + tr(semml.mult) + diff⨉inv*μ_diff
             end
         end
     end
@@ -156,7 +154,7 @@ function (semml::SemML)(par, F, G, H, model::Sem{O, I, L, D}) where {O, I <: RAM
         if isnothing(model.imply.μ)
 
             if G
-                G = SemML_gradient(
+                gradient = SemML_gradient(
                     model.imply.S, 
                     model.imply.F⨉I_A⁻¹, 
                     semml.inverses, 
@@ -164,13 +162,12 @@ function (semml::SemML)(par, F, G, H, model::Sem{O, I, L, D}) where {O, I <: RAM
                     model.imply.∇A, 
                     model.imply.∇S,
                     model.observed.obs_cov)
-                semml.G .= G'
+                semml.G .= gradient'
             end
 
             if F
                 mul!(semml.mult, semml.inverses, model.observed.obs_cov)
-                F = ld + tr(semml.mult)
-                semml.F[1] = F
+                semml.F[1] = ld + tr(semml.mult)
             end
             
         else
@@ -179,7 +176,7 @@ function (semml::SemML)(par, F, G, H, model::Sem{O, I, L, D}) where {O, I <: RAM
         diff⨉inv = μ_diff'*semml.inverses
             
             if G
-                G = SemML_gradient(
+                gradient = SemML_gradient(
                         model.imply.S, 
                         model.imply.F⨉I_A⁻¹, 
                         semml.inverses, 
@@ -196,13 +193,12 @@ function (semml::SemML)(par, F, G, H, model::Sem{O, I, L, D}) where {O, I <: RAM
                         model.imply.∇M, 
                         model.imply.∇A,
                         model.imply.∇S)
-                semml.G .= G'
+                semml.G .= gradient'
             end
 
             if F
                 mul!(semml.mult, semml.inverses, model.observed.obs_cov)
-                F = ld + tr(semml.mult) + diff⨉inv*μ_diff
-                semml.F[1] = F
+                semml.F[1] = ld + tr(semml.mult) + diff⨉inv*μ_diff
             end
 
         end
