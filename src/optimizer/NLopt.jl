@@ -9,7 +9,7 @@ end
 function SemFit_NLopt(optimization_result, model::AbstractSem)
     return SemFit(
         optimization_result[1],
-        optimization_result[2].minimizer,
+        optimization_result[2],
         model,
         optimization_result
     )
