@@ -120,8 +120,8 @@ UserSemML(;n_par, kwargs...) = UserSemML([1.0], zeros(n_par), zeros(n_par, n_par
 ############################################################################
 
 function (semml::UserSemML)(par, F, G, H, model)
-    if !isnothing(G) stop("analytic gradient of ML is not implemented (yet)") end
-    if !isnothing(H) stop("analytic hessian of ML is not implemented (yet)") end
+    if G error("analytic gradient of ML is not implemented (yet)") end
+    if H error("analytic hessian of ML is not implemented (yet)") end
 
     a = cholesky(Symmetric(model.imply.Σ); check = false)
     if !isposdef(a)
@@ -131,8 +131,7 @@ function (semml::UserSemML)(par, F, G, H, model)
         Σ_inv = LinearAlgebra.inv(a)
         if !isnothing(F)
             prod = Σ_inv*model.observed.obs_cov
-            F = ld + tr(prod)
-            semml.F[1] = F
+            semml.F[1] = ld + tr(prod)
         end
     end
 end

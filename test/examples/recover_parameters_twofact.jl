@@ -58,7 +58,7 @@ diff =
             x_tol = 1.5e-8))
 
 model_ml = Sem(semobserved, imply_ml, loss_ml, diff)
-model_ml(true_val, 1.0, nothing, nothing)
+model_ml(true_val, true, false, false)
 solution = sem_fit(model_ml)
 
 @test SEM.compare_estimates(true_val, solution.solution, .05)
