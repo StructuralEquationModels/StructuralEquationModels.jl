@@ -88,7 +88,7 @@ function RAM(;
     Σ = zeros(n_var, n_var)
     F⨉I_A⁻¹ = zeros(n_var, n_nod)
     F⨉I_A⁻¹S = zeros(n_var, n_nod)
-    I_A = zeros(n_nod, n_nod)
+    I_A = similar(A_pre)
 
     if gradient
         ∇A = get_matrix_derivative(A_indices, parameters, n_nod^2)
@@ -164,7 +164,7 @@ function (imply::RAM)(parameters, F, G, H, model)
     
     imply.I_A .= I - imply.A
     
-    if isnothing(G)
+    if G
         copyto!(imply.F⨉I_A⁻¹, imply.F)
         rdiv!(imply.F⨉I_A⁻¹, factorize(imply.I_A))
     else

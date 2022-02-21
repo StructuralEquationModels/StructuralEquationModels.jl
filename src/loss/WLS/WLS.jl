@@ -59,7 +59,7 @@ function (semwls::SemWLS)(par, F, G, H, model)
     σ_diff = semwls.s - model.imply.Σ
     if isnothing(semwls.V_μ)
     # without meanstructure
-        if !isnothing(G) && !isnothing(H)
+        if G && H
             J = (-2*(σ_diff)'*semwls.V)'
             G = model.imply.∇Σ'*J
             semwls.G .= G
@@ -70,7 +70,7 @@ function (semwls::SemWLS)(par, F, G, H, model)
             end
             semwls.H .= H
         end
-        if isnothing(G) && !isnothing(H)
+        if !G && H
             H = 2*model.imply.∇Σ'*semwls.V*model.imply.∇Σ
             if !semwls.approx_H
                 J = (-2*(σ_diff)'*semwls.V)'
@@ -79,23 +79,23 @@ function (semwls::SemWLS)(par, F, G, H, model)
             end
             semwls.H .= H
         end
-        if !isnothing(G) && isnothing(H)
+        if G && !H
             G = (-2*(σ_diff)'*semwls.V*model.imply.∇Σ)'
             semwls.G .= G
         end
-        if !isnothing(F)
+        if F
             F = dot(σ_diff, semwls.V, σ_diff)
             semwls.F[1] = F
         end
     else
     # with meanstructure
     μ_diff = model.observed.obs_mean - model.imply.μ
-        if !isnothing(H) stop("hessian of GLS with meanstructure is not available") end
-        if !isnothing(G)
+        if H stop("hessian of GLS with meanstructure is not available") end
+        if G
             G = -2*(σ_diff'*semwls.V*model.imply.∇Σ + μ_diff'*semwls.V_μ*model.imply.∇μ)'
             semwls.G .= G
         end
-        if !isnothing(F)
+        if F
             F = σ_diff'*semwls.V*σ_diff + μ_diff'*semwls.V_μ*μ_diff
             semwls.F[1] = F
         end

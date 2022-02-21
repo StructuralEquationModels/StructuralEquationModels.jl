@@ -1,6 +1,6 @@
 ## connect do Optim.jl as backend
 function sem_wrap_optim(par, F, G, H, sem::AbstractSem)
-    sem(par, F, G, H)
+    sem(par, !isnothing(F), !isnothing(G), !isnothing(H))
     if !isnothing(G) G .= gradient(sem) end
     if !isnothing(H) H .= hessian(sem) end
     if !isnothing(F) return objective(sem) end
