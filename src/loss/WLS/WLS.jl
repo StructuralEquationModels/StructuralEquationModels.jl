@@ -61,43 +61,41 @@ function (semwls::SemWLS)(par, F, G, H, model)
     # without meanstructure
         if G && H
             J = (-2*(σ_diff)'*semwls.V)'
-            G = model.imply.∇Σ'*J
-            semwls.G .= G
-            H = 2*model.imply.∇Σ'*semwls.V*model.imply.∇Σ
+            gradient = model.imply.∇Σ'*J
+            semwls.G .= gradient
+            hessian = 2*model.imply.∇Σ'*semwls.V*model.imply.∇Σ
             if !semwls.approx_H
                 model.imply.∇²Σ_function(model.imply.∇²Σ, J, par)
-                H += model.imply.∇²Σ 
+                hessian += model.imply.∇²Σ 
             end
-            semwls.H .= H
+            semwls.H .= hessian
         end
         if !G && H
-            H = 2*model.imply.∇Σ'*semwls.V*model.imply.∇Σ
+            hessian = 2*model.imply.∇Σ'*semwls.V*model.imply.∇Σ
             if !semwls.approx_H
                 J = (-2*(σ_diff)'*semwls.V)'
                 model.imply.∇²Σ_function(model.imply.∇²Σ, J, par)
-                H += model.imply.∇²Σ
+                hessian += model.imply.∇²Σ
             end
-            semwls.H .= H
+            semwls.H .= hessian
         end
         if G && !H
-            G = (-2*(σ_diff)'*semwls.V*model.imply.∇Σ)'
-            semwls.G .= G
+            gradient = (-2*(σ_diff)'*semwls.V*model.imply.∇Σ)'
+            semwls.G .= gradient
         end
         if F
-            F = dot(σ_diff, semwls.V, σ_diff)
-            semwls.F[1] = F
+            semwls.F[1] = dot(σ_diff, semwls.V, σ_diff)   
         end
     else
     # with meanstructure
     μ_diff = model.observed.obs_mean - model.imply.μ
         if H stop("hessian of GLS with meanstructure is not available") end
         if G
-            G = -2*(σ_diff'*semwls.V*model.imply.∇Σ + μ_diff'*semwls.V_μ*model.imply.∇μ)'
-            semwls.G .= G
+            gradient = -2*(σ_diff'*semwls.V*model.imply.∇Σ + μ_diff'*semwls.V_μ*model.imply.∇μ)'
+            semwls.G .= gradient
         end
         if F
-            F = σ_diff'*semwls.V*σ_diff + μ_diff'*semwls.V_μ*μ_diff
-            semwls.F[1] = F
+            semwls.F[1] = σ_diff'*semwls.V*σ_diff + μ_diff'*semwls.V_μ*μ_diff
         end
     end
 end
