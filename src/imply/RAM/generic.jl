@@ -164,7 +164,7 @@ function (imply::RAM)(parameters, F, G, H, model)
     
     imply.I_A .= I - imply.A
     
-    if G
+    if !G
         copyto!(imply.F⨉I_A⁻¹, imply.F)
         rdiv!(imply.F⨉I_A⁻¹, factorize(imply.I_A))
     else

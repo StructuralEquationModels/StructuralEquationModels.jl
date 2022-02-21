@@ -1,9 +1,9 @@
 ## connect do Optim.jl as backend
 function sem_wrap_nlopt(par, G, sem::AbstractSem)
-    if length(G) == 0 G = nothing end
-    sem(par, 1.0, G, nothing)
-    if !isnothing(G) G .= gradient(sem) end
-    if !isnothing(F) return objective(sem) end
+    need_gradient = length(G) != 0
+    sem(par, true, need_gradient, false)
+    if need_gradient G .= gradient(sem) end
+    return objective(sem)
 end
 
 function SemFit_NLopt(optimization_result, model::AbstractSem)
