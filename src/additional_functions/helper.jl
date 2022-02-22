@@ -180,3 +180,51 @@ function compare_estimates(solution_true, solution_sus, tol)
     is_close = all(abs.(solution_sus - solution_true) .< margin)
     return is_close
 end
+
+function commutation_matrix_pre_square(A)
+
+    n2 = size(A, 1)
+    n = Int(sqrt(n2))
+
+    ind = repeat(1:n, inner = n)
+    indadd = (0:(n-1))*n
+    for i in 1:n ind[((i-1)*n+1):i*n] .+= indadd end
+
+    A_post = A[ind, :]
+
+    return A_post
+
+end
+
+function commutation_matrix_pre_square_add!(B, A) # comuptes B + KₙA
+
+    n2 = size(A, 1)
+    n = Int(sqrt(n2))
+
+    ind = repeat(1:n, inner = n)
+    indadd = (0:(n-1))*n
+    for i in 1:n ind[((i-1)*n+1):i*n] .+= indadd end
+
+    @views @inbounds B .+= A[ind, :]
+
+    return B
+
+end
+
+function commutation_matrix_pre_square_add_mt!(B, A) # comuptes B + KₙA # 0 allocations but slower
+
+    n2 = size(A, 1)
+    n = Int(sqrt(n2))
+
+    indadd = (0:(n-1))*n
+
+    Threads.@threads for i = 1:n
+        for j = 1:n
+            row = i + indadd[j]
+            @views @inbounds B[row, :] .+= A[row, :]
+        end
+    end
+
+    return B
+
+end
