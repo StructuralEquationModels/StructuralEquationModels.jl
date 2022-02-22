@@ -161,9 +161,9 @@ function ∇F_fiml_outer(JΣ, Jμ, imply, model)
     Iₙ = sparse(1.0I, size(imply.A)...)
     P = kron(imply.F⨉I_A⁻¹, imply.F⨉I_A⁻¹)
     Q = kron(imply.S*imply.I_A', Iₙ)
-    Kₙ = commutation_matrix(size(imply.A, 1); tosparse = true)
+    commutation_matrix_pre_square_add!(Q, Q)
 
-    ∇Σ = P*(imply.∇S + (Q+Kₙ*Q)*imply.∇A)
+    ∇Σ = P*(imply.∇S + Q*imply.∇A)
 
     ∇μ = imply.F⨉I_A⁻¹*imply.∇M + kron((imply.I_A*imply.M)', imply.F⨉I_A⁻¹)*imply.∇A
 

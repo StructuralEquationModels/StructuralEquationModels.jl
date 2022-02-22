@@ -1550,14 +1550,14 @@ ram_matrices_big = gen_CFA_RAM(5, 40)
 model_ml_small = Sem(
     ram_matrices = ram_matrices_small,
     data = Matrix(data_vec[2]),
-    imply = RAM,
+    imply = RAMSymbolic,
     diff = semdiff 
 )
 
 model_ml_big = Sem(
     ram_matrices = ram_matrices_big,
     data = Matrix(data_vec[6]),
-    imply = RAM,
+    imply = RAMSymbolic,
     diff = semdiff 
 )
 
@@ -1615,3 +1615,19 @@ function profile_test(model, n)
 end
 
 ProfileView.@profview profile_test(model_ml_small, 1000)
+
+### NLopt
+
+model_ml_small = Sem(
+    ram_matrices = ram_matrices_small,
+    data = Matrix(data_vec[2]),
+    imply = RAM,
+    diff = SemDiffNLopt()
+)
+
+model_ml_big = Sem(
+    ram_matrices = ram_matrices_big,
+    data = Matrix(data_vec[6]),
+    imply = RAM,
+    diff = SemDiffNLopt()
+)
