@@ -2,15 +2,21 @@
 ### Types
 ############################################################################
 
-struct SemFIML{INV, C, L, O, M, IM, I, T, W, FT, GT, HT} <: SemLossFunction
+struct SemFIML{INV, C, L, O, M, IM, I, T, U, W, FT, GT, HT} <: SemLossFunction
     inverses::INV #preallocated inverses of imp_cov
     choleskys::C #preallocated choleskys
     logdets::L #logdets of implied covmats
+
     ∇ind::O
+
     imp_mean::IM
     meandiff::M
     imp_inv::I
+
     mult::T
+
+    commutation_indices::U
+
     interaction::W
 
     F::FT
@@ -22,7 +28,7 @@ end
 ### Constructors
 ############################################################################
 
-function SemFIML(;observed, n_par, parameter_type = Float64, kwargs...)
+function SemFIML(;observed, ram_matrices, n_par, parameter_type = Float64, kwargs...)
 
     inverses = broadcast(x -> zeros(x, x), Int64.(observed.pattern_nvar_obs))
     choleskys = Array{Cholesky{Float64,Array{Float64,2}},1}(undef, length(inverses))
@@ -40,6 +46,8 @@ function SemFIML(;observed, n_par, parameter_type = Float64, kwargs...)
     ∇ind = vec(CartesianIndices(Array{Float64}(undef, n_man, n_man)))
     ∇ind = [findall(x -> !(x[1] ∈ ind || x[2] ∈ ind), ∇ind) for ind in observed.patterns_not]
 
+    commutation_indices = get_commutation_lookup(size(ram_matrices.A, 1)^2)
+
     return SemFIML(
     inverses,
     choleskys,
@@ -49,6 +57,7 @@ function SemFIML(;observed, n_par, parameter_type = Float64, kwargs...)
     meandiff,
     imp_inv,
     mult,
+    commutation_indices,
     nothing,
 
     zeros(parameter_type, 1),
@@ -151,19 +160,20 @@ function ∇F_one_pattern(μ_diff, Σ⁻¹, S, pattern, ∇ind, N, Jμ, JΣ, mod
 
 end
 
-function ∇F_fiml_outer(JΣ, Jμ, imply::SemImplySymbolic, model)
+function ∇F_fiml_outer(JΣ, Jμ, imply::SemImplySymbolic, model, semfiml)
     G = transpose(JΣ'*imply.∇Σ-Jμ'*imply.∇μ)
     return G
 end
 
-function ∇F_fiml_outer(JΣ, Jμ, imply, model)
+function ∇F_fiml_outer(JΣ, Jμ, imply, model, semfiml)
 
     Iₙ = sparse(1.0I, size(imply.A)...)
     P = kron(imply.F⨉I_A⁻¹, imply.F⨉I_A⁻¹)
     Q = kron(imply.S*imply.I_A', Iₙ)
-    commutation_matrix_pre_square_add!(Q, Q)
+    #commutation_matrix_pre_square_add!(Q, Q)
+    Q2 = commutation_matrix_pre_square(Q, semfiml.commutation_indices)
 
-    ∇Σ = P*(imply.∇S + Q*imply.∇A)
+    ∇Σ = P*(imply.∇S + (Q+Q2)*imply.∇A)
 
     ∇μ = imply.F⨉I_A⁻¹*imply.∇M + kron((imply.I_A*imply.M)', imply.F⨉I_A⁻¹)*imply.∇A
 
@@ -200,7 +210,7 @@ function ∇F_FIML(G, rows, semfiml, model)
             JΣ,
             model)
     end
-    G .= ∇F_fiml_outer(JΣ, Jμ, model.imply, model)
+    G .= ∇F_fiml_outer(JΣ, Jμ, model.imply, model, semfiml)
 end
 
 function copy_per_pattern!(inverses, source_inverses, means, source_means, patterns)
