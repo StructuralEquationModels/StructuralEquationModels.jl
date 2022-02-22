@@ -211,6 +211,50 @@ function commutation_matrix_pre_square_add!(B, A) # comuptes B + KₙA
 
 end
 
+function get_commutation_lookup(n2::Int64)
+
+    n = Int(sqrt(n2))
+    ind = repeat(1:n, inner = n)
+    indadd = (0:(n-1))*n
+    for i in 1:n ind[((i-1)*n+1):i*n] .+= indadd end
+
+    lookup = Dict{Int64, Int64}()
+
+    for i in 1:n2
+        j = findall(x -> (x == i), ind)[1]
+        push!(lookup, i => j)
+    end
+
+    return lookup
+    
+end
+
+function commutation_matrix_pre_square!(A::SparseMatrixCSC, lookup) # comuptes B + KₙA
+    
+    for (i, rowind) in enumerate(A.rowval)
+        A.rowval[i] = lookup[rowind]
+    end
+
+end
+
+function commutation_matrix_pre_square!(A::SparseMatrixCSC) # computes KₙA
+    lookup = get_commutation_lookup(size(A, 2))
+    commutation_matrix_pre_square!(A, lookup)
+end
+
+function commutation_matrix_pre_square(A::SparseMatrixCSC)
+    B = copy(A)
+    commutation_matrix_pre_square!(B)
+    return B
+end
+
+function commutation_matrix_pre_square(A::SparseMatrixCSC, lookup)
+    B = copy(A)
+    commutation_matrix_pre_square!(B, lookup)
+    return B
+end
+
+
 function commutation_matrix_pre_square_add_mt!(B, A) # comuptes B + KₙA # 0 allocations but slower
 
     n2 = size(A, 1)
