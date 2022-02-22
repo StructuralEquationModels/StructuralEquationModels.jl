@@ -209,8 +209,20 @@ function gradient!(model::AbstractSem, parameters)
     return model.loss.G
 end
 
+function gradient!(grad, model::AbstractSem, parameters)
+    model(parameters, false, true, false)
+    copyto!(grad, model.loss.G)
+    return model.loss.G
+end
+
 function hessian!(model::AbstractSem, parameters)
     model(parameters, false, false, true)
+    return model.loss.H
+end
+
+function hessian!(hessian, model::AbstractSem, parameters)
+    model(parameters, false, false, true)
+    copyto!(hessian, model.loss.H)
     return model.loss.H
 end
 
@@ -224,8 +236,20 @@ function gradient!(model::SemEnsemble, parameters)
     return model.G
 end
 
+function gradient!(grad, model::SemEnsemble, parameters)
+    model(parameters, false, true, false)
+    copyto!(grad, model.G)
+    return model.G
+end
+
 function hessian!(model::SemEnsemble, parameters)
     model(parameters, false, false, true)
+    return model.H
+end
+
+function hessian!(hessian, model::SemEnsemble, parameters)
+    model(parameters, false, false, true)
+    copyto!(hessian, model.H)
     return model.H
 end
 
