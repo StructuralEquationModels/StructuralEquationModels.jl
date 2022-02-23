@@ -6,7 +6,7 @@ abstract type AbstractSem end
 
 abstract type SemLossFunction end
 
-struct SemLoss{F <: Tuple, FT, GT, HT}
+mutable struct SemLoss{F <: Tuple, FT, GT, HT}
     functions::F
 
     F::FT
@@ -34,7 +34,7 @@ abstract type SemImply end
 
 abstract type SemImplySymbolic <: SemImply end
 
-struct Sem{O <: SemObs, I <: SemImply, L <: SemLoss, D <: SemDiff} <: AbstractSem
+mutable struct Sem{O <: SemObs, I <: SemImply, L <: SemLoss, D <: SemDiff} <: AbstractSem
     observed::O
     imply::I
     loss::L

@@ -1,4 +1,4 @@
-struct SemObsMissing{
+mutable struct SemObsMissing{
         A <: AbstractArray,
         D <: AbstractFloat,
         O <: AbstractFloat,
