@@ -2,7 +2,7 @@
 ### Types
 ############################################################################
 
-struct RAM{A1, A2, A3, A4, A5, A6, V, I1, I2, I3, I4, M1, M2, M3, S1, S2, S3} <: SemImply
+mutable struct RAM{A1, A2, A3, A4, A5, A6, V, I1, I2, I3, I4, M1, M2, M3, S1, S2, S3} <: SemImply
     Σ::A1
     A::A2
     S::A3
