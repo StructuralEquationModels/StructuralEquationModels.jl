@@ -169,11 +169,7 @@ function (imply::RAM)(parameters, F, G, H, model)
         rdiv!(imply.F⨉I_A⁻¹, factorize(imply.I_A))
     else
         imply.I_A .= LinearAlgebra.inv!(factorize(imply.I_A))
-        copyto!(
-            imply.F⨉I_A⁻¹,
-            imply.I_A_indices,
-            imply.I_A,
-            imply.I_A_indices)
+        imply.F⨉I_A⁻¹ .= imply.F*imply.I_A
     end
 
     Σ_RAM!(
