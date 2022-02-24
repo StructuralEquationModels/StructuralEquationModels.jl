@@ -2,16 +2,19 @@ module StructuralEquationModels
 
 using LinearAlgebra, Optim,
     NLSolversBase, Statistics, SparseArrays, Symbolics,
-    NLopt, FiniteDiff, ForwardDiff
+    NLopt, FiniteDiff, ForwardDiff, PrettyTables
 
 # type hierarchy
 include("types.jl")
+# specification of models
+include("specification/ParameterTable.jl")
 # pretty printing
 include("frontend/pretty_printing.jl")
 # observed
 include("observed/common.jl")
 include("observed/missing.jl")
 # constructor
+include("frontend/parser.jl")
 include("frontend/RAMMatrices.jl")
 include("sem.jl")
 # helper functions
@@ -41,7 +44,7 @@ include("optimizer/NLopt.jl")
 export  AbstractSem, 
             Sem, SemFiniteDiff, SemForwardDiff, SemEnsemble,
         SemImply, 
-            RAMSymbolic, RAM, SNLLS, RAMMatrices, ImplyEmpty,
+            RAMSymbolic, RAM, SNLLS, ImplyEmpty,
         start_fabin3, start_simple,
         SemLoss, 
             SemLossFunction, SemML, SemFIML, SemDefinition, SemLasso, SemRidge,
@@ -51,7 +54,6 @@ export  AbstractSem,
         SemObs, 
             SemObsCommon, SemObsMissing,
         sem_fit, SemFit,
-        objective, objective!, gradient, gradient!, hessian, hessian!
-
-
+        objective, objective!, gradient, gradient!, hessian, hessian!, objective_gradient!,
+        ParameterTable, RAMMatrices
 end
