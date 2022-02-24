@@ -24,7 +24,8 @@ end
 ############################################################################
 
 function RAMSymbolic(;
-        ram_matrices,
+        parameter_table = nothing,
+        ram_matrices = nothing,
         loss_types = nothing,
         start_val = start_fabin3,
         vech = false,
@@ -32,6 +33,10 @@ function RAMSymbolic(;
         hessian = false,
         kwargs...)
 
+    if isnothing(ram_matrices)
+        ram_matrices = RAMMatrices(parameter_table)
+    end
+    
     A, S, F, M, par = 
         ram_matrices.A, ram_matrices.S, ram_matrices.F, ram_matrices.M, ram_matrices.parameters
 

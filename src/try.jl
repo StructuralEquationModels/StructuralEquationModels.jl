@@ -1631,3 +1631,113 @@ model_ml_big = Sem(
     imply = RAM,
     diff = SemDiffNLopt()
 )
+
+
+
+### test F Matrix
+
+A = rand(10,10)
+
+F = zeros(7, 10); F[diagind(F)] .= 1.0
+
+test = F*A*F'
+
+test == A[1:7, 1:7]
+
+##
+
+F2 = zeros(7, 10)
+
+F2[1, 1] = 1.0
+F2[2, 2] = 1.0
+F2[3, 3] = 1.0
+F2[4, 5] = 1.0
+F2[5, 6] = 1.0
+F2[6, 7] = 1.0
+F2[7, 8] = 1.0
+
+F2
+
+test = F2*A*F2'
+
+test == A[[1, 2, 3, 5, 6, 7, 8], [1, 2, 3, 5, 6, 7, 8]]
+
+#dim F = nobs x n_lat
+#
+
+###########################################
+
+using StructuralEquationModels
+import StructuralEquationModels as SEM
+
+
+lat_vars = "f".*string.(1:3)
+
+obs_vars = "x".*string.(1:9)
+
+model_free = """
+    f1 =∼ x1 + x2 + x3
+    f2 =∼ x4 + x5 + x6
+    f3 =∼ x7 + x8 + x9
+    f1 ∼∼ f2
+    f3 ∼ f1
+"""
+
+model_fixed = """
+    f1 =∼ 1*x1 + x2 + x3
+    f2 =∼ 1*x4 + x5 + x6
+    f3 =∼ 1*x7 + x8 + x9
+    f1 ∼∼ 0.5*f2
+    f3 ∼ f1
+"""
+
+model_equal = """
+    f1 =∼ 1*x1 + x2 + x3
+    f2 =∼ 1*x4 + a*x5 + x6
+    f3 =∼ 1*x7 + a*x8 + x9
+    f1 ∼∼ 0.5*f2
+    f3 ∼ f1
+"""
+
+# do it
+# include("frontend/parser.jl")
+
+my_partable = ParameterTable(lat_vars, obs_vars, model_equal)
+
+ram_matrices = RAMMatrices(my_partable)
+
+sort!(my_partable)
+
+struct mystruct{A}
+    mat::A
+end
+
+mutable struct mutestruct2{A}
+    mat::A
+end
+
+A = rand(20, 20)
+
+B = rand(20, 20)
+
+C = rand(20, 20)
+
+D = rand(20, 20)
+
+obj1 = mystruct(A)
+
+obj2 = mutestruct2(A)
+
+@benchmark f1($obj2, $C, $D)
+
+@benchmark f2($obj1, $C, $D)
+
+function f1(obj, A, B)
+    C = A*B
+    obj.mat = C
+end
+
+function f2(obj, A, B)
+    C = A*B
+    obj.mat .= C
+end
