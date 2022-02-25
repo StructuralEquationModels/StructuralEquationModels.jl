@@ -1,4 +1,8 @@
-Base.@kwdef mutable struct ParameterTable{SV, BV, FV, SyV} <: SemSpecification
+############################################################################
+### Types
+############################################################################
+
+Base.@kwdef mutable struct ParameterTable{SV, BV, FV, SyV} <: SemSpec
     latent_vars::SV
     observed_vars::SV
     sorted_vars::SV = Vector{String}()
@@ -13,34 +17,53 @@ Base.@kwdef mutable struct ParameterTable{SV, BV, FV, SyV} <: SemSpecification
     identifier::SyV
 end
 
-Base.getindex(partable::ParameterTable, i::Int) =
-    (partable.from[i], 
-    partable.parameter_type[i], 
-    partable.to[i], 
-    partable.free[i], 
-    partable.value_fixed[i], 
-    partable.label[i])
-
-Base.length(partable::ParameterTable) = length(partable.from)
-
-import Base.Dict
-
 ############################################################################
 ### Constructors
 ############################################################################
 
-function ParameterTable(;ram_matrices::RAMMatrices, kwargs...)
+# constuct an empty table
+function ParameterTable()
+
+    from = Vector{String}()
+    parameter_type = Vector{String}()
+    to = Vector{String}()
+    free = Vector{Bool}()
+    value_fixed = Vector{Float64}()
+    label = Vector{String}()
+    start = Vector{Float64}()
+    estimate = Vector{Float64}()
+    identifier = Vector{Symbol}()
+
+    latent_vars = Vector{String}()
+    observed_vars = Vector{String}()
+    sorted_vars = Vector{String}()
+
+    return ParameterTable(
+        latent_vars,
+        observed_vars,
+        sorted_vars,
+        from,
+        parameter_type,
+        to,
+        free,
+        value_fixed,
+        label,
+        start,
+        estimate,
+        identifier
+    )
 
 end
 
-function ParameterTable(;graph::StenoGraph, kwargs...)
+#= function ParameterTable(;graph::StenoGraph, kwargs...)
     
-end
-
+end =#
 
 ############################################################################
 ### Convert to other types
 ############################################################################
+
+import Base.Dict
 
 function Dict(partable::ParameterTable)
     fields = fieldnames(typeof(partable))
@@ -96,8 +119,22 @@ function Base.show(io::IO, partable::ParameterTable)
 end
 
 ############################################################################
-### Sorting
+### Additional Methods
 ############################################################################
+
+# Iteration ----------------------------------------------------------------
+
+Base.getindex(partable::ParameterTable, i::Int) =
+    (partable.from[i], 
+    partable.parameter_type[i], 
+    partable.to[i], 
+    partable.free[i], 
+    partable.value_fixed[i], 
+    partable.label[i])
+
+Base.length(partable::ParameterTable) = length(partable.from)
+
+# Sorting -------------------------------------------------------------------
 
 import Base.sort!, Base.sort
 
@@ -142,4 +179,22 @@ function sort(partable::ParameterTable)
     new_partable = deepcopy(partable)
     sort!(new_partable)
     return new_partable
+end
+
+# add a row -------------------------------------------------------------------
+
+import Base.push!
+
+function push!(partable::ParameterTable, from, parameter_type, to, free, value_fixed, label, start, estimate, identifier)
+    
+    push!(partable.from, from)
+    push!(partable.parameter_type, parameter_type)
+    push!(partable.to, to)
+    push!(partable.free, free)
+    push!(partable.value_fixed, value_fixed)
+    push!(partable.label, label)
+    push!(partable.start, start)
+    push!(partable.estimate, estimate)
+    push!(partable.identifier, identifier)
+
 end
