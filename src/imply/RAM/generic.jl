@@ -33,14 +33,15 @@ end
 ############################################################################
 
 function RAM(;
-        parameter_table = nothing,
-        ram_matrices = nothing,
+        specification,
         start_val = start_fabin3,
         vech = false,
         gradient = true,
         kwargs...)
 
     # check the model specification
+    # if isa(specification, ParameterTable)
+    # else if ...
     if !isnothing(parameter_table) && !isnothing(ram_matrices)
 
         @warn "You specified both a parameter table and RAM Matrices - \n

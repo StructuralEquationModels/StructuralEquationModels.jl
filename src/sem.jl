@@ -3,18 +3,26 @@
 ##############################################################
 
 function Sem(;
+        specification::S = ParameterTable,
         observed::O = SemObsCommon,
         imply::I = RAM,
         loss::L = (SemML,),
         diff::D = SemDiffOptim,
-        kwargs...) where {O, I, L, D}
+        kwargs...) where {S, O, I, L, D}
 
     kwargs = Dict{Symbol, Any}(kwargs...)
 
+    kwargs[:specification_type] = S <: Type ? specification : typeof(specification)
     kwargs[:observed_type] = O <: Type ? observed : typeof(observed)
     kwargs[:imply_type] = I <: Type ? imply : typeof(imply)
     kwargs[:loss_types] = [lossfun isa SemLossFunction ? typeof(lossfun) : lossfun for lossfun in loss]
     kwargs[:diff_type] = D <: Type ? diff : typeof(diff)
+
+    if !isa(specification, SemSpecification)
+        specification = specification(;kwargs...)
+    end
+
+    kwargs[:specification] = specification
 
     if O <: Type
         observed = observed(;kwargs...)
@@ -48,26 +56,34 @@ function Sem(;
         diff = diff(;kwargs...)
     end
 
-    sem = Sem(observed, imply, loss, diff)
+    sem = Sem(specification, observed, imply, loss, diff)
 
     return sem
 
 end
 
 function SemFiniteDiff(;
+        specification::S = ParameterTable,
         observed::O = SemObsCommon,
         imply::I = RAM,
         loss::L = (SemML,),
         diff::D = SemDiffOptim,
         has_gradient = false,
-        kwargs...) where {O, I, L, D}
+        kwargs...) where {S, O, I, L, D}
 
     kwargs = Dict{Symbol, Any}(kwargs...)
 
+    kwargs[:specification_type] = S <: Type ? specification : typeof(specification)
     kwargs[:observed_type] = O <: Type ? observed : typeof(observed)
     kwargs[:imply_type] = I <: Type ? imply : typeof(imply)
     kwargs[:loss_types] = [lossfun isa SemLossFunction ? typeof(lossfun) : lossfun for lossfun in loss]
     kwargs[:diff_type] = D <: Type ? diff : typeof(diff)
+
+    if !isa(specification, SemSpecification)
+        specification = specification(;kwargs...)
+    end
+
+    kwargs[:specification] = specification
 
     if O <: Type
         observed = observed(;kwargs...)
@@ -108,20 +124,28 @@ function SemFiniteDiff(;
 end
 
 function SemForwardDiff(;
+        specification::S = ParameterTable,
         observed::O = SemObsCommon,
         imply::I = RAM,
         loss::L = (SemML,),
         diff::D = SemDiffOptim,
         has_gradient = false,
-        kwargs...) where {O, I, L, D}
+        kwargs...) where {S, O, I, L, D}
 
     kwargs = Dict{Symbol, Any}(kwargs...)
 
+    kwargs[:specification_type] = S <: Type ? specification : typeof(specification)
     kwargs[:observed_type] = O <: Type ? observed : typeof(observed)
     kwargs[:imply_type] = I <: Type ? imply : typeof(imply)
     kwargs[:loss_types] = [lossfun isa SemLossFunction ? typeof(lossfun) : lossfun for lossfun in loss]
     kwargs[:diff_type] = D <: Type ? diff : typeof(diff)
 
+    if !isa(specification, SemSpecification)
+        specification = specification(;kwargs...)
+    end
+
+    kwargs[:specification] = specification
+    
     if O <: Type
         observed = observed(;kwargs...)
     end

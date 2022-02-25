@@ -49,7 +49,7 @@ function (semml::SemML)(
     F, 
     G, 
     H, 
-    model::Sem{O, I, L, D}) where {O, I <: SemImplySymbolic, L, D}
+    model::Sem{S, O, I, L, D}) where {S, O, I <: SemImplySymbolic, L, D}
     semml.inverses .= model.imply.Σ
     a = cholesky!(Symmetric(semml.inverses); check = false)
 
@@ -133,7 +133,7 @@ function (semml::SemML)(
 end
 
 # for non-symbolic imply type
-function (semml::SemML)(par, F, G, H, model::Sem{O, I, L, D}) where {O, I <: RAM, L, D}
+function (semml::SemML)(par, F, G, H, model::Sem{S, O, I, L, D}) where {S, O, I <: RAM, L, D}
 
     if H
         stop("Hessian for ML estimation with non-symbolic imply type is not implemented")

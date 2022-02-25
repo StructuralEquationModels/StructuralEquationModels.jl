@@ -1,4 +1,4 @@
-Base.@kwdef mutable struct ParameterTable{SV, BV, FV, SyV}
+Base.@kwdef mutable struct ParameterTable{SV, BV, FV, SyV} <: SemSpecification
     latent_vars::SV
     observed_vars::SV
     sorted_vars::SV = Vector{String}()
@@ -24,6 +24,23 @@ Base.getindex(partable::ParameterTable, i::Int) =
 Base.length(partable::ParameterTable) = length(partable.from)
 
 import Base.Dict
+
+############################################################################
+### Constructors
+############################################################################
+
+function ParameterTable(;ram_matrices::RAMMatrices, kwargs...)
+
+end
+
+function ParameterTable(;graph::StenoGraph, kwargs...)
+    
+end
+
+
+############################################################################
+### Convert to other types
+############################################################################
 
 function Dict(partable::ParameterTable)
     fields = fieldnames(typeof(partable))
@@ -78,6 +95,10 @@ function Base.show(io::IO, partable::ParameterTable)
     print(io, "Observed Variables:  $(partable.observed_vars) \n")
 end
 
+############################################################################
+### Sorting
+############################################################################
+
 import Base.sort!, Base.sort
 
 function sort!(partable::ParameterTable)
@@ -121,8 +142,4 @@ function sort(partable::ParameterTable)
     new_partable = deepcopy(partable)
     sort!(new_partable)
     return new_partable
-end
-
-function update_estimate!(partable::ParameterTable, sem_fit::SemFit)
-    
 end
