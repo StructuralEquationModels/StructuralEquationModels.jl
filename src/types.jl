@@ -26,6 +26,8 @@ function SemLoss(functions; parameter_type = Float64)
         zeros(parameter_type, n_par, n_par))
 end
 
+abstract type SemSpec end
+
 abstract type SemDiff end
 
 abstract type SemObs end
@@ -34,7 +36,8 @@ abstract type SemImply end
 
 abstract type SemImplySymbolic <: SemImply end
 
-mutable struct Sem{O <: SemObs, I <: SemImply, L <: SemLoss, D <: SemDiff} <: AbstractSem
+mutable struct Sem{S <: SemSpec, O <: SemObs, I <: SemImply, L <: SemLoss, D <: SemDiff} <: AbstractSem
+    specification::S
     observed::O
     imply::I
     loss::L
@@ -72,7 +75,8 @@ end
 # automatic differentiation
 #####################################################################################################
 
-struct SemFiniteDiff{O <: SemObs, I <: SemImply, L <: SemLoss, D <: SemDiff, G} <: AbstractSem
+struct SemFiniteDiff{S <: SemSpec, O <: SemObs, I <: SemImply, L <: SemLoss, D <: SemDiff, G} <: AbstractSem
+    specification::S
     observed::O
     imply::I
     loss::L
@@ -104,7 +108,8 @@ function (model::SemFiniteDiff)(par, F, G, H)
 
 end
 
-struct SemForwardDiff{O <: SemObs, I <: SemImply, L <: SemLoss, D <: SemDiff, G} <: AbstractSem
+struct SemForwardDiff{S <: SemSpec, O <: SemObs, I <: SemImply, L <: SemLoss, D <: SemDiff, G} <: AbstractSem
+    specification::S
     observed::O
     imply::I 
     loss::L 
