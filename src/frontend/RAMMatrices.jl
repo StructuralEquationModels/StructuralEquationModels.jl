@@ -4,18 +4,39 @@ Base.@kwdef struct RAMMatrices
     F
     M = nothing
     parameters
+    identifier = nothing
 end
 
 ############################################################################
 ### get RAMMatrices from parameter table
 ############################################################################
 
-function RAMMatrices(partable; parname = :θ, to_sparse = true)
+function RAMMatrices!(partable::ParameterTable; parname::Symbol = :θ, to_sparse = true)
     n_labels_unique = size(unique(partable.label), 1) - 1
     n_labels = sum(.!(partable.label .== ""))
     n_parameters = sum(partable.free) - n_labels + n_labels_unique
 
     parameters = (Symbolics.@variables $parname[1:n_parameters])[1]
+    
+    identifier = Symbol.(parname, :_, 1:n_parameters)
+    identifier_copy = copy(identifier)
+    label_identifier = Dict{String, Symbol}()
+    identifier_long = Vector{Symbol}()
+
+    for label in partable.label[partable.free]
+        if length(label) == 0
+            push!(identifier_long, popfirst!(identifier_copy))
+        else
+            if haskey(label_identifier, label)
+                push!(identifier_long, label_identifier[label])
+            else
+                push!(label_identifier, label => first(identifier_copy))
+                push!(identifier_long, popfirst!(identifier_copy))
+            end
+        end
+    end
+
+    partable.identifier[partable.free] .= identifier_long
 
     n_observed = size(partable.observed_vars, 1)
     n_latent = size(partable.latent_vars, 1)
@@ -80,7 +101,7 @@ function RAMMatrices(partable; parname = :θ, to_sparse = true)
         F = sparse(F)
     end
 
-    return RAMMatrices(;A = A, S = S, F = F, parameters = parameters)
+    return RAMMatrices(;A = A, S = S, F = F, parameters = parameters, parameter_names = identifier)
 end
 
 function set_RAM_index(A, S, parameter_type, row_ind, col_ind, parameter)

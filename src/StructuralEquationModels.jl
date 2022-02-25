@@ -55,5 +55,5 @@ export  AbstractSem,
             SemObsCommon, SemObsMissing,
         sem_fit, SemFit,
         objective, objective!, gradient, gradient!, hessian, hessian!, objective_gradient!,
-        ParameterTable, RAMMatrices
+        ParameterTable, RAMMatrices, RAMMatrices!
 end

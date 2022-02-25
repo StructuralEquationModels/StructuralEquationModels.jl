@@ -1,4 +1,4 @@
-Base.@kwdef mutable struct ParameterTable{SV, BV, FV}
+Base.@kwdef mutable struct ParameterTable{SV, BV, FV, SyV}
     latent_vars::SV
     observed_vars::SV
     sorted_vars::SV = Vector{String}()
@@ -10,6 +10,7 @@ Base.@kwdef mutable struct ParameterTable{SV, BV, FV}
     label::SV
     start::FV
     estimate::FV
+    identifier::SyV
 end
 
 Base.getindex(partable::ParameterTable, i::Int) =
@@ -39,7 +40,8 @@ function DataFrame(partable::ParameterTable)
         :value_fixed => partable.value_fixed,
         :label => partable.label,
         :start => partable.start,
-        :estimate => partable.estimate])
+        :estimate => partable.estimate,
+        :identifier => partable.identifier])
     return out
 end
 
@@ -61,7 +63,8 @@ function Base.show(io::IO, partable::ParameterTable)
         :value_fixed,
         :label,
         :start,
-        :estimate]
+        :estimate,
+        :identifier]
     as_matrix = hcat(getproperty.([partable], relevant_fields)...)
     pretty_table(
         io, 
@@ -118,4 +121,8 @@ function sort(partable::ParameterTable)
     new_partable = deepcopy(partable)
     sort!(new_partable)
     return new_partable
+end
+
+function update_estimate!(partable::ParameterTable, sem_fit::SemFit)
+    
 end
