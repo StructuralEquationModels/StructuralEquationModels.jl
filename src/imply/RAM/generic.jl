@@ -33,7 +33,8 @@ end
 ############################################################################
 
 function RAM(;
-        specification,
+        specification = nothing,
+        ram_matrices = nothing,
         start_val = start_fabin3,
         vech = false,
         gradient = true,

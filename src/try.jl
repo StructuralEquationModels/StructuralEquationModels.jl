@@ -1693,8 +1693,8 @@ model_fixed = """
 
 model_equal = """
     f1 =∼ 1*x1 + x2 + x3
-    f2 =∼ 1*x4 + a*x5 + x6
-    f3 =∼ 1*x7 + a*x8 + x9
+    f2 =∼ 1*x4 + a*x5 + b*x6
+    f3 =∼ 1*x7 + a*x8 + b*x9
     f1 ∼∼ 0.5*f2
     f3 ∼ f1
 """
@@ -1704,157 +1704,8 @@ model_equal = """
 
 my_partable = ParameterTable(lat_vars, obs_vars, model_equal)
 
-ram_matrices = RAMMatrices!(my_partable)
-
-ram_matrices.A
-
 sort!(my_partable)
 
-import Base.push!
+ram_matrices = RAMMatrices!(my_partable)
 
-function push!(partable::ParameterTable, from, parameter_type, to, free, value_fixed, label, start, estimate, identifier)
-    
-    # if !(from ∈ partable.observed_vars) && !(from ∈ partable.latent_vars)
-    #    @error "You tried to push a parameter between unknow variables to a parameter table. Please add the variables first."
-    # end
-
-    push!(partable.from, from)
-    push!(partable.parameter_type, parameter_type)
-    push!(partable.to, to)
-    push!(partable.free, free)
-    push!(partable.value_fixed, value_fixed)
-    push!(partable.label, label)
-    push!(partable.start, start)
-    push!(partable.estimate, estimate)
-    push!(partable.identifier, identifier)
-
-end
-
-function ParameterTable()
-
-    from = Vector{String}()
-    parameter_type = Vector{String}()
-    to = Vector{String}()
-    free = Vector{Bool}()
-    value_fixed = Vector{Float64}()
-    label = Vector{String}()
-    start = Vector{Float64}()
-    estimate = Vector{Float64}()
-    identifier = Vector{Symbol}()
-
-    latent_vars = Vector{String}()
-    observed_vars = Vector{String}()
-    sorted_vars = Vector{String}()
-
-    return ParameterTable(
-        latent_vars,
-        observed_vars,
-        sorted_vars,
-        from,
-        parameter_type,
-        to,
-        free,
-        value_fixed,
-        label,
-        start,
-        estimate,
-        identifier
-    )
-
-end
-
-new_partable = ParameterTable()
-
-n_obs = size(ram_matrices.F, 1)
-n_nod = size(ram_matrices.F, 2)
-n_lat = n_nod - n_obs
-
-
-
-new_partable.observed_vars = copy(names_obs)
-new_partable.latent_vars = copy(names_lat)
-
-position_names = Dict{Int64, String}()
-
-F = Matrix(ram_matrices.F)
-A = Matrix(ram_matrices.A)
-S = Matrix(ram_matrices.S)
-
-A_string = string.(A)
-S_string = string.(S)
-
-A_isfloat = SEM.check_str_number.(A_string)
-S_isfloat = SEM.check_str_number.(S_string)
-
-for i in 1:n_nod
-    if any(isone.(F[:, i]))
-        push!(position_names, i => popfirst!(names_obs))
-    else
-        push!(position_names, i => popfirst!(names_lat))
-    end
-end
-
-colnames = ["f1", "f2", "x1", "x2", "x3", "f3", "x4", "x5", "x6", "x7", "x8", "x9"]
-
-names_lat = Vector{String}()
-names_obs = Vector{String}()
-
-
-
-parameter_identifier = Dict([ram_matrices.parameters...] .=> ram_matrices.identifier)
-
-for index in CartesianIndices(A)
-    value = A[index]
-    if iszero(value)
-    elseif A_isfloat[index]
-        from = position_names[index[2]]
-        to = position_names[index[1]]
-        parameter_type = "→"
-        free = false
-        value_fixed = tryparse(Float64, A_string[index])
-        label = "const"
-        start = 0.0
-        estimate = 0.0
-        identifier = :const
-        push!(new_partable, from, parameter_type, to, free, value_fixed, label, start, estimate, identifier)
-    else
-        from = position_names[index[2]]
-        to = position_names[index[1]]
-        parameter_type = "→"
-        free = true
-        value_fixed = 0.0
-        label = string(parameter_identifier[value])
-        start = 0.0
-        estimate = 0.0
-        identifier = parameter_identifier[value]
-        push!(new_partable, from, parameter_type, to, free, value_fixed, label, start, estimate, identifier)
-    end
-end
-
-for index in CartesianIndices(S)
-    value = S[index]
-    if iszero(value)
-    elseif S_isfloat[index]
-        from = position_names[index[2]]
-        to = position_names[index[1]]
-        parameter_type = "↔"
-        free = false
-        value_fixed = tryparse(Float64, S_string[index])
-        label = "const"
-        start = 0.0
-        estimate = 0.0
-        identifier = :const
-        push!(new_partable, from, parameter_type, to, free, value_fixed, label, start, estimate, identifier)
-    else
-        from = position_names[index[2]]
-        to = position_names[index[1]]
-        parameter_type = "↔"
-        free = true
-        value_fixed = 0.0
-        label = string(parameter_identifier[value])
-        start = 0.0
-        estimate = 0.0
-        identifier = parameter_identifier[value]
-        push!(new_partable, from, parameter_type, to, free, value_fixed, label, start, estimate, identifier)
-    end
-end
+new_partable = ParameterTable(ram_matrices = ram_matrices, colnames = my_partable.sorted_vars)
