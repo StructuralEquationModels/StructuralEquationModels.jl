@@ -1707,37 +1707,3 @@ my_partable = ParameterTable(lat_vars, obs_vars, model_equal)
 ram_matrices = RAMMatrices(my_partable)
 
 sort!(my_partable)
-
-struct mystruct{A}
-    mat::A
-end
-
-mutable struct mutestruct2{A}
-    mat::A
-end
-
-A = rand(20, 20)
-
-B = rand(20, 20)
-
-C = rand(20, 20)
-
-D = rand(20, 20)
-
-obj1 = mystruct(A)
-
-obj2 = mutestruct2(A)
-
-@benchmark f1($obj2, $C, $D)
-
-@benchmark f2($obj1, $C, $D)
-
-function f1(obj, A, B)
-    C = A*B
-    obj.mat = C
-end
-
-function f2(obj, A, B)
-    C = A*B
-    obj.mat .= C
-end

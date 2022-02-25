@@ -125,4 +125,5 @@ function parse_sem(model)
     return get_partable(model_vec, parameter_type)
 end
 
-ParameterTable(lat_vars, obs_vars, model) = ParameterTable(lat_vars, obs_vars, Vector{String}(), parse_sem(model)...)
+ParameterTable(lat_vars, obs_vars, model) = ParameterTable(lat_vars, obs_vars, Vector{String}(), parse_sem(model)...,
+    Vector{Symbol}(undef, length(parse_sem(model)[1])))

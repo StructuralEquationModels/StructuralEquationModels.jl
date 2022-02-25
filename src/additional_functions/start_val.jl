@@ -192,3 +192,21 @@ function start_simple(;
 
     return start_val
 end
+
+function start_parameter_table(;ram_matrices::RAMMatrices, partable::ParameterTable)
+    
+    start_val = zeros(0)
+    
+    for identifier_ram in ram_matrices.identifier
+        for (i, identifier_table) in enumerate(partable.identifier)
+            if identifier_ram == identifier_table
+                push!(start_val, partable.start[i])
+                break
+            end
+        end
+        @error "At least one parameter could not be found in the parameter table."
+    end
+
+    return start_val
+
+end

@@ -2,7 +2,7 @@
 ### Types
 ############################################################################
 
-mutable struct RAM{A1, A2, A3, A4, A5, A6, V, I1, I2, I3, I4, M1, M2, M3, S1, S2, S3} <: SemImply
+mutable struct RAM{A1, A2, A3, A4, A5, A6, V, I1, I2, I3, I4, M1, M2, M3, S1, S2, S3, D} <: SemImply
     Σ::A1
     A::A2
     S::A3
@@ -24,6 +24,8 @@ mutable struct RAM{A1, A2, A3, A4, A5, A6, V, I1, I2, I3, I4, M1, M2, M3, S1, S2
     ∇A::S1
     ∇S::S2
     ∇M::S3
+
+    identifier::D
 end
 
 ############################################################################
@@ -31,11 +33,39 @@ end
 ############################################################################
 
 function RAM(;
-        ram_matrices,
+        parameter_table = nothing,
+        ram_matrices = nothing,
         start_val = start_fabin3,
         vech = false,
         gradient = true,
         kwargs...)
+
+    # check the model specification
+    if !isnothing(parameter_table) && !isnothing(ram_matrices)
+
+        @warn "You specified both a parameter table and RAM Matrices - \n
+        please specify only a ParameterTable or make shure that the parameter identifiers match!"
+
+        identifier = Dict{Symbol, Int64}(RAMMatrices.identifier .=> 1:length(RAMMatrices.identifier))
+
+    elseif !isnothing(parameter_table) && isnothing(parameter_table)
+
+        ram_matrices = RAMMatrices!(parameter_table)
+        identifier = Dict{Symbol, Int64}(RAMMatrices.identifier .=> 1:length(RAMMatrices.identifier))
+
+    elseif isnothing(parameter_table) && !isnothing(parameter_table)
+
+        @warn "You specified only RAM Matrices - \n
+        if you later want to update entries of a parameter table, please make shure that the 
+        parameter identifiers match!"
+
+        identifier = Dict{Symbol, Int64}(RAMMatrices.identifier .=> 1:length(RAMMatrices.identifier))
+
+    else
+
+        @error "You did not specify a ParameterTable or RAMMatrices"
+
+    end
 
     A, S, F, M, parameters = 
         ram_matrices.A, ram_matrices.S, ram_matrices.F, ram_matrices.M, ram_matrices.parameters
@@ -143,7 +173,9 @@ function RAM(;
 
         ∇A,
         ∇S,
-        ∇M
+        ∇M,
+
+        identifier
     )
 end
 
