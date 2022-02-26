@@ -13,6 +13,7 @@ function start_fabin3(;ram_matrices::RAMMatrices, observed, kwargs...)
 
     # loading Matrix
     Λ = A[ind_observed, .!ind_observed]
+    ind_observed = findall(ind_observed)
 
     # check in which matrix each parameter appears
     in_S = zeros(Bool, n_par)
@@ -48,8 +49,9 @@ function start_fabin3(;ram_matrices::RAMMatrices, observed, kwargs...)
     for (par, in_A, in_S, in_Λ, index, i) ∈ zip(parameters, in_A, in_S, in_Λ, indices, 1:n_par)
         if in_S
             if index[1] == index[2]
-                if index[1] <= n_var
-                    start_val[i] = Σ[index]/2
+                if index[1] ∈ ind_observed
+                    index_position = findall(index[1] .== ind_observed)
+                    start_val[i] = Σ[index_position[1], index_position[1]]/2
                 else
                     start_val[i] = 0.05
                 end
@@ -154,13 +156,17 @@ function start_simple(;
     n_par = size(parameters, 1)
     start_val = zeros(n_par)
     n_var = size(F, 1)
-    Λ_ind = filter(x -> (x[1] <= n_var) & (x[2] > n_var), CartesianIndices(A))
+
+    Fmat = Matrix(F)
+    ind_observed = [any(isone.(Fmat[:, i])) for i in 1:size(F, 2)]
+    Λ_ind = CartesianIndices(A)[ind_observed, .!ind_observed]
+    ind_observed = findall(ind_observed)
 
     for (i, par) ∈ enumerate(parameters)
         for index in CartesianIndices(S)
-            if isequal(par, S[index]) 
+            if isequal(par, S[index])
                 if index[1] == index[2]
-                    if index[1] <= n_var
+                    if index[1] ∈ ind_observed
                         start_val[i] = start_variances_observed
                     else
                         start_val[i] = start_variances_latent
@@ -195,18 +201,20 @@ function start_simple(;
     return start_val
 end
 
-function start_parameter_table(;ram_matrices::RAMMatrices, partable::ParameterTable)
+function start_parameter_table(;ram_matrices::RAMMatrices, specification::ParameterTable, kwargs...)
     
     start_val = zeros(0)
     
     for identifier_ram in ram_matrices.identifier
-        for (i, identifier_table) in enumerate(partable.identifier)
+        found = false
+        for (i, identifier_table) in enumerate(specification.identifier)
             if identifier_ram == identifier_table
-                push!(start_val, partable.start[i])
+                push!(start_val, specification.start[i])
+                found = true
                 break
             end
         end
-        @error "At least one parameter could not be found in the parameter table."
+        if !found @error "At least one parameter could not be found in the parameter table." end
     end
 
     return start_val

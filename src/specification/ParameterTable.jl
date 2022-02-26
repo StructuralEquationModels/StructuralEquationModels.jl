@@ -203,13 +203,60 @@ end
 ### Update Fitted Model
 ############################################################################
 
-function update_partable!(partable::ParameterTable, sem_fit::SemFit)
+# update estimates ---------------------------------------------------------
+
+function update_estimate!(partable::ParameterTable, sem_fit::SemFit)
     for (i, identifier) in enumerate(partable.identifier)
         if identifier == :const 
         else
             partable.estimate[i] = sem_fit.solution[sem_fit.model.imply.identifier[identifier]] 
         end
     end
+    return partable
+end
+
+function update_estimate!(sem_fit::SemFit)
+    partable = sem_fit.model.specification
+    update_estimate!(partable, sem_fit)
+end
+
+# update starting values -----------------------------------------------------
+
+function update_start!(partable::ParameterTable, sem_fit::SemFit)
+    for (i, identifier) in enumerate(partable.identifier)
+        if identifier == :const 
+        else
+            partable.start[i] = sem_fit.model.imply.start_val[sem_fit.model.imply.identifier[identifier]] 
+        end
+    end
+    return partable
+end
+
+function update_start!(sem_fit::SemFit)
+    partable = sem_fit.model.specification
+    update_start!(partable, sem_fit)
+end
+
+function update_start!(partable::ParameterTable, model::Sem{S, O, I, L, D}) where{S <: ParameterTable, O, I, L, D}
+    for (i, identifier) in enumerate(partable.identifier)
+        if identifier == :const 
+        else
+            partable.start[i] = model.imply.start_val[model.imply.identifier[identifier]]
+        end
+    end
+    return partable
+end
+
+function update_start!(model::Sem{S, O, I, L, D}) where{S <: ParameterTable, O, I, L, D}
+    partable = model.specification
+    update_start!(partable, model)
+end
+
+# update estimates and starting values ----------------------------------------
+
+function update_partable!(partable::ParameterTable, sem_fit::SemFit)
+    update_start!(partable, sem_fit)
+    update_estimate!(partable, sem_fit)
     return partable
 end
 

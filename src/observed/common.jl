@@ -80,8 +80,8 @@ function get_colnames(specification::ParameterTable)
 end
 
 function get_colnames(specification::RAMMatrices)
-    is_obs = [any(isone.(RAMMatrices.F[:, i])) for i in 1:length(RAMMatrices.colnames)]
-    colnames = RAMMatrices.colnames[is_obs]
+    is_obs = [any(isone.(specification.F[:, i])) for i in 1:length(specification.colnames)]
+    colnames = specification.colnames[is_obs]
     return colnames
 end
 

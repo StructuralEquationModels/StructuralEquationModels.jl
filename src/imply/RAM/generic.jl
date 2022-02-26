@@ -73,7 +73,7 @@ function RAM(;
         ram_matrices.A, ram_matrices.S, ram_matrices.F, ram_matrices.M, ram_matrices.parameters
 
     if !isa(start_val, Vector)
-        start_val = start_val(;ram_matrices = ram_matrices, kwargs...)
+        start_val = start_val(;ram_matrices = ram_matrices, specification = specification, kwargs...)
     end
     
     n_var, n_nod = size(F)
