@@ -27,8 +27,10 @@ function SemObsCommon(;
     # sort columns/rows
     colnames = get_colnames(specification)
     
-    if !isnothing(data) && !isnothing(colnames)
-        data = data[:, colnames]
+    if !isnothing(data) 
+        if !isnothing(colnames)
+            data = data[:, colnames]
+        end
         data = Matrix(data)
     end
 
@@ -80,9 +82,18 @@ function get_colnames(specification::ParameterTable)
 end
 
 function get_colnames(specification::RAMMatrices)
-    is_obs = [any(isone.(specification.F[:, i])) for i in 1:length(specification.colnames)]
-    colnames = specification.colnames[is_obs]
-    return colnames
+    if isnothing(specification.colnames)
+        @warn "Your RAMMatrices do not contain column names. Please make shure the order of variables in your data is correct!"
+        return nothing
+    else
+        is_obs = [any(isone.(specification.F[:, i])) for i in 1:length(specification.colnames)]
+        colnames = specification.colnames[is_obs]
+        return colnames
+    end
+end
+
+function get_colnames(specification::SpecEmpty)
+    return nothing
 end
 
 function get_colnames(specification::Nothing)

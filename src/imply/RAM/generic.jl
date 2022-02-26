@@ -33,8 +33,7 @@ end
 ############################################################################
 
 function RAM(;
-        specification = nothing,
-        ram_matrices = nothing,
+        specification,
         start_val = start_fabin3,
         vech = false,
         gradient = true,
@@ -43,30 +42,15 @@ function RAM(;
     # check the model specification
     # if isa(specification, ParameterTable)
     # else if ...
-    if !isnothing(specification) && !isnothing(ram_matrices)
-
-        @warn "You specified both a SemSpec object and RAM Matrices - \n
-        please specify only a SemSpec object or make shure that the parameters match!"
-
+    if specification isa RAMMatrices
+        ram_matrices = specification
         identifier = Dict{Symbol, Int64}(ram_matrices.identifier .=> 1:length(ram_matrices.identifier))
-
-    elseif !isnothing(specification) && isnothing(ram_matrices)
-
+    elseif specification isa ParameterTable
         ram_matrices = RAMMatrices!(specification)
         identifier = Dict{Symbol, Int64}(ram_matrices.identifier .=> 1:length(ram_matrices.identifier))
-
-    elseif isnothing(specification) && !isnothing(ram_matrices)
-
-        @warn "You specified only RAM Matrices - \n
-        if you later want to update entries of a parameter table, please make shure that the 
-        parameter identifiers match!"
-
-        identifier = Dict{Symbol, Int64}(ram_matrices.identifier .=> 1:length(ram_matrices.identifier))
-
     else
-
-        @error "You did not specify a ParameterTable or RAMMatrices"
-
+        @error "The RAM constructor does not know how to handle your specification object. 
+        \n Please specify your model as either a ParameterTable or RAMMatrices."
     end
 
     A, S, F, M, parameters = 

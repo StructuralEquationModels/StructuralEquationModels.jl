@@ -11,8 +11,6 @@ dat = DataFrame(CSV.File("examples/data/data_dem.csv"))
 par_ml = DataFrame(CSV.File("examples/data/par_dem_ml.csv"))
 par_order = []
 
-semobserved = SemObsCommon(data = Matrix{Float64}(dat))
-
 ############################################################################
 ### define models
 ############################################################################
@@ -56,6 +54,7 @@ start_val = start_simple(Matrix(A), Matrix(S), Matrix(F), x; loadings = 1.0)
 
 # imply and loss
 semimply = RAMSymbolic(A, S, F, x, start_val; M = M)
+semobserved = SemObsCommon(data = dat, specification = lol)
 semloss = SemLoss((SemFIML(semobserved, 1.0, similar(start_val)),))
 
 semdiff = SemDiffOptim(
@@ -68,7 +67,9 @@ semdiff = SemDiffOptim(
         x_tol = 1.5e-8)
     )
             
-model_ml = Sem(semobserved, semimply, semloss, semdiff)
+model_ml = Sem(SpecEmpty(), semobserved, semimply, semloss, semdiff)
+
+
 
 ############################################################################
 ### test gradients

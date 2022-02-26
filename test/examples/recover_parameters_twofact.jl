@@ -29,7 +29,7 @@ A = [0 0 0 0 0 0 1.0   0
      0 0 0 0 0 0 0     0
      0 0 0 0 0 0 0     0]
 
-ram_matrices = RAMMatrices(;A = A, S = S, F = F, parameters = x)
+ram_matrices = RAMMatrices(;A = A, S = S, F = F, parameters = x, colnames = nothing)
 
 true_val = [repeat([1], 8)
             0.4
@@ -38,7 +38,7 @@ true_val = [repeat([1], 8)
 start_val = [repeat([1], 9)
              repeat([0.5], 4)]
 
-imply_ml = RAMSymbolic(;ram_matrices = ram_matrices, start_val = start_val)
+imply_ml = RAMSymbolic(;specification = ram_matrices, start_val = start_val)
 
 imply_ml.Σ_function(imply_ml.Σ, true_val)
 
@@ -57,7 +57,7 @@ diff =
             ;f_tol = 1e-10, 
             x_tol = 1.5e-8))
 
-model_ml = Sem(semobserved, imply_ml, loss_ml, diff)
+model_ml = Sem(ram_matrices, semobserved, imply_ml, loss_ml, diff)
 model_ml(true_val, true, false, false)
 solution = sem_fit(model_ml)
 

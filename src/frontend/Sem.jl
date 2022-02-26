@@ -79,7 +79,7 @@ function SemFiniteDiff(;
     kwargs[:loss_types] = [lossfun isa SemLossFunction ? typeof(lossfun) : lossfun for lossfun in loss]
     kwargs[:diff_type] = D <: Type ? diff : typeof(diff)
 
-    if !isa(specification, SemSpecification)
+    if !isa(specification, SemSpec)
         specification = specification(;kwargs...)
     end
 
@@ -117,7 +117,7 @@ function SemFiniteDiff(;
         diff = diff(;kwargs...)
     end
 
-    sem = SemFiniteDiff(observed, imply, loss, diff, has_gradient)
+    sem = SemFiniteDiff(specification, observed, imply, loss, diff, has_gradient)
 
     return sem
 
@@ -140,7 +140,7 @@ function SemForwardDiff(;
     kwargs[:loss_types] = [lossfun isa SemLossFunction ? typeof(lossfun) : lossfun for lossfun in loss]
     kwargs[:diff_type] = D <: Type ? diff : typeof(diff)
 
-    if !isa(specification, SemSpecification)
+    if !isa(specification, SemSpec)
         specification = specification(;kwargs...)
     end
 
@@ -178,7 +178,7 @@ function SemForwardDiff(;
         diff = diff(;kwargs...)
     end
 
-    sem = SemForwardDiff(observed, imply, loss, diff, has_gradient)
+    sem = SemForwardDiff(specification, observed, imply, loss, diff, has_gradient)
 
     return sem
 
