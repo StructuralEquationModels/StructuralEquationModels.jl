@@ -8,14 +8,14 @@ using LinearAlgebra, Optim,
 include("types.jl")
 # specification of models
 include("specification/ParameterTable.jl")
+include("frontend/parser.jl")
+include("frontend/RAMMatrices.jl")
 # pretty printing
 include("frontend/pretty_printing.jl")
 # observed
 include("observed/common.jl")
 include("observed/missing.jl")
 # constructor
-include("frontend/parser.jl")
-include("frontend/RAMMatrices.jl")
 include("sem.jl")
 # helper functions
 include("additional_functions/helper.jl")
@@ -55,5 +55,8 @@ export  AbstractSem,
             SemObsCommon, SemObsMissing,
         sem_fit, SemFit,
         objective, objective!, gradient, gradient!, hessian, hessian!, objective_gradient!,
-        ParameterTable, RAMMatrices, RAMMatrices!
+        ParameterTable,
+            update_partable!,
+        RAMMatrices, 
+            RAMMatrices!
 end

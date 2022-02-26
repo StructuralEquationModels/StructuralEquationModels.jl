@@ -5,12 +5,14 @@ function start_fabin3(;ram_matrices::RAMMatrices, observed, kwargs...)
         ram_matrices.A, ram_matrices.S, ram_matrices.F, ram_matrices.parameters
         
     n_latent = size(F, 2) - size(F, 1)
+    Fmat = Matrix(F)
+    ind_observed = [any(isone.(Fmat[:, i])) for i in 1:size(F, 2)]
     n_var = size(F, 1)
     parameters = [parameters...]
     n_par = size(parameters, 1)
 
     # loading Matrix
-    Λ = A[1:n_var, n_var+1:n_var+n_latent]
+    Λ = A[ind_observed, .!ind_observed]
 
     # check in which matrix each parameter appears
     in_S = zeros(Bool, n_par)

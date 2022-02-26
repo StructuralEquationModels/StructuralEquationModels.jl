@@ -24,7 +24,12 @@ mutable struct SemObsMissing{
     obs_cov::A3
 end
 
-function SemObsMissing(;data, kwargs...)
+function SemObsMissing(;data, specification = nothing, kwargs...)
+
+    # sort columns
+    colnames = get_colnames(specification)
+    if !isnothing(colnames) data = data[:, colnames] end
+    data = Matrix(data)
 
     # remove persons with only missings
     keep = Vector{Int64}()
@@ -35,9 +40,10 @@ function SemObsMissing(;data, kwargs...)
     end
     data = data[keep, :]
 
+
+
     n_obs = size(data, 1)
     n_man = size(data, 2)
-    
 
     # compute and store the different missing patterns with their rowindices
     missings = ismissing.(data)

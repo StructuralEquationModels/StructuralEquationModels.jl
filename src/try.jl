@@ -1697,6 +1697,8 @@ model_equal = """
     f3 =∼ 1*x7 + a*x8 + b*x9
     f1 ∼∼ 0.5*f2
     f3 ∼ f1
+    x1 ∼∼ x1
+    x2 ∼∼ x2
 """
 
 # do it
@@ -1708,4 +1710,4 @@ sort!(my_partable)
 
 ram_matrices = RAMMatrices!(my_partable)
 
-new_partable = ParameterTable(ram_matrices = ram_matrices, colnames = my_partable.sorted_vars)
+new_partable = ParameterTable(ram_matrices, my_partable.sorted_vars)

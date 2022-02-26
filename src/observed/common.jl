@@ -14,14 +14,37 @@ struct SemObsCommon{
 end
 
 function SemObsCommon(;
+        specification = nothing,
         data = nothing,
+        colnames = nothing,
         obs_cov = nothing,
+        cov_colnames = nothing,
         meanstructure = false,
         rowwise = false,
+        n_obs = nothing,
         kwargs...)
+
+    # sort columns/rows
+    colnames = get_colnames(specification)
+    
+    if !isnothing(data) && !isnothing(colnames)
+        data = data[:, colnames]
+        data = Matrix(data)
+    end
+
+    if !isnothing(obs_cov) && isnothing(cov_colnames)
+        @error "An observed covariance was given, but no cov_colnames where specified"
+    end
+
+    if !isnothing(obs_cov) && !isnothing(cov_colnames)
+        new_position = [findall(x .== cov_colnames)[1] for x in colnames]
+        indices = reshape([CartesianIndex(i, j) for j in new_position for i in new_position], size(obs_cov, 1), size(obs_cov, 1))
+        obs_cov = obs_cov[indices]
+    end
+
     # if no cov. matrix was given, compute one
     if isnothing(obs_cov) obs_cov = Statistics.cov(data) end
-    isnothing(data) ? n_obs = nothing : n_obs = convert(Float64, size(data, 1))
+    isnothing(data) ? nothing : n_obs = convert(Float64, size(data, 1))
     n_man = Float64(size(obs_cov, 1))
     # if a meanstructure is needed, compute observed means
     meanstructure ? 
@@ -40,4 +63,28 @@ end
 function Base.show(io::IO, struct_inst::SemObsCommon)
     print_type_name(io, struct_inst)
     print_field_types(io, struct_inst)
+end
+
+############################################################################
+### Additional functions
+############################################################################
+
+function get_colnames(specification::ParameterTable)
+    if length(specification.sorted_vars) == 0
+        colnames = specification.observed_vars
+    else
+        is_obs = [var ∈ specification.observed_vars for var in specification.sorted_vars]
+        colnames = specification.sorted_vars[is_obs]
+    end
+    return colnames
+end
+
+function get_colnames(specification::RAMMatrices)
+    is_obs = [any(isone.(RAMMatrices.F[:, i])) for i in 1:length(RAMMatrices.colnames)]
+    colnames = RAMMatrices.colnames[is_obs]
+    return colnames
+end
+
+function get_colnames(specification::Nothing)
+    return nothing
 end

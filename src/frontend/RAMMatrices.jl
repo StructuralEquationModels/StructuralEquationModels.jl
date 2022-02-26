@@ -5,6 +5,7 @@ Base.@kwdef struct RAMMatrices
     M = nothing
     parameters
     identifier = nothing
+    colnames
 end
 
 ############################################################################
@@ -37,6 +38,7 @@ function RAMMatrices!(partable::ParameterTable; parname::Symbol = :θ, to_sparse
     end
 
     partable.identifier[partable.free] .= identifier_long
+    partable.identifier[.!partable.free] .= :const
 
     n_observed = size(partable.observed_vars, 1)
     n_latent = size(partable.latent_vars, 1)
@@ -55,8 +57,10 @@ function RAMMatrices!(partable::ParameterTable; parname::Symbol = :θ, to_sparse
 
     if length(partable.sorted_vars) != 0
         positions = Dict(zip(partable.sorted_vars, collect(1:n_observed+n_latent)))
+        colnames = copy(partable.sorted_vars)
     else
         positions = Dict(zip([partable.observed_vars; partable.latent_vars], collect(1:n_observed+n_latent)))
+        colnames = [partable.observed_vars; partable.latent_vars]
     end
     
     # fill Matrices
@@ -101,7 +105,7 @@ function RAMMatrices!(partable::ParameterTable; parname::Symbol = :θ, to_sparse
         F = sparse(F)
     end
 
-    return RAMMatrices(;A = A, S = S, F = F, parameters = parameters, identifier = identifier)
+    return RAMMatrices(;A = A, S = S, F = F, parameters = parameters, identifier = identifier, colnames)
 end
 
 function set_RAM_index(A, S, parameter_type, row_ind, col_ind, parameter)
@@ -117,9 +121,9 @@ end
 ### get parameter table from RAMMatrices
 ############################################################################
 
-function ParameterTable(;ram_matrices::RAMMatrices, colnames, kwargs...)
+function ParameterTable(ram_matrices::RAMMatrices, colnames)
     
-    new_partable = ParameterTable()
+    new_partable = ParameterTable(nothing)
 
     # n_obs = size(ram_matrices.F, 1)
     # n_nod = size(ram_matrices.F, 2)

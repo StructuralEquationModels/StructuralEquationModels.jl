@@ -18,7 +18,7 @@ function Sem(;
     kwargs[:loss_types] = [lossfun isa SemLossFunction ? typeof(lossfun) : lossfun for lossfun in loss]
     kwargs[:diff_type] = D <: Type ? diff : typeof(diff)
 
-    if !isa(specification, SemSpecification)
+    if !isa(specification, SemSpec)
         specification = specification(;kwargs...)
     end
 
