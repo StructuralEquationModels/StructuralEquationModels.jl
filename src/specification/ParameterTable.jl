@@ -2,10 +2,10 @@
 ### Types
 ############################################################################
 
-Base.@kwdef mutable struct ParameterTable{SV, BV, FV, SyV} <: SemSpec
+mutable struct ParameterTable{SV, BV, FV, SyV} <: SemSpec
     latent_vars::SV
     observed_vars::SV
-    sorted_vars::SV = Vector{String}()
+    sorted_vars::SV
     from::SV
     parameter_type::SV
     to::SV
@@ -22,7 +22,7 @@ end
 ############################################################################
 
 # constuct an empty table
-function ParameterTable()
+function ParameterTable(disambig::Nothing)
 
     from = Vector{String}()
     parameter_type = Vector{String}()
@@ -197,4 +197,23 @@ function push!(partable::ParameterTable, from, parameter_type, to, free, value_f
     push!(partable.estimate, estimate)
     push!(partable.identifier, identifier)
 
+end
+
+############################################################################
+### Update Fitted Model
+############################################################################
+
+function update_partable!(partable::ParameterTable, sem_fit::SemFit)
+    for (i, identifier) in enumerate(partable.identifier)
+        if identifier == :const 
+        else
+            partable.estimate[i] = sem_fit.solution[sem_fit.model.imply.identifier[identifier]] 
+        end
+    end
+    return partable
+end
+
+function update_partable!(sem_fit::SemFit)
+    partable = sem_fit.model.specification
+    update_partable!(partable, sem_fit)
 end

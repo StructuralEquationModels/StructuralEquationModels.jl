@@ -43,25 +43,25 @@ function RAM(;
     # check the model specification
     # if isa(specification, ParameterTable)
     # else if ...
-    if !isnothing(parameter_table) && !isnothing(ram_matrices)
+    if !isnothing(specification) && !isnothing(ram_matrices)
 
-        @warn "You specified both a parameter table and RAM Matrices - \n
-        please specify only a ParameterTable or make shure that the parameter identifiers match!"
+        @warn "You specified both a SemSpec object and RAM Matrices - \n
+        please specify only a SemSpec object or make shure that the parameters match!"
 
-        identifier = Dict{Symbol, Int64}(RAMMatrices.identifier .=> 1:length(RAMMatrices.identifier))
+        identifier = Dict{Symbol, Int64}(ram_matrices.identifier .=> 1:length(ram_matrices.identifier))
 
-    elseif !isnothing(parameter_table) && isnothing(parameter_table)
+    elseif !isnothing(specification) && isnothing(ram_matrices)
 
-        ram_matrices = RAMMatrices!(parameter_table)
-        identifier = Dict{Symbol, Int64}(RAMMatrices.identifier .=> 1:length(RAMMatrices.identifier))
+        ram_matrices = RAMMatrices!(specification)
+        identifier = Dict{Symbol, Int64}(ram_matrices.identifier .=> 1:length(ram_matrices.identifier))
 
-    elseif isnothing(parameter_table) && !isnothing(parameter_table)
+    elseif isnothing(specification) && !isnothing(ram_matrices)
 
         @warn "You specified only RAM Matrices - \n
         if you later want to update entries of a parameter table, please make shure that the 
         parameter identifiers match!"
 
-        identifier = Dict{Symbol, Int64}(RAMMatrices.identifier .=> 1:length(RAMMatrices.identifier))
+        identifier = Dict{Symbol, Int64}(ram_matrices.identifier .=> 1:length(ram_matrices.identifier))
 
     else
 

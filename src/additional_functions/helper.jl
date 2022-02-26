@@ -181,6 +181,33 @@ function compare_estimates(solution_true, solution_sus, tol)
     return is_close
 end
 
+function compare_estimates(partable_lav, partable::ParameterTable, tol)
+
+    correct = []
+
+    for i in findall(partable.free)
+
+        from = partable.from[i]
+        to = partable.to[i]
+        estimate = partable.estimate[i]
+
+        lav_ind = findall((partable_lav.lhs .== from) .& (partable_lav.rhs .== to))
+
+        if length(lav_ind) == 0
+            lav_ind = findall((partable_lav.lhs .== to) .& (partable_lav.rhs .== from))
+            if length(lav_ind) == 0
+                @error "At least one parameter could not be found in the lavaan solution"
+            end
+            is_correct = isapprox(estimate, partable_lav.est[lav_ind[1]]; rtol = tol)
+            push!(correct, is_correct)
+        else
+            is_correct = isapprox(estimate, partable_lav.est[lav_ind[1]]; rtol = tol)
+            push!(correct, is_correct)
+        end
+    end
+    return all(correct)
+end
+
 function commutation_matrix_pre_square(A)
 
     n2 = size(A, 1)
