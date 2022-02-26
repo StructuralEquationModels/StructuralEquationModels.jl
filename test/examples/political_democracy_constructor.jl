@@ -10,13 +10,6 @@ dat = DataFrame(CSV.File("examples/data/data_dem.csv"))
 par_ml = DataFrame(CSV.File("examples/data/par_dem_ml.csv"))
 par_ls = DataFrame(CSV.File("examples/data/par_dem_ls.csv"))
 
-dat = 
-    select(
-        dat,
-        [:x1, :x2, :x3, :y1, :y2, :y3, :y4, :y5, :y6, :y7, :y8])
-
-dat = Matrix{Float64}(dat)
-
 ############################################################################
 ### define models
 ############################################################################
@@ -65,16 +58,21 @@ A =[0  0  0  0  0  0  0  0  0  0  0     1     0     0
     0  0  0  0  0  0  0  0  0  0  0     x[29] 0     0
     0  0  0  0  0  0  0  0  0  0  0     x[30] x[31] 0]
 
-ram_matrices = RAMMatrices(;A = A, S = S, F = F, parameters = x)
+ram_matrices = RAMMatrices(;
+    A = A, 
+    S = S, 
+    F = F, 
+    parameters = x,
+    colnames = string.([:x1, :x2, :x3, :y1, :y2, :y3, :y4, :y5, :y6, :y7, :y8]))
 
 # models
 model_ml = Sem(
-    ram_matrices = ram_matrices,
+    specification = ram_matrices,
     data = dat
 )
 
 model_ls_sym = Sem(
-    ram_matrices = ram_matrices,
+    specification = ram_matrices,
     data = dat,
     imply = RAMSymbolic,
     loss = (SemWLS, ),
@@ -82,13 +80,13 @@ model_ls_sym = Sem(
 )
 
 model_ml_sym = Sem(
-    ram_matrices = ram_matrices,
+    specification = ram_matrices,
     data = dat,
     imply = RAMSymbolic
 )
 
 model_ridge = Sem(
-    ram_matrices = ram_matrices,
+    specification = ram_matrices,
     data = dat,
     loss = (SemML, SemRidge,),
     α_ridge = .001,
@@ -96,7 +94,7 @@ model_ridge = Sem(
 )
 
 model_constant = Sem(
-    ram_matrices = ram_matrices,
+    specification = ram_matrices,
     data = dat,
     loss = (SemML, SemConstant,),
     constant_loss = 3.465
@@ -171,7 +169,7 @@ end
 ############################################################################
 
 model_ls = Sem(
-    ram_matrices = ram_matrices,
+    specification = ram_matrices,
     data = dat,
     imply = RAMSymbolic,
     loss = (SemWLS, ),
@@ -182,7 +180,7 @@ model_ls = Sem(
 )
 
 model_ml = Sem(
-    ram_matrices = ram_matrices,
+    specification = ram_matrices,
     data = dat,
     imply = RAMSymbolic,
     hessian = true,
@@ -262,7 +260,13 @@ A =[0  0  0  0  0  0  0  0  0  0  0     1     0     0
 
 M = [x[32]; x[33]; x[34]; x[35]; x[36]; x[37]; x[38]; x[35]; x[36]; x[37]; x[38]; 0.0; 0.0; 0.0]
 
-ram_matrices = RAMMatrices(A, S, F, M, x)
+ram_matrices = RAMMatrices(;
+    A = A, 
+    S = S, 
+    F = F,
+    M = M,
+    parameters = x,
+    colnames = string.([:x1, :x2, :x3, :y1, :y2, :y3, :y4, :y5, :y6, :y7, :y8]))
 
 ### start values
 par_order = [collect(29:42); collect(15:20); 2;3; 5;6;7; collect(9:14); collect(43:45); collect(21:24)]
@@ -271,7 +275,7 @@ start_val_ls = Vector{Float64}(par_ls.start[par_order])
 
 # models
 model_ls = Sem(
-    ram_matrices = ram_matrices,
+    specification = ram_matrices,
     data = dat,
     imply = RAMSymbolic,
     loss = (SemWLS, ),
@@ -280,14 +284,14 @@ model_ls = Sem(
 )
 
 model_ml = Sem(
-    ram_matrices = ram_matrices,
+    specification = ram_matrices,
     data = dat,
     meanstructure = true,
     start_val = start_val_ml
 )
 
 model_ml_sym = Sem(
-    ram_matrices = ram_matrices,
+    specification = ram_matrices,
     data = dat,
     imply = RAMSymbolic,
     meanstructure = true,
@@ -339,13 +343,6 @@ end
 dat = DataFrame(CSV.read("examples/data/data_dem_fiml.csv", DataFrame; missingstring = "NA"))
 par_ml = DataFrame(CSV.read("examples/data/par_dem_ml_fiml.csv", DataFrame))
 
-dat = 
-    select(
-        dat,
-        [:x1, :x2, :x3, :y1, :y2, :y3, :y4, :y5, :y6, :y7, :y8])
-
-dat = Matrix(dat)
-
 ############################################################################
 ### define models
 ############################################################################
@@ -396,7 +393,13 @@ A =[0  0  0  0  0  0  0  0  0  0  0     1     0     0
 
 M = [x[32]; x[33]; x[34]; x[35]; x[36]; x[37]; x[38]; x[35]; x[36]; x[37]; x[38]; 0.0; 0.0; 0.0]
 
-ram_matrices = RAMMatrices(A, S, F, M, x)
+ram_matrices = RAMMatrices(;
+    A = A, 
+    S = S, 
+    F = F,
+    M = M,
+    parameters = x,
+    colnames = string.([:x1, :x2, :x3, :y1, :y2, :y3, :y4, :y5, :y6, :y7, :y8]))
 
 ### start values
 par_order = [collect(29:42); collect(15:20); 2;3; 5;6;7; collect(9:14); collect(43:45); collect(21:24)]
@@ -404,7 +407,7 @@ start_val_ml = Vector{Float64}(par_ml.start[par_order])
 
 # models
 model_ml = Sem(
-    ram_matrices = ram_matrices,
+    specification = ram_matrices,
     data = dat,
     observed = SemObsMissing,
     loss = (SemFIML,),
@@ -412,7 +415,7 @@ model_ml = Sem(
 )
 
 model_ml_sym = Sem(
-    ram_matrices = ram_matrices,
+    specification = ram_matrices,
     data = dat,
     observed = SemObsMissing,
     imply = RAMSymbolic,

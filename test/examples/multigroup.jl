@@ -13,19 +13,10 @@ par_ls = DataFrame(CSV.File("examples/data/par_multigroup_ls.csv"))
 par_ml = filter(row -> (row.free != 0)&(row.op != "~1"), par_ml)
 par_ls = filter(row -> (row.free != 0)&(row.op != "~1"), par_ls)
 
-dat = 
-    select(
-        dat,
-        [:school, :x1, :x2, :x3, :x4, :x5, :x6, :x7, :x8, :x9])
-
 dat_g1 = select(filter(row -> row.school == "Pasteur", dat), Not(:school))
 dat_g2 = select(filter(row -> row.school == "Grant-White", dat), Not(:school))
 
 dat = select(dat, Not(:school))
-
-# observed
-dat_g1 = Matrix{Float64}(dat_g1)
-dat_g2 = Matrix{Float64}(dat_g2)
 
 ############################################################################
 ### define models
@@ -55,8 +46,19 @@ S2[10, 11] = x[34]; S2[11, 10] = x[34]
 S2[10, 12] = x[35]; S2[12, 10] = x[35]
 S2[12, 11] = x[36]; S2[11, 12] = x[36]
 
-ram_matrices_g1 = RAMMatrices(; A = A, S = S1, F = F, parameters = x)
-ram_matrices_g2 = RAMMatrices(; A = A, S = S2, F = F, parameters = x)
+ram_matrices_g1 = RAMMatrices(;
+    A = A,
+    S = S1,
+    F = F,
+    parameters = x,
+    colnames = string.([:x1, :x2, :x3, :x4, :x5, :x6, :x7, :x8, :x9]))
+
+ram_matrices_g2 = RAMMatrices(;
+    A = A,
+    S = S2,
+    F = F,
+    parameters = x,
+    colnames = string.([:x1, :x2, :x3, :x4, :x5, :x6, :x7, :x8, :x9]))
 
 ### start values
 par_order = [collect(7:21); collect(1:6); collect(28:42)]
@@ -68,14 +70,14 @@ par_order = [collect(7:21); collect(1:6); collect(28:42)]
 start_val_ml = Vector{Float64}(par_ml.start[par_order])
 
 model_g1 = Sem(
-    ram_matrices = ram_matrices_g1,
+    specification = ram_matrices_g1,
     data = dat_g1,
     imply = RAMSymbolic,
     start_val = start_val_ml
 )
 
 model_g2 = Sem(
-    ram_matrices = ram_matrices_g2,
+    specification = ram_matrices_g2,
     data = dat_g2,
     imply = RAMSymbolic,
     start_val = start_val_ml
@@ -140,14 +142,14 @@ start_val_ml = Vector{Float64}(par_ml.start[par_order])
 
 # models
 model_g1 = Sem(
-    ram_matrices = ram_matrices_g1,
+    specification = ram_matrices_g1,
     data = dat_g1,
     imply = RAMSymbolic,
     start_val = start_val_ml
 )
 
 model_g2 = SemFiniteDiff(
-    ram_matrices = ram_matrices_g2,
+    specification = ram_matrices_g2,
     data = dat_g2,
     imply = RAMSymbolic,
     loss = (UserSemML,),
@@ -171,7 +173,7 @@ end
 ####################################################################
 
 model_ls_g1 = Sem(
-    ram_matrices = ram_matrices_g1,
+    specification = ram_matrices_g1,
     data = dat_g1,
     imply = RAMSymbolic,
     loss = (SemWLS,),
@@ -179,7 +181,7 @@ model_ls_g1 = Sem(
 )
 
 model_ls_g2 = Sem(
-    ram_matrices = ram_matrices_g2,
+    specification = ram_matrices_g2,
     data = dat_g2,
     imply = RAMSymbolic,
     loss = (SemWLS,),

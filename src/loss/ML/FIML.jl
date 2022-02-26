@@ -28,7 +28,7 @@ end
 ### Constructors
 ############################################################################
 
-function SemFIML(;observed, ram_matrices, n_par, parameter_type = Float64, kwargs...)
+function SemFIML(;observed, specification, n_par, parameter_type = Float64, kwargs...)
 
     inverses = broadcast(x -> zeros(x, x), Int64.(observed.pattern_nvar_obs))
     choleskys = Array{Cholesky{Float64,Array{Float64,2}},1}(undef, length(inverses))
@@ -46,7 +46,7 @@ function SemFIML(;observed, ram_matrices, n_par, parameter_type = Float64, kwarg
     ∇ind = vec(CartesianIndices(Array{Float64}(undef, n_man, n_man)))
     ∇ind = [findall(x -> !(x[1] ∈ ind || x[2] ∈ ind), ∇ind) for ind in observed.patterns_not]
 
-    commutation_indices = get_commutation_lookup(size(ram_matrices.A, 1)^2)
+    commutation_indices = get_commutation_lookup(get_n_nodes(specification)^2)
 
     return SemFIML(
     inverses,
@@ -284,6 +284,9 @@ function check_fiml(semfiml, model)
     a = cholesky!(Symmetric(semfiml.imp_inv); check = false)
     return isposdef(a)
 end
+
+get_n_nodes(specification::RAMMatrices) = size(specification.A, 1)
+get_n_nodes(specification::ParameterTable) = length(specification.observed_vars) + length(specification.latent_vars)
 
 ############################################################################
 ### Pretty Printing

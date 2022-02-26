@@ -2,7 +2,7 @@
 ### Types
 ############################################################################
 
-struct RAMSymbolic{F1, F2, F3, A1, A2, A3, S1, S2, S3, V, F4, A4, F5, A5} <: SemImplySymbolic
+struct RAMSymbolic{F1, F2, F3, A1, A2, A3, S1, S2, S3, V, F4, A4, F5, A5, D1} <: SemImplySymbolic
     Σ_function::F1
     ∇Σ_function::F2
     ∇²Σ_function::F3
@@ -17,6 +17,7 @@ struct RAMSymbolic{F1, F2, F3, A1, A2, A3, S1, S2, S3, V, F4, A4, F5, A5} <: Sem
     μ::A4
     ∇μ_function::F5
     ∇μ::A5
+    identifier::D1
 end
 
 ############################################################################
@@ -24,8 +25,7 @@ end
 ############################################################################
 
 function RAMSymbolic(;
-        parameter_table = nothing,
-        ram_matrices = nothing,
+        specification,
         loss_types = nothing,
         start_val = start_fabin3,
         vech = false,
@@ -33,15 +33,22 @@ function RAMSymbolic(;
         hessian = false,
         kwargs...)
 
-    if isnothing(ram_matrices)
-        ram_matrices = RAMMatrices(parameter_table)
+    if specification isa RAMMatrices
+        ram_matrices = specification
+        identifier = Dict{Symbol, Int64}(ram_matrices.identifier .=> 1:length(ram_matrices.identifier))
+    elseif specification isa ParameterTable
+        ram_matrices = RAMMatrices!(specification)
+        identifier = Dict{Symbol, Int64}(ram_matrices.identifier .=> 1:length(ram_matrices.identifier))
+    else
+        @error "The RAM constructor does not know how to handle your specification object. 
+        \n Please specify your model as either a ParameterTable or RAMMatrices."
     end
     
     A, S, F, M, par = 
         ram_matrices.A, ram_matrices.S, ram_matrices.F, ram_matrices.M, ram_matrices.parameters
 
     if !isa(start_val, Vector)
-        start_val = start_val(;ram_matrices = ram_matrices, kwargs...)
+        start_val = start_val(;ram_matrices = ram_matrices, specification = specification, kwargs...)
     end
 
     A, S, F = sparse(A), sparse(S), sparse(F)
@@ -123,7 +130,8 @@ function RAMSymbolic(;
         μ_function,
         μ,
         ∇μ_function,
-        ∇μ
+        ∇μ,
+        identifier
     )
 end
 

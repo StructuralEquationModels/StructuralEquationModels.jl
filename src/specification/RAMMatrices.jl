@@ -1,13 +1,22 @@
-Base.@kwdef struct RAMMatrices
+struct RAMMatrices <: SemSpec
     A
     S
     F
-    M = nothing
+    M
     parameters
-    identifier = nothing
+    identifier
     colnames
 end
 
+############################################################################
+### Constructor
+############################################################################
+function RAMMatrices(;A, S, F, M = nothing, parameters, identifier = nothing, colnames)
+    if isnothing(identifier)
+        identifier = identifier = Symbol.(:θ_, 1:length(parameters))
+    end
+    return RAMMatrices(A, S, F, M, parameters, identifier, colnames)
+end
 ############################################################################
 ### get RAMMatrices from parameter table
 ############################################################################

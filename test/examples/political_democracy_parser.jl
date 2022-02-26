@@ -10,11 +10,6 @@ dat = DataFrame(CSV.File("examples/data/data_dem.csv"))
 par_ml = DataFrame(CSV.File("examples/data/par_dem_ml.csv"))
 par_ls = DataFrame(CSV.File("examples/data/par_dem_ls.csv"))
 
-dat = 
-    select(
-        dat,
-        [:x1, :x2, :x3, :y1, :y2, :y3, :y4, :y5, :y6, :y7, :y8])
-
 ############################################################################
 ### define models
 ############################################################################
