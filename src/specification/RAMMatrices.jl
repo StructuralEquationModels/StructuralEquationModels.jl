@@ -32,7 +32,7 @@ function RAMMatrices(partable::ParameterTable; parname = :θ, to_sparse = true)
 
     A = zeros(Num, n_node, n_node)
     S = zeros(Num, n_node, n_node)
-    F = zeros(Num, n_observed, n_node)
+    F = zeros(n_observed, n_node)
 
     if length(partable.sorted_vars) != 0
         obsind = findall(x -> x ∈ partable.observed_vars, partable.sorted_vars)
