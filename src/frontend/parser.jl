@@ -78,7 +78,33 @@ function get_partable(model_vec, parameter_type_in)
     parameter_type_out = replace(parameter_type_out, "∼" => "→")
     parameter_type_out = replace(parameter_type_out, "∼∼" => "↔")
 
-    return to, parameter_type_out, from, free, value_fixed, label, start, estimate
+    n_labels_unique = size(unique(label), 1) - 1
+    n_labels = sum(.!(label .== ""))
+    n_parameters = sum(free) - n_labels + n_labels_unique
+    
+    identifier = Symbol.(:θ_, 1:n_parameters)
+    identifier_copy = copy(identifier)
+    label_identifier = Dict{String, Symbol}()
+    identifier_long = Vector{Symbol}()
+
+    for label in label[free]
+        if length(label) == 0
+            push!(identifier_long, popfirst!(identifier_copy))
+        else
+            if haskey(label_identifier, label)
+                push!(identifier_long, label_identifier[label])
+            else
+                push!(label_identifier, label => first(identifier_copy))
+                push!(identifier_long, popfirst!(identifier_copy))
+            end
+        end
+    end
+
+    identifier_out = Vector{Symbol}(undef, length(to))
+    identifier_out[.!free] .= :const
+    identifier_out[free] .= identifier_long
+
+    return to, parameter_type_out, from, free, value_fixed, label, start, estimate, identifier_out
 end
 
 function check_free(to)
@@ -125,5 +151,4 @@ function parse_sem(model)
     return get_partable(model_vec, parameter_type)
 end
 
-ParameterTable(lat_vars, obs_vars, model) = ParameterTable(lat_vars, obs_vars, Vector{String}(), parse_sem(model)...,
-    Vector{Symbol}(undef, length(parse_sem(model)[1])))
+ParameterTable(lat_vars, obs_vars, model) = ParameterTable(lat_vars, obs_vars, Vector{String}(), parse_sem(model)...,)

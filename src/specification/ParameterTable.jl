@@ -2,7 +2,7 @@
 ### Types
 ############################################################################
 
-mutable struct ParameterTable{SV, BV, FV, SyV} <: SemSpec
+mutable struct ParameterTable{SV, BV, FV, SyV}
     latent_vars::SV
     observed_vars::SV
     sorted_vars::SV
@@ -130,7 +130,8 @@ Base.getindex(partable::ParameterTable, i::Int) =
     partable.to[i], 
     partable.free[i], 
     partable.value_fixed[i], 
-    partable.label[i])
+    partable.label[i],
+    partable.identifier[i])
 
 Base.length(partable::ParameterTable) = length(partable.from)
 
@@ -215,10 +216,6 @@ function update_estimate!(partable::ParameterTable, sem_fit::SemFit)
     return partable
 end
 
-function update_estimate!(sem_fit::SemFit)
-    partable = sem_fit.model.specification
-    update_estimate!(partable, sem_fit)
-end
 
 # update starting values -----------------------------------------------------
 
@@ -232,12 +229,7 @@ function update_start!(partable::ParameterTable, sem_fit::SemFit)
     return partable
 end
 
-function update_start!(sem_fit::SemFit)
-    partable = sem_fit.model.specification
-    update_start!(partable, sem_fit)
-end
-
-function update_start!(partable::ParameterTable, model::Sem{S, O, I, L, D}) where{S <: ParameterTable, O, I, L, D}
+function update_start!(partable::ParameterTable, model::Sem{O, I, L, D}) where{O, I, L, D}
     for (i, identifier) in enumerate(partable.identifier)
         if identifier == :const 
         else
@@ -247,20 +239,10 @@ function update_start!(partable::ParameterTable, model::Sem{S, O, I, L, D}) wher
     return partable
 end
 
-function update_start!(model::Sem{S, O, I, L, D}) where{S <: ParameterTable, O, I, L, D}
-    partable = model.specification
-    update_start!(partable, model)
-end
-
 # update estimates and starting values ----------------------------------------
 
 function update_partable!(partable::ParameterTable, sem_fit::SemFit)
     update_start!(partable, sem_fit)
     update_estimate!(partable, sem_fit)
     return partable
-end
-
-function update_partable!(sem_fit::SemFit)
-    partable = sem_fit.model.specification
-    update_partable!(partable, sem_fit)
 end

@@ -24,7 +24,7 @@ function sem_fit(model::Sem{O, I, L, D}) where {O, I, L, D <: SemDiffOptim}
     return SemFit(result, model)
 end
 
-function sem_fit(model::SemFiniteDiff{O, I, L, D}) where {I, L, D <: SemDiffOptim}
+function sem_fit(model::SemFiniteDiff{O, I, L, D}) where {O, I, L, D <: SemDiffOptim}
     result = Optim.optimize(
                 Optim.only_fgh!((F, G, H, par) -> sem_wrap_optim(par, F, G, H, model)),
                 model.imply.start_val,

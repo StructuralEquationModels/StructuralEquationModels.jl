@@ -46,7 +46,7 @@ function RAM(;
         ram_matrices = specification
         identifier = Dict{Symbol, Int64}(ram_matrices.identifier .=> 1:length(ram_matrices.identifier))
     elseif specification isa ParameterTable
-        ram_matrices = RAMMatrices!(specification)
+        ram_matrices = RAMMatrices(specification)
         identifier = Dict{Symbol, Int64}(ram_matrices.identifier .=> 1:length(ram_matrices.identifier))
     else
         @error "The RAM constructor does not know how to handle your specification object. 

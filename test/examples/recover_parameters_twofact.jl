@@ -57,7 +57,7 @@ diff =
             ;f_tol = 1e-10, 
             x_tol = 1.5e-8))
 
-model_ml = Sem(ram_matrices, semobserved, imply_ml, loss_ml, diff)
+model_ml = Sem(semobserved, imply_ml, loss_ml, diff)
 model_ml(true_val, true, false, false)
 solution = sem_fit(model_ml)
 

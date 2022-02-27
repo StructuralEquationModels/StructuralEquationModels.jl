@@ -1,4 +1,4 @@
-struct RAMMatrices <: SemSpec
+struct RAMMatrices
     A
     S
     F
@@ -21,33 +21,10 @@ end
 ### get RAMMatrices from parameter table
 ############################################################################
 
-function RAMMatrices!(partable::ParameterTable; parname::Symbol = :θ, to_sparse = true)
-    n_labels_unique = size(unique(partable.label), 1) - 1
-    n_labels = sum(.!(partable.label .== ""))
-    n_parameters = sum(partable.free) - n_labels + n_labels_unique
+function RAMMatrices(partable::ParameterTable; parname = :θ, to_sparse = true)
 
+    n_parameters = length(unique(partable.identifier)) - 1
     parameters = (Symbolics.@variables $parname[1:n_parameters])[1]
-    
-    identifier = Symbol.(parname, :_, 1:n_parameters)
-    identifier_copy = copy(identifier)
-    label_identifier = Dict{String, Symbol}()
-    identifier_long = Vector{Symbol}()
-
-    for label in partable.label[partable.free]
-        if length(label) == 0
-            push!(identifier_long, popfirst!(identifier_copy))
-        else
-            if haskey(label_identifier, label)
-                push!(identifier_long, label_identifier[label])
-            else
-                push!(label_identifier, label => first(identifier_copy))
-                push!(identifier_long, popfirst!(identifier_copy))
-            end
-        end
-    end
-
-    partable.identifier[partable.free] .= identifier_long
-    partable.identifier[.!partable.free] .= :const
 
     n_observed = size(partable.observed_vars, 1)
     n_latent = size(partable.latent_vars, 1)
@@ -74,11 +51,12 @@ function RAMMatrices!(partable::ParameterTable; parname::Symbol = :θ, to_sparse
     
     # fill Matrices
     known_labels = Dict{String, Int64}()
+    identifier_vec = Vector{Symbol}()
     par_ind = 1
 
     for i in 1:length(partable)
 
-        from, parameter_type, to, free, value_fixed, label = partable[i]
+        from, parameter_type, to, free, value_fixed, label, identifier = partable[i]
 
         row_ind = positions[to]
         col_ind = positions[from]
@@ -93,14 +71,20 @@ function RAMMatrices!(partable::ParameterTable; parname::Symbol = :θ, to_sparse
         else
             if label == ""
                 set_RAM_index(A, S, parameter_type, row_ind, col_ind, parameters[par_ind])
+                push!(identifier_vec, identifier)
                 par_ind += 1
             else
                 if haskey(known_labels, label)
                     known_ind = known_labels[label]
                     set_RAM_index(A, S, parameter_type, row_ind, col_ind, parameters[known_ind])
+                    if identifier != identifier_vec[known_ind]
+                        @error "Your ParameterTable has parameters constrained to be equal but with different identfiers.
+                                Label: $label, identifiers: $identifier, $(identifier_vec[known_ind])"
+                    end
                 else
                     known_labels[label] = par_ind
                     set_RAM_index(A, S, parameter_type, row_ind, col_ind, parameters[par_ind])
+                    push!(identifier_vec, identifier)
                     par_ind +=1
                 end
             end
@@ -114,7 +98,7 @@ function RAMMatrices!(partable::ParameterTable; parname::Symbol = :θ, to_sparse
         F = sparse(F)
     end
 
-    return RAMMatrices(;A = A, S = S, F = F, parameters = parameters, identifier = identifier, colnames)
+    return RAMMatrices(;A = A, S = S, F = F, parameters = parameters, identifier = identifier_vec, colnames)
 end
 
 function set_RAM_index(A, S, parameter_type, row_ind, col_ind, parameter)
@@ -130,7 +114,7 @@ end
 ### get parameter table from RAMMatrices
 ############################################################################
 
-function ParameterTable(ram_matrices::RAMMatrices, colnames)
+function ParameterTable(ram_matrices::RAMMatrices)
     
     new_partable = ParameterTable(nothing)
 
@@ -148,12 +132,12 @@ function ParameterTable(ram_matrices::RAMMatrices, colnames)
     A_isfloat = check_str_number.(A_string)
     S_isfloat = check_str_number.(S_string)
 
-    position_names = Dict{Int64, String}(1:length(colnames) .=> colnames)
+    position_names = Dict{Int64, String}(1:length(ram_matrices.colnames) .=> ram_matrices.colnames)
 
     names_lat = Vector{String}()
     names_obs = Vector{String}()
 
-    for (i, varname) in enumerate(colnames)
+    for (i, varname) in enumerate(ram_matrices.colnames)
         if any(isone.(F[:, i]))
             push!(names_obs, varname)
         else

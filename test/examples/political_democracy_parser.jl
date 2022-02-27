@@ -47,12 +47,6 @@ latent_vars = ["ind60", "dem60", "dem65"]
 
 partable = ParameterTable(latent_vars, observed_vars, graph_1)
 
-ram_matrices = RAMMatrices!(partable)
-
-ParameterTable(ram_matrices)
-
-@benchmark sort!(partable)
-sem_fit!!(arg1, arg2)
 # models
 model_ml = Sem(
     specification = partable,
@@ -60,7 +54,7 @@ model_ml = Sem(
 )
 
 model_ls_sym = Sem(
-    specification = deepcopy(partable),
+    specification = partable,
     data = dat,
     imply = RAMSymbolic,
     loss = (SemWLS, ),
@@ -74,7 +68,7 @@ model_ls_sym = Sem(
 test_start_val = [fill(0.5, 8); fill(0.05, 3); fill(0.1, 3); fill(1.0, 11); fill(0.05, 6)]
 start_val_fabin3 = copy(model_ml.imply.start_val)
 
-update_start!(model_ml)
+update_start!(partable, model_ml)
 
 model_start_partable = Sem(
     specification = partable,
@@ -104,16 +98,14 @@ end
 
 @testset "ml_solution" begin
     solution_ml = sem_fit(model_ml)
-    update_partable!(solution_ml)
+    update_partable!(partable, solution_ml)
     @test SEM.compare_estimates(par_ml, partable, 0.01)
-    @test SEM.compare_estimates(par_ml, solution_ml.model.specification, 0.01)
 end
 
 @testset "ls_solution" begin
     solution_ls = sem_fit(model_ls_sym)
-    update_partable!(solution_ls)
-    @test !SEM.compare_estimates(par_ml, partable, 0.01)
-    @test SEM.compare_estimates(par_ml, solution_ml.model.specification, 0.01)
+    update_partable!(partable, solution_ls)
+    @test SEM.compare_estimates(par_ls, partable, 0.01)
 end
 
 ############################################################################
@@ -133,6 +125,6 @@ end
 
 @testset "ml_solution_sorted" begin
     solution_ml_sorted = sem_fit(model_ml_sorted)
-    update_partable!(solution_ml_sorted)
-    @test SEM.compare_estimates(par_ml, solution_ml_sorted.model.specification, 0.01)
+    update_partable!(partable, solution_ml_sorted)
+    @test SEM.compare_estimates(par_ml, partable, 0.01)
 end
