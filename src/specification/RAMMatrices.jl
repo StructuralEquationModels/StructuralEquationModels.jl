@@ -1,0 +1,242 @@
+struct RAMMatrices
+    A
+    S
+    F
+    M
+    parameters
+    identifier
+    colnames
+end
+
+############################################################################
+### Constructor
+############################################################################
+function RAMMatrices(;A, S, F, M = nothing, parameters, identifier = nothing, colnames)
+    if isnothing(identifier)
+        identifier = identifier = Symbol.(:θ_, 1:length(parameters))
+    end
+    return RAMMatrices(A, S, F, M, parameters, identifier, colnames)
+end
+############################################################################
+### get RAMMatrices from parameter table
+############################################################################
+
+function RAMMatrices(partable::ParameterTable; parname = :θ, to_sparse = true)
+
+    n_parameters = length(unique(partable.identifier)) - 1
+    parameters = (Symbolics.@variables $parname[1:n_parameters])[1]
+
+    n_observed = size(partable.observed_vars, 1)
+    n_latent = size(partable.latent_vars, 1)
+    n_node = n_observed + n_latent
+
+    A = zeros(Num, n_node, n_node)
+    S = zeros(Num, n_node, n_node)
+    F = zeros(n_observed, n_node)
+
+    if length(partable.sorted_vars) != 0
+        obsind = findall(x -> x ∈ partable.observed_vars, partable.sorted_vars)
+        F[CartesianIndex.(1:n_observed, obsind)] .= 1.0
+    else
+        F[LinearAlgebra.diagind(F)] .= 1.0
+    end
+
+    if length(partable.sorted_vars) != 0
+        positions = Dict(zip(partable.sorted_vars, collect(1:n_observed+n_latent)))
+        colnames = copy(partable.sorted_vars)
+    else
+        positions = Dict(zip([partable.observed_vars; partable.latent_vars], collect(1:n_observed+n_latent)))
+        colnames = [partable.observed_vars; partable.latent_vars]
+    end
+    
+    # fill Matrices
+    known_labels = Dict{String, Int64}()
+    identifier_vec = Vector{Symbol}()
+    par_ind = 1
+
+    for i in 1:length(partable)
+
+        from, parameter_type, to, free, value_fixed, label, identifier = partable[i]
+
+        row_ind = positions[to]
+        col_ind = positions[from]
+
+        if !free
+            if parameter_type == "→"
+                A[row_ind, col_ind] = value_fixed
+            else
+                S[row_ind, col_ind] = value_fixed
+                S[col_ind, row_ind] = value_fixed
+            end
+        else
+            if label == ""
+                set_RAM_index(A, S, parameter_type, row_ind, col_ind, parameters[par_ind])
+                push!(identifier_vec, identifier)
+                par_ind += 1
+            else
+                if haskey(known_labels, label)
+                    known_ind = known_labels[label]
+                    set_RAM_index(A, S, parameter_type, row_ind, col_ind, parameters[known_ind])
+                    if identifier != identifier_vec[known_ind]
+                        @error "Your ParameterTable has parameters constrained to be equal but with different identfiers.
+                                Label: $label, identifiers: $identifier, $(identifier_vec[known_ind])"
+                    end
+                else
+                    known_labels[label] = par_ind
+                    set_RAM_index(A, S, parameter_type, row_ind, col_ind, parameters[par_ind])
+                    push!(identifier_vec, identifier)
+                    par_ind +=1
+                end
+            end
+        end
+
+    end
+
+    if to_sparse
+        A = sparse(A)
+        S = sparse(S)
+        F = sparse(F)
+    end
+
+    return RAMMatrices(;A = A, S = S, F = F, parameters = parameters, identifier = identifier_vec, colnames)
+end
+
+function set_RAM_index(A, S, parameter_type, row_ind, col_ind, parameter)
+    if parameter_type == "→"
+        A[row_ind, col_ind] = parameter
+    else
+        S[row_ind, col_ind] = parameter
+        S[col_ind, row_ind] = parameter
+    end
+end
+
+############################################################################
+### get parameter table from RAMMatrices
+############################################################################
+
+function ParameterTable(ram_matrices::RAMMatrices)
+    
+    new_partable = ParameterTable(nothing)
+
+    # n_obs = size(ram_matrices.F, 1)
+    # n_nod = size(ram_matrices.F, 2)
+    # n_lat = n_nod - n_obs
+
+    F = Matrix(ram_matrices.F)
+    A = Matrix(ram_matrices.A)
+    S = Matrix(ram_matrices.S)
+
+    A_string = string.(A)
+    S_string = string.(S)
+
+    A_isfloat = check_str_number.(A_string)
+    S_isfloat = check_str_number.(S_string)
+
+    position_names = Dict{Int64, String}(1:length(ram_matrices.colnames) .=> ram_matrices.colnames)
+
+    names_lat = Vector{String}()
+    names_obs = Vector{String}()
+
+    for (i, varname) in enumerate(ram_matrices.colnames)
+        if any(isone.(F[:, i]))
+            push!(names_obs, varname)
+        else
+            push!(names_lat, varname)
+        end
+    end
+
+    new_partable.observed_vars = copy(names_obs)
+    new_partable.latent_vars = copy(names_lat)
+
+    parameter_identifier = Dict([ram_matrices.parameters...] .=> ram_matrices.identifier)
+
+    for index in CartesianIndices(A)
+        value = A[index]
+        if iszero(value)
+        elseif A_isfloat[index]
+            from = position_names[index[2]]
+            to = position_names[index[1]]
+            parameter_type = "→"
+            free = false
+            value_fixed = tryparse(Float64, A_string[index])
+            label = "const"
+            start = 0.0
+            estimate = 0.0
+            identifier = :const
+            push!(new_partable, from, parameter_type, to, free, value_fixed, label, start, estimate, identifier)
+        else
+            from = position_names[index[2]]
+            to = position_names[index[1]]
+            parameter_type = "→"
+            free = true
+            value_fixed = 0.0
+            label = string(parameter_identifier[value])
+            start = 0.0
+            estimate = 0.0
+            identifier = parameter_identifier[value]
+            push!(new_partable, from, parameter_type, to, free, value_fixed, label, start, estimate, identifier)
+        end
+    end
+
+    for index in CartesianIndices(S)
+        value = S[index]
+        if iszero(value)
+        elseif S_isfloat[index]
+            from = position_names[index[2]]
+            to = position_names[index[1]]
+            parameter_type = "↔"
+            free = false
+            value_fixed = tryparse(Float64, S_string[index])
+            label = "const"
+            start = 0.0
+            estimate = 0.0
+            identifier = :const
+            push!(new_partable, from, parameter_type, to, free, value_fixed, label, start, estimate, identifier)
+        else
+            from = position_names[index[2]]
+            to = position_names[index[1]]
+            parameter_type = "↔"
+            free = true
+            value_fixed = 0.0
+            label = string(parameter_identifier[value])
+            start = 0.0
+            estimate = 0.0
+            identifier = parameter_identifier[value]
+            push!(new_partable, from, parameter_type, to, free, value_fixed, label, start, estimate, identifier)
+        end
+    end
+
+    label_position = Dict{String, Vector{Int64}}()
+
+    for (i, label) in enumerate(new_partable.label)
+        if haskey(label_position, label)
+            push!(label_position[label], i)
+        else
+            push!(label_position, label => [i])
+        end
+    end
+
+    counter = 1
+
+    for label in keys(label_position)
+        if label == "const"
+            new_partable.label[label_position[label]] .= ""
+        elseif length(label_position[label]) == 1
+            new_partable.label[label_position[label]] .= ""
+        else
+            new_partable.label[label_position[label]] .= "label_"*string(counter)
+            counter += 1
+        end
+    end
+
+    return new_partable
+end
+
+############################################################################
+### Pretty Printing
+############################################################################
+
+function Base.show(io::IO, ram_matrices::RAMMatrices)
+    print_type_name(io, ram_matrices)
+    print_field_types(io, ram_matrices)
+end
