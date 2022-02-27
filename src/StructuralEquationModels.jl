@@ -4,8 +4,6 @@ using LinearAlgebra, Optim,
     NLSolversBase, Statistics, SparseArrays, Symbolics,
     NLopt, FiniteDiff, ForwardDiff, PrettyTables
 
-import Symbolics: convert
-
 # type hierarchy
 include("types.jl")
 # specification of models

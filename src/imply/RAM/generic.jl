@@ -64,7 +64,8 @@ function RAM(;
         
     A = Matrix(A)
     S = Matrix(S)
-    F = Matrix(F); F = convert(Matrix{Float64}, F)
+    F = Matrix(F); 
+    F = zeros(size(F))[isone.(F)] .= 1
     I_A_indices = CartesianIndices(F)
 
     A_indices = get_parameter_indices(parameters, A)
