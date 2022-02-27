@@ -70,7 +70,7 @@ end
 ### functors
 ############################################################################
 
-function (semfiml::SemFIML)(par, F, G, H, model::Sem{S, O, I, L, D}) where {S, O, I <: SemImplySymbolic, L, D}
+function (semfiml::SemFIML)(par, F, G, H, model::Sem{O, I, L, D}) where {O, I <: SemImplySymbolic, L, D}
 
     if H stop("hessian for FIML is not implemented (yet)") end
 
@@ -101,7 +101,7 @@ function (semfiml::SemFIML)(par, F, G, H, model::Sem{S, O, I, L, D}) where {S, O
     
 end
 
-function (semfiml::SemFIML)(par, F, G, H, model::Sem{S, O, I, L, D}) where {S, O, I <: RAM, L, D}
+function (semfiml::SemFIML)(par, F, G, H, model::Sem{O, I, L, D}) where {O, I <: RAM, L, D}
 
     if H stop("hessian for FIML is not implemented (yet)") end
 

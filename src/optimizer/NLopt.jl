@@ -16,13 +16,13 @@ function SemFit_NLopt(optimization_result, model::AbstractSem)
 end
 
 function sem_fit(
-            model::Sem{S, O, I, L, D}; 
+            model::Sem{O, I, L, D}; 
             ftol_rel = 1e-10,
             xtol_rel = 1.5e-8,
             lower = nothing,
             upper = nothing,
             local_algo = nothing,
-            maxeval = 200) where {S, O, I, L, D <: SemDiffNLopt}
+            maxeval = 200) where {O, I, L, D <: SemDiffNLopt}
 
     opt = NLopt.Opt(model.diff.algorithm, length(model.imply.start_val))
     #cache = FiniteDiff.GradientCache(start)
