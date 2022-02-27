@@ -47,6 +47,12 @@ latent_vars = ["ind60", "dem60", "dem65"]
 
 partable = ParameterTable(latent_vars, observed_vars, graph_1)
 
+ram_matrices = RAMMatrices!(partable)
+
+ParameterTable(ram_matrices)
+
+@benchmark sort!(partable)
+sem_fit!!(arg1, arg2)
 # models
 model_ml = Sem(
     specification = partable,
