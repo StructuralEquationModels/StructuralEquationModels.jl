@@ -8,7 +8,6 @@ using LinearAlgebra, Optim,
 include("types.jl")
 # specification of models
 include("specification/ParameterTable.jl")
-include("specification/empty.jl")
 include("frontend/parser.jl")
 include("specification/RAMMatrices.jl")
 # pretty printing
