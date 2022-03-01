@@ -1711,3 +1711,5 @@ sort!(my_partable)
 ram_matrices = RAMMatrices!(my_partable)
 
 new_partable = ParameterTable(ram_matrices, my_partable.sorted_vars)
+
+using StructuralEquationModels
