@@ -6,17 +6,19 @@ using LinearAlgebra, Optim,
 
 # type hierarchy
 include("types.jl")
+# fitted objects
+include("frontend/fit/SemFit.jl")
 # specification of models
-include("specification/ParameterTable.jl")
-include("frontend/parser.jl")
-include("specification/RAMMatrices.jl")
+include("frontend/specification/ParameterTable.jl")
+include("frontend/specification/parser.jl")
+include("frontend/specification/RAMMatrices.jl")
 # pretty printing
 include("frontend/pretty_printing.jl")
 # observed
 include("observed/common.jl")
 include("observed/missing.jl")
 # constructor
-include("frontend/Sem.jl")
+include("frontend/specification/Sem.jl")
 # helper functions
 include("additional_functions/helper.jl")
 include("additional_functions/parameters.jl")
