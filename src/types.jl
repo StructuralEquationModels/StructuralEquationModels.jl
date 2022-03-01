@@ -4,6 +4,10 @@
 
 abstract type AbstractSem end
 
+abstract type AbstractSemSingle end
+
+abstract type AbstractSemCollection end
+
 abstract type SemLossFunction end
 
 mutable struct SemLoss{F <: Tuple, FT, GT, HT}
@@ -34,7 +38,7 @@ abstract type SemImply end
 
 abstract type SemImplySymbolic <: SemImply end
 
-mutable struct Sem{O <: SemObs, I <: SemImply, L <: SemLoss, D <: SemDiff} <: AbstractSem
+mutable struct Sem{O <: SemObs, I <: SemImply, L <: SemLoss, D <: SemDiff} <: AbstractSemSingle
     observed::O
     imply::I
     loss::L
@@ -72,7 +76,7 @@ end
 # automatic differentiation
 #####################################################################################################
 
-struct SemFiniteDiff{O <: SemObs, I <: SemImply, L <: SemLoss, D <: SemDiff, G} <: AbstractSem
+struct SemFiniteDiff{O <: SemObs, I <: SemImply, L <: SemLoss, D <: SemDiff, G} <: AbstractSemSingle
     observed::O
     imply::I
     loss::L
@@ -104,7 +108,7 @@ function (model::SemFiniteDiff)(par, F, G, H)
 
 end
 
-struct SemForwardDiff{O <: SemObs, I <: SemImply, L <: SemLoss, D <: SemDiff, G} <: AbstractSem
+struct SemForwardDiff{O <: SemObs, I <: SemImply, L <: SemLoss, D <: SemDiff, G} <: AbstractSemSingle
     observed::O
     imply::I 
     loss::L 
@@ -140,7 +144,7 @@ end
 # ensemble models
 #####################################################################################################
 
-struct SemEnsemble{N, T <: Tuple, V <: AbstractVector, D, S, FT, GT, HT} <: AbstractSem
+struct SemEnsemble{N, T <: Tuple, V <: AbstractVector, D, S, FT, GT, HT} <: AbstractSemCollection
     n::N
     sems::T
     weights::V
@@ -282,15 +286,4 @@ function objective_gradient!(grad, model::SemEnsemble, parameters)
     model(parameters, true, true, false)
     copyto!(grad, model.G)
     return model.F[1]
-end
-
-#####################################################################################################
-# fitted objects
-#####################################################################################################
-
-mutable struct SemFit
-    minimum
-    solution
-    model
-    optimization_result
 end
