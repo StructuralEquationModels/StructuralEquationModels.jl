@@ -44,7 +44,7 @@ include("optimizer/NLopt.jl")
 
 
 export  AbstractSem, 
-            Sem, SemFiniteDiff, SemForwardDiff, SemEnsemble,
+            AbstractSemSingle, AbstractSemCollection, Sem, SemFiniteDiff, SemForwardDiff, SemEnsemble,
         SemImply, 
             RAMSymbolic, RAM, SNLLS, ImplyEmpty,
         start_fabin3, start_simple, start_parameter_table,

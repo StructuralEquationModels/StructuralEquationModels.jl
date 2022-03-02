@@ -9,6 +9,8 @@ include("test_helpers.jl")
 dat = DataFrame(CSV.File("examples/data/data_dem.csv"))
 par_ml = DataFrame(CSV.File("examples/data/par_dem_ml.csv"))
 par_ls = DataFrame(CSV.File("examples/data/par_dem_ls.csv"))
+measures_ml = DataFrame(CSV.File("examples/data/measures_dem_ml.csv"))
+measures_ls = DataFrame(CSV.File("examples/data/measures_dem_ls.csv"))
 
 ############################################################################
 ### define models
@@ -165,6 +167,30 @@ end
 end
 
 ############################################################################
+### test fit assessment
+############################################################################
+
+solution_ml = sem_fit(model_ml)
+
+# F value
+F = Fₘᵢₙ(solution_ml)
+F_lav = measures_ml.x[measures_ml.Column1 .==  "fmin"][1]
+isapprox(F, 2F_lav; rtol = 1e-4)
+
+# χ²
+chi2 = χ²(solution_ml)
+chi2_lav = measures_ml.x[measures_ml.Column1 .==  "chisq"][1]
+isapprox(chi2, chi2_lav; rtol = 1e-4)
+measures_ml
+
+# p
+p_val = p_value(solution_ml)
+p_val_lav = measures_ml.x[measures_ml.Column1 .==  "pvalue"][1]
+isapprox(p_val, p_val_lav; rtol = 1e-4)
+
+fit_measures(solution_ml)
+
+############################################################################
 ### test hessians
 ############################################################################
 
@@ -211,6 +237,9 @@ end
 
 par_ml = DataFrame(CSV.File("examples/data/par_dem_ml_mean.csv"))
 par_ls = DataFrame(CSV.File("examples/data/par_dem_ls_mean.csv"))
+
+measures_ml = DataFrame(CSV.File("examples/data/measures_dem_ml_mean.csv"))
+measures_ls = DataFrame(CSV.File("examples/data/measures_dem_ls_mean.csv"))
 
 @Symbolics.variables x[1:38]
 
@@ -297,6 +326,7 @@ model_ml_sym = Sem(
     meanstructure = true,
     start_val = start_val_ml
 )
+
 ############################################################################
 ### test solution
 ############################################################################
@@ -331,6 +361,41 @@ end
 @testset "ml_gradients_meanstructure_symbolic" begin
     @test test_gradient(model_ml_sym, start_val_ml)
 end
+
+############################################################################
+### test fit assessment
+############################################################################
+
+solution_ml = sem_fit(model_ml)
+
+# F value
+F = Fₘᵢₙ(solution_ml)
+F_lav = measures_ml.x[measures_ml.Column1 .==  "fmin"][1]
+isapprox(F, 2F_lav; rtol = 1e-4)
+
+# χ²
+chi2 = χ²(solution_ml)
+chi2_lav = measures_ml.x[measures_ml.Column1 .==  "chisq"][1]
+isapprox(chi2, chi2_lav; rtol = 1e-4)
+
+# df
+df_ = df(solution_ml)
+df_lav = measures_ml.x[measures_ml.Column1 .==  "df"][1]
+isapprox(df_, df_lav; rtol = 1e-10)
+
+# p
+p_val = p_value(solution_ml)
+p_val_lav = measures_ml.x[measures_ml.Column1 .==  "pvalue"][1]
+isapprox(p_val, p_val_lav; rtol = 1e-4)
+
+# se
+se = se_fisher(solution_ml)
+maximum(abs.(par_ml.se[par_order] .- se))
+isapprox(par_ml.se[par_order], se; rtol = 1e-3)
+
+# se_fisher
+
+
 
 ############################################################################
 ### fiml
