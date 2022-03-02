@@ -1,10 +1,10 @@
 ############################################################################
-### based on -2ll
+### get number of parameters
 ############################################################################
 
 # SemFit splices loss functions ---------------------------------------------------------------------
-AIC(sem_fit::SemFit{Mi, S, Mo, O} where {Mi, S, Mo <: AbstractSemSingle, O}) = 
-    AIC(
+npar(sem_fit::SemFit{Mi, S, Mo, O} where {Mi, S, Mo <: AbstractSemSingle, O}) = 
+    npar(
         sem_fit,
         sem_fit.model.observed,
         sem_fit.model.imply,
@@ -13,13 +13,10 @@ AIC(sem_fit::SemFit{Mi, S, Mo, O} where {Mi, S, Mo <: AbstractSemSingle, O}) =
         )
 
 # RAM + SemML
-AIC(sem_fit::SemFit, obs, imp::Union{RAM, RAMSymbolic}, diff, loss_ml::SemML) =
-    AIC(sem_fit.minimum, obs.n_man, obs.n_obs, npar(imp))
+npar(sem_fit::SemFit, obs, imp::Union{RAM, RAMSymbolic}, diff, loss_ml::SemML) =
+    npar(imp)
 
-function AIC(minimum, n_man, n_obs, n_par)
-    AIC = minus2ll(minimum, n_obs, n_man) + 2n_par
-    return AIC
-end
+npar(imp::Union{RAM, RAMSymbolic}) = length(imp.start_val)
 
 ############################################################################
 ### based on χ² - 2df

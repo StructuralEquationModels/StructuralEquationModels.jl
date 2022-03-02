@@ -34,3 +34,23 @@ function test_hessian(model, parameters)
     
     return correct1 & correct2 & correct3
 end
+
+fitmeasure_names = Dict(
+    :AIC => "aic",
+    :BIC => "bic",
+    :df => "df",
+    :χ² => "chisq",
+    :p_value => "pvalue",
+    :npar => "npar",
+    :RMSEA => "rmsea",
+)
+
+function test_fitmeasures(measures, measures_lav; rtol = 1e-4)
+    correct = []
+    for key in keys(fitmeasure_names)
+        measure = measures[key]
+        measure_lav = measures_lav.x[measures_lav.Column1 .==  fitmeasure_names[key]][1]
+        push!(correct, isapprox(measure, measure_lav; rtol = rtol))
+    end
+    return correct
+end
