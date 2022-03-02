@@ -4,9 +4,9 @@
 
 abstract type AbstractSem end
 
-abstract type AbstractSemSingle end
+abstract type AbstractSemSingle <: AbstractSem end
 
-abstract type AbstractSemCollection end
+abstract type AbstractSemCollection <: AbstractSem end
 
 abstract type SemLossFunction end
 
