@@ -1,31 +1,22 @@
-# 
+############################################################################
+### based on -2ll
+############################################################################
 
+# SemFit splices loss functions ---------------------------------------------------------------------
 BIC(sem_fit::SemFit{Mi, S, Mo, O} where {Mi, S, Mo <: AbstractSemSingle, O}) = 
     BIC(
-        sem_fit.minimum,
-        sem_fit.solution,
-        sem_fit.model,
-        sem_fit.optimization_result,
-        sem_fit.loss.functions...
+        sem_fit,
+        sem_fit.model.observed,
+        sem_fit.model.imply,
+        sem_fit.model.diff,
+        sem_fit.model.loss.functions...
         )
 
-function BIC(
-        minimum, 
-        solution, 
-        model::Sem{O, I, L, D} where {O, I <: RAM, L, D}, 
-        optimization_result, 
-        loss_ml::SemML)
-    F_ML = minimum - logdet(model.observed.obs_cov) - p
+# RAM + SemML
+BIC(sem_fit::SemFit, obs, imp::Union{RAM, RAMSymbolic}, diff, loss_ml::SemML) =
+    BIC(sem_fit.minimum, obs.n_man, obs.n_obs, npar(imp))
 
-    
+function BIC(minimum, n_man, n_obs, n_par)
+    BIC = minus2ll(minimum, n_obs, n_man) + log(n_obs)*n_par
+    return BIC
 end
-
-function BIC(minimum, solution, model::Sem{O, I, L, D}, optimization_result, loss_ls::SemWLS)
-    
-end
-
-function BIC(minimum, solution, model::Sem{O, I, L, D}, optimization_result, loss_ml::SemML, loss_ridge::SemRidge)
-    
-end
-
-BIC(min, sol, mod, ores, l_ridge::SemRidge, l_ml::SemML) = BIC(min, sol, mod, ores, l_ml, l_ridge)

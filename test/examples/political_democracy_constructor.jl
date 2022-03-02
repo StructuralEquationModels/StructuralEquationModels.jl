@@ -172,23 +172,7 @@ end
 
 solution_ml = sem_fit(model_ml)
 
-# F value
-F = Fₘᵢₙ(solution_ml)
-F_lav = measures_ml.x[measures_ml.Column1 .==  "fmin"][1]
-isapprox(F, 2F_lav; rtol = 1e-4)
-
-# χ²
-chi2 = χ²(solution_ml)
-chi2_lav = measures_ml.x[measures_ml.Column1 .==  "chisq"][1]
-isapprox(chi2, chi2_lav; rtol = 1e-4)
-measures_ml
-
-# p
-p_val = p_value(solution_ml)
-p_val_lav = measures_ml.x[measures_ml.Column1 .==  "pvalue"][1]
-isapprox(p_val, p_val_lav; rtol = 1e-4)
-
-fit_measures(solution_ml)
+all(test_fitmeasures(fit_measures(solution_ml), measures_ml; rtol = 1e-4))
 
 ############################################################################
 ### test hessians
@@ -394,6 +378,31 @@ maximum(abs.(par_ml.se[par_order] .- se))
 isapprox(par_ml.se[par_order], se; rtol = 1e-3)
 
 # se_fisher
+###
+###
+
+# -2ll
+m2ll = minus2ll(solution_ml)
+logl_lav = measures_ml.x[measures_ml.Column1 .==  "logl"][1]
+isapprox(m2ll, -2logl_lav; rtol = 1e-4)
+
+# AIC
+aic = AIC(solution_ml)
+aic_lav = measures_ml.x[measures_ml.Column1 .==  "aic"][1]
+isapprox(aic, aic_lav; rtol = 1e-4)
+
+# BIC
+bic = BIC(solution_ml)
+bic_lav = measures_ml.x[measures_ml.Column1 .==  "bic"][1]
+isapprox(bic, bic_lav; rtol = 1e-4)
+
+# RMSEA
+rmsea = RMSEA(solution_ml)
+rmsea_lav = measures_ml.x[measures_ml.Column1 .==  "rmsea"][1]
+isapprox(rmsea, rmsea_lav; rtol = 1e-4)
+
+fm = fit_measures(solution_ml)
+
 
 
 

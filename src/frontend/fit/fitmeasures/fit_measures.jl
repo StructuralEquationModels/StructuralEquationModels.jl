@@ -1,10 +1,24 @@
-function fit_measures(sem_fit)
+function fit_measures(sem_fit, args...)
 
     measures = Dict{Symbol, Float64}()
     
-    push!(measures, :F => Fₘᵢₙ(sem_fit))
-    push!(measures, :p => p_value(sem_fit))
-    push!(measures, :χ² => χ²(sem_fit))
+    for arg in args
+        push!(measures, Symbol(arg) => arg(sem_fit))
+    end
 
     return measures
 end
+
+fit_measures(sem_fit) = 
+    fit_measures(
+        sem_fit,
+        npar,
+        df,
+        AIC,
+        BIC,
+        RMSEA,
+        χ²,
+        p_value,
+        Fₘᵢₙ,
+        minus2ll,
+        )
