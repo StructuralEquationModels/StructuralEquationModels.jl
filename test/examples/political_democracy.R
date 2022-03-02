@@ -1,4 +1,5 @@
-pacman::p_load(dplyr, lavaan)
+library(dplyr)
+library(lavaan)
 
 set.seed(123)
 
@@ -21,15 +22,21 @@ data <- PoliticalDemocracy
 
 data <- select(data, starts_with("x"), starts_with("y"))
 
-fit_ml <- cfa(model, data, likelihood = "wishart", do.fit = TRUE)
-fit_ls <- cfa(model, data, estimator = "GLS", do.fit = TRUE)
+fit_ml <- cfa(model, data, likelihood = "wishart", do.fit = TRUE, information = "observed")
+fit_ls <- cfa(model, data, estimator = "GLS", do.fit = TRUE, information = "observed")
 
-par_ml <- select(parTable(fit_ml), lhs, op, rhs, est, start)
-par_ls <- select(parTable(fit_ls), lhs, op, rhs, est, start)
+par_ml <- select(parTable(fit_ml), lhs, op, rhs, est, start, se)
+par_ls <- select(parTable(fit_ls), lhs, op, rhs, est, start, se)
+
+measures_ml <- fitMeasures(fit_ml)
+measures_ls <- fitMeasures(fit_ls)
 
 write.csv(par_ml, "test/examples/data/par_dem_ml.csv")
 write.csv(par_ls, "test/examples/data/par_dem_ls.csv")
 write.csv(data, "test/examples/data/data_dem.csv")
+
+write.csv(measures_ml, "test/examples/data/measures_dem_ml.csv")
+write.csv(measures_ls, "test/examples/data/measures_dem_ls.csv")
 
 # starting values for fixed variances
 fit_ml <- cfa(model, data, likelihood = "wishart", do.fit = FALSE, std.lv = TRUE)
@@ -61,14 +68,20 @@ model <-    "# measurement model
             y7 ~ c*1
             y8 ~ d*1"
 
-fit_ml <- cfa(model, data, likelihood = "wishart", do.fit = TRUE)
-fit_ls <- cfa(model, data, estimator = "GLS", do.fit = TRUE)
+fit_ml <- cfa(model, data, likelihood = "wishart", do.fit = TRUE, information = "observed")
+fit_ls <- cfa(model, data, estimator = "GLS", do.fit = TRUE, information = "observed")
 
-par_ml <- select(parTable(fit_ml), lhs, op, rhs, est, start)
-par_ls <- select(parTable(fit_ls), lhs, op, rhs, est, start)
+par_ml <- select(parTable(fit_ml), lhs, op, rhs, est, start, se)
+par_ls <- select(parTable(fit_ls), lhs, op, rhs, est, start, se)
+
+measures_ml <- fitMeasures(fit_ml)
+measures_ls <- fitMeasures(fit_ls)
 
 write.csv(par_ml, "test/examples/data/par_dem_ml_mean.csv")
 write.csv(par_ls, "test/examples/data/par_dem_ls_mean.csv")
+
+write.csv(measures_ml, "test/examples/data/measures_dem_ml_mean.csv")
+write.csv(measures_ls, "test/examples/data/measures_dem_ls_mean.csv")
 
 # fiml
 p_miss <- 0.2
@@ -77,13 +90,16 @@ n_obs <- nrow(data)
 data_miss <- mutate(data, 
     across(
         everything(), 
-        ~ifelse(rbinom(n_obs, 1, p), NA, .x)
+        ~ifelse(rbinom(n_obs, 1, p_miss), NA, .x)
         )
     )
 
 fit_ml <- cfa(model, data_miss, missing = "fiml", likelihood = "wishart", do.fit = TRUE) # 0.44s
 
-par_ml <- select(parTable(fit_ml), lhs, op, rhs, est, start)
+par_ml <- select(parTable(fit_ml), lhs, op, rhs, est, start, se)
+
+measures_ml <- fitMeasures(fit_ml)
 
 write.csv(par_ml, "test/examples/data/par_dem_ml_fiml.csv")
 write.csv(data_miss, "test/examples/data/data_dem_fiml.csv")
+write.csv(measures_ml, "test/examples/data/measures_dem_fiml.csv")
