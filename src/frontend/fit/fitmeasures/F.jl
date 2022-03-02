@@ -26,5 +26,4 @@ function Fₘᵢₙ(minimum, obs_cov, n_man)
     return F
 end
 
-
 #! how for FIML?

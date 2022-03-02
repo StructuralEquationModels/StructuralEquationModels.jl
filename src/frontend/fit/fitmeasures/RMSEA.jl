@@ -1,10 +1,6 @@
-############################################################################
-### based on -2ll
-############################################################################
-
 # SemFit splices loss functions ---------------------------------------------------------------------
-AIC(sem_fit::SemFit{Mi, S, Mo, O} where {Mi, S, Mo <: AbstractSemSingle, O}) = 
-    AIC(
+RMSEA(sem_fit::SemFit{Mi, S, Mo, O} where {Mi, S, Mo <: AbstractSemSingle, O}) = 
+    RMSEA(
         sem_fit,
         sem_fit.model.observed,
         sem_fit.model.imply,
@@ -13,12 +9,14 @@ AIC(sem_fit::SemFit{Mi, S, Mo, O} where {Mi, S, Mo <: AbstractSemSingle, O}) =
         )
 
 # RAM + SemML
-AIC(sem_fit::SemFit, obs, imp::Union{RAM, RAMSymbolic}, diff, loss_ml::SemML) =
-    AIC(sem_fit.minimum, obs.n_man, obs.n_obs, npar(imp))
+RMSEA(sem_fit::SemFit, obs, imp::Union{RAM, RAMSymbolic}, diff, loss_ml::SemML) =
+    RMSEA(sem_fit.minimum, obs, imp)
 
-function AIC(minimum, n_man, n_obs, n_par)
-    AIC = minus2ll(minimum, n_obs, n_man) + 2n_par
-    return AIC
+function RMSEA(minimum, observed, imply)
+    df_ = df(observed, imply)
+    rmsea = (χ²(minimum, observed) - df_)/((observed.n_obs-1)*df_)
+    rmsea > 0 ? nothing : rmsea = 0
+    return sqrt(rmsea)
 end
 
 ############################################################################

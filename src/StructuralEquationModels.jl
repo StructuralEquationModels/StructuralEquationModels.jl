@@ -2,7 +2,8 @@ module StructuralEquationModels
 
 using LinearAlgebra, Optim,
     NLSolversBase, Statistics, SparseArrays, Symbolics,
-    NLopt, FiniteDiff, ForwardDiff, PrettyTables
+    NLopt, FiniteDiff, ForwardDiff, PrettyTables,
+    Distributions
 
 # type hierarchy
 include("types.jl")
@@ -41,6 +42,17 @@ include("diff/NLopt.jl")
 # optimizer
 include("optimizer/optim.jl")
 include("optimizer/NLopt.jl")
+# fit measures
+include("frontend/fit/fitmeasures/AIC.jl")
+include("frontend/fit/fitmeasures/BIC.jl")
+include("frontend/fit/fitmeasures/chi2.jl")
+include("frontend/fit/fitmeasures/df.jl")
+include("frontend/fit/fitmeasures/F.jl")
+include("frontend/fit/fitmeasures/fit_measures.jl")
+include("frontend/fit/fitmeasures/minus2ll.jl")
+include("frontend/fit/fitmeasures/npar.jl")
+include("frontend/fit/fitmeasures/p.jl")
+include("frontend/fit/fitmeasures/RMSEA.jl")
 
 
 export  AbstractSem, 
@@ -61,5 +73,7 @@ export  AbstractSem,
             ParameterTable, update_partable!, update_estimate!, update_start!,
             SpecEmpty,
         RAMMatrices, 
-            RAMMatrices!
+            RAMMatrices!,
+        fit_measures,
+            AIC, BIC, χ², df, Fₘᵢₙ, fit_measures, minus2ll, npar, p_value, RMSEA
 end
