@@ -403,9 +403,6 @@ isapprox(rmsea, rmsea_lav; rtol = 1e-4)
 
 fm = fit_measures(solution_ml)
 
-
-
-
 ############################################################################
 ### fiml
 ############################################################################
@@ -496,6 +493,10 @@ model_ml_sym = Sem(
     loss = (SemFIML,),
     start_val = start_val_ml
 )
+
+observed = SemObsMissing(data = dat, specification = ram_matrices)
+
+observed.data
 
 ############################################################################
 ### test gradients
