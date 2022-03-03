@@ -14,7 +14,7 @@ AIC(sem_fit::SemFit{Mi, S, Mo, O} where {Mi, S, Mo <: AbstractSemSingle, O}) =
 
 # RAM + SemML
 AIC(sem_fit::SemFit, obs, imp::Union{RAM, RAMSymbolic}, diff, loss_ml::SemML) =
-    AIC(sem_fit.minimum, obs.n_man, obs.n_obs, npar(imp))
+    minus2ll(sem_fit) + 2npar(sem_fit)
 
 function AIC(minimum, n_man, n_obs, n_par)
     AIC = minus2ll(minimum, n_obs, n_man) + 2n_par
