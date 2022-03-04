@@ -496,7 +496,13 @@ model_ml_sym = Sem(
 
 observed = SemObsMissing(data = dat, specification = ram_matrices)
 
-observed.data
+# observed.data
+
+start_model = EmMVNModel(model_ml.imply.Σ, model_ml.imply.μ)
+
+@benchmark iter, em_model = em_mvn(;observed = observed)
+
+solution_ml = sem_fit(model_ml)
 
 ############################################################################
 ### test gradients
