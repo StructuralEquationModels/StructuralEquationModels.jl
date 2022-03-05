@@ -1,9 +1,33 @@
 ###################### starting values FABIN 3
-function start_fabin3(;ram_matrices::RAMMatrices, observed, kwargs...)
+start_fabin3(;ram_matrices::RAMMatrices, observed, kwargs...) = start_fabin3(ram_matrices::RAMMatrices, observed; kwargs...)
 
-    A, S, F, parameters = 
-        ram_matrices.A, ram_matrices.S, ram_matrices.F, ram_matrices.parameters
-        
+function start_fabin3(ram_matrices::RAMMatrices, observed::SemObsCommon; kwargs...)
+    return start_fabin3(
+        ram_matrices.A, 
+        ram_matrices.S, 
+        ram_matrices.F, 
+        ram_matrices.M,
+        ram_matrices.parameters,
+        observed.obs_cov,
+        observed.obs_mean)
+end
+
+function start_fabin3(ram_matrices::RAMMatrices, observed::SemObsMissing; kwargs...)
+    if !observed.em_model.fitted
+        em_mvn(observed; kwargs...)
+    end 
+    return start_fabin3(
+        ram_matrices.A, 
+        ram_matrices.S, 
+        ram_matrices.F, 
+        ram_matrices.M,
+        ram_matrices.parameters, 
+        observed.em_model.Σ,
+        observed.em_model.μ)
+end
+
+function start_fabin3(A, S, F, M, parameters, Σ, μ)
+
     n_latent = size(F, 2) - size(F, 1)
     Fmat = Matrix(F)
     ind_observed = [any(isone.(Fmat[:, i])) for i in 1:size(F, 2)]
@@ -19,10 +43,9 @@ function start_fabin3(;ram_matrices::RAMMatrices, observed, kwargs...)
     in_S = zeros(Bool, n_par)
     in_A = zeros(Bool, n_par)
     in_Λ = zeros(Bool, n_par)
-    indices = Vector{CartesianIndex{2}}(undef, n_par)
+    indices = Vector{CartesianIndex}(undef, n_par)
 
     start_val = zeros(n_par)
-    Σ = observed.obs_cov
 
     for (i, par) ∈ enumerate(parameters)
         for j in CartesianIndices(S)
@@ -45,6 +68,23 @@ function start_fabin3(;ram_matrices::RAMMatrices, observed, kwargs...)
         end
     end
 
+    if !isnothing(M)
+    in_M = zeros(Bool, n_par)
+    for (i, par) ∈ enumerate(parameters)
+        for j in CartesianIndices(M)
+            if isequal(par, M[j])
+                in_M[i] = true
+                indices[i] = j
+            end
+        end
+    end
+
+    !isnothing(M) ? in_any = in_A .| in_S .| in_M : in_any = in_A .| in_S end
+
+    if !all(in_any)
+        @warn "Could not determine starting value for the $i-th parameter. Default to 0"
+    end
+
     # set undirected parameters in S
     for (par, in_A, in_S, in_Λ, index, i) ∈ zip(parameters, in_A, in_S, in_Λ, indices, 1:n_par)
         if in_S
@@ -56,8 +96,6 @@ function start_fabin3(;ram_matrices::RAMMatrices, observed, kwargs...)
                     start_val[i] = 0.05
                 end
             end
-        elseif !in_A
-            @warn "Could not determine starting value for the $i-th parameter. Default to 0"
         end
     end
 
@@ -135,6 +173,14 @@ function start_fabin3(;ram_matrices::RAMMatrices, observed, kwargs...)
             end
         end
     end
+
+    # set means
+    for (in_M, index, i) ∈ zip(in_M, indices, 1:n_par)
+        if in_M
+            start_val[i] = μ[index]
+        end
+    end
+
     return start_val
 end
 

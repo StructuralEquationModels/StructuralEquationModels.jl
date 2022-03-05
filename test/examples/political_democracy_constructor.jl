@@ -481,8 +481,7 @@ model_ml = Sem(
     specification = ram_matrices,
     data = dat,
     observed = SemObsMissing,
-    loss = (SemFIML,),
-    start_val = start_val_ml
+    loss = (SemFIML,)
 )
 
 model_ml_sym = Sem(
@@ -493,16 +492,6 @@ model_ml_sym = Sem(
     loss = (SemFIML,),
     start_val = start_val_ml
 )
-
-observed = SemObsMissing(data = dat, specification = ram_matrices)
-
-# observed.data
-
-start_model = EmMVNModel(model_ml.imply.Σ, model_ml.imply.μ)
-
-@benchmark iter, em_model = em_mvn(;observed = observed)
-
-solution_ml = sem_fit(model_ml)
 
 ############################################################################
 ### test gradients
