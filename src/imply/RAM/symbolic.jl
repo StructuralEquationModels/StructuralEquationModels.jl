@@ -28,7 +28,6 @@ end
 function RAMSymbolic(;
         specification,
         loss_types = nothing,
-        start_val = start_fabin3,
         vech = false,
         gradient = true,
         hessian = false,
@@ -48,7 +47,7 @@ function RAMSymbolic(;
     A, S, F, M, par = 
         ram_matrices.A, ram_matrices.S, ram_matrices.F, ram_matrices.M, ram_matrices.parameters
 
-    n_par = length(parameters)
+    n_par = length(par)
 
     A, S, F = sparse(A), sparse(S), sparse(F)
 
