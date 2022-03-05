@@ -2,9 +2,10 @@
 # struct
 #####################################################################################################
 
-mutable struct SemFit{Mi, S, Mo, O}
+mutable struct SemFit{Mi, So, St, Mo, O}
     minimum::Mi
-    solution::S
+    solution::So
+    start_val::St
     model::Mo
     optimization_result::O
 end

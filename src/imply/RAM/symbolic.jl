@@ -2,7 +2,7 @@
 ### Types
 ############################################################################
 
-struct RAMSymbolic{F1, F2, F3, A1, A2, A3, S1, S2, S3, V, F4, A4, F5, A5, D1} <: SemImplySymbolic
+struct RAMSymbolic{F1, F2, F3, A1, A2, A3, S1, S2, S3, V, V2, F4, A4, F5, A5, D1} <: SemImplySymbolic
     Σ_function::F1
     ∇Σ_function::F2
     ∇²Σ_function::F3
@@ -12,7 +12,8 @@ struct RAMSymbolic{F1, F2, F3, A1, A2, A3, S1, S2, S3, V, F4, A4, F5, A5, D1} <:
     Σ_symbolic::S1
     ∇Σ_symbolic::S2
     ∇²Σ_symbolic::S3
-    start_val::V
+    n_par::V
+    ram_matrices::V2
     μ_function::F4
     μ::A4
     ∇μ_function::F5
@@ -47,9 +48,7 @@ function RAMSymbolic(;
     A, S, F, M, par = 
         ram_matrices.A, ram_matrices.S, ram_matrices.F, ram_matrices.M, ram_matrices.parameters
 
-    if !isa(start_val, Vector)
-        start_val = start_val(;ram_matrices = ram_matrices, specification = specification, kwargs...)
-    end
+    n_par = length(parameters)
 
     A, S, F = sparse(A), sparse(S), sparse(F)
 
@@ -126,7 +125,8 @@ function RAMSymbolic(;
         Σ_symbolic,
         ∇Σ_symbolic,
         ∇²Σ_symbolic,
-        copy(start_val),
+        n_par,
+        ram_matrices,
         μ_function,
         μ,
         ∇μ_function,

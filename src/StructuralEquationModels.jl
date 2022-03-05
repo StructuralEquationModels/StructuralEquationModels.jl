@@ -21,10 +21,6 @@ include("observed/missing.jl")
 include("observed/EM.jl")
 # constructor
 include("frontend/specification/Sem.jl")
-# helper functions
-include("additional_functions/helper.jl")
-include("additional_functions/parameters.jl")
-include("additional_functions/start_val.jl")
 # imply
 include("imply/RAM/symbolic.jl")
 include("imply/RAM/generic.jl")
@@ -43,6 +39,13 @@ include("diff/NLopt.jl")
 # optimizer
 include("optimizer/optim.jl")
 include("optimizer/NLopt.jl")
+# helper functions
+include("additional_functions/helper.jl")
+include("additional_functions/parameters.jl")
+include("additional_functions/start_val/start_val.jl")
+include("additional_functions/start_val/start_fabin3.jl")
+include("additional_functions/start_val/start_partable.jl")
+include("additional_functions/start_val/start_simple.jl")
 # fit measures
 include("frontend/fit/fitmeasures/AIC.jl")
 include("frontend/fit/fitmeasures/BIC.jl")
@@ -60,7 +63,8 @@ export  AbstractSem,
             AbstractSemSingle, AbstractSemCollection, Sem, SemFiniteDiff, SemForwardDiff, SemEnsemble,
         SemImply, 
             RAMSymbolic, RAM, SNLLS, ImplyEmpty,
-        start_fabin3, start_simple, start_parameter_table,
+        start_val,
+            start_fabin3, start_simple, start_parameter_table,
         SemLoss, 
             SemLossFunction, SemML, SemFIML, em_mvn, SemLasso, SemRidge,
             SemConstant, SemWLS, SemSNLLS,
