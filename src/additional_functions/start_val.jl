@@ -79,7 +79,11 @@ function start_fabin3(A, S, F, M, parameters, Σ, μ)
         end
     end
 
-    !isnothing(M) ? in_any = in_A .| in_S .| in_M : in_any = in_A .| in_S end
+    if !isnothing(M) 
+        in_any = in_A .| in_S .| in_M
+    else 
+        in_any = in_A .| in_S 
+    end
 
     if !all(in_any)
         @warn "Could not determine starting value for the $i-th parameter. Default to 0"
