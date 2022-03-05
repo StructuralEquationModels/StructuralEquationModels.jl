@@ -184,9 +184,11 @@ function start_fabin3(ram_matrices::RAMMatrices, Σ, μ)
     end
 
     # set means
-    for (in_M, index, i) ∈ zip(in_M, indices, 1:n_par)
-        if in_M
-            start_val[i] = μ[index]
+    if !isnothing(M) 
+        for (in_M, index, i) ∈ zip(in_M, indices, 1:n_par)
+            if in_M
+                start_val[i] = μ[index]
+            end
         end
     end
 

@@ -66,7 +66,7 @@ model_ls_sym = Sem(
 ############################################################################
 
 test_start_val = [fill(0.5, 8); fill(0.05, 3); fill(0.1, 3); fill(1.0, 11); fill(0.05, 6)]
-start_val_fabin3 = copy(model_ml.imply.start_val)
+start_val_fabin3 = start_val(model_ml)
 
 update_start!(partable, model_ml)
 
