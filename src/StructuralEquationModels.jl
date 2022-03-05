@@ -18,6 +18,7 @@ include("frontend/pretty_printing.jl")
 # observed
 include("observed/common.jl")
 include("observed/missing.jl")
+include("observed/EM.jl")
 # constructor
 include("frontend/specification/Sem.jl")
 # helper functions
@@ -75,5 +76,6 @@ export  AbstractSem,
         RAMMatrices, 
             RAMMatrices!,
         fit_measures,
-            AIC, BIC, χ², df, Fₘᵢₙ, fit_measures, minus2ll, npar, p_value, RMSEA
+            AIC, BIC, χ², df, Fₘᵢₙ, fit_measures, minus2ll, npar, p_value, RMSEA,
+            EmMVNModel
 end
