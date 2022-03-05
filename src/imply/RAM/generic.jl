@@ -2,7 +2,7 @@
 ### Types
 ############################################################################
 
-mutable struct RAM{A1, A2, A3, A4, A5, A6, V, I1, I2, I3, I4, M1, M2, M3, S1, S2, S3, D} <: SemImply
+mutable struct RAM{A1, A2, A3, A4, A5, A6, V, V2, I1, I2, I3, I4, M1, M2, M3, S1, S2, S3, D} <: SemImply
     Σ::A1
     A::A2
     S::A3
@@ -10,7 +10,8 @@ mutable struct RAM{A1, A2, A3, A4, A5, A6, V, I1, I2, I3, I4, M1, M2, M3, S1, S2
     μ::A5
     M::A6
 
-    start_val::V
+    n_par::V
+    ram_matrices::V2
 
     A_indices::I1
     S_indices::I2
@@ -56,9 +57,7 @@ function RAM(;
     A, S, F, M, parameters = 
         ram_matrices.A, ram_matrices.S, ram_matrices.F, ram_matrices.M, ram_matrices.parameters
 
-    if !isa(start_val, Vector)
-        start_val = start_val(;ram_matrices = ram_matrices, specification = specification, kwargs...)
-    end
+    n_par = length(parameters)
     
     n_var, n_nod = size(F)
         
@@ -146,7 +145,8 @@ function RAM(;
         μ,
         M_pre,
 
-        start_val,
+        n_par,
+        ram_matrices,
 
         A_indices,
         S_indices,

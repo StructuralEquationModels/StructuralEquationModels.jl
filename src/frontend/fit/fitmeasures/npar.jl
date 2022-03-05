@@ -16,7 +16,7 @@ npar(sem_fit::SemFit{Mi, S, Mo, O} where {Mi, S, Mo <: AbstractSemSingle, O}) =
 npar(sem_fit::SemFit, obs, imp::Union{RAM, RAMSymbolic}, diff, loss_ml::SemML) =
     npar(imp)
 
-npar(imp::Union{RAM, RAMSymbolic}) = length(imp.start_val)
+npar(imp::Union{RAM, RAMSymbolic}) = imp.n_par
 
 ############################################################################
 ### based on χ² - 2df
