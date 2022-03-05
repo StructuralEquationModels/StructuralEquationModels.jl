@@ -35,7 +35,6 @@ end
 
 function RAM(;
         specification,
-        start_val = start_fabin3,
         vech = false,
         gradient = true,
         kwargs...)
@@ -80,7 +79,7 @@ function RAM(;
     
     # fill copy of a matrix with random parameters
     A_rand = copy(A_pre)
-    randpar = rand(length(start_val))
+    randpar = rand(n_par)
 
     fill_matrix(
         A_rand,
