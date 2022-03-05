@@ -13,10 +13,10 @@
 # outer function -----------------------------------------------------------------
 
 function em_mvn(
-    ;observed::SemObsMissing,
+    observed::SemObsMissing;
     start_em = start_em_observed,
-    max_iter = 100,
-    rtol = 1e-4,
+    max_iter_em = 100,
+    rtol_em = 1e-4,
     kwargs...)
     
     n_obs, n_man = observed.n_obs, Int(observed.n_man)
@@ -39,7 +39,7 @@ function em_mvn(
 
     # initialize
     em_model = start_em(observed; kwargs...)
-    em_model_prev = EmMVNModel(zeros(n_man, n_man), zeros(n_man))
+    em_model_prev = EmMVNModel(zeros(n_man, n_man), zeros(n_man), false)
     iter = 1
     done = false
     𝔼x = zeros(n_man)
@@ -50,13 +50,13 @@ function em_mvn(
         em_mvn_Estep!(𝔼x, 𝔼xxᵀ, em_model, observed, 𝔼x_pre, 𝔼xxᵀ_pre)
         em_mvn_Mstep!(em_model, n_obs, 𝔼x, 𝔼xxᵀ)
 
-        if iter > max_iter
+        if iter > max_iter_em
             done = true
             @warn "EM Algorithm for MVN missing data did not converge. Likelihood for FIML is not interpretable. 
             Maybe try passing different starting values via 'start_em = ...' "
         elseif iter > 1
             # done = isapprox(ll, ll_prev; rtol = rtol)
-            done = isapprox(em_model_prev.μ, em_model.μ; rtol = rtol) & isapprox(em_model_prev.Σ, em_model.Σ; rtol = rtol)
+            done = isapprox(em_model_prev.μ, em_model.μ; rtol = rtol_em) & isapprox(em_model_prev.Σ, em_model.Σ; rtol = rtol_em)
         end
 
         # print("$iter \n")
@@ -65,49 +65,13 @@ function em_mvn(
 
     end
 
-    return iter, em_model
+    # update EM Mode in observed
+    observed.em_model.Σ .= em_model.Σ
+    observed.em_model.μ .= em_model.μ
+    observed.em_model.fitted = true
 
-end
-
-# Type to store result -----------------------------------------------------------------
-
-mutable struct EmMVNModel{A, b}
-    Σ::A
-    μ::b
-end
-
-# generate starting values --------------------------------------------------------------
-
-# use μ and Σ of full cases
-function start_em_observed(observed::SemObsMissing, kwargs...)
-
-    if (length(observed.patterns[1]) == observed.n_man) & (observed.pattern_n_obs[1] > 1)
-        μ = copy(observed.obs_mean[1])
-        Σ = copy(Symmetric(observed.obs_cov[1]))
-        if !isposdef(Σ)
-            Σ = Matrix(Diagonal(Σ))
-        end
-        return EmMVNModel(Σ, μ)
-    else
-        @warn "Could not use Cov and Mean of observed samples as starting values for EM.
-        Fall back to simple starting values"
-        return start_em_simple(observed, kwargs...)
-    end
-
-end
-
-# use μ = O and Σ = I
-function start_em_simple(observed::SemObsMissing, kwargs...)
-    n_man = Int(observed.n_man)
-    μ = zeros(n_man)
-    Σ = rand(n_man, n_man); Σ = Σ*Σ'
-    # Σ = Matrix(1.0I, n_man, n_man)
-    return EmMVNModel(Σ, μ)
-end
-
-# set to passed values
-function start_em_set(observed::SemObsMissing; model_em, kwargs...)
-    return em_model
+    return nothing
+    
 end
 
 # E and M step ------------------------------------------------------------------------------
@@ -177,4 +141,38 @@ function em_mvn_Mstep!(em_model, n_obs, 𝔼x, 𝔼xxᵀ)
     #end
 
     return nothing
+end
+
+# generate starting values --------------------------------------------------------------
+
+# use μ and Σ of full cases
+function start_em_observed(observed::SemObsMissing; kwargs...)
+
+    if (length(observed.patterns[1]) == observed.n_man) & (observed.pattern_n_obs[1] > 1)
+        μ = copy(observed.obs_mean[1])
+        Σ = copy(Symmetric(observed.obs_cov[1]))
+        if !isposdef(Σ)
+            Σ = Matrix(Diagonal(Σ))
+        end
+        return EmMVNModel(Σ, μ, false)
+    else
+        @warn "Could not use Cov and Mean of observed samples as starting values for EM.
+        Fall back to simple starting values"
+        return start_em_simple(observed, kwargs...)
+    end
+
+end
+
+# use μ = O and Σ = I
+function start_em_simple(observed::SemObsMissing; kwargs...)
+    n_man = Int(observed.n_man)
+    μ = zeros(n_man)
+    Σ = rand(n_man, n_man); Σ = Σ*Σ'
+    # Σ = Matrix(1.0I, n_man, n_man)
+    return EmMVNModel(Σ, μ, false)
+end
+
+# set to passed values
+function start_em_set(observed::SemObsMissing; model_em, kwargs...)
+    return em_model
 end
