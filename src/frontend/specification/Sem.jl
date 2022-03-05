@@ -27,7 +27,7 @@ function Sem(;
     end
 
     kwargs[:imply] = imply
-    kwargs[:n_par] = length(imply.start_val)
+    kwargs[:n_par] = imply.n_par
 
     loss_out = []
 
@@ -80,7 +80,7 @@ function SemFiniteDiff(;
     end
 
     kwargs[:imply] = imply
-    kwargs[:n_par] = length(imply.start_val)
+    kwargs[:n_par] = imply.n_par
 
     loss_out = []
 
@@ -133,7 +133,7 @@ function SemForwardDiff(;
     end
 
     kwargs[:imply] = imply
-    kwargs[:n_par] = length(imply.start_val)
+    kwargs[:n_par] = imply.n_par
 
     loss_out = []
 
