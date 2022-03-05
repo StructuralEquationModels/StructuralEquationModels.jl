@@ -9,12 +9,10 @@ df(sem_fit::SemFit{Mi, S, Mo, O} where {Mi, S, Mo <: AbstractSemSingle, O}) =
         )
 
 # RAM + SemML
-df(sem_fit::SemFit, obs, imp::RAM, diff, loss_ml::SemML) = df(obs, imp)
-df(sem_fit::SemFit, obs, imp::RAMSymbolic, diff, loss_ml::SemML) = df(obs, imp)
+df(sem_fit::SemFit, obs, imp::Union{RAM, RAMSymbolic}, diff, loss_ml::SemML) = df(obs, npar(imp))
 
 # generic
-function df(observed::SemObsCommon, imply::RAM)
-    n_par = length(imply.start_val)
+function df(observed::SemObsCommon, n_par)
     n_dp = 0.5(observed.n_man^2 + observed.n_man)
     if !isnothing(imply.μ)
         n_dp += observed.n_man

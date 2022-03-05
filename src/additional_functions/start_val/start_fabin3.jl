@@ -1,32 +1,36 @@
-###################### starting values FABIN 3
-start_fabin3(;ram_matrices::RAMMatrices, observed, kwargs...) = start_fabin3(ram_matrices::RAMMatrices, observed; kwargs...)
+# splice model and loss functions
+start_fabin3(model::Union{Sem, SemForwardDiff, SemFiniteDiff}; kwargs...) = 
+    start_fabin3(
+        model.observed, 
+        model.imply,
+        model.diff, 
+        model.loss.functions...,
+        kwargs...)
 
-function start_fabin3(ram_matrices::RAMMatrices, observed::SemObsCommon; kwargs...)
-    return start_fabin3(
-        ram_matrices.A, 
-        ram_matrices.S, 
-        ram_matrices.F, 
-        ram_matrices.M,
-        ram_matrices.parameters,
-        observed.obs_cov,
-        observed.obs_mean)
-end
+# SemObsCommon
+start_fabin3(observed::SemObsCommon, imply::Union{RAM, RAMSymbolic}, diff, args...; kwargs...) = 
+    start_fabin3(
+        imply.ram_matrices,
+        observed.em_model.obs_cov,
+        observed.em_model.obs_mean)
 
-function start_fabin3(ram_matrices::RAMMatrices, observed::SemObsMissing; kwargs...)
+# SemObsMissing
+function start_fabin3(observed::SemObsMissing, imply::Union{RAM, RAMSymbolic}, diff, args...; kwargs...)
+
     if !observed.em_model.fitted
         em_mvn(observed; kwargs...)
-    end 
+    end
+
     return start_fabin3(
-        ram_matrices.A, 
-        ram_matrices.S, 
-        ram_matrices.F, 
-        ram_matrices.M,
-        ram_matrices.parameters, 
+        imply.ram_matrices,
         observed.em_model.Σ,
         observed.em_model.μ)
 end
 
-function start_fabin3(A, S, F, M, parameters, Σ, μ)
+
+function start_fabin3(ram_matrices::RAMMatrices, Σ, μ)
+
+    A, S, F, M, parameters = ram_matrices.A, ram_matrices.S, ram_matrices.F, ram_matrices.M, ram_matrices.parameters
 
     n_latent = size(F, 2) - size(F, 1)
     Fmat = Matrix(F)
@@ -69,12 +73,13 @@ function start_fabin3(A, S, F, M, parameters, Σ, μ)
     end
 
     if !isnothing(M)
-    in_M = zeros(Bool, n_par)
-    for (i, par) ∈ enumerate(parameters)
-        for j in CartesianIndices(M)
-            if isequal(par, M[j])
-                in_M[i] = true
-                indices[i] = j
+        in_M = zeros(Bool, n_par)
+        for (i, par) ∈ enumerate(parameters)
+            for j in CartesianIndices(M)
+                if isequal(par, M[j])
+                    in_M[i] = true
+                    indices[i] = j
+                end
             end
         end
     end
@@ -186,87 +191,4 @@ function start_fabin3(A, S, F, M, parameters, Σ, μ)
     end
 
     return start_val
-end
-
-function start_simple(;
-    ram_matrices::RAMMatrices,
-    start_loadings = 0.5,
-    start_regressions = 0.0,
-    start_variances_observed = 1,
-    start_variances_latent = 0.05,
-    start_covariances_observed = 0.0,
-    start_covariances_latent = 0.0,
-    start_means = 0.0,
-    kwargs...)
-
-    A, S, F, M, parameters = 
-        ram_matrices.A, ram_matrices.S, ram_matrices.F, ram_matrices.M, ram_matrices.parameters
-
-    parameters = [parameters...]
-    n_par = size(parameters, 1)
-    start_val = zeros(n_par)
-    n_var = size(F, 1)
-
-    Fmat = Matrix(F)
-    ind_observed = [any(isone.(Fmat[:, i])) for i in 1:size(F, 2)]
-    Λ_ind = CartesianIndices(A)[ind_observed, .!ind_observed]
-    ind_observed = findall(ind_observed)
-
-    for (i, par) ∈ enumerate(parameters)
-        for index in CartesianIndices(S)
-            if isequal(par, S[index])
-                if index[1] == index[2]
-                    if index[1] ∈ ind_observed
-                        start_val[i] = start_variances_observed
-                    else
-                        start_val[i] = start_variances_latent
-                    end
-                else
-                    if (index[1] <= n_var) & (index[1] <= n_var)
-                        start_val[i] = start_covariances_observed
-                    elseif (index[1] >= n_var) & (index[1] >= n_var)
-                        start_val[i] = start_covariances_latent
-                    end
-                end
-            end
-        end
-        for index in CartesianIndices(A)
-            if isequal(par, A[index]) 
-                if index ∈ Λ_ind
-                    start_val[i] = start_loadings
-                else
-                    start_val[i] = start_regressions
-                end
-            end 
-        end
-        if !isnothing(M)
-            for index in CartesianIndices(M)
-                if isequal(par, M[index]) 
-                    start_val[i] = start_means
-                end 
-            end
-        end
-    end
-
-    return start_val
-end
-
-function start_parameter_table(;ram_matrices::RAMMatrices, specification::ParameterTable, kwargs...)
-    
-    start_val = zeros(0)
-    
-    for identifier_ram in ram_matrices.identifier
-        found = false
-        for (i, identifier_table) in enumerate(specification.identifier)
-            if identifier_ram == identifier_table
-                push!(start_val, specification.start[i])
-                found = true
-                break
-            end
-        end
-        if !found @error "At least one parameter could not be found in the parameter table." end
-    end
-
-    return start_val
-
 end
