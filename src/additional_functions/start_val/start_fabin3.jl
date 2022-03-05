@@ -11,8 +11,8 @@ start_fabin3(model::Union{Sem, SemForwardDiff, SemFiniteDiff}; kwargs...) =
 start_fabin3(observed::SemObsCommon, imply::Union{RAM, RAMSymbolic}, diff, args...; kwargs...) = 
     start_fabin3(
         imply.ram_matrices,
-        observed.em_model.obs_cov,
-        observed.em_model.obs_mean)
+        observed.obs_cov,
+        observed.obs_mean)
 
 # SemObsMissing
 function start_fabin3(observed::SemObsMissing, imply::Union{RAM, RAMSymbolic}, diff, args...; kwargs...)
