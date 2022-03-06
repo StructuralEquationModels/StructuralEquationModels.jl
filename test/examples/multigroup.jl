@@ -72,15 +72,13 @@ start_val_ml = Vector{Float64}(par_ml.start[par_order])
 model_g1 = Sem(
     specification = ram_matrices_g1,
     data = dat_g1,
-    imply = RAMSymbolic,
-    start_val = start_val_ml
+    imply = RAMSymbolic
 )
 
 model_g2 = Sem(
     specification = ram_matrices_g2,
     data = dat_g2,
-    imply = RAMSymbolic,
-    start_val = start_val_ml
+    imply = RAMSymbolic
 )
 
 model_ml_multigroup = SemEnsemble((model_g1, model_g2), SemDiffOptim(), start_val_ml)
@@ -97,7 +95,7 @@ end
 
 # fit
 @testset "ml_solution_multigroup" begin
-    solution_ml = sem_fit(model_ml_multigroup)
+    solution_ml = sem_fit(model_ml_multigroup; start_val = start_val_ml)
     @test SEM.compare_estimates(par_ml.est[par_order], solution_ml.solution, 0.01)
 end
 
@@ -144,16 +142,14 @@ start_val_ml = Vector{Float64}(par_ml.start[par_order])
 model_g1 = Sem(
     specification = ram_matrices_g1,
     data = dat_g1,
-    imply = RAMSymbolic,
-    start_val = start_val_ml
+    imply = RAMSymbolic
 )
 
 model_g2 = SemFiniteDiff(
     specification = ram_matrices_g2,
     data = dat_g2,
     imply = RAMSymbolic,
-    loss = (UserSemML,),
-    start_val = start_val_ml
+    loss = (UserSemML,)
 )
 
 model_ml_multigroup = SemEnsemble((model_g1, model_g2), SemDiffOptim(), start_val_ml)
@@ -164,7 +160,7 @@ end
 
 # fit
 @testset "solution_user_defined_loss" begin
-    solution_ml = sem_fit(model_ml_multigroup)
+    solution_ml = sem_fit(model_ml_multigroup; start_val = start_val_ml)
     @test SEM.compare_estimates(par_ml.est[par_order], solution_ml.solution, 0.01)
 end
 
@@ -176,16 +172,14 @@ model_ls_g1 = Sem(
     specification = ram_matrices_g1,
     data = dat_g1,
     imply = RAMSymbolic,
-    loss = (SemWLS,),
-    start_val = start_val_ml
+    loss = (SemWLS,)
 )
 
 model_ls_g2 = Sem(
     specification = ram_matrices_g2,
     data = dat_g2,
     imply = RAMSymbolic,
-    loss = (SemWLS,),
-    start_val = start_val_ml
+    loss = (SemWLS,)
 )
 
 start_val_ls = Vector{Float64}(par_ls.start[par_order])
@@ -197,6 +191,6 @@ model_ls_multigroup = SemEnsemble((model_ls_g1, model_ls_g2), SemDiffOptim(), st
 end
 
 @testset "ls_solution_multigroup" begin
-    solution_ls = sem_fit(model_ls_multigroup)
+    solution_ls = sem_fit(model_ls_multigroup; start_val = start_val_ls)
     @test SEM.compare_estimates(par_ls.est[par_order], solution_ls.solution, 0.01)
 end
