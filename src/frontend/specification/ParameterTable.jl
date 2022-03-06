@@ -223,17 +223,20 @@ function update_start!(partable::ParameterTable, sem_fit::SemFit)
     for (i, identifier) in enumerate(partable.identifier)
         if identifier == :const 
         else
-            partable.start[i] = sem_fit.model.imply.start_val[sem_fit.model.imply.identifier[identifier]] 
+            partable.start[i] = sem_fit.start_val[sem_fit.model.imply.identifier[identifier]] 
         end
     end
     return partable
 end
 
-function update_start!(partable::ParameterTable, model::Sem{O, I, L, D}) where{O, I, L, D}
+function update_start!(partable::ParameterTable, model::Sem{O, I, L, D}, start_val) where{O, I, L, D}
+    if !(start_val isa Vector)
+        start_val = start_val(model)
+    end
     for (i, identifier) in enumerate(partable.identifier)
         if identifier == :const 
         else
-            partable.start[i] = model.imply.start_val[model.imply.identifier[identifier]]
+            partable.start[i] = start_val[model.imply.identifier[identifier]]
         end
     end
     return partable
