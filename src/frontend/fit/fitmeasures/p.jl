@@ -1,5 +1,5 @@
 # SemFit splices loss functions ---------------------------------------------------------------------
-p_value(sem_fit::SemFit{Mi, S, Mo, O} where {Mi, S, Mo <: AbstractSemSingle, O}) = 
+p_value(sem_fit::SemFit{Mi, So, St, Mo, O} where {Mi, So, St, Mo <: AbstractSemSingle, O}) = 
     p_value(
         sem_fit,
         sem_fit.model.observed,
