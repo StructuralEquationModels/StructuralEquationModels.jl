@@ -14,7 +14,7 @@ BIC(sem_fit::SemFit{Mi, So, St, Mo, O} where {Mi, So, St, Mo <: AbstractSemSingl
 
 # RAM + SemML
 BIC(sem_fit::SemFit, obs, imp::Union{RAM, RAMSymbolic}, diff, loss_ml::SemML) =
-    minus2ll(sem_fit) + log(ob.n_obs)*npar(imp)
+    minus2ll(sem_fit) + log(obs.n_obs)*npar(imp)
 
 function BIC(minimum, n_man, n_obs, n_par)
     BIC = minus2ll(minimum, n_obs, n_man) + log(n_obs)*n_par
