@@ -3,7 +3,7 @@
 #####################################################################################################
 
 # SemFit splices loss functions ---------------------------------------------------------------------
-χ²(sem_fit::SemFit{Mi, S, Mo, O} where {Mi, S, Mo <: AbstractSemSingle, O}) = 
+χ²(sem_fit::SemFit{Mi, So, St, Mo, O} where {Mi, So, St, Mo <: AbstractSemSingle, O}) = 
     χ²(
         sem_fit,
         sem_fit.model.observed,
