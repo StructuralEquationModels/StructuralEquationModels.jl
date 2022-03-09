@@ -364,6 +364,7 @@ all(test_fitmeasures(fit_measures(solution_ml), measures_ml; rtol = 1e-4))
 
 dat = DataFrame(CSV.read("examples/data/data_dem_fiml.csv", DataFrame; missingstring = "NA"))
 par_ml = DataFrame(CSV.read("examples/data/par_dem_ml_fiml.csv", DataFrame))
+measures_ml = DataFrame(CSV.read("examples/data/measures_dem_fiml.csv", DataFrame))
 
 ############################################################################
 ### define models
@@ -469,3 +470,41 @@ end
     solution_ml_symbolic = sem_fit(model_ml_sym)
     @test SEM.compare_estimates(par_ml.est[par_order], solution_ml_symbolic.solution, 0.01)
 end
+
+############################################################################
+### test fit measures
+############################################################################
+
+fit = sem_fit(model_ml)
+
+ts = copy(fit.solution)
+
+measures = Dict(measures_ml.Column1 .=> measures_ml.x)
+
+measures["logl"]
+
+measures["baseline.chisq"]
+
+measures["chisq"]
+
+measures["fmin"]
+
+- minus2ll(fit)/2
+
+measures["baseline.chisq"] / (- minus2ll(model_ml.observed)/2)
+
+chi2 = χ²(fit)
+
+p_value(fit)
+
+npar = length(fit.solution)
+ndp = 0.5(11^2 + 11) + 11
+df = ndp - npar
+
+1 - cdf(Chisq(df), chi2)
+
+measures["pvalue"]
+
+minus2ll(model_ml.observed)
+
+chisq = 67.3282314777827

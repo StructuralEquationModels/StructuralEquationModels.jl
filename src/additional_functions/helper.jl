@@ -176,9 +176,9 @@ function commutation_matrix(n; tosparse = false)
 end
 
 function compare_estimates(solution_true, solution_sus, tol)
-    margin = tol*abs.(solution_true)
-    is_close = all(abs.(solution_sus - solution_true) .< margin)
-    return is_close
+    # margin = tol*abs.(solution_true)
+    # is_close = all(abs.(solution_sus - solution_true) .< margin)
+    return isapprox(solution_true, solution_sus; rtol = tol)
 end
 
 function compare_estimates(partable_lav, partable::ParameterTable, tol)
