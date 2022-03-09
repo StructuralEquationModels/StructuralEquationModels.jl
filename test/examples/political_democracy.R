@@ -94,7 +94,7 @@ data_miss <- mutate(data,
         )
     )
 
-fit_ml <- cfa(model, data_miss, missing = "fiml", likelihood = "wishart", do.fit = TRUE) # 0.44s
+fit_ml <- cfa(model, data_miss, missing = "fiml", do.fit = TRUE) # 0.44s
 
 par_ml <- select(parTable(fit_ml), lhs, op, rhs, est, start, se)
 

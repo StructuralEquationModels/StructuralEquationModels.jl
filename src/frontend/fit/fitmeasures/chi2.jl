@@ -20,6 +20,15 @@
 # generic SemObsCommon
 χ²(minimum, observed::SemObsCommon) = (observed.n_obs-1)*Fₘᵢₙ(minimum, observed.obs_cov, observed.n_man)
 
+
+# FIML
+function χ²(sem_fit::SemFit, observed::SemObsMissing, imp::RAM, diff, loss_ml::SemFIML)
+    ll_H0 = minus2ll(sem_fit)
+    ll_H1 = minus2ll(observed)
+    chi2 = ll_H0 - ll_H1
+    return chi2
+end
+
 #####################################################################################################
 # Collections
 #####################################################################################################
