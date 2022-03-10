@@ -19,6 +19,5 @@ fit_measures(sem_fit) =
         RMSEA,
         χ²,
         p_value,
-        Fₘᵢₙ,
         minus2ll,
         )
