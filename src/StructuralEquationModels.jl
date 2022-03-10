@@ -80,6 +80,6 @@ export  AbstractSem,
         RAMMatrices, 
             RAMMatrices!,
         fit_measures,
-            AIC, BIC, χ², df, Fₘᵢₙ, fit_measures, minus2ll, npar, p_value, RMSEA,
+            AIC, BIC, χ², df, fit_measures, minus2ll, npar, nobs, p_value, RMSEA,
             EmMVNModel
 end
