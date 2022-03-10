@@ -13,10 +13,7 @@ npar(sem_fit::SemFit{Mi, So, St, Mo, O} where {Mi, So, St, Mo <: AbstractSemSing
         )
 
 # RAM + SemML
-npar(sem_fit::SemFit, obs, imp::Union{RAM, RAMSymbolic}, diff, loss_ml::SemML) =
-    npar(imp)
-
-npar(imp::Union{RAM, RAMSymbolic}) = imp.n_par
+npar(sem_fit::SemFit, obs, imply::Union{RAM, RAMSymbolic}, diff, loss) = imply.n_par
 
 ############################################################################
 ### based on χ² - 2df
