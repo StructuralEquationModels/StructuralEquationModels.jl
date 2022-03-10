@@ -25,14 +25,12 @@ include("frontend/specification/Sem.jl")
 include("imply/RAM/symbolic.jl")
 include("imply/RAM/generic.jl")
 include("imply/empty.jl")
-include("imply/SNLLS/SNLLS.jl")
 # loss
 include("loss/ML/ML.jl")
 include("loss/ML/FIML.jl")
 include("loss/regularization/ridge.jl")
 include("loss/WLS/WLS.jl")
 include("loss/constant/constant.jl")
-include("loss/SNLLS/SNLLS.jl")
 # diff
 include("diff/optim.jl")
 include("diff/NLopt.jl")
@@ -62,12 +60,12 @@ include("frontend/fit/fitmeasures/RMSEA.jl")
 export  AbstractSem, 
             AbstractSemSingle, AbstractSemCollection, Sem, SemFiniteDiff, SemForwardDiff, SemEnsemble,
         SemImply, 
-            RAMSymbolic, RAM, SNLLS, ImplyEmpty,
+            RAMSymbolic, RAM, ImplyEmpty,
         start_val,
             start_fabin3, start_simple, start_parameter_table,
         SemLoss, 
             SemLossFunction, SemML, SemFIML, em_mvn, SemLasso, SemRidge,
-            SemConstant, SemWLS, SemSNLLS,
+            SemConstant, SemWLS,
         SemDiff, 
             SemDiffOptim, SemDiffNLopt,
         SemObs, 
