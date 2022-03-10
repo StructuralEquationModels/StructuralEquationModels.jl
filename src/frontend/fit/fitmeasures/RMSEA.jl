@@ -10,8 +10,8 @@ RMSEA(sem_fit::SemFit{Mi, So, St, Mo, O} where {Mi, So, St, Mo <: AbstractSemSin
 
 # RAM + SemML
 function RMSEA(sem_fit::SemFit, obs, imp::Union{RAM, RAMSymbolic}, diff, loss_ml::Union{SemML, SemFIML})
-    df = df(sem_fit)
-    rmsea = (χ²(sem_fit) - df) / ((nobs(sem_fit))*df)
+    df_ = df(sem_fit)
+    rmsea = (χ²(sem_fit) - df_) / ((nobs(sem_fit))*df_)
     rmsea > 0 ? nothing : rmsea = 0
     return sqrt(rmsea)
 end
