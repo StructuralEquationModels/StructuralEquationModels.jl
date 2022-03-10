@@ -54,6 +54,7 @@ include("frontend/fit/fitmeasures/df.jl")
 include("frontend/fit/fitmeasures/fit_measures.jl")
 include("frontend/fit/fitmeasures/minus2ll.jl")
 include("frontend/fit/fitmeasures/npar.jl")
+include("frontend/fit/fitmeasures/nobs.jl")
 include("frontend/fit/fitmeasures/p.jl")
 include("frontend/fit/fitmeasures/RMSEA.jl")
 

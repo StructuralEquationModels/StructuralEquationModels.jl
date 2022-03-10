@@ -1714,3 +1714,33 @@ new_partable = ParameterTable(ram_matrices, my_partable.sorted_vars)
 
 using StructuralEquationModels
 
+############# Proximal Algs
+
+using StructuralEquationModels, ProximalAlgorithms, ProximalCore, ProximalOperators, StructuredOptimization
+
+import ProximalOperators.prox!
+
+ProximalCore.prox!(y, f, x, gamma) = ProximalOperators.prox!(y, f, x, gamma)
+
+ProximalCore.gradient!(grad, model::AbstractSem, parameters) = objective_gradient!(grad, model::AbstractSem, parameters)
+
+solution_ml = sem_fit(model_ml)
+
+solution_ridge = sem_fit(model_ridge)
+
+start = start_val(model_ml)
+
+# α_ridge = .001
+# which_ridge = 16:20
+
+λ = zeros(31); λ[16:20] .= 0.02
+
+panoc = ProximalAlgorithms.PANOC()
+
+solution, iterations = panoc(x0=start, f=model_ml, g=SqrNormL2(λ))
+
+solution, iterations = panoc(x0=start, f=model_ml, g=NormL0(0.002))
+
+using BenchmarkTools
+
+sem_fit(model_ridge)
