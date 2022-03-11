@@ -45,12 +45,12 @@ fitmeasure_names = Dict(
     :RMSEA => "rmsea",
 )
 
-function test_fitmeasures(measures, measures_lav; rtol = 1e-4)
+function test_fitmeasures(measures, measures_lav; atol = 1e-4)
     correct = []
     for key in keys(fitmeasure_names)
         measure = measures[key]
         measure_lav = measures_lav.x[measures_lav.Column1 .==  fitmeasure_names[key]][1]
-        push!(correct, isapprox(measure, measure_lav; rtol = rtol))
+        push!(correct, isapprox(measure, measure_lav; atol = atol))
     end
     return correct
 end
