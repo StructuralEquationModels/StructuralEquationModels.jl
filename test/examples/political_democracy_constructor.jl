@@ -172,7 +172,7 @@ end
 
 @testset "fitmeasures_ml" begin
     solution_ml = sem_fit(model_ml)
-    @test all(test_fitmeasures(fit_measures(solution_ml), measures_ml; rtol = 1e-3))
+    @test all(test_fitmeasures(fit_measures(solution_ml), measures_ml; atol = 1e-3))
 end
 
 ############################################################################
@@ -355,7 +355,7 @@ solution_ml = sem_fit(model_ml)
 
 @testset "fitmeasures_ml_mean" begin
     solution_ml = sem_fit(model_ml)
-    @test all(test_fitmeasures(fit_measures(solution_ml), measures_ml; rtol = 1e-3))
+    @test all(test_fitmeasures(fit_measures(solution_ml), measures_ml; atol = 1e-3))
 end
 
 ############################################################################
@@ -481,5 +481,5 @@ end
 
 @testset "fitmeasures_fiml" begin
     solution_ml = sem_fit(model_ml)
-    @test all(test_fitmeasures(fit_measures(solution_ml), measures_ml; rtol = 1e-3))
+    @test all(test_fitmeasures(fit_measures(solution_ml), measures_ml; atol = 1e-3))
 end
