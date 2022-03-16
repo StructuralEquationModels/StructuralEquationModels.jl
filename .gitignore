@@ -6,10 +6,3 @@
 /dev/
 /docs/build/
 /docs/site/
-/benchmark/cfa/.Rhistory
-/benchmark/cfa/data/
-/benchmark/cfa/parest/
-/benchmark/cfa/results/
-/benchmark/cfa/*.csv
-/benchmark/cfa/*.rds
-/benchmark/sem-writ.simg/
