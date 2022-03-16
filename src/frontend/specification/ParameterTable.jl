@@ -15,6 +15,8 @@ mutable struct ParameterTable{SV, BV, FV, SyV}
     start::FV
     estimate::FV
     identifier::SyV
+    group::SV
+    start_partable::BV
 end
 
 ############################################################################
@@ -24,19 +26,19 @@ end
 # constuct an empty table
 function ParameterTable(disambig::Nothing)
 
-    from = Vector{String}()
-    parameter_type = Vector{String}()
-    to = Vector{String}()
+    from = Vector{Symbol}()
+    parameter_type = Vector{Symbol}()
+    to = Vector{Symbol}()
     free = Vector{Bool}()
     value_fixed = Vector{Float64}()
-    label = Vector{String}()
+    label = Vector{Symbol}()
     start = Vector{Float64}()
     estimate = Vector{Float64}()
     identifier = Vector{Symbol}()
 
-    latent_vars = Vector{String}()
-    observed_vars = Vector{String}()
-    sorted_vars = Vector{String}()
+    latent_vars = Vector{Symbol}()
+    observed_vars = Vector{Symbol}()
+    sorted_vars = Vector{Symbol}()
 
     return ParameterTable(
         latent_vars,
@@ -210,7 +212,7 @@ function update_estimate!(partable::ParameterTable, sem_fit::SemFit)
     for (i, identifier) in enumerate(partable.identifier)
         if identifier == :const 
         else
-            partable.estimate[i] = sem_fit.solution[sem_fit.model.imply.identifier[identifier]] 
+            partable.estimate[i] = sem_fit.solution[sem_fit.model.imply.identifier[identifier]]
         end
     end
     return partable
