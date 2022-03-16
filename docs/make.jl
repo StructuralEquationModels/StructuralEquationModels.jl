@@ -1,25 +1,17 @@
-using Documenter, StructuralEquationModels
+using Documenter, sem
 
-# push!(LOAD_PATH,"/home/maximilian/Documents/repositories/StructuralEquationModels.jl/src")
+makedocs(;
+    modules=[sem],
+    format=Documenter.HTML(),
+    pages=[
+        "Home" => "index.md",
+    ],
+    repo="https://github.com/Maximilian-Stefan-Ernst/sem.jl/blob/{commit}{path}#L{line}",
+    sitename="sem.jl",
+    authors="Maximilian Ernst, Aaron Peikert",
+    assets=String[],
+)
 
-makedocs(
-    sitename="StructuralEquationModels.jl",
-    pages = [
-        "index.md",
-        "Tutorials" => [
-            "Fit a SEM" => [
-                "tutorials/high_level.md",
-                "tutorials/build_by_parts.md"],
-            "Multigroup SEM" => [
-                "tutorials/multigroup.md",
-                "tutorials/collection.md"
-            ],
-            "Custom loss functions" => "tutorials/loss.md",
-            "Custom imply types" => "tutorials/imply.md",
-            "Custom sem types" => "tutorials/sem.md"
-        ],
-    ])
-
-deploydocs(
-    repo = "github.com/StructuralEquationModels/StructuralEquationModels.jl.git",
+deploydocs(;
+    repo="github.com/Maximilian-Stefan-Ernst/sem.jl",
 )
