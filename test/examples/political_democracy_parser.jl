@@ -1,4 +1,5 @@
-using StructuralEquationModels, CSV, DataFrames, SparseArrays, Symbolics, LineSearches, Optim, Test, FiniteDiff, LinearAlgebra
+using StructuralEquationModels, CSV, DataFrames, SparseArrays, Symbolics, LineSearches, Optim, Test, FiniteDiff, LinearAlgebra,
+    StenoGraphs
 import StructuralEquationModels as SEM
 include("test_helpers.jl")
 
@@ -13,6 +14,25 @@ par_ls = DataFrame(CSV.File("examples/data/par_dem_ls.csv"))
 ############################################################################
 ### define models
 ############################################################################
+
+graph = @StenoGraph begin
+    # loadings
+    ind60 → fixed(1)*x1 + x2 + x3
+    dem60 → fixed(1)*y1 + y2 + y3 + y4
+    dem65 → fixed(1)*y5 + y6 + y7 + y8
+    # latent regressions
+    dem60 ← ind60
+    dem65 ← dem60
+    dem65 ← ind60
+    # variances
+    observed_vars .↔ observed_vars
+    latent_vars .↔ latent_vars
+    # covariances
+    y1 ↔ y5
+    y2 ↔ y4 + y6
+    y3 ↔ y7
+    y8 ↔ y4 + y6
+end
 
 graph_1 = """
     ind60 =∼ 1*x1 + x2 + x3
@@ -42,10 +62,13 @@ graph_1 = """
     y6 ∼∼ y8
 """
 
-observed_vars = string.([:x1, :x2, :x3, :y1, :y2, :y3, :y4, :y5, :y6, :y7, :y8])
-latent_vars = ["ind60", "dem60", "dem65"]
+observed_vars = [:x1, :x2, :x3, :y1, :y2, :y3, :y4, :y5, :y6, :y7, :y8]
+latent_vars = [:ind60, :dem60, :dem65]
 
-partable = ParameterTable(latent_vars, observed_vars, graph_1)
+partable = ParameterTable(
+    latent_vars = latent_vars, 
+    observed_vars = observed_vars, 
+    graph = graph)
 
 # models
 model_ml = Sem(
