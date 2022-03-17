@@ -19,57 +19,50 @@ function start_simple(
     start_variances_latent = 0.05,
     start_covariances_observed = 0.0,
     start_covariances_latent = 0.0,
+    start_covariances_obs_lat = 0.0,
     start_means = 0.0,
     kwargs...)
 
-    A, S, F, M, parameters = 
-        ram_matrices.A, ram_matrices.S, ram_matrices.F, ram_matrices.M, ram_matrices.parameters
+    A_ind, S_ind, F_ind, M_ind, parameters = 
+        ram_matrices.A_ind, ram_matrices.S_ind, ram_matrices.F_ind, ram_matrices.M_ind, ram_matrices.parameters
 
-    parameters = [parameters...]
-    n_par = size(parameters, 1)
+    n_par = length(parameters)
     start_val = zeros(n_par)
-    n_var = size(F, 1)
+    n_var, n_nod = ram_matrices.size_F
 
-    Fmat = Matrix(F)
-    ind_observed = [any(isone.(Fmat[:, i])) for i in 1:size(F, 2)]
-    Λ_ind = CartesianIndices(A)[ind_observed, .!ind_observed]
-    ind_observed = findall(ind_observed)
+    C_indices = CartesianIndices((n_nod, n_nod))
 
-    for (i, par) ∈ enumerate(parameters)
-        for index in CartesianIndices(S)
-            if isequal(par, S[index])
-                if index[1] == index[2]
-                    if index[1] ∈ ind_observed
-                        start_val[i] = start_variances_observed
-                    else
-                        start_val[i] = start_variances_latent
-                    end
+    for i in 1:n_par
+        if length(S_ind[i]) != 0
+            # use the first occurence of the parameter to determine starting value
+            c_ind = C_indices[S_ind[i][1]] 
+            if c_ind[1] == c_ind[2]
+                if c_ind[1] ∈ F_ind
+                    start_val[i] = start_variances_observed
                 else
-                    if (index[1] <= n_var) & (index[1] <= n_var)
-                        start_val[i] = start_covariances_observed
-                    elseif (index[1] >= n_var) & (index[1] >= n_var)
-                        start_val[i] = start_covariances_latent
-                    end
+                    start_val[i] = start_variances_latent
+                end
+            else
+                o1 = c_ind[1] ∈ F_ind
+                o2 = c_ind[2] ∈ F_ind
+                if o1 & o2
+                    start_val[i] = start_covariances_observed
+                elseif !o1 & !o2
+                    start_val[i] = start_covariances_latent
+                else
+                    start_val[i] = start_covariances_obs_lat
                 end
             end
-        end
-        for index in CartesianIndices(A)
-            if isequal(par, A[index]) 
-                if index ∈ Λ_ind
-                    start_val[i] = start_loadings
-                else
-                    start_val[i] = start_regressions
-                end
-            end 
-        end
-        if !isnothing(M)
-            for index in CartesianIndices(M)
-                if isequal(par, M[index]) 
-                    start_val[i] = start_means
-                end 
+        elseif length(A_ind[i]) != 0
+            c_ind = C_indices[A_ind[i][1]]
+            if (c_ind[1] ∈ F_ind) & !(c_ind[2] ∈ F_ind)
+                start_val[i] = start_loadings
+            else
+                start_val[i] = start_regressions
             end
+        elseif !isnothing(M) && (length(M_ind[i]) != 0)
+            start_val[i] = start_means
         end
     end
-
     return start_val
 end
