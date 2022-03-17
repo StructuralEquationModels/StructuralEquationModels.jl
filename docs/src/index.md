@@ -22,8 +22,23 @@ You may consider using this package if:
 - you want to fit the same model(s) to many datasets (bootstrapping, simulation studies)
 - you are planning a study and would like to do power simulations
 
-For examples on how to use the package, see the XXX.
+For examples on how to use the package, see the Tutorials.
 
 ## Installation
 
+To install the latest version from GitHub, use the following commands in your julia REPL:
+```julia
+using Pkg
+Pkd.add("https://github.com/StructuralEquationModels/StructuralEquationModels.jl")
+```
+
 ## Citing the package
+
+```@docs
+AbstractSem
+SemLoss
+Sem
+SemObs
+SemLossFunction
+SemImply
+```
