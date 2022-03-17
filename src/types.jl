@@ -1,15 +1,34 @@
 #####################################################################################################
 # Define the basic type system
 #####################################################################################################
-
+"Most abstract supertype for all SEMs"
 abstract type AbstractSem end
 
+"Supertype for all single SEMs, e.g. SEMs that have the fields `observed`, `imply`, loss, diff"
 abstract type AbstractSemSingle <: AbstractSem end
 
+"Supertype for all collections of multiple SEMs"
 abstract type AbstractSemCollection <: AbstractSem end
 
+"Supertype for all loss functions of SEMs. If you want to implement a custom loss function, it should be of this type."
 abstract type SemLossFunction end
 
+"""
+    SemLoss(args...; ...)
+
+Constructs the loss field of a SEM. Can contain multiple `SemLossFunction`s, the model is optimized over their sum.
+See also [`SemLossFunction`](@ref).
+
+# Arguments
+- `args...`: Multiple `SemLossFunction`s.
+
+# Examples
+```julia
+my_ml_loss = SemML(...)
+my_ridge_loss = SemRidge(...)
+my_loss = SemLoss(SemML, SemRidge)
+```
+"""
 mutable struct SemLoss{F <: Tuple, FT, GT, HT}
     functions::F
 
@@ -30,14 +49,51 @@ function SemLoss(functions; parameter_type = Float64)
         zeros(parameter_type, n_par, n_par))
 end
 
+SemLoss(args...; parameter_type = Float64) = SemLoss(args; parameter_type = parameter_type)
+
+"""
+Supertype of all objects that can serve as the diff field of a SEM.
+Connects the SEM to its optimization backend and controls options like the optimization algorithm.
+If you want to connect the SEM package to a new optimization backend, you should implement a subtype of SemDiff.
+"""
 abstract type SemDiff end
 
+"""
+Supertype of all objects that can serve as the observed field of a SEM.
+Pre-processes data and computes sufficient statistics for example.
+If you have a special kind of data, e.g. ordinal data, you should implement a subtype of SemObs.
+"""
 abstract type SemObs end
 
+"""
+Supertype of all objects that can serve as the imply field of a SEM.
+Computed model-implied values that should be compared with the observed data to find parameter estimates,
+e. g. the model implied covariance or mean.
+If you would like to implement a different notation, e.g. LISREL, you should implement a subtype of SemImply.
+"""
 abstract type SemImply end
 
+"Subtype of SemImply for all objects that can serve as the imply field of a SEM and use some form of symbolic precomputation."
 abstract type SemImplySymbolic <: SemImply end
 
+"""
+    Sem(;observed = SemObsCommon, imply = RAM, loss = (SemML,), diff = SemDiffOptim, kwargs...)
+
+Constructor for the basic `Sem` type.
+All additional kwargs are passed down to the constructors for the fields.
+
+# Arguments
+- `observed`: isa `SemObs` or a constructor.
+- `imply`: isa `SemImply` or a constructor.
+- `loss`: Tuple of objects that are `SemLossFunction`s or constructors.
+- `observed`: isa `SemObs` or a constructor.
+
+Returns a struct of type Sem with fields
+- `observed::SemObs`: Stores observed data, sample statistics, etc. See also [`SemObs`](@ref).
+- `imply::SemImply`: Computes Σ, μ, etc. See also [`SemImply`](@ref).
+- `loss::SemLoss`: Computes the objective and gradient of a sum of loss functions. See also [`SemLoss`](@ref).
+- `diff::SemDiff`: Connects the model to the optimizer. See also [`SemDiff`](@ref).
+"""
 mutable struct Sem{O <: SemObs, I <: SemImply, L <: SemLoss, D <: SemDiff} <: AbstractSemSingle
     observed::O
     imply::I

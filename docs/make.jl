@@ -18,8 +18,13 @@ makedocs(
             "Custom imply types" => "tutorials/imply.md",
             "Custom sem types" => "tutorials/sem.md"
         ],
-    ])
+    ]
+)
 
 deploydocs(
     repo = "github.com/StructuralEquationModels/StructuralEquationModels.jl.git",
 )
+
+function testfun(args...)
+    print(args)
+end

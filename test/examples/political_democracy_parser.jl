@@ -1,6 +1,6 @@
 using StructuralEquationModels, CSV, DataFrames, SparseArrays, Symbolics, LineSearches, Optim, Test, FiniteDiff, LinearAlgebra,
     StenoGraphs
-import StenoGraphs: EdgeModifier
+import StenoGraphs
 import StructuralEquationModels as SEM
 include("test_helpers.jl")
 
