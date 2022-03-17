@@ -28,19 +28,19 @@ function Base.show(io::IO, struct_inst::SimpleNode)
 end
 
 # define modifiers
-struct Fixed{N} <: Modifier
+struct Fixed{N} <: EdgeModifier
     value::N
 end
 fixed(value) = Fixed(value)
 Fixed(value::Int) = Fixed(Float64(value))
 
-struct Start{N} <: Modifier
+struct Start{N} <: EdgeModifier
     value::N
 end
 start(value) = Start(value)
 Start(value::Int) = Start(Float64(value))
 
-struct Label{N <: Symbol} <: Modifier
+struct Label{N <: Symbol} <: EdgeModifier
     value::N
 end
 label(value) = Label(value)
@@ -81,7 +81,7 @@ function ParameterTable(;graph, observed_vars, latent_vars)
                 to[i] =  element.edge.dst.node
                 parameter_type[i] = :↔
             end
-            for modifier in element.modifiers
+            for modifier in values(element.modifiers)
                 if modifier isa Fixed
                     free[i] = false
                     value_fixed[i] = modifier.value
