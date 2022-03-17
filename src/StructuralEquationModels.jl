@@ -5,6 +5,8 @@ using LinearAlgebra, Optim,
     NLopt, FiniteDiff, ForwardDiff, PrettyTables,
     Distributions
 
+import StenoGraphs: EdgeModifier, DirectedEdge, UndirectedEdge, ModifiedEdge
+
 # type hierarchy
 include("types.jl")
 # fitted objects
@@ -13,6 +15,7 @@ include("frontend/fit/SemFit.jl")
 include("frontend/specification/ParameterTable.jl")
 include("frontend/specification/parser.jl")
 include("frontend/specification/RAMMatrices.jl")
+include("frontend/specification/StenoGraphs.jl")
 # pretty printing
 include("frontend/pretty_printing.jl")
 # observed
@@ -79,5 +82,6 @@ export  AbstractSem,
             RAMMatrices!,
         fit_measures,
             AIC, BIC, χ², df, fit_measures, minus2ll, npar, nobs, p_value, RMSEA,
-            EmMVNModel
+            EmMVNModel,
+        Fixed, fixed, Start, start, Label, label
 end
