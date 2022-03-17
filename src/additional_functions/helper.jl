@@ -191,10 +191,10 @@ function compare_estimates(partable_lav, partable::ParameterTable, tol)
         to = partable.to[i]
         estimate = partable.estimate[i]
 
-        lav_ind = findall((partable_lav.lhs .== from) .& (partable_lav.rhs .== to))
+        lav_ind = findall((partable_lav.lhs .== String(from)) .& (partable_lav.rhs .== String(to)))
 
         if length(lav_ind) == 0
-            lav_ind = findall((partable_lav.lhs .== to) .& (partable_lav.rhs .== from))
+            lav_ind = findall((partable_lav.lhs .== String(to)) .& (partable_lav.rhs .== String(from)))
             if length(lav_ind) == 0
                 @error "At least one parameter could not be found in the lavaan solution"
             end

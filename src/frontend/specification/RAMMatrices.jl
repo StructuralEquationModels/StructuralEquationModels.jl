@@ -50,7 +50,7 @@ function RAMMatrices(partable::ParameterTable; parname = :θ, to_sparse = true)
     end
     
     # fill Matrices
-    known_labels = Dict{String, Int64}()
+    known_labels = Dict{Symbol, Int64}()
     identifier_vec = Vector{Symbol}()
     par_ind = 1
 
@@ -62,14 +62,14 @@ function RAMMatrices(partable::ParameterTable; parname = :θ, to_sparse = true)
         col_ind = positions[from]
 
         if !free
-            if parameter_type == "→"
+            if parameter_type == :→
                 A[row_ind, col_ind] = value_fixed
             else
                 S[row_ind, col_ind] = value_fixed
                 S[col_ind, row_ind] = value_fixed
             end
         else
-            if label == ""
+            if label == Symbol("")
                 set_RAM_index(A, S, parameter_type, row_ind, col_ind, parameters[par_ind])
                 push!(identifier_vec, identifier)
                 par_ind += 1
@@ -102,7 +102,7 @@ function RAMMatrices(partable::ParameterTable; parname = :θ, to_sparse = true)
 end
 
 function set_RAM_index(A, S, parameter_type, row_ind, col_ind, parameter)
-    if parameter_type == "→"
+    if parameter_type == :→
         A[row_ind, col_ind] = parameter
     else
         S[row_ind, col_ind] = parameter

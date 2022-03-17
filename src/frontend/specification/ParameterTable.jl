@@ -145,12 +145,12 @@ function sort!(partable::ParameterTable)
 
     variables = [partable.latent_vars; partable.observed_vars]
 
-    is_regression = partable.parameter_type .== "→"
+    is_regression = partable.parameter_type .== :→
 
     to = partable.to[is_regression]
     from = partable.from[is_regression]
 
-    sorted_variables = Vector{String}()
+    sorted_variables = Vector{Symbol}()
 
     sorted = false
     while !sorted
