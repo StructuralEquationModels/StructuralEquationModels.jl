@@ -170,10 +170,10 @@ function (semml::SemML)(par, F, G, H, model::Sem{O, I, L, D}) where {O, I <: RAM
                 semml.F[1] = ld + tr(semml.mult)
             end
             
-        else
-        # with means
-        μ_diff = model.observed.obs_mean - model.imply.μ
-        diff⨉inv = μ_diff'*semml.inverses
+        else # with means
+            
+            μ_diff = model.observed.obs_mean - model.imply.μ
+            diff⨉inv = μ_diff'*semml.inverses
             
             if G
                 gradient = SemML_gradient(

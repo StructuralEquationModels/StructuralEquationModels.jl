@@ -26,22 +26,12 @@ function fill_A_S_M(A, S, M, A_indices, S_indices, M_indices, parameters)
 
 end
 
-function get_parameter_indices(parameters, M; index_function = eachindex, kwargs...)
+function get_parameter_indices(parameters, M; linear = true, kwargs...)
 
-    M_indices = []
+    M_indices = [findall(x -> (x == par), M) for par in parameters]
 
-    for parameter in parameters
-
-        M_indices_par = []
-
-        for index in index_function(M; kwargs...)
-            if isequal(parameter, M[index])
-                push!(M_indices_par, index)
-            end
-        end
-
-        push!(M_indices, M_indices_par)
-
+    if linear
+        M_indices = cartesian2linear.(M_indices, [M])
     end
 
     return M_indices
