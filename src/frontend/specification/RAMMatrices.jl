@@ -1,46 +1,107 @@
+############################################################################
+### Type
+############################################################################
+
 struct RAMMatrices
-    A
-    S
-    F
-    M
+    A_ind
+    S_ind
+    F_ind
+    M_ind
     parameters
-    identifier
     colnames
+    constants
+    size_F
 end
 
 ############################################################################
 ### Constructor
 ############################################################################
-function RAMMatrices(;A, S, F, M = nothing, parameters, identifier = nothing, colnames)
-    if isnothing(identifier)
-        identifier = identifier = Symbol.(:θ_, 1:length(parameters))
-    end
-    return RAMMatrices(A, S, F, M, parameters, identifier, colnames)
+
+function RAMMatrices(;A, S, F, M = nothing, parameters, colnames)
+    A_indices = get_parameter_indices(parameters, A)
+    S_indices = get_parameter_indices(parameters, S)
+    isnothing(M) ? M_indices = nothing : M_indices = get_parameter_indices(parameters, M)
+    F_indices = findall([any(isone.(col)) for col in eachcol(F)])
+    constants = get_RAMConstants(A, S, M)
+    return RAMMatrices(A_indices, S_indices, F_indices, M_indices, parameters, colnames, constants, size(F))
 end
+
+############################################################################
+### Constants
+############################################################################
+
+struct RAMConstant
+    matrix
+    index
+    value
+end
+
+function get_RAMconstants(A, S, M)
+    
+    constants = Vector{RAMConstant}()
+
+    for index in eachindex(A)
+        if A[index] isa Number & !iszero(A[index])
+            push!(constants, RAMConstant(:A, index, A[index]))
+        end
+    end
+
+    for index in eachindex(S)
+        if S[index] isa Number & !iszero(S[index])
+            push!(constants, RAMConstant(:S, index, S[index]))
+        end
+    end
+
+    if !isnothing(M)
+        for index in eachindex(M)
+            if M[index] isa Number & !iszero(M[index])
+                push!(constants, RAMConstant(:M, index, M[index]))
+            end
+        end
+    end
+
+    return constants
+
+end
+
+function set_RAMConstant!(A, S, M, rc::RAMConstant)
+    if rc.matrix == :A
+        A[rc.index] = rc.value
+    elseif rc.matrix == :S
+        S[rc.index] = rc.value
+        S[rc.index[2], rc.index[1]] = rc.value
+    elseif rc.matrix == :M
+        M[rd.index] = rc.value
+    end
+end
+
+function set_RAMConstants!(A, S, M, rc_vec::Vector{RAMConstant})
+    for rc in rc_vec set_RAMConstant!(A, S, M, rc) end
+end
+
 ############################################################################
 ### get RAMMatrices from parameter table
 ############################################################################
 
-function RAMMatrices(partable::ParameterTable; parname = :θ, to_sparse = true)
+function RAMMatrices(partable::ParameterTable)
 
-    n_parameters = length(unique(partable.identifier)) - 1
-    parameters = (Symbolics.@variables $parname[1:n_parameters])[1]
+    parameters = unique(partable.identifier)
+    filter!(x -> x != :const, parameters)
+    n_par = length(parameters)
+    par_positions = Dict(parameters .=> 1:n_par)
 
     n_observed = size(partable.observed_vars, 1)
     n_latent = size(partable.latent_vars, 1)
     n_node = n_observed + n_latent
 
-    A = zeros(Num, n_node, n_node)
-    S = zeros(Num, n_node, n_node)
-    F = zeros(n_observed, n_node)
-
+    # F indices
     if length(partable.sorted_vars) != 0
-        obsind = findall(x -> x ∈ partable.observed_vars, partable.sorted_vars)
-        F[CartesianIndex.(1:n_observed, obsind)] .= 1.0
+        F_ind = findall(x -> x ∈ partable.observed_vars, partable.sorted_vars)
     else
-        F[LinearAlgebra.diagind(F)] .= 1.0
+        F_ind = 1:n_observed
     end
 
+    # indices of the colnames
     if length(partable.sorted_vars) != 0
         positions = Dict(zip(partable.sorted_vars, collect(1:n_observed+n_latent)))
         colnames = copy(partable.sorted_vars)
@@ -50,55 +111,57 @@ function RAMMatrices(partable::ParameterTable; parname = :θ, to_sparse = true)
     end
     
     # fill Matrices
-    known_labels = Dict{Symbol, Int64}()
-    identifier_vec = Vector{Symbol}()
-    par_ind = 1
+    # known_labels = Dict{Symbol, Int64}()
 
+    A_ind = Vector{Vector{Int64}}(undef, n_par)
+    for i in 1:length(A_ind) A_ind[i] = Vector{Int64}() end
+    S_ind = Vector{Vector{Int64}}(undef, n_par); S_ind .= [Vector{Int64}()]
+    for i in 1:length(S_ind) S_ind[i] = Vector{Int64}() end
+
+    # is there a meanstructure?
+    if any(partable.from .== Symbol("1"))
+        M_ind = Vector{Vector{Int64}}(undef, n_par)
+        for i in 1:length(M_ind) M_ind[i] = Vector{Int64}() end
+    else
+        M_ind = nothing
+    end
+
+    # handel constants
+    constants = Vector{RAMConstant}()
+    
     for i in 1:length(partable)
 
         from, parameter_type, to, free, value_fixed, label, identifier = partable[i]
 
         row_ind = positions[to]
-        col_ind = positions[from]
+        if from != Symbol("1") col_ind = positions[from] end
+        
 
         if !free
-            if parameter_type == :→
-                A[row_ind, col_ind] = value_fixed
+            if (parameter_type == :→) & (from == Symbol("1"))
+                push!(constants, RAMConstant(:M, row_ind, value_fixed))
+            elseif (parameter_type == :→)
+                push!(constants, RAMConstant(:A, CartesianIndex(row_ind, col_ind), value_fixed))
             else
-                S[row_ind, col_ind] = value_fixed
-                S[col_ind, row_ind] = value_fixed
+                push!(constants, RAMConstant(:S, CartesianIndex(row_ind, col_ind), value_fixed))
             end
         else
-            if label == Symbol("")
-                set_RAM_index(A, S, parameter_type, row_ind, col_ind, parameters[par_ind])
-                push!(identifier_vec, identifier)
-                par_ind += 1
+            par_ind = par_positions[identifier]
+            if (parameter_type == :→) && (from == Symbol("1"))
+                push!(M_ind[par_ind], row_ind)
+            elseif parameter_type == :→
+                push!(A_ind[par_ind], (row_ind + (col_ind-1)*n_node))
             else
-                if haskey(known_labels, label)
-                    known_ind = known_labels[label]
-                    set_RAM_index(A, S, parameter_type, row_ind, col_ind, parameters[known_ind])
-                    if identifier != identifier_vec[known_ind]
-                        @error "Your ParameterTable has parameters constrained to be equal but with different identfiers.
-                                Label: $label, identifiers: $identifier, $(identifier_vec[known_ind])"
-                    end
-                else
-                    known_labels[label] = par_ind
-                    set_RAM_index(A, S, parameter_type, row_ind, col_ind, parameters[par_ind])
-                    push!(identifier_vec, identifier)
-                    par_ind +=1
+                push!(S_ind[par_ind], row_ind + (col_ind-1)*n_node)
+                if row_ind != col_ind
+                    push!(S_ind[par_ind], col_ind + (row_ind-1)*n_node)
                 end
             end
         end
 
     end
 
-    if to_sparse
-        A = sparse(A)
-        S = sparse(S)
-        F = sparse(F)
-    end
-
-    return RAMMatrices(;A = A, S = S, F = F, parameters = parameters, identifier = identifier_vec, colnames)
+    return RAMMatrices(A_ind, S_ind, F_ind, M_ind, parameters, colnames, constants, (n_observed, n_node))
 end
 
 function set_RAM_index(A, S, parameter_type, row_ind, col_ind, parameter)

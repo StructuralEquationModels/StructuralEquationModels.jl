@@ -2,7 +2,7 @@
 ### Types
 ############################################################################
 
-mutable struct RAM{A1, A2, A3, A4, A5, A6, V, V2, I1, I2, I3, I4, M1, M2, M3, S1, S2, S3, D} <: SemImply
+mutable struct RAM{A1, A2, A3, A4, A5, A6, V, V2, I1, I2, I3, M1, M2, M3, S1, S2, S3, D} <: SemImply
     Σ::A1
     A::A2
     S::A3
@@ -16,7 +16,6 @@ mutable struct RAM{A1, A2, A3, A4, A5, A6, V, V2, I1, I2, I3, I4, M1, M2, M3, S1
     A_indices::I1
     S_indices::I2
     M_indices::I3
-    I_A_indices::I4
 
     F⨉I_A⁻¹::M1
     F⨉I_A⁻¹S::M2
@@ -44,59 +43,34 @@ function RAM(;
     # else if ...
     if specification isa RAMMatrices
         ram_matrices = specification
-        identifier = Dict{Symbol, Int64}(ram_matrices.identifier .=> 1:length(ram_matrices.identifier))
+        identifier = Dict{Symbol, Int64}(ram_matrices.parameters .=> 1:length(ram_matrices.parameters))
     elseif specification isa ParameterTable
         ram_matrices = RAMMatrices(specification)
-        identifier = Dict{Symbol, Int64}(ram_matrices.identifier .=> 1:length(ram_matrices.identifier))
+        identifier = Dict{Symbol, Int64}(ram_matrices.parameters .=> 1:length(ram_matrices.parameters))
     else
         @error "The RAM constructor does not know how to handle your specification object. 
         \n Please specify your model as either a ParameterTable or RAMMatrices."
     end
 
-    A, S, F, M, parameters = 
-        ram_matrices.A, ram_matrices.S, ram_matrices.F, ram_matrices.M, ram_matrices.parameters
+    # get dimensions of the model
+    n_par = length(ram_matrices.parameters)
+    n_var, n_nod = ram_matrices.size_F
+    parameters = ram_matrices.parameters
+    F = zeros(ram_matrices.size_F); F[CartesianIndex.(1:n_var, ram_matrices.F_ind)] .= 1.0
 
-    n_par = length(parameters)
+    # get indices
+    A_indices = copy(ram_matrices.A_ind)
+    S_indices = copy(ram_matrices.S_ind)
+    !isnothing(ram_matrices.M_ind) ? M_indices = copy(ram_matrices.M_ind) : M_indices = nothing
+
+    #preallocate arrays
+    A_pre = zeros(n_nod, n_nod)
+    S_pre = zeros(n_nod, n_nod)
+    !isnothing(M_indices) ? M_pre = zeros(n_nod) : M_pre = nothing
+
+    set_RAMConstants!(A_pre, S_pre, M_pre, ram_matrices.constants)
     
-    n_var, n_nod = size(F)
-        
-    A = Matrix(A)
-    S = Matrix(S)
-    F = Matrix(F)
-    I_A_indices = CartesianIndices(F)
-
-    A_indices = get_parameter_indices(parameters, A)
-    S_indices = get_parameter_indices(parameters, S)
-
-    A_indices = [convert(Vector{Int}, indices) for indices in A_indices]
-    S_indices = [convert(Vector{Int}, indices) for indices in S_indices]
-
-    A_pre = zeros(size(A)...)
-    S_pre = zeros(size(S)...)
-
-    set_constants!(S, S_pre)
-    set_constants!(A, A_pre)
-    
-    # fill copy of a matrix with random parameters
-    A_rand = copy(A_pre)
-    randpar = rand(n_par)
-
-    fill_matrix(
-        A_rand,
-        A_indices,
-        randpar)
-
-    # check if the model is acyclic
-    acyclic = isone(det(I-A_rand))
-
-    # check if A is lower or upper triangular
-    if iszero(A_rand[.!tril(ones(Bool, size(A)...))])
-        A_pre = LowerTriangular(A_pre)
-    elseif iszero(A_rand[.!tril(ones(Bool, size(A)...))'])
-        A_pre = UpperTriangular(A_pre)
-    elseif acyclic
-        @info "Your model is acyclic, specifying the A Matrix as either Upper or Lower Triangular can have great performance benefits.\n"
-    end
+    A_pre = check_acyclic(A_pre, n_par, A_indices)
 
     # pre-allocate some matrices
     Σ = zeros(n_var, n_var)
@@ -113,14 +87,8 @@ function RAM(;
     end
 
     # μ
-    if !isnothing(M)
-    
-        M_indices = get_parameter_indices(parameters, M)
-        M_indices = [convert(Vector{Int}, indices) for indices in M_indices]
-    
-        M_pre = zeros(size(M)...)
-        set_constants!(M, M_pre)
-    
+    if !isnothing(M_indices)
+
         if gradient
             ∇M = get_matrix_derivative(M_indices, parameters, n_nod)
         else
@@ -150,7 +118,6 @@ function RAM(;
         A_indices,
         S_indices,
         M_indices,
-        I_A_indices,
 
         F⨉I_A⁻¹,
         F⨉I_A⁻¹S,
@@ -212,6 +179,31 @@ end
 
 function μ_RAM!(μ, F⨉I_A⁻¹, M)
     mul!(μ, F⨉I_A⁻¹, M)
+end
+
+function check_acyclic(A_pre, n_par, A_indices)
+    # fill copy of A-matrix with random parameters
+    A_rand = copy(A_pre)
+    randpar = rand(n_par)
+
+    fill_matrix(
+        A_rand,
+        A_indices,
+        randpar)
+
+    # check if the model is acyclic
+    acyclic = isone(det(I-A_rand))
+
+    # check if A is lower or upper triangular
+    if iszero(A_rand[.!tril(ones(Bool, size(A_pre)...))])
+        A_pre = LowerTriangular(A_pre)
+    elseif iszero(A_rand[.!tril(ones(Bool, size(A_pre)...))'])
+        A_pre = UpperTriangular(A_pre)
+    elseif acyclic
+        @info "Your model is acyclic, specifying the A Matrix as either Upper or Lower Triangular can have great performance benefits.\n"
+    end
+
+    return A_pre
 end
 
 ############################################################################
