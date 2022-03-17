@@ -35,19 +35,27 @@ function RAMSymbolic(;
 
     if specification isa RAMMatrices
         ram_matrices = specification
-        identifier = Dict{Symbol, Int64}(ram_matrices.identifier .=> 1:length(ram_matrices.identifier))
+        identifier = Dict{Symbol, Int64}(ram_matrices.parameters .=> 1:length(ram_matrices.parameters))
     elseif specification isa ParameterTable
         ram_matrices = RAMMatrices(specification)
-        identifier = Dict{Symbol, Int64}(ram_matrices.identifier .=> 1:length(ram_matrices.identifier))
+        identifier = Dict{Symbol, Int64}(ram_matrices.parameters .=> 1:length(ram_matrices.parameters))
     else
         @error "The RAMSymbolic constructor does not know how to handle your specification object. 
         \n Please specify your model as either a ParameterTable or RAMMatrices."
     end
-    
-    A, S, F, M, par = 
-        ram_matrices.A, ram_matrices.S, ram_matrices.F, ram_matrices.M, ram_matrices.parameters
 
-    n_par = length(par)
+    n_par = length(ram_matrices.parameters)
+    n_var, n_nod = ram_matrices.size_F
+
+    par = (Symbolics.@variables θ[1:n_par])[1]
+
+    A = zeros(Num, n_nod, n_nod)
+    S = zeros(Num, n_nod, n_nod)
+    !isnothing(ram_matrices.M_ind) ? M = zeros(Num, n_nod) : M = nothing
+    F = zeros(ram_matrices.size_F); F[CartesianIndex.(1:n_var, ram_matrices.F_ind)] .= 1.0
+
+    set_RAMConstants!(A, S, M, ram_matrices.constants)
+    fill_A_S_M(A, S, M, ram_matrices.A_ind, ram_matrices.S_ind, ram_matrices.M_ind, par)
 
     A, S, F = sparse(A), sparse(S), sparse(F)
 
