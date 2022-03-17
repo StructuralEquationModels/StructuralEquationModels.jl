@@ -1,50 +1,32 @@
-# Interface to the StenoGraphs package
+## Interface to the StenoGraphs package
 
-import Base: show
-import StructuralEquationModels: print_type_name, print_field_types
+############################################################################
+### Define Modifiers
+############################################################################
 
-function Base.show(io::IO, struct_inst::ModifiedEdge)
-    print_type_name(io, struct_inst)
-    print_field_types(io, struct_inst)
-end
-
-function Base.show(io::IO, struct_inst::Vector{AbstractEdge})
-    print("hi")
-end
-
-function Base.show(io::IO, struct_inst::DirectedEdge)
-    print_type_name(io, struct_inst)
-    print_field_types(io, struct_inst)
-end
-
-function Base.show(io::IO, struct_inst::UndirectedEdge)
-    print_type_name(io, struct_inst)
-    print_field_types(io, struct_inst)
-end
-
-function Base.show(io::IO, struct_inst::SimpleNode)
-    print_type_name(io, struct_inst)
-    print_field_types(io, struct_inst)
-end
-
-# define modifiers
+# fixed parameter values
 struct Fixed{N} <: EdgeModifier
     value::N
 end
 fixed(value) = Fixed(value)
 Fixed(value::Int) = Fixed(Float64(value))
 
+# start values
 struct Start{N} <: EdgeModifier
     value::N
 end
 start(value) = Start(value)
 Start(value::Int) = Start(Float64(value))
 
+# labels for equality constraints
 struct Label{N <: Symbol} <: EdgeModifier
     value::N
 end
 label(value) = Label(value)
 
+############################################################################
+### constructor for parameter table from graph
+############################################################################
 
 function ParameterTable(;graph, observed_vars, latent_vars)
     n = length(graph)
