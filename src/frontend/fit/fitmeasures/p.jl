@@ -9,5 +9,5 @@ p_value(sem_fit::SemFit{Mi, So, St, Mo, O} where {Mi, So, St, Mo <: AbstractSemS
         )
 
 # RAM + SemML
-p_value(sem_fit::SemFit, obs, imp::Union{RAM, RAMSymbolic}, diff, loss_ml::Union{SemML, SemFIML}) = 
+p_value(sem_fit::SemFit, obs, imp::Union{RAM, RAMSymbolic}, diff, loss_ml::Union{SemML, SemFIML, SemWLS}) = 
     1 - cdf(Chisq(df(sem_fit)), χ²(sem_fit))

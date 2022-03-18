@@ -35,7 +35,7 @@ function test_hessian(model, parameters)
     return correct1 & correct2 & correct3
 end
 
-fitmeasure_names = Dict(
+fitmeasure_names_ml = Dict(
     :AIC => "aic",
     :BIC => "bic",
     :df => "df",
@@ -45,7 +45,15 @@ fitmeasure_names = Dict(
     :RMSEA => "rmsea",
 )
 
-function test_fitmeasures(measures, measures_lav; rtol = 1e-4)
+fitmeasure_names_ls = Dict(
+    :df => "df",
+    :χ² => "chisq",
+    :p_value => "pvalue",
+    :npar => "npar",
+    :RMSEA => "rmsea",
+)
+
+function test_fitmeasures(measures, measures_lav; rtol = 1e-4, fitmeasure_names = fitmeasure_names_ml)
     correct = []
     for key in keys(fitmeasure_names)
         measure = measures[key]

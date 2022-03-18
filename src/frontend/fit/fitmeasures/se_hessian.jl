@@ -3,7 +3,7 @@
 ############################################################################
 
 # SemFit splices loss functions ---------------------------------------------------------------------
-se_hessian(sem_fit::SemFit{Mi, So, St, Mo, O} where {Mi, So, St, Mo <: AbstractSemSingle, O}; analytic = false) = 
+#= se_hessian(sem_fit::SemFit{Mi, So, St, Mo, O} where {Mi, So, St, Mo <: AbstractSemSingle, O}; analytic = false) = 
     se_hessian(
         sem_fit,
         sem_fit.model.observed,
@@ -15,7 +15,7 @@ se_hessian(sem_fit::SemFit{Mi, So, St, Mo, O} where {Mi, So, St, Mo <: AbstractS
 
 # RAM + SemML
 se_hessian(sem_fit::SemFit, obs, imp::RAM, diff, loss_ml::SemML; analytic) = se_hessian(sem_fit; analytic = analytic)
-se_hessian(sem_fit::SemFit, obs, imp::RAMSymbolic, diff, loss_ml::SemML; analytic) = se_hessian(sem_fit; analytic = analytic)
+se_hessian(sem_fit::SemFit, obs, imp::RAMSymbolic, diff, loss_ml::SemML; analytic) = se_hessian(sem_fit; analytic = analytic) =#
 
 # se_hessian(sem_fit::SemFit, obs, imp::RAM, diff, loss_ml::SemFIML; analytic) = se_hessian(sem_fit; analytic = analytic)
 # se_hessian(sem_fit::SemFit, obs, imp::RAMSymbolic, diff, loss_ml::SemFIML; analytic) = se_hessian(sem_fit; analytic = analytic)
