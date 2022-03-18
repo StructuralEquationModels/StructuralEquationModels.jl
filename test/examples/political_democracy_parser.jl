@@ -48,6 +48,10 @@ model_ml = Sem(
     data = dat
 )
 
+sem_fit(model_ml; start_val = start_simple)
+
+start_fabin3(model_ml)
+
 model_ls_sym = Sem(
     specification = partable,
     data = dat,
