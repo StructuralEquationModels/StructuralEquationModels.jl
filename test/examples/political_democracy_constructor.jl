@@ -175,6 +175,11 @@ end
     @test all(test_fitmeasures(fit_measures(solution_ml), measures_ml; rtol = 1e-2))
 end
 
+@testset "fitmeasures_ls" begin
+    solution_ls = sem_fit(model_ls_sym)
+    @test all(test_fitmeasures(fit_measures(solution_ls), measures_ls; rtol = 1e-2, fitmeasure_names = fitmeasure_names_ls))
+end
+
 ############################################################################
 ### test hessians
 ############################################################################
@@ -312,6 +317,11 @@ solution_ml = sem_fit(model_ml)
 @testset "fitmeasures_ml_mean" begin
     solution_ml = sem_fit(model_ml)
     @test all(test_fitmeasures(fit_measures(solution_ml), measures_ml; rtol = 1e-2))
+end
+
+@testset "fitmeasures_ls" begin
+    solution_ls = sem_fit(model_ls)
+    @test all(test_fitmeasures(fit_measures(solution_ls), measures_ls; rtol = 1e-2, fitmeasure_names = fitmeasure_names_ls))
 end
 
 ############################################################################

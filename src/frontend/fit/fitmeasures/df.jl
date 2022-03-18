@@ -14,7 +14,7 @@ function df(
         observed::Union{SemObsCommon, SemObsMissing}, 
         imply::Union{RAM, RAMSymbolic}, 
         diff, 
-        loss_ml::Union{SemML, SemFIML})
+        loss_ml::Union{SemML, SemFIML, SemWLS})
     n_par = npar(sem_fit)
     n_dp = 0.5(observed.n_man^2 + observed.n_man)
     if !isnothing(imply.μ)
