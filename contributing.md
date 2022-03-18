@@ -46,7 +46,9 @@ We follow the Gitflow workflow described [here](https://www.atlassian.com/git/tu
 - never directly interacts with main; merged into devel if the feature is complete
 
 ### hotfix/xxx
-- branched from main
+- forked from main
 - merged into main and devel (or the current release branch) and main is tagged
 
-
+### documentation/xxx
+- forked from main/release/devel
+- **only** changes to documentation
