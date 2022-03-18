@@ -86,9 +86,7 @@ function get_colnames(specification::RAMMatrices)
         @warn "Your RAMMatrices do not contain column names. Please make shure the order of variables in your data is correct!"
         return nothing
     else
-        F = Matrix(specification.F)
-        is_obs = [any(isone.(F[:, i])) for i in 1:length(specification.colnames)]
-        colnames = specification.colnames[is_obs]
+        colnames = specification.colnames[specification.F_ind]
         return colnames
     end
 end

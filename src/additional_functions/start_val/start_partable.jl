@@ -4,7 +4,7 @@ function start_parameter_table(model::Union{Sem, SemForwardDiff, SemFiniteDiff};
         model.observed, 
         model.imply,
         model.diff, 
-        model.loss.functions...,
+        model.loss.functions...;
         kwargs...)
 end
 
@@ -19,7 +19,7 @@ function start_parameter_table(ram_matrices::RAMMatrices; parameter_table::Param
     
     start_val = zeros(0)
     
-    for identifier_ram in ram_matrices.identifier
+    for identifier_ram in ram_matrices.parameters
         found = false
         for (i, identifier_table) in enumerate(parameter_table.identifier)
             if identifier_ram == identifier_table

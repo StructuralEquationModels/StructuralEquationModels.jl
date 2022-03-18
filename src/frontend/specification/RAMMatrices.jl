@@ -36,25 +36,25 @@ struct RAMConstant
     value
 end
 
-function get_RAMconstants(A, S, M)
+function get_RAMConstants(A, S, M)
     
     constants = Vector{RAMConstant}()
 
-    for index in eachindex(A)
-        if A[index] isa Number & !iszero(A[index])
+    for index in CartesianIndices(A)
+        if (A[index] isa Number) && !iszero(A[index])
             push!(constants, RAMConstant(:A, index, A[index]))
         end
     end
 
-    for index in eachindex(S)
-        if S[index] isa Number & !iszero(S[index])
+    for index in CartesianIndices(S)
+        if (S[index] isa Number) && !iszero(S[index])
             push!(constants, RAMConstant(:S, index, S[index]))
         end
     end
 
     if !isnothing(M)
-        for index in eachindex(M)
-            if M[index] isa Number & !iszero(M[index])
+        for index in CartesianIndices(M)
+            if (M[index] isa Number) && !iszero(M[index])
                 push!(constants, RAMConstant(:M, index, M[index]))
             end
         end
