@@ -1,6 +1,6 @@
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.7.1"
+julia_version = "1.7.2"
 manifest_format = "2.0"
 
 [[deps.AbstractTrees]]
@@ -566,6 +566,13 @@ deps = ["ChainRulesCore", "IrrationalConstants", "LogExpFunctions", "Reexport", 
 git-tree-sha1 = "46d7ccc7104860c38b11966dd1f72ff042f382e4"
 uuid = "4c63d2b9-4356-54db-8cca-17b64c39e42c"
 version = "0.9.10"
+
+[[deps.StenoGraphs]]
+git-tree-sha1 = "258c564a3c0082756904567fc296f5d008a262e6"
+repo-rev = "feature/unquote"
+repo-url = "https://github.com/aaronpeikert/StenoGraphs.jl.git"
+uuid = "78862bba-adae-4a83-bb4d-33c106177f81"
+version = "0.1.0"
 
 [[deps.SuiteSparse]]
 deps = ["Libdl", "LinearAlgebra", "Serialization", "SparseArrays"]
