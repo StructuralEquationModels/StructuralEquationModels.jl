@@ -67,13 +67,13 @@ ram_matrices = RAMMatrices(;
     parameters = x,
     colnames = string.([:x1, :x2, :x3, :y1, :y2, :y3, :y4, :y5, :y6, :y7, :y8, :ind60, :dem60, :dem65]))
 
-@test get_parlabel_indices([:x2, :x10, :x28], ram_matrices) == [2, 10, 28]
-
 # models
 model_ml = Sem(
     specification = ram_matrices,
     data = dat
 )
+
+@test get_identifier_indices([:x2, :x10, :x28], model_ml) == [2, 10, 28]
 
 model_ls_sym = Sem(
     specification = ram_matrices,
@@ -95,6 +95,14 @@ model_ridge = Sem(
     loss = (SemML, SemRidge,),
     α_ridge = .001,
     which_ridge = 16:20
+)
+
+model_ridge_id = Sem(
+    specification = ram_matrices,
+    data = dat,
+    loss = (SemML, SemRidge,),
+    α_ridge = .001,
+    which_ridge = [:x16, :x17, :x18, :x19, :x20]
 )
 
 model_constant = Sem(
