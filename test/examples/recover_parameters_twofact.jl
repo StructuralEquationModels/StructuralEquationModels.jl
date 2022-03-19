@@ -2,16 +2,16 @@ using StructuralEquationModels, Symbolics, SparseArrays, Distributions, Optim, L
 import StructuralEquationModels as SEM
 include("test_helpers.jl")
 
-@variables x[1:13]
+x = Symbol.("x".*string.(1:13))
 
-S = [x[1] 0 0 0 0 0 0 0
-     0 x[2] 0 0 0 0 0 0
-     0 0 x[3] 0 0 0 0 0
-     0 0 0 x[4] 0 0 0 0
-     0 0 0 0 x[5] 0 0 0
-     0 0 0 0 0 x[6] 0 0
-     0 0 0 0 0 0 x[7] x[9]
-     0 0 0 0 0 0 x[9] x[8]]
+S = [:x1 0 0 0 0 0 0 0
+     0 :x2 0 0 0 0 0 0
+     0 0 :x3 0 0 0 0 0
+     0 0 0 :x4 0 0 0 0
+     0 0 0 0 :x5 0 0 0
+     0 0 0 0 0 :x6 0 0
+     0 0 0 0 0 0 :x7 :x9
+     0 0 0 0 0 0 :x9 :x8]
 
 F = [1.0 0 0 0 0 0 0 0
      0 1.0 0 0 0 0 0 0
@@ -21,13 +21,13 @@ F = [1.0 0 0 0 0 0 0 0
      0 0 0 0 0 1.0 0 0]
 
 A = [0 0 0 0 0 0 1.0   0
-     0 0 0 0 0 0 x[10] 0
-     0 0 0 0 0 0 x[11] 0
-     0 0 0 0 0 0 0     1.0
-     0 0 0 0 0 0 0     x[12]
-     0 0 0 0 0 0 0     x[13]
-     0 0 0 0 0 0 0     0
-     0 0 0 0 0 0 0     0]
+     0 0 0 0 0 0 :x10 0
+     0 0 0 0 0 0 :x11 0
+     0 0 0 0 0 0 0    1.0
+     0 0 0 0 0 0 0    :x12
+     0 0 0 0 0 0 0    :x13
+     0 0 0 0 0 0 0    0
+     0 0 0 0 0 0 0    0]
 
 ram_matrices = RAMMatrices(;A = A, S = S, F = F, parameters = x, colnames = nothing)
 
