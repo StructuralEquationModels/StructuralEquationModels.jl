@@ -160,6 +160,12 @@ end
     @test SEM.compare_estimates(par_ls.est[par_order], solution_ls.solution, 0.01)
 end
 
+@testset "ridge_solution" begin
+    solution_ridge = sem_fit(model_ridge)
+    solution_ridge_id = sem_fit(model_ridge_id)
+    @test solution_ridge.solution ≈ solution_ridge_id.solution 1e-6
+end
+
 @testset "constant_solution" begin
     solution_constant = sem_fit(model_constant)
     @test SEM.compare_estimates(par_ml.est[par_order], solution_constant.solution, 0.01)
