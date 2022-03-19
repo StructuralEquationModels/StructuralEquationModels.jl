@@ -18,7 +18,10 @@ end
 ### Constructors
 ############################################################################
 
-function SemRidge(;α_ridge, which_ridge, n_par, parameter_type = Float64, kwargs...)
+function SemRidge(;α_ridge, which_ridge, n_par, parameter_type = Float64, imply = nothing, kwargs...)
+    if which_ridge isa Vector{Symbol}
+        which_ridge = get_identifier_indices(which_ridge, imply)
+    end
     which = [CartesianIndex(x) for x in which_ridge]
     which_H = [CartesianIndex(x, x) for x in which_ridge]
     return SemRidge(

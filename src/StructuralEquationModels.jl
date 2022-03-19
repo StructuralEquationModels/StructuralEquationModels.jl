@@ -83,5 +83,5 @@ export  AbstractSem,
             AIC, BIC, χ², df, fit_measures, minus2ll, npar, nobs, p_value, RMSEA,
             EmMVNModel,
         Fixed, fixed, Start, start, Label, label,
-        get_parlabel_indices
+        get_identifier_indices
 end
