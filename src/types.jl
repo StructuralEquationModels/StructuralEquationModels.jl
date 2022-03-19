@@ -248,7 +248,7 @@ function (ensemble::SemEnsemble)(par, F, G, H)
 end
 
 #####################################################################################################
-# helpers
+# gradient, objective, hessian helpers
 #####################################################################################################
 
 objective(model::AbstractSem) = model.loss.F[1]
@@ -343,3 +343,11 @@ function objective_gradient!(grad, model::SemEnsemble, parameters)
     copyto!(grad, model.G)
     return model.F[1]
 end
+
+#####################################################################################################
+# get identifier
+#####################################################################################################
+
+identifier(sem_fit::SemFit) = identifier(sem_fit.model)
+identifier(model::AbstractSemSingle) = identifier(model.imply)
+identifier(model::SemEnsemble) = model.identifier
