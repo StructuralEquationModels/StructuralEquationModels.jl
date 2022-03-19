@@ -11,7 +11,6 @@ include("types.jl")
 include("frontend/fit/SemFit.jl")
 # specification of models
 include("frontend/specification/ParameterTable.jl")
-include("frontend/specification/parser.jl")
 include("frontend/specification/RAMMatrices.jl")
 include("frontend/specification/StenoGraphs.jl")
 # pretty printing
@@ -81,5 +80,6 @@ export  AbstractSem,
         fit_measures,
             AIC, BIC, χ², df, fit_measures, minus2ll, npar, nobs, p_value, RMSEA,
             EmMVNModel,
-        Fixed, fixed, Start, start, Label, label
+        Fixed, fixed, Start, start, Label, label,
+        get_parlabel_indices
 end

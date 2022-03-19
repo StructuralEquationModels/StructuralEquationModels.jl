@@ -7,20 +7,21 @@ We will fit the following example model:
 We can use the `StenoGraph` package to define our model, which has a similar syntax to the R-package `lavaan`:
 
 ```julia
+observed_vars = [:x1, :x2, :x3, :y1, :y2, :y3]
+latent_vars = [:ξ, :η]
+
 graph = @StenoGraph begin
     # loadings and regressions
     [fixed(1)*x1, x2, x3] ← ξ → η → [fixed(1)*y1, y2, y3]
     # variances
-    [x1, x2, x3, y1, y2, y3, ξ, η] .↔ [x1, x2, x3, y1, y2, y3, ξ, η]
+    _(observed_vars) ↔ _(observed_vars)
+    _(latent_vars) ↔ _(latent_vars)
 end
 ```
 
 We then use this graph to define a `ParameterTable` object:
 
 ```julia
-observed_vars = [:x1, :x2, :x3, :y1, :y2, :y3]
-latent_vars = [:ξ, :η]
-
 partable = ParameterTable(
     latent_vars = latent_vars, 
     observed_vars = observed_vars, 
