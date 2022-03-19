@@ -72,11 +72,11 @@ end
 ############################################################################
 
 function get_colnames(specification::ParameterTable)
-    if length(specification.sorted_vars) == 0
-        colnames = specification.observed_vars
+    if !haskey(specification.variables, :sorted_vars) || (length(specification.variables[:sorted_vars]) == 0)
+        colnames = specification.variables[:observed_vars]
     else
-        is_obs = [var ∈ specification.observed_vars for var in specification.sorted_vars]
-        colnames = specification.sorted_vars[is_obs]
+        is_obs = [var ∈ specification.variables[:observed_vars] for var in specification.variables[:sorted_vars]]
+        colnames = specification.variables[:sorted_vars][is_obs]
     end
     return colnames
 end
