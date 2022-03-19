@@ -300,15 +300,15 @@ function commutation_matrix_pre_square_add_mt!(B, A) # comuptes B + KₙA # 0 al
 
 end
 
-function get_parameter_indices(parameters, model_parameters)
+function get_parlabel_indices(parameters, model_parameters)
     indices = [findfirst(x -> x == par, model_parameters) for par in parameters]
     return indices
 end
 
-get_parameter_indices(parameters, specification::RAMMatrices) = get_parameter_indices(parameters, specification.parameters)
+get_parlabel_indices(parameters, specification::RAMMatrices) = get_parlabel_indices(parameters, specification.parameters)
 
-function get_parameter_indices(parameters, specification::ParameterTable)
+function get_parlabel_indices(parameters, specification::ParameterTable)
     model_parameters = unique(specification.identifier)
     filter!(x -> x != :const, model_parameters)
-    return get_parameter_indices(model_parameters, parameters)
+    return get_parlabel_indices(model_parameters, parameters)
 end
