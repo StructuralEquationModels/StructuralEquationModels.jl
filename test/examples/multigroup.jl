@@ -22,7 +22,7 @@ dat = select(dat, Not(:school))
 ### define models
 ############################################################################
 
-@Symbolics.variables x[1:36]
+x = Symbol.("x".*string.(1:36))
 #x = [x...]
 
 F = zeros(9, 12)
@@ -51,14 +51,14 @@ ram_matrices_g1 = RAMMatrices(;
     S = S1,
     F = F,
     parameters = x,
-    colnames = string.([:x1, :x2, :x3, :x4, :x5, :x6, :x7, :x8, :x9]))
+    colnames = string.([:x1, :x2, :x3, :x4, :x5, :x6, :x7, :x8, :x9, :visual, :textual, :speed]))
 
 ram_matrices_g2 = RAMMatrices(;
     A = A,
     S = S2,
     F = F,
     parameters = x,
-    colnames = string.([:x1, :x2, :x3, :x4, :x5, :x6, :x7, :x8, :x9]))
+    colnames = string.([:x1, :x2, :x3, :x4, :x5, :x6, :x7, :x8, :x9, :visual, :textual, :speed]))
 
 ### start values
 par_order = [collect(7:21); collect(1:6); collect(28:42)]
