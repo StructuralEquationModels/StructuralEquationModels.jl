@@ -57,6 +57,8 @@ include("frontend/fit/fitmeasures/nobs.jl")
 include("frontend/fit/fitmeasures/p.jl")
 include("frontend/fit/fitmeasures/RMSEA.jl")
 include("frontend/fit/fitmeasures/fit_measures.jl")
+# standard errors
+include("frontend/fit/standard_errors/hessian.jl")
 
 
 export  AbstractSem, 
