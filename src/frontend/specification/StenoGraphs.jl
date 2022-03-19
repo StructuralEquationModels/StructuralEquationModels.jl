@@ -39,8 +39,8 @@ function ParameterTable(;graph, observed_vars, latent_vars)
     start = zeros(n)
     estimate = zeros(n)
     identifier = Vector{Symbol}(undef, n)
-    group = Vector{Symbol}(undef, n)
-    start_partable = zeros(Bool, n)
+    # group = Vector{Symbol}(undef, n)
+    # start_partable = zeros(Bool, n)
 
     sorted_vars = Vector{Symbol}()
 
@@ -104,19 +104,21 @@ function ParameterTable(;graph, observed_vars, latent_vars)
     identifier_out[free] .= identifier_long
 
     return StructuralEquationModels.ParameterTable(
-        latent_vars,
-        observed_vars,
-        sorted_vars,
-        from,
-        parameter_type,
-        to,
-        free,
-        value_fixed,
-        label,
-        start,
-        estimate,
-        identifier_out,
-        group,
-        start_partable
+        Dict(
+            :from => from,
+            :parameter_type => parameter_type,
+            :to => to,
+            :free => free,
+            :value_fixed => value_fixed,
+            :label => label,
+            :start => start,
+            :estimate => estimate,
+            :identifier => identifier_out),
+            #:group => ,
+            #:start_partable => start_partable),
+        Dict(
+            :latent_vars => latent_vars,
+            :observed_vars => observed_vars,
+            :sorted_vars => sorted_vars)
     )
 end

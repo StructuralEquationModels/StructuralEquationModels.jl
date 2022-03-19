@@ -185,11 +185,11 @@ function compare_estimates(partable_lav, partable::ParameterTable, tol)
 
     correct = []
 
-    for i in findall(partable.free)
+    for i in findall(partable.columns[:free])
 
-        from = partable.from[i]
-        to = partable.to[i]
-        estimate = partable.estimate[i]
+        from = partable.columns[:from][i]
+        to = partable.columns[:to][i]
+        estimate = partable.columns[:estimate][i]
 
         lav_ind = findall((partable_lav.lhs .== String(from)) .& (partable_lav.rhs .== String(to)))
 
@@ -298,4 +298,17 @@ function commutation_matrix_pre_square_add_mt!(B, A) # comuptes B + KₙA # 0 al
 
     return B
 
+end
+
+function get_parlabel_indices(parameters, model_parameters)
+    indices = [findfirst(x -> x == par, model_parameters) for par in parameters]
+    return indices
+end
+
+get_parlabel_indices(parameters, specification::RAMMatrices) = get_parlabel_indices(parameters, specification.parameters)
+
+function get_parlabel_indices(parameters, specification::ParameterTable)
+    model_parameters = unique(specification.identifier)
+    filter!(x -> x != :const, model_parameters)
+    return get_parlabel_indices(model_parameters, parameters)
 end

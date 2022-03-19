@@ -85,29 +85,29 @@ end
 
 function RAMMatrices(partable::ParameterTable)
 
-    parameters = unique(partable.identifier)
+    parameters = unique(partable.columns[:identifier])
     filter!(x -> x != :const, parameters)
     n_par = length(parameters)
     par_positions = Dict(parameters .=> 1:n_par)
 
-    n_observed = size(partable.observed_vars, 1)
-    n_latent = size(partable.latent_vars, 1)
+    n_observed = size(partable.variables[:observed_vars], 1)
+    n_latent = size(partable.variables[:latent_vars], 1)
     n_node = n_observed + n_latent
 
     # F indices
-    if length(partable.sorted_vars) != 0
-        F_ind = findall(x -> x ∈ partable.observed_vars, partable.sorted_vars)
+    if length(partable.variables[:sorted_vars]) != 0
+        F_ind = findall(x -> x ∈ partable.variables[:observed_vars], partable.variables[:sorted_vars])
     else
         F_ind = 1:n_observed
     end
 
     # indices of the colnames
-    if length(partable.sorted_vars) != 0
-        positions = Dict(zip(partable.sorted_vars, collect(1:n_observed+n_latent)))
-        colnames = copy(partable.sorted_vars)
+    if length(partable.variables[:sorted_vars]) != 0
+        positions = Dict(zip(partable.variables[:sorted_vars], collect(1:n_observed+n_latent)))
+        colnames = copy(partable.variables[:sorted_vars])
     else
-        positions = Dict(zip([partable.observed_vars; partable.latent_vars], collect(1:n_observed+n_latent)))
-        colnames = [partable.observed_vars; partable.latent_vars]
+        positions = Dict(zip([partable.variables[:observed_vars]; partable.variables[:latent_vars]], collect(1:n_observed+n_latent)))
+        colnames = [partable.variables[:observed_vars]; partable.variables[:latent_vars]]
     end
     
     # fill Matrices
@@ -119,7 +119,7 @@ function RAMMatrices(partable::ParameterTable)
     for i in 1:length(S_ind) S_ind[i] = Vector{Int64}() end
 
     # is there a meanstructure?
-    if any(partable.from .== Symbol("1"))
+    if any(partable.columns[:from] .== Symbol("1"))
         M_ind = Vector{Vector{Int64}}(undef, n_par)
         for i in 1:length(M_ind) M_ind[i] = Vector{Int64}() end
     else
@@ -176,7 +176,7 @@ end
 ############################################################################
 ### get parameter table from RAMMatrices
 ############################################################################
-
+#= 
 function ParameterTable(ram_matrices::RAMMatrices)
     
     new_partable = ParameterTable(nothing)
@@ -293,7 +293,7 @@ function ParameterTable(ram_matrices::RAMMatrices)
     end
 
     return new_partable
-end
+end =#
 
 ############################################################################
 ### Pretty Printing
