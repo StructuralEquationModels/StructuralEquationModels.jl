@@ -67,8 +67,6 @@ ram_matrices = RAMMatrices(;
     parameters = x,
     colnames = string.([:x1, :x2, :x3, :y1, :y2, :y3, :y4, :y5, :y6, :y7, :y8, :ind60, :dem60, :dem65]))
 
-
-@test get_parlabel_indices([:x2, :x10, :x28], partable) == [2, 10, 28]
 @test get_parlabel_indices([:x2, :x10, :x28], ram_matrices) == [2, 10, 28]
 
 # models
