@@ -226,7 +226,7 @@ end
 
 # update partable standard errors ---------------------------------------------
 
-function update_se_hessian!(;partable::ParameterTable, sem_fit::SemFit; hessian = :finitediff)
+function update_se_hessian!(partable::ParameterTable, sem_fit::SemFit; hessian = :finitediff)
     se = se_hessian(sem_fit; hessian = hessian)
     return update_partable!(partable, identifier(model), se, :se)
 end
