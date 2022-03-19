@@ -285,7 +285,7 @@ function check_fiml(semfiml, model)
     return isposdef(a)
 end
 
-get_n_nodes(specification::RAMMatrices) = size(specification.A, 1)
+get_n_nodes(specification::RAMMatrices) = specification.size_F[2]
 get_n_nodes(specification::ParameterTable) = length(specification.observed_vars) + length(specification.latent_vars)
 
 ############################################################################
