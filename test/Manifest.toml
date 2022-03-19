@@ -568,9 +568,9 @@ uuid = "4c63d2b9-4356-54db-8cca-17b64c39e42c"
 version = "0.9.10"
 
 [[deps.StenoGraphs]]
-git-tree-sha1 = "c3319b31ddcbbde053a59e0a81d6526c8d57d574"
+git-tree-sha1 = "7bfe40d1fa3437296b7b290562fe83832702d52e"
 uuid = "78862bba-adae-4a83-bb4d-33c106177f81"
-version = "0.0.1"
+version = "0.1.1"
 
 [[deps.SuiteSparse]]
 deps = ["Libdl", "LinearAlgebra", "Serialization", "SparseArrays"]
