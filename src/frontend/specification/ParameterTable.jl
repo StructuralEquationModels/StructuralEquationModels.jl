@@ -186,7 +186,7 @@ end =#
 # update generic ---------------------------------------------------------------
 
 function update_partable!(partable::ParameterTable, model_identifier::AbstractDict, vec, column)
-    if !haskey(partable, column)
+    if !haskey(partable.columns, column)
         @info "Your parameter table does not have the column $column, so it was added."
         new_col = Vector{eltype(vec)}(undef, length(partable))
         for (i, identifier) in enumerate(partable.columns[:identifier])
