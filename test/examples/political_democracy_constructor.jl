@@ -163,7 +163,7 @@ end
 @testset "ridge_solution" begin
     solution_ridge = sem_fit(model_ridge)
     solution_ridge_id = sem_fit(model_ridge_id)
-    @test solution_ridge.solution ≈ solution_ridge_id.solution 1e-6
+    @test solution_ridge.solution ≈ solution_ridge_id.solution rtol = 1e-6
 end
 
 @testset "constant_solution" begin
