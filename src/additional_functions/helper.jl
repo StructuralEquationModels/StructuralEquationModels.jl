@@ -315,4 +315,4 @@ end =#
 
 get_identifier_indices(parameters, identifier::Dict{Symbol, Int}) = [identifier[par] for par in parameters]
 
-get_identifier_indices(parameters, obj) = get_parlabel_indices(parameters, identifier(obj)) 
+get_identifier_indices(parameters, obj) = get_identifier_indices(parameters, identifier(obj)) 
