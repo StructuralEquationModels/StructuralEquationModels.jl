@@ -81,13 +81,13 @@ end
 
 @testset "ml_solution" begin
     solution_ml = sem_fit(model_ml)
-    update_partable!(partable, solution_ml)
+    update_estimate!(partable, solution_ml)
     @test SEM.compare_estimates(par_ml, partable, 0.01)
 end
 
 @testset "ls_solution" begin
     solution_ls = sem_fit(model_ls_sym)
-    update_partable!(partable, solution_ls)
+    update_estimate!(partable, solution_ls)
     @test SEM.compare_estimates(par_ls, partable, 0.01)
 end
 
@@ -108,6 +108,6 @@ end
 
 @testset "ml_solution_sorted" begin
     solution_ml_sorted = sem_fit(model_ml_sorted)
-    update_partable!(partable, solution_ml_sorted)
+    update_estimate!(partable, solution_ml_sorted)
     @test SEM.compare_estimates(par_ml, partable, 0.01)
 end
