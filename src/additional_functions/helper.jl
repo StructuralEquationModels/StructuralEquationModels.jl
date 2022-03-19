@@ -185,11 +185,11 @@ function compare_estimates(partable_lav, partable::ParameterTable, tol)
 
     correct = []
 
-    for i in findall(partable.free)
+    for i in findall(partable.columns[:free])
 
-        from = partable.from[i]
-        to = partable.to[i]
-        estimate = partable.estimate[i]
+        from = partable.columns[:from][i]
+        to = partable.columns[:to][i]
+        estimate = partable.columns[:estimate][i]
 
         lav_ind = findall((partable_lav.lhs .== String(from)) .& (partable_lav.rhs .== String(to)))
 

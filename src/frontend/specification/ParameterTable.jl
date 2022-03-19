@@ -2,9 +2,8 @@
 ### Types
 ############################################################################
 
-mutable struct ParameterTable{C, l, V}
+mutable struct ParameterTable{C, V}
     columns::C
-    len::l # length
     variables::V
     #latent_vars::SV
     #observed_vars::SV
@@ -39,6 +38,7 @@ function ParameterTable(disambig::Nothing)
         :start => Vector{Float64}(),
         :estimate => Vector{Float64}(),
         :identifier => Vector{Symbol}(),
+        :start => Vector{Float64}(),
     )
 
     variables = Dict{Symbol, Any}(
@@ -47,7 +47,7 @@ function ParameterTable(disambig::Nothing)
         :sorted_vars => Vector{Symbol}()
     )
 
-    return ParameterTable(columns, 0, variables)
+    return ParameterTable(columns, variables)
 end
 
 ############################################################################
@@ -89,8 +89,8 @@ function Base.show(io::IO, partable::ParameterTable)
         io, 
         as_matrix,
         header = (
-            relevant_fields,
-            eltype.(getproperty.([partable], relevant_fields))
+            relevant_columns,
+            eltype.([partable.columns[key] for key in relevant_columns[existing_columns]])
         ),
         tf = PrettyTables.tf_compact)
 
@@ -117,7 +117,14 @@ Base.getindex(partable::ParameterTable, i::Int) =
     partable.columns[:label][i],
     partable.columns[:identifier][i])
 
-Base.length(partable::ParameterTable) = partable.len
+function Base.length(partable::ParameterTable)
+    len = missing
+    for key in keys(partable.columns)
+        len = length(partable.columns[key])
+        break
+    end
+    return len
+end
 
 # Sorting -------------------------------------------------------------------
 
@@ -158,6 +165,7 @@ function sort!(partable::ParameterTable)
 
     push!(partable.variables, :sorted_vars => sorted_variables)
 
+    return partable
 end
 
 function sort(partable::ParameterTable)
