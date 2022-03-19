@@ -76,7 +76,7 @@ function Base.show(io::IO, partable::ParameterTable)
         io, 
         as_matrix,
         header = (
-            relevant_columns,
+            relevant_columns[existing_columns],
             eltype.([partable.columns[key] for key in relevant_columns[existing_columns]])
         ),
         tf = PrettyTables.tf_compact)
