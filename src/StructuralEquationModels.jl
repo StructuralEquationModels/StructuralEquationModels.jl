@@ -3,9 +3,7 @@ module StructuralEquationModels
 using LinearAlgebra, Optim,
     NLSolversBase, Statistics, SparseArrays, Symbolics,
     NLopt, FiniteDiff, ForwardDiff, PrettyTables,
-    Distributions
-
-import StenoGraphs: EdgeModifier, DirectedEdge, UndirectedEdge, ModifiedEdge
+    Distributions, StenoGraphs
 
 # type hierarchy
 include("types.jl")
