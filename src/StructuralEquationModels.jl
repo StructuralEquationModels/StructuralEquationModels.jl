@@ -82,6 +82,7 @@ export  AbstractSem,
         fit_measures,
             AIC, BIC, χ², df, fit_measures, minus2ll, npar, nobs, p_value, RMSEA,
             EmMVNModel,
+        se_hessian,
         Fixed, fixed, Start, start, Label, label,
         get_identifier_indices
 end
