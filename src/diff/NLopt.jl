@@ -9,9 +9,9 @@ struct SemDiffNLopt{A, B} <: SemDiff
     inequality_constraints
 end
 
-function SemDiffNLopt(;algorithm = :LD_LBFGS, options = nothing, equality_constraints = [], inequality_constraints = [], kwargs...) 
-    applicable(iterate, equality_constraints) || equality_constraints = [equality_constraints]
-    applicable(iterate, inequality_constraints) || equality_constraints = [equality_constraints]
+function SemDiffNLopt(;algorithm = :LD_LBFGS, options = nothing, equality_constraints = [], inequality_constraints = [], kwargs...)
+    applicable(iterate, equality_constraints) || (equality_constraints = [equality_constraints])
+    applicable(iterate, inequality_constraints) || (equality_constraints = [equality_constraints])
     return SemDiffNLopt(algorithm, options, equality_constraints, inequality_constraints)
 end
 
