@@ -1,4 +1,8 @@
-## connect do Optim.jl as backend
+############################################################################
+### connect to NLopt.jl as backend
+############################################################################
+
+# wrapper to define the objective
 function sem_wrap_nlopt(par, G, sem::AbstractSem)
     need_gradient = length(G) != 0
     sem(par, true, need_gradient, false)
@@ -6,40 +10,80 @@ function sem_wrap_nlopt(par, G, sem::AbstractSem)
     return objective(sem)
 end
 
-function SemFit_NLopt(optimization_result, model::AbstractSem, start_val)
+mutable struct NLoptResult
+    result
+    problem
+end
+
+# construct SemFit from fitted NLopt object
+function SemFit_NLopt(optimization_result, model::AbstractSem, start_val, opt)
     return SemFit(
         optimization_result[1],
         optimization_result[2],
         start_val,
         model,
-        optimization_result
+        NLoptResult(optimization_result, opt)
     )
 end
 
-function sem_fit(
-            model::Sem{O, I, L, D};
-            start_val = start_val,
-            ftol_rel = 1e-10,
-            xtol_rel = 1.5e-8,
-            lower = nothing,
-            upper = nothing,
-            local_algo = nothing,
-            maxeval = 200,
-            kwargs...) where {O, I, L, D <: SemDiffNLopt}
+# sem_fit method
+function sem_fit(model::Sem{O, I, L, D}; start_val = start_val, kwargs...) where {O, I, L, D <: SemDiffNLopt}
 
+    # starting values
     if !isa(start_val, Vector)
         start_val = start_val(model; kwargs...)
     end
 
-    opt = NLopt.Opt(model.diff.algorithm, length(start_val))
-    #cache = FiniteDiff.GradientCache(start)
+    # construct the NLopt problem
+    opt = construct_NLopt_problem(model.diff.algorithm, model.diff.options, length(start_val))
+    set_NLopt_constraints!(opt, model.diff)   
     opt.min_objective = (par, G) -> sem_wrap_nlopt(par, G, model)
-    opt.ftol_rel = ftol_rel
-    opt.xtol_rel = xtol_rel
-    opt.maxeval = maxeval
-    !isnothing(lower) ? opt.lower_bounds = lower : nothing
-    !isnothing(upper) ? opt.upper_bounds = upper : nothing
-    !isnothing(local_algo) ? opt.local_optimizer = NLopt.Opt(local_algo, length(start_val)) : nothing
+
+    if !isnothing(model.diff.local_algorithm)
+        opt_local = construct_NLopt_problem(
+            model.diff.local_algorithm,
+            model.diff.local_options,
+            length(start_val))
+        opt.local_optimizer = opt_local
+    end
+
+    # fit
     result = NLopt.optimize(opt, start_val)
-    return SemFit_NLopt(result, model, start_val)
+
+    return SemFit_NLopt(result, model, start_val, opt)
+end
+
+############################################################################
+### additional functions
+############################################################################
+
+function construct_NLopt_problem(algorithm, options, npar)
+    opt = Opt(algorithm, npar)
+
+    for key in keys(options)
+        setproperty!(opt, key, options[key])
+    end
+
+    return opt
+
+end
+
+function set_NLopt_constraints!(opt, diff::SemDiffNLopt)
+    for con in diff.inequality_constraints
+        inequality_constraint!(opt::Opt, con.f, con.tol)
+    end
+    for con in diff.equality_constraints
+        equality_constraint!(opt::Opt, con.f, con.tol)
+    end
+end
+
+##############################################################
+# pretty printing
+##############################################################
+
+function Base.show(io::IO, result::NLoptResult)
+    print(io, "Optimizer status: $(result.result[3]) \n")
+    print(io, "Minimum:          $(round(result.result[1]; digits = 2)) \n")
+    print(io, "Algorithm:        $(result.problem.algorithm) \n")
+    print(io, "No. evaluations:  $(result.problem.numevals) \n")
 end

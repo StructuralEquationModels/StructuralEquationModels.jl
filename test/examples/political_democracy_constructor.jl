@@ -67,13 +67,13 @@ ram_matrices = RAMMatrices(;
     parameters = x,
     colnames = string.([:x1, :x2, :x3, :y1, :y2, :y3, :y4, :y5, :y6, :y7, :y8, :ind60, :dem60, :dem65]))
 
-@test get_parlabel_indices([:x2, :x10, :x28], ram_matrices) == [2, 10, 28]
-
 # models
 model_ml = Sem(
     specification = ram_matrices,
     data = dat
 )
+
+@test get_identifier_indices([:x2, :x10, :x28], model_ml) == [2, 10, 28]
 
 model_ls_sym = Sem(
     specification = ram_matrices,
@@ -95,6 +95,14 @@ model_ridge = Sem(
     loss = (SemML, SemRidge,),
     α_ridge = .001,
     which_ridge = 16:20
+)
+
+model_ridge_id = Sem(
+    specification = ram_matrices,
+    data = dat,
+    loss = (SemML, SemRidge,),
+    α_ridge = .001,
+    which_ridge = [:x16, :x17, :x18, :x19, :x20]
 )
 
 model_constant = Sem(
@@ -152,6 +160,12 @@ end
     @test SEM.compare_estimates(par_ls.est[par_order], solution_ls.solution, 0.01)
 end
 
+@testset "ridge_solution" begin
+    solution_ridge = sem_fit(model_ridge)
+    solution_ridge_id = sem_fit(model_ridge_id)
+    @test solution_ridge.solution ≈ solution_ridge_id.solution rtol = 1e-6
+end
+
 @testset "constant_solution" begin
     solution_constant = sem_fit(model_constant)
     @test SEM.compare_estimates(par_ml.est[par_order], solution_constant.solution, 0.01)
@@ -172,14 +186,16 @@ end
 ### test fit assessment
 ############################################################################
 
-@testset "fitmeasures_ml" begin
+@testset "fitmeasures/se_ml" begin
     solution_ml = sem_fit(model_ml)
     @test all(test_fitmeasures(fit_measures(solution_ml), measures_ml; rtol = 1e-2))
+    @test par_ml.se[par_order] ≈ se_hessian(solution_ml) rtol = 1e-3
 end
 
-@testset "fitmeasures_ls" begin
+@testset "fitmeasures/se_ls" begin
     solution_ls = sem_fit(model_ls_sym)
     @test all(test_fitmeasures(fit_measures(solution_ls), measures_ls; rtol = 1e-2, fitmeasure_names = fitmeasure_names_ls))
+    @test_skip par_ls.se[par_order] ≈ se_hessian(solution_ls) rtol = 1e-3
 end
 
 ############################################################################

@@ -47,3 +47,9 @@ function Base.show(io::IO, struct_inst::ImplyEmpty)
     print_type_name(io, struct_inst)
     print_field_types(io, struct_inst)
 end
+
+############################################################################
+### Identifier
+############################################################################
+
+identifier(imply::ImplyEmpty) = imply.identifier

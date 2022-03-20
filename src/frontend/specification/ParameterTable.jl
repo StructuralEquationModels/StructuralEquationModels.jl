@@ -5,20 +5,6 @@
 mutable struct ParameterTable{C, V}
     columns::C
     variables::V
-    #latent_vars::SV
-    #observed_vars::SV
-    #sorted_vars::SV
-    #from::SV
-    #parameter_type::SV
-    #to::SV
-    #free::BV
-    #value_fixed::FV
-    #label::SV
-    #start::FV
-    #estimate::FV
-    #identifier::SyV
-    #group::SV
-    #start_partable::BV
 end
 
 ############################################################################
@@ -81,6 +67,7 @@ function Base.show(io::IO, partable::ParameterTable)
         :label,
         :start,
         :estimate,
+        :se,
         :identifier]
     existing_columns = [haskey(partable.columns, key) for key in relevant_columns]
     
@@ -89,7 +76,7 @@ function Base.show(io::IO, partable::ParameterTable)
         io, 
         as_matrix,
         header = (
-            relevant_columns,
+            relevant_columns[existing_columns],
             eltype.([partable.columns[key] for key in relevant_columns[existing_columns]])
         ),
         tf = PrettyTables.tf_compact)
@@ -193,48 +180,53 @@ function push!(partable::ParameterTable, from, parameter_type, to, free, value_f
 end =#
 
 ############################################################################
-### Update Fitted Model
+### Update Partable from Fitted Model
 ############################################################################
+
+# update generic ---------------------------------------------------------------
+
+function update_partable!(partable::ParameterTable, model_identifier::AbstractDict, vec, column)
+    if !haskey(partable.columns, column)
+        @info "Your parameter table does not have the column $column, so it was added."
+        new_col = Vector{eltype(vec)}(undef, length(partable))
+        for (i, identifier) in enumerate(partable.columns[:identifier])
+            if !(identifier == :const)
+                new_col[i] = vec[model_identifier[identifier]]
+            elseif identifier == :const
+                new_col[i] == zero(eltype(vec))
+            end
+        end
+        push!(partable.columns, column => new_col)
+    else
+        for (i, identifier) in enumerate(partable.columns[:identifier])
+            if !(identifier == :const)
+                partable.columns[column][i] = vec[model_identifier[identifier]]
+            end
+        end
+    end
+    return partable
+end
 
 # update estimates ---------------------------------------------------------
 
-function update_estimate!(partable::ParameterTable, sem_fit::SemFit)
-    for (i, identifier) in enumerate(partable.columns[:identifier])
-        if !(identifier == :const)
-            partable.columns[:estimate][i] = sem_fit.solution[sem_fit.model.imply.identifier[identifier]]
-        end
-    end
-    return partable
-end
-
+update_estimate!(partable::ParameterTable, sem_fit::SemFit) =
+    update_partable!(partable, identifier(sem_fit), sem_fit.solution, :estimate)
 
 # update starting values -----------------------------------------------------
 
-function update_start!(partable::ParameterTable, sem_fit::SemFit)
-    for (i, identifier) in enumerate(partable.columns[:identifier])
-        if !(identifier == :const)
-            partable.columns[:start][i] = sem_fit.start_val[sem_fit.model.imply.identifier[identifier]] 
-        end
-    end
-    return partable
-end
+update_start!(partable::ParameterTable, sem_fit::SemFit) =
+    update_partable!(partable, identifier(sem_fit), sem_fit.start_val, :start)
 
-function update_start!(partable::ParameterTable, model::Sem{O, I, L, D}, start_val) where{O, I, L, D}
+function update_start!(partable::ParameterTable, model::AbstractSem, start_val) where{O, I, L, D}
     if !(start_val isa Vector)
         start_val = start_val(model)
     end
-    for (i, identifier) in enumerate(partable.columns[:identifier])
-        if !(identifier == :const)
-            partable.columns[:start][i] = start_val[model.imply.identifier[identifier]]
-        end
-    end
-    return partable
+    return update_partable!(partable, identifier(model), start_val, :start)
 end
 
-# update estimates and starting values ----------------------------------------
+# update partable standard errors ---------------------------------------------
 
-function update_partable!(partable::ParameterTable, sem_fit::SemFit)
-    update_start!(partable, sem_fit)
-    update_estimate!(partable, sem_fit)
-    return partable
+function update_se_hessian!(partable::ParameterTable, sem_fit::SemFit; hessian = :finitediff)
+    se = se_hessian(sem_fit; hessian = hessian)
+    return update_partable!(partable, identifier(model), se, :se)
 end

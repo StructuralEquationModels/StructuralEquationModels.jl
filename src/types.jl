@@ -248,7 +248,7 @@ function (ensemble::SemEnsemble)(par, F, G, H)
 end
 
 #####################################################################################################
-# helpers
+# gradient, objective, hessian helpers
 #####################################################################################################
 
 objective(model::AbstractSem) = model.loss.F[1]
