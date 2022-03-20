@@ -189,13 +189,13 @@ end
 @testset "fitmeasures/se_ml" begin
     solution_ml = sem_fit(model_ml)
     @test all(test_fitmeasures(fit_measures(solution_ml), measures_ml; rtol = 1e-2))
-    @test par_ml.est[par_order] ≈ se_hessian(solution_ml) rtol = 1e-3
+    @test par_ml.se[par_order] ≈ se_hessian(solution_ml) rtol = 1e-3
 end
 
 @testset "fitmeasures/se_ls" begin
     solution_ls = sem_fit(model_ls_sym)
     @test all(test_fitmeasures(fit_measures(solution_ls), measures_ls; rtol = 1e-2, fitmeasure_names = fitmeasure_names_ls))
-    @test par_ls.est[par_order] ≈ se_hessian(solution_ls) rtol = 1e-3
+    @test par_ls.se[par_order] ≈ se_hessian(solution_ls) rtol = 1e-3
 end
 
 ############################################################################
