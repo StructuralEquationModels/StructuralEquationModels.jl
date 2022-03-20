@@ -163,21 +163,22 @@ end
 
 # add a row -------------------------------------------------------------------
 
-#= import Base.push!
+import Base.push!
 
-function push!(partable::ParameterTable, from, parameter_type, to, free, value_fixed, label, start, estimate, identifier)
-    
-    push!(partable.from, from)
-    push!(partable.parameter_type, parameter_type)
-    push!(partable.to, to)
-    push!(partable.free, free)
-    push!(partable.value_fixed, value_fixed)
-    push!(partable.label, label)
-    push!(partable.start, start)
-    push!(partable.estimate, estimate)
-    push!(partable.identifier, identifier)
+function push!(partable::ParameterTable, d::AbstractDict)
 
-end =#
+    if !(keys(d) == keys(partable.columns))
+        @error "Can not push row to partable as the columns do not match. \n
+                Got columns $(keys(d)) and $(keys(partable.columns))"
+    end
+
+    for key in keys(d)
+        push!(partable.columns[key], d[key])
+    end
+
+end
+
+push!(partable::ParameterTable, d::Nothing) = nothing
 
 ############################################################################
 ### Update Partable from Fitted Model
