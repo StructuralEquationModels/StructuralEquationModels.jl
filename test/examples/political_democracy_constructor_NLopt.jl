@@ -1,4 +1,4 @@
-using StructuralEquationModels, CSV, DataFrames, Test, FiniteDiff, NLopt
+using StructuralEquationModels, CSV, DataFrames, Test, FiniteDiff
 import StructuralEquationModels as SEM
 include("test_helpers.jl")
 
