@@ -126,7 +126,7 @@ constrained_diff = SemDiffNLopt(;
     algorithm = :AUGLAG,
     local_algorithm = :LD_LBFGS,
     local_options = Dict(
-        :ftol_rel => 1e-8
+        :ftol_rel => 1e-6
     ),
     # equality_constraints = NLoptConstraint(;f = eq_constraint, tol = 1e-14),
     inequality_constraints = NLoptConstraint(;f = ineq_constraint, tol = 0.0),
@@ -203,6 +203,7 @@ end
     @test solution_constrained.solution[31]*solution_constrained.solution[30] >= 0.6
     @test all(abs.(solution_constrained.solution) .< 10)
     @test solution_constrained.optimization_result.result[3] == :FTOL_REACHED
+    @test abs(solution_constrained.minimum - 21.21) < 0.01
 end
 
 ############################################################################
