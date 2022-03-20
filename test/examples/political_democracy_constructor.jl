@@ -45,10 +45,10 @@ F =[1.0 0 0 0 0 0 0 0 0 0 0 0 0 0
     0 0 0 0 0 0 0 0 0 1 0 0 0 0
     0 0 0 0 0 0 0 0 0 0 1 0 0 0]
 
-A =[0  0  0  0  0  0  0  0  0  0  0     1     0     0
+A =[0  0  0  0  0  0  0  0  0  0  0     1.0   0     0
     0  0  0  0  0  0  0  0  0  0  0     :x21  0     0
     0  0  0  0  0  0  0  0  0  0  0     :x22  0     0
-    0  0  0  0  0  0  0  0  0  0  0     0     1     0
+    0  0  0  0  0  0  0  0  0  0  0     0     1.0   0
     0  0  0  0  0  0  0  0  0  0  0     0     :x23  0
     0  0  0  0  0  0  0  0  0  0  0     0     :x24  0
     0  0  0  0  0  0  0  0  0  0  0     0     :x25  0
@@ -65,7 +65,12 @@ ram_matrices = RAMMatrices(;
     S = S, 
     F = F, 
     parameters = x,
-    colnames = string.([:x1, :x2, :x3, :y1, :y2, :y3, :y4, :y5, :y6, :y7, :y8, :ind60, :dem60, :dem65]))
+    colnames = [:x1, :x2, :x3, :y1, :y2, :y3, :y4, :y5, :y6, :y7, :y8, :ind60, :dem60, :dem65])
+
+@testset "ParameterTable - RAMMatrices conversion" begin
+    partable = ParameterTable(ram_matrices)
+    @test ram_matrices == RAMMatrices(partable)
+end
 
 # models
 model_ml = Sem(
