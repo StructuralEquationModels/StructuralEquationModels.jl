@@ -239,14 +239,3 @@ function Base.show(io::IO, models::SemEnsemble)
         print(io, model)
     end
 end
-
-function Base.show(io::IO, semfit::SemFit)
-    print(io, "Fitted Structural Equation Model \n \n")
-    print(io, "================================ \n")
-    print(io, "---------- Model ---------- \n")
-    print(io, semfit.model)
-    print(io, "\n")
-    #print(io, "Objective value: $(round(semfit.minimum, digits = 4)) \n")
-    print(io, "----- Optimization result ------ \n")
-    print(io, semfit.optimization_result)
-end

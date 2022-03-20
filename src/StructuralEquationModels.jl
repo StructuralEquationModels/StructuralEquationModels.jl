@@ -44,6 +44,8 @@ include("additional_functions/start_val/start_val.jl")
 include("additional_functions/start_val/start_fabin3.jl")
 include("additional_functions/start_val/start_partable.jl")
 include("additional_functions/start_val/start_simple.jl")
+# identifier
+include("frontend/identifier.jl")
 # fit measures
 include("frontend/fit/fitmeasures/AIC.jl")
 include("frontend/fit/fitmeasures/BIC.jl")
@@ -55,6 +57,8 @@ include("frontend/fit/fitmeasures/nobs.jl")
 include("frontend/fit/fitmeasures/p.jl")
 include("frontend/fit/fitmeasures/RMSEA.jl")
 include("frontend/fit/fitmeasures/fit_measures.jl")
+# standard errors
+include("frontend/fit/standard_errors/hessian.jl")
 
 
 export  AbstractSem, 
@@ -67,7 +71,7 @@ export  AbstractSem,
             SemLossFunction, SemML, SemFIML, em_mvn, SemLasso, SemRidge,
             SemConstant, SemWLS,
         SemDiff, 
-            SemDiffOptim, SemDiffNLopt,
+            SemDiffOptim, SemDiffNLopt, NLoptConstraint,
         SemObs, 
             SemObsCommon, SemObsMissing,
         sem_fit, SemFit,
@@ -80,6 +84,7 @@ export  AbstractSem,
         fit_measures,
             AIC, BIC, χ², df, fit_measures, minus2ll, npar, nobs, p_value, RMSEA,
             EmMVNModel,
+        se_hessian,
         Fixed, fixed, Start, start, Label, label,
-        get_parlabel_indices
+        get_identifier_indices
 end
