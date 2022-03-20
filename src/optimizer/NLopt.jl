@@ -10,6 +10,11 @@ function sem_wrap_nlopt(par, G, sem::AbstractSem)
     return objective(sem)
 end
 
+mutable struct NLoptResult
+    result
+    problem
+end
+
 # construct SemFit from fitted NLopt object
 function SemFit_NLopt(optimization_result, model::AbstractSem, start_val, opt)
     return SemFit(
@@ -17,12 +22,12 @@ function SemFit_NLopt(optimization_result, model::AbstractSem, start_val, opt)
         optimization_result[2],
         start_val,
         model,
-        Dict(:result => optimization_result, :problem => opt)
+        NLoptResult(optimization_result, opt)
     )
 end
 
 # sem_fit method
-function sem_fit(model::Sem{O, I, L, D}; kwargs...) where {O, I, L, D <: SemDiffNLopt}
+function sem_fit(model::Sem{O, I, L, D}; start_val = start_val, kwargs...) where {O, I, L, D <: SemDiffNLopt}
 
     # starting values
     if !isa(start_val, Vector)
@@ -30,9 +35,17 @@ function sem_fit(model::Sem{O, I, L, D}; kwargs...) where {O, I, L, D <: SemDiff
     end
 
     # construct the NLopt problem
-    opt = construct_NLopt_problem(model.diff, start_val)
-    set_NLopt_constraints!(opt, diff)   
+    opt = construct_NLopt_problem(model.diff.algorithm, model.diff.options, length(start_val))
+    set_NLopt_constraints!(opt, model.diff)   
     opt.min_objective = (par, G) -> sem_wrap_nlopt(par, G, model)
+
+    if !isnothing(model.diff.local_algorithm)
+        opt_local = construct_NLopt_problem(
+            model.diff.local_algorithm,
+            model.diff.local_options,
+            length(start_val))
+        opt.local_optimizer = opt_local
+    end
 
     # fit
     result = NLopt.optimize(opt, start_val)
@@ -44,11 +57,11 @@ end
 ### additional functions
 ############################################################################
 
-function construct_NLopt_problem(diff::SemDiffNLopt, npar)
-    opt = Opt(diff.algorithm, npar)
+function construct_NLopt_problem(algorithm, options, npar)
+    opt = Opt(algorithm, npar)
 
-    for key in keys(diff.options)
-        setproperty!(opt, key, diff.options[key])
+    for key in keys(options)
+        setproperty!(opt, key, options[key])
     end
 
     return opt
@@ -62,4 +75,15 @@ function set_NLopt_constraints!(opt, diff::SemDiffNLopt)
     for con in diff.equality_constraints
         equality_constraint!(opt::Opt, con.f, con.tol)
     end
+end
+
+##############################################################
+# pretty printing
+##############################################################
+
+function Base.show(io::IO, result::NLoptResult)
+    print(io, "Optimizer status: $(result.result[3]) \n")
+    print(io, "Minimum:          $(round(result.result[1]; digits = 2)) \n")
+    print(io, "Algorithm:        $(result.problem.algorithm) \n")
+    print(io, "No. evaluations:  $(result.problem.numevals) \n")
 end
