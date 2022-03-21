@@ -24,7 +24,7 @@ graph = @StenoGraph begin
     dem60 → fixed(1)*y1 + y2 + y3 + y4
     dem65 → fixed(1)*y5 + y6 + y7 + y8
     # latent regressions
-    dem60 ← ind60
+    label(:a)*dem60 ← ind60
     dem65 ← dem60
     dem65 ← ind60
     # variances
