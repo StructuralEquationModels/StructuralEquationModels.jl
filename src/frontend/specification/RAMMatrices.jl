@@ -140,7 +140,7 @@ function RAMMatrices(partable::ParameterTable)
     
     for i in 1:length(partable)
 
-        from, parameter_type, to, free, value_fixed, label, identifier = partable[i]
+        from, parameter_type, to, free, value_fixed, identifier = partable[i]
 
         row_ind = positions[to]
         if from != Symbol("1") col_ind = positions[from] end
@@ -219,8 +219,6 @@ function ParameterTable(ram_matrices::RAMMatrices)
             ram_matrices.size_F[2])
     end
 
-    #partable.columns[:label] = Vector{Symbol}(undef, length(partable))
-
     return partable
 end
 
@@ -251,7 +249,6 @@ function get_partable_row(c::RAMConstant, position_names)
     end
     free = false
     value_fixed = c.value
-    label = :const
     start = 0.0
     estimate = 0.0
     identifier = :const
@@ -261,7 +258,6 @@ function get_partable_row(c::RAMConstant, position_names)
         :to => to, 
         :free => free, 
         :value_fixed => value_fixed, 
-        :label => label, 
         :start => start, 
         :estimate => estimate, 
         :identifier => identifier)
@@ -309,7 +305,6 @@ function get_partable_row(par, position_names, index, matrix, n_nod, known_indic
 
     free = true
     value_fixed = 0.0
-    label = par
     start = 0.0
     estimate = 0.0
     identifier = par
@@ -319,8 +314,7 @@ function get_partable_row(par, position_names, index, matrix, n_nod, known_indic
         :parameter_type => parameter_type, 
         :to => to, 
         :free => free, 
-        :value_fixed => value_fixed, 
-        :label => label, 
+        :value_fixed => value_fixed,
         :start => start, 
         :estimate => estimate, 
         :identifier => identifier)

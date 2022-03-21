@@ -20,7 +20,6 @@ function ParameterTable(disambig::Nothing)
         :to => Vector{Symbol}(),
         :free => Vector{Bool}(),
         :value_fixed => Vector{Float64}(),
-        :label => Vector{Symbol}(),
         :start => Vector{Float64}(),
         :estimate => Vector{Float64}(),
         :identifier => Vector{Symbol}(),
@@ -48,7 +47,8 @@ end
 
 function DataFrame(
         partable::ParameterTable; 
-        columns = [:from, :parameter_type, :to, :free, :value_fixed, :label, :start, :estimate, :identifier])
+        columns = nothing)
+    if isnothing(columns) columns = keys(partable.columns) end
     out = DataFrame([key => partable.columns[key] for key in columns])
     return DataFrame(out)
 end
@@ -64,7 +64,6 @@ function Base.show(io::IO, partable::ParameterTable)
         :to,
         :free,
         :value_fixed,
-        :label,
         :start,
         :estimate,
         :se,
@@ -101,7 +100,6 @@ Base.getindex(partable::ParameterTable, i::Int) =
     partable.columns[:to][i], 
     partable.columns[:free][i], 
     partable.columns[:value_fixed][i], 
-    partable.columns[:label][i],
     partable.columns[:identifier][i])
 
 function Base.length(partable::ParameterTable)
