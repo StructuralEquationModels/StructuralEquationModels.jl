@@ -79,10 +79,14 @@ function ParameterTable(;graph, observed_vars, latent_vars)
     # make identifiers for parameters that are not labeled
     current_id = 1
     for i in 1:length(identifier)
-        if identifier[i] == Symbol("")
+        if (identifier[i] == Symbol("")) & free[i]
             identifier[i] = Symbol(:θ_, current_id)
+            current_id += 1
+        elseif (identifier[i] == Symbol("")) & !free[i]
+            identifier[i] = :const
+        elseif (identifier[i] != Symbol("")) & !free[i]
+            @warn "You labeled a constant. Please check if the labels of your graph are correct."
         end
-        current_id += 1
     end
 
     return StructuralEquationModels.ParameterTable(
@@ -95,9 +99,7 @@ function ParameterTable(;graph, observed_vars, latent_vars)
             :label => label,
             :start => start,
             :estimate => estimate,
-            :identifier => identifier_out),
-            #:group => ,
-            #:start_partable => start_partable),
+            :identifier => identifier),
         Dict(
             :latent_vars => latent_vars,
             :observed_vars => observed_vars,
