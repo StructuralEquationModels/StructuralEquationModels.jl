@@ -149,7 +149,7 @@ model_g2 = SemFiniteDiff(
     specification = ram_matrices_g2,
     data = dat_g2,
     imply = RAMSymbolic,
-    loss = (UserSemML,)
+    loss = UserSemML
 )
 
 model_ml_multigroup = SemEnsemble((model_g1, model_g2), SemDiffOptim(), start_val_ml)
@@ -172,14 +172,14 @@ model_ls_g1 = Sem(
     specification = ram_matrices_g1,
     data = dat_g1,
     imply = RAMSymbolic,
-    loss = (SemWLS,)
+    loss = SemWLS
 )
 
 model_ls_g2 = Sem(
     specification = ram_matrices_g2,
     data = dat_g2,
     imply = RAMSymbolic,
-    loss = (SemWLS,)
+    loss = SemWLS
 )
 
 start_val_ls = Vector{Float64}(par_ls.start[par_order])

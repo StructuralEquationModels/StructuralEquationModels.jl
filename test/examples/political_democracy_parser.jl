@@ -52,7 +52,7 @@ model_ls_sym = Sem(
     specification = partable,
     data = dat,
     imply = RAMSymbolic,
-    loss = (SemWLS, ),
+    loss = SemWLS,
     start_val = start_simple
 )
 
