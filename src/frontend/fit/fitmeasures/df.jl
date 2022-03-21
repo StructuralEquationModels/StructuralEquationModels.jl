@@ -15,10 +15,10 @@ function df(
         imply::Union{RAM, RAMSymbolic}, 
         diff, 
         loss_ml::Union{SemML, SemFIML, SemWLS})
-    n_par = n_par(sem_fit)
+    npar = n_par(sem_fit)
     n_dp = 0.5(observed.n_man^2 + observed.n_man)
     if !isnothing(imply.μ)
         n_dp += observed.n_man
     end
-    return n_dp - n_par
+    return n_dp - npar
 end
