@@ -35,10 +35,9 @@ function ParameterTable(;graph, observed_vars, latent_vars)
     to = Vector{Symbol}(undef, n)
     free = ones(Bool, n)
     value_fixed = zeros(n)
-    label = Vector{Symbol}(undef, n); label .= Symbol("")
     start = zeros(n)
     estimate = zeros(n)
-    identifier = Vector{Symbol}(undef, n)
+    identifier = Vector{Symbol}(undef, n); identifier .= Symbol("")
     # group = Vector{Symbol}(undef, n)
     # start_partable = zeros(Bool, n)
 
@@ -71,37 +70,20 @@ function ParameterTable(;graph, observed_vars, latent_vars)
                     start_partable[i] = true
                     start[i] = modifier.value
                 elseif modifier isa Label
-                    label[i] = modifier.value
+                    identifier[i] = modifier.value
                 end
             end
         end 
     end
 
-    n_labels_unique = size(unique(label), 1) - 1
-    n_labels = sum(.!(label .== Symbol("")))
-    n_parameters = sum(free) - n_labels + n_labels_unique
-    
-    identifier = Symbol.(:θ_, 1:n_parameters)
-    identifier_copy = copy(identifier)
-    label_identifier = Dict{Symbol, Symbol}()
-    identifier_long = Vector{Symbol}()
-
-    for label in label[free]
-        if label == Symbol("")
-            push!(identifier_long, popfirst!(identifier_copy))
-        else
-            if haskey(label_identifier, label)
-                push!(identifier_long, label_identifier[label])
-            else
-                push!(label_identifier, label => first(identifier_copy))
-                push!(identifier_long, popfirst!(identifier_copy))
-            end
+    # make identifiers for parameters that are not labeled
+    current_id = 1
+    for i in 1:length(identifier)
+        if identifier[i] == Symbol("")
+            identifier[i] = Symbol(:θ_, current_id)
         end
+        current_id += 1
     end
-
-    identifier_out = Vector{Symbol}(undef, length(to))
-    identifier_out[.!free] .= :const
-    identifier_out[free] .= identifier_long
 
     return StructuralEquationModels.ParameterTable(
         Dict(
