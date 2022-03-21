@@ -5,13 +5,13 @@
 function Sem(;
         observed::O = SemObsCommon,
         imply::I = RAM,
-        loss::L = (SemML,),
+        loss::L = SemML,
         diff::D = SemDiffOptim,
         kwargs...) where {O, I, L, D}
 
     kwargs = Dict{Symbol, Any}(kwargs...)
 
-    set_field_type_kwargs!(kwargs, observed, imply, loss, diff)
+    set_field_type_kwargs!(kwargs, observed, imply, loss, diff, O, I, D)
     
     observed, imply, loss, diff = get_fields!(kwargs, observed, imply, loss, diff)
 
@@ -23,14 +23,14 @@ end
 function SemFiniteDiff(;
         observed::O = SemObsCommon,
         imply::I = RAM,
-        loss::L = (SemML,),
+        loss::L = SemML,
         diff::D = SemDiffOptim,
         has_gradient = false,
         kwargs...) where {O, I, L, D}
 
     kwargs = Dict{Symbol, Any}(kwargs...)
 
-    set_field_type_kwargs!(kwargs, observed, imply, loss, diff)
+    set_field_type_kwargs!(kwargs, observed, imply, loss, diff, O, I, D)
     
     observed, imply, loss, diff = get_fields!(kwargs, observed, imply, loss, diff)
 
@@ -42,14 +42,14 @@ end
 function SemForwardDiff(;
         observed::O = SemObsCommon,
         imply::I = RAM,
-        loss::L = (SemML,),
+        loss::L = SemML,
         diff::D = SemDiffOptim,
         has_gradient = false,
         kwargs...) where {O, I, L, D}
 
     kwargs = Dict{Symbol, Any}(kwargs...)
 
-    set_field_type_kwargs!(kwargs, observed, imply, loss, diff)
+    set_field_type_kwargs!(kwargs, observed, imply, loss, diff, O, I, D)
     
     observed, imply, loss, diff = get_fields!(kwargs, observed, imply, loss, diff)
 
@@ -62,7 +62,7 @@ end
 # functions
 ##############################################################
 
-function set_field_type_kwargs!(kwargs, observed, imply, loss, diff)
+function set_field_type_kwargs!(kwargs, observed, imply, loss, diff, O, I, D)
     kwargs[:observed_type] = O <: Type ? observed : typeof(observed)
     kwargs[:imply_type] = I <: Type ? imply : typeof(imply)
     if loss isa SemLoss
@@ -78,7 +78,7 @@ end
 # construct Sem fields
 function get_fields!(kwargs, observed, imply, loss, diff)
     # observed
-    if O <: Type
+    if !isa(observed, SemObs)
         observed = observed(;kwargs...)
     end
     kwargs[:observed] = observed
@@ -92,7 +92,7 @@ function get_fields!(kwargs, observed, imply, loss, diff)
     kwargs[:n_par] = imply.n_par
 
     # loss
-    loss = get_SemLoss(loss)
+    loss = get_SemLoss(loss; kwargs...)
     kwargs[:loss] = loss
 
     # diff
@@ -104,7 +104,7 @@ function get_fields!(kwargs, observed, imply, loss, diff)
 end
 
 # construct loss field
-function get_SemLoss(loss)
+function get_SemLoss(loss; kwargs...)
     if loss isa SemLoss
         nothing
     elseif applicable(iterate, loss)
