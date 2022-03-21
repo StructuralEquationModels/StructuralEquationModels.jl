@@ -169,6 +169,13 @@ function (imply::RAM)(parameters, F, G, H, model)
 end
 
 ############################################################################
+### Recommended methods
+############################################################################
+
+identifier(imply::RAM) = imply.identifier
+n_par(imply::RAM) = imply.n_par
+
+############################################################################
 ### additional functions
 ############################################################################
 
@@ -214,9 +221,3 @@ function Base.show(io::IO, struct_inst::RAM)
     print_type_name(io, struct_inst)
     print_field_types(io, struct_inst)
 end
-
-############################################################################
-### Identifier
-############################################################################
-
-identifier(imply::RAM) = imply.identifier
