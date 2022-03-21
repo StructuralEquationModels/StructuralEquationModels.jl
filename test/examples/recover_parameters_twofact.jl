@@ -48,7 +48,7 @@ Random.seed!(1234)
 x = transpose(rand(true_dist, 100000))
 semobserved = SemObsCommon(data = x)
 
-loss_ml = SemLoss((SEM.SemML(;observed = semobserved, n_par = length(start_val)), ))
+loss_ml = SemLoss(SEM.SemML(;observed = semobserved, n_par = length(start_val)))
 
 diff = 
     SemDiffOptim(
