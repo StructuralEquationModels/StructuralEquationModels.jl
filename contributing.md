@@ -57,5 +57,13 @@ We follow the Gitflow workflow described [here](https://www.atlassian.com/git/tu
 - merged into main and devel (or the current release branch) and main is tagged
 
 ### documentation/xxx
-- forked from main/release merged into main/release/devel.
+- remember to add an apropriate tag if merged into main/release (e.g. v1.2.3+doc1 see [Documenter.jl docs](http://mortenpi.eu/Documenter.jl/dev/man/hosting/#Documentation-Versions)
+- forked from main/release/devel merged into main/release/devel.
 - **only** changes to documentation
+
+### testing/xxx
+- changes that do not touch the code but only test
+- **only** changes that fix faulty tests or increase test coverage
+- forked from main/release/devel merged into main/release
+
+
