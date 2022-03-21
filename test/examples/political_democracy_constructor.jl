@@ -84,7 +84,7 @@ model_ls_sym = Sem(
     specification = ram_matrices,
     data = dat,
     imply = RAMSymbolic,
-    loss = (SemWLS, ),
+    loss = SemWLS,
     start_val = start_simple
 )
 
@@ -97,7 +97,7 @@ model_ml_sym = Sem(
 model_ridge = Sem(
     specification = ram_matrices,
     data = dat,
-    loss = (SemML, SemRidge,),
+    loss = (SemML, SemRidge),
     α_ridge = .001,
     which_ridge = 16:20
 )
@@ -105,7 +105,7 @@ model_ridge = Sem(
 model_ridge_id = Sem(
     specification = ram_matrices,
     data = dat,
-    loss = (SemML, SemRidge,),
+    loss = (SemML, SemRidge),
     α_ridge = .001,
     which_ridge = [:x16, :x17, :x18, :x19, :x20]
 )
@@ -113,7 +113,7 @@ model_ridge_id = Sem(
 model_constant = Sem(
     specification = ram_matrices,
     data = dat,
-    loss = (SemML, SemConstant,),
+    loss = (SemML, SemConstant),
     constant_loss = 3.465
 )
 
@@ -211,7 +211,7 @@ model_ls = Sem(
     specification = ram_matrices,
     data = dat,
     imply = RAMSymbolic,
-    loss = (SemWLS, ),
+    loss = SemWLS,
     hessian = true,
     algorithm = Newton(
         ;linesearch = BackTracking(order=3), 
@@ -276,7 +276,7 @@ model_ls = Sem(
     specification = ram_matrices,
     data = dat,
     imply = RAMSymbolic,
-    loss = (SemWLS, ),
+    loss = SemWLS,
     meanstructure = true,
     start_val = start_val_ls
 )
@@ -380,7 +380,7 @@ model_ml = Sem(
     specification = ram_matrices,
     data = dat,
     observed = SemObsMissing,
-    loss = (SemFIML,)
+    loss = SemFIML
 )
 
 model_ml_sym = Sem(
@@ -388,7 +388,7 @@ model_ml_sym = Sem(
     data = dat,
     observed = SemObsMissing,
     imply = RAMSymbolic,
-    loss = (SemFIML,),
+    loss = SemFIML,
     start_val = start_val_ml
 )
 
