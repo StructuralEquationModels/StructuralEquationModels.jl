@@ -3,8 +3,8 @@
 ############################################################################
 
 # SemFit splices loss functions ---------------------------------------------------------------------
-npar(sem_fit::SemFit{Mi, So, St, Mo, O} where {Mi, So, St, Mo <: AbstractSemSingle, O}) = 
-    npar(
+n_par(sem_fit::SemFit{Mi, So, St, Mo, O} where {Mi, So, St, Mo <: AbstractSemSingle, O}) = 
+    n_par(
         sem_fit,
         sem_fit.model.observed,
         sem_fit.model.imply,
@@ -13,7 +13,7 @@ npar(sem_fit::SemFit{Mi, So, St, Mo, O} where {Mi, So, St, Mo <: AbstractSemSing
         )
 
 # RAM + SemML
-npar(sem_fit::SemFit, obs, imply::Union{RAM, RAMSymbolic}, diff, loss) = imply.n_par
+n_par(sem_fit::SemFit, obs, imply::Union{RAM, RAMSymbolic}, diff, loss) = imply.n_par
 
 ############################################################################
 ### based on χ² - 2df

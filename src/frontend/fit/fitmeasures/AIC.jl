@@ -3,7 +3,7 @@
 ############################################################################
 
 AIC(sem_fit::SemFit{Mi, So, St, Mo, O} where {Mi, So, St, Mo <: AbstractSemSingle, O}) =
-    minus2ll(sem_fit) + 2npar(sem_fit)
+    minus2ll(sem_fit) + 2n_par(sem_fit)
 
 ############################################################################
 ### based on χ² - 2df
