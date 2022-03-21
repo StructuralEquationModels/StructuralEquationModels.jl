@@ -22,7 +22,7 @@ end
 
 get_identifier_indices(parameters, identifier::Dict{Symbol, Int}) = [identifier[par] for par in parameters]
 
-get_identifier_indices(parameters, obj::Union{SemFit, AbstractSemSingle, SemEnsemble}) = 
+get_identifier_indices(parameters, obj::Union{SemFit, AbstractSemSingle, SemEnsemble, SemImply}) = 
     get_identifier_indices(parameters, identifier(obj))
 
 function get_identifier_indices(parameters, obj::Union{ParameterTable, RAMMatrices})
