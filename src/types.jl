@@ -37,7 +37,7 @@ mutable struct SemLoss{F <: Tuple, FT, GT, HT}
     H::HT
 end
 
-function SemLoss(functions; parameter_type = Float64)
+function SemLoss(functions...; parameter_type = Float64)
 
     n_par = length(functions[1].G)
 
@@ -48,8 +48,6 @@ function SemLoss(functions; parameter_type = Float64)
         zeros(parameter_type, n_par),
         zeros(parameter_type, n_par, n_par))
 end
-
-SemLoss(args...; parameter_type = Float64) = SemLoss(args; parameter_type = parameter_type)
 
 """
 Supertype of all objects that can serve as the diff field of a SEM.
