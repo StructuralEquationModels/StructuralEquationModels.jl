@@ -64,6 +64,16 @@ test_start_val = [fill(0.5, 8); fill(0.05, 3); fill(0.1, 3); fill(1.0, 11); fill
 start_val_fabin3 = start_val(model_ml)
 
 ############################################################################
+### test parameter index retrieval
+############################################################################
+
+@testset "get_identifier_indices" begin
+    pars = [:θ_1, :θ_7, :θ_21]
+    @test get_identifier_indices(pars, model_ml) == get_identifier_indices(pars, partable)
+    @test get_identifier_indices(pars, model_ml) == get_identifier_indices(pars, RAMMatrices(partable))
+end
+
+############################################################################
 ### test gradients
 ############################################################################
 

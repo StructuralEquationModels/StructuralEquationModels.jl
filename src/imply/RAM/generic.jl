@@ -43,10 +43,10 @@ function RAM(;
     # else if ...
     if specification isa RAMMatrices
         ram_matrices = specification
-        identifier = Dict{Symbol, Int64}(ram_matrices.parameters .=> 1:length(ram_matrices.parameters))
+        identifier = StructuralEquationModels.identifier(ram_matrices)
     elseif specification isa ParameterTable
         ram_matrices = RAMMatrices(specification)
-        identifier = Dict{Symbol, Int64}(ram_matrices.parameters .=> 1:length(ram_matrices.parameters))
+        identifier = StructuralEquationModels.identifier(ram_matrices)
     else
         @error "The RAM constructor does not know how to handle your specification object. 
         \n Please specify your model as either a ParameterTable or RAMMatrices."

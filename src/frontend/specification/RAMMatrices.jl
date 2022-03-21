@@ -94,10 +94,7 @@ end
 
 function RAMMatrices(partable::ParameterTable)
 
-    parameters = unique(partable.columns[:identifier])
-    filter!(x -> x != :const, parameters)
-    n_par = length(parameters)
-    par_positions = Dict(parameters .=> 1:n_par)
+    parameters, n_par, par_positions = get_par_npar_identifier(partable)
 
     n_observed = size(partable.variables[:observed_vars], 1)
     n_latent = size(partable.variables[:latent_vars], 1)
@@ -234,6 +231,14 @@ end
 ############################################################################
 ### Additional Functions
 ############################################################################
+
+function get_par_npar_identifier(partable::ParameterTable)
+    parameters = unique(partable.columns[:identifier])
+    filter!(x -> x != :const, parameters)
+    n_par = length(parameters)
+    par_positions = Dict(parameters .=> 1:n_par)
+    return parameters, n_par, par_positions
+end
 
 function get_partable_row(c::RAMConstant, position_names)
     # variable names
