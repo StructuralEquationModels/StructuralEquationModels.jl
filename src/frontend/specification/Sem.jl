@@ -11,47 +11,13 @@ function Sem(;
 
     kwargs = Dict{Symbol, Any}(kwargs...)
 
-    kwargs[:observed_type] = O <: Type ? observed : typeof(observed)
-    kwargs[:imply_type] = I <: Type ? imply : typeof(imply)
-    kwargs[:loss_types] = [lossfun isa SemLossFunction ? typeof(lossfun) : lossfun for lossfun in loss]
-    kwargs[:diff_type] = D <: Type ? diff : typeof(diff)
-
-    if O <: Type
-        observed = observed(;kwargs...)
-    end
-
-    kwargs[:observed] = observed
-
-    if !isa(imply, SemImply)
-        imply = imply(;kwargs...)
-    end
-
-    kwargs[:imply] = imply
-    kwargs[:n_par] = imply.n_par
-
-    loss_out = []
-
-    for lossfun in loss
-        if isa(lossfun, SemLossFunction)
-            append!(loss_out, [lossfun])
-        else
-            lossfun = lossfun(;kwargs...)
-            push!(loss_out, lossfun)
-        end
-    end
-
-    loss = SemLoss((loss_out...,))
-
-    kwargs[:loss] = loss
-
-    if !isa(diff, SemDiff)
-        diff = diff(;kwargs...)
-    end
+    set_field_type_kwargs!(kwargs, observed, imply, loss, diff)
+    
+    observed, imply, loss, diff = get_fields!(kwargs, observed, imply, loss, diff)
 
     sem = Sem(observed, imply, loss, diff)
 
     return sem
-
 end
 
 function SemFiniteDiff(;
@@ -64,47 +30,13 @@ function SemFiniteDiff(;
 
     kwargs = Dict{Symbol, Any}(kwargs...)
 
-    kwargs[:observed_type] = O <: Type ? observed : typeof(observed)
-    kwargs[:imply_type] = I <: Type ? imply : typeof(imply)
-    kwargs[:loss_types] = [lossfun isa SemLossFunction ? typeof(lossfun) : lossfun for lossfun in loss]
-    kwargs[:diff_type] = D <: Type ? diff : typeof(diff)
-
-    if O <: Type
-        observed = observed(;kwargs...)
-    end
-
-    kwargs[:observed] = observed
-
-    if !isa(imply, SemImply)
-        imply = imply(;kwargs...)
-    end
-
-    kwargs[:imply] = imply
-    kwargs[:n_par] = imply.n_par
-
-    loss_out = []
-
-    for lossfun in loss
-        if isa(lossfun, SemLossFunction)
-            append!(loss_out, [lossfun])
-        else
-            lossfun = lossfun(;kwargs...)
-            push!(loss_out, lossfun)
-        end
-    end
-
-    loss = SemLoss((loss_out...,))
-
-    kwargs[:loss] = loss
-
-    if !isa(diff, SemDiff)
-        diff = diff(;kwargs...)
-    end
+    set_field_type_kwargs!(kwargs, observed, imply, loss, diff)
+    
+    observed, imply, loss, diff = get_fields!(kwargs, observed, imply, loss, diff)
 
     sem = SemFiniteDiff(observed, imply, loss, diff, has_gradient)
 
     return sem
-
 end
 
 function SemForwardDiff(;
@@ -117,17 +49,41 @@ function SemForwardDiff(;
 
     kwargs = Dict{Symbol, Any}(kwargs...)
 
+    set_field_type_kwargs!(kwargs, observed, imply, loss, diff)
+    
+    observed, imply, loss, diff = get_fields!(kwargs, observed, imply, loss, diff)
+
+    sem = SemForwardDiff(observed, imply, loss, diff, has_gradient)
+    
+    return sem
+end
+
+##############################################################
+# functions
+##############################################################
+
+function set_field_type_kwargs!(kwargs, observed, imply, loss, diff)
     kwargs[:observed_type] = O <: Type ? observed : typeof(observed)
     kwargs[:imply_type] = I <: Type ? imply : typeof(imply)
-    kwargs[:loss_types] = [lossfun isa SemLossFunction ? typeof(lossfun) : lossfun for lossfun in loss]
+    if loss isa SemLoss
+        kwargs[:loss_types] = [lossfun isa SemLossFunction ? typeof(lossfun) : lossfun for lossfun in loss.functions]
+    elseif applicable(iterate, loss)
+        kwargs[:loss_types] = [lossfun isa SemLossFunction ? typeof(lossfun) : lossfun for lossfun in loss]
+    else
+        kwargs[:loss_types] = [loss isa SemLossFunction ? typeof(loss) : loss]
+    end
     kwargs[:diff_type] = D <: Type ? diff : typeof(diff)
-    
+end
+
+# construct Sem fields
+function get_fields!(kwargs, observed, imply, loss, diff)
+    # observed
     if O <: Type
         observed = observed(;kwargs...)
     end
-
     kwargs[:observed] = observed
 
+    # imply
     if !isa(imply, SemImply)
         imply = imply(;kwargs...)
     end
@@ -135,30 +91,41 @@ function SemForwardDiff(;
     kwargs[:imply] = imply
     kwargs[:n_par] = imply.n_par
 
-    loss_out = []
-
-    for lossfun in loss
-        if isa(lossfun, SemLossFunction)
-            append!(loss_out, [lossfun])
-        else
-            lossfun = lossfun(;kwargs...)
-            push!(loss_out, lossfun)
-        end
-    end
-
-    loss = SemLoss((loss_out...,))
-
+    # loss
+    loss = get_SemLoss(loss)
     kwargs[:loss] = loss
 
+    # diff
     if !isa(diff, SemDiff)
         diff = diff(;kwargs...)
     end
 
-    sem = SemForwardDiff(observed, imply, loss, diff, has_gradient)
-
-    return sem
-
+    return observed, imply, loss, diff
 end
+
+# construct loss field
+function get_SemLoss(loss)
+    if loss isa SemLoss
+        nothing
+    elseif applicable(iterate, loss)
+        loss_out = []
+        for lossfun in loss
+            if isa(lossfun, SemLossFunction)
+                push!(loss_out, lossfun)
+            else
+                lossfun = lossfun(;kwargs...)
+                push!(loss_out, lossfun)
+            end
+        end
+        loss = SemLoss(loss_out...)
+    else
+        if !isa(loss, SemLossFunction)
+            loss = SemLoss(loss(;kwargs...))
+        end
+    end
+    return loss
+end
+
 
 ##############################################################
 # pretty printing
