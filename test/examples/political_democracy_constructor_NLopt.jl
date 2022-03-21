@@ -78,14 +78,14 @@ model_ls_sym = Sem(
     specification = ram_matrices,
     data = dat,
     imply = RAMSymbolic,
-    loss = (SemWLS, ),
+    loss = SemWLS,
     diff = SemDiffNLopt
 )
 
 model_ridge = Sem(
     specification = ram_matrices,
     data = dat,
-    loss = (SemML, SemRidge,),
+    loss = (SemML, SemRidge),
     diff = SemDiffNLopt,
     α_ridge = .001,
     which_ridge = [:x16, :x17, :x18, :x19, :x20]
