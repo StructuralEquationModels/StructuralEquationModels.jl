@@ -159,6 +159,12 @@ function (imply::RAMSymbolic)(par, F, G, H, model)
     end
 end
 
+############################################################################
+### Recommended methods
+############################################################################
+
+identifier(imply::RAMSymbolic) = imply.identifier
+n_par(imply::RAMSymbolic) = imply.n_par
 
 ############################################################################
 ### additional functions
@@ -194,9 +200,3 @@ function Base.show(io::IO, struct_inst::RAMSymbolic)
     print_type_name(io, struct_inst)
     print_field_types(io, struct_inst)
 end
-
-############################################################################
-### Identifier
-############################################################################
-
-identifier(imply::RAMSymbolic) = imply.identifier
