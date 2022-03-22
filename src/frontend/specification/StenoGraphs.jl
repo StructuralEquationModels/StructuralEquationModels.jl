@@ -29,6 +29,7 @@ label(args...) = Label(args)
 ############################################################################
 
 function ParameterTable(;graph, observed_vars, latent_vars, g = 1, parname = :θ)
+    graph = unique(graph)
     n = length(graph)
     from = Vector{Symbol}(undef, n)
     parameter_type = Vector{Symbol}(undef, n)
@@ -120,6 +121,8 @@ end
 ############################################################################
 
 function EnsembleParameterTable(;graph, observed_vars, latent_vars, groups)
+
+    graph = unique(graph)
 
     partable = EnsembleParameterTable(nothing)
 
