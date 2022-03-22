@@ -51,14 +51,14 @@ ram_matrices_g1 = RAMMatrices(;
     S = S1,
     F = F,
     parameters = x,
-    colnames = string.([:x1, :x2, :x3, :x4, :x5, :x6, :x7, :x8, :x9, :visual, :textual, :speed]))
+    colnames = [:x1, :x2, :x3, :x4, :x5, :x6, :x7, :x8, :x9, :visual, :textual, :speed])
 
 ram_matrices_g2 = RAMMatrices(;
     A = A,
     S = S2,
     F = F,
     parameters = x,
-    colnames = string.([:x1, :x2, :x3, :x4, :x5, :x6, :x7, :x8, :x9, :visual, :textual, :speed]))
+    colnames = [:x1, :x2, :x3, :x4, :x5, :x6, :x7, :x8, :x9, :visual, :textual, :speed])
 
 ### start values
 par_order = [collect(7:21); collect(1:6); collect(28:42)]
@@ -81,7 +81,7 @@ model_g2 = Sem(
     imply = RAMSymbolic
 )
 
-model_ml_multigroup = SemEnsemble((model_g1, model_g2), SemDiffOptim(), start_val_ml)
+model_ml_multigroup = SemEnsemble(model_g1, model_g2)
 
 ############################################################################
 ### test gradients
@@ -152,7 +152,7 @@ model_g2 = SemFiniteDiff(
     loss = UserSemML
 )
 
-model_ml_multigroup = SemEnsemble((model_g1, model_g2), SemDiffOptim(), start_val_ml)
+model_ml_multigroup = SemEnsemble(model_g1, model_g2)
 
 @testset "gradients_user_defined_loss" begin
     @test test_gradient(model_ml_multigroup, start_val_ml)
@@ -184,7 +184,7 @@ model_ls_g2 = Sem(
 
 start_val_ls = Vector{Float64}(par_ls.start[par_order])
 
-model_ls_multigroup = SemEnsemble((model_ls_g1, model_ls_g2), SemDiffOptim(), start_val_ls)
+model_ls_multigroup = SemEnsemble(model_ls_g1, model_ls_g2)
 
 @testset "ls_gradients_multigroup" begin
     @test test_gradient(model_ls_multigroup, start_val_ls)
