@@ -22,7 +22,7 @@ dat = select(dat, Not(:school))
 ### define models
 ############################################################################
 
-x = Symbol.("x".*string.(1:36))
+x = Symbol.(:x, 1:36)
 #x = [x...]
 
 F = zeros(9, 12)
