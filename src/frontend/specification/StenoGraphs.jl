@@ -8,27 +8,27 @@
 struct Fixed{N} <: EdgeModifier
     value::N
 end
-fixed(value) = Fixed(value)
+fixed(args...) = Fixed(args)
 Fixed(value::Int) = Fixed(Float64(value))
 
 # start values
 struct Start{N} <: EdgeModifier
     value::N
 end
-start(value) = Start(value)
+start(args...) = Start(args)
 Start(value::Int) = Start(Float64(value))
 
 # labels for equality constraints
-struct Label{N <: Symbol} <: EdgeModifier
+struct Label{N} <: EdgeModifier
     value::N
 end
-label(value) = Label(value)
+label(args...) = Label(args)
 
 ############################################################################
 ### constructor for parameter table from graph
 ############################################################################
 
-function ParameterTable(;graph, observed_vars, latent_vars)
+function ParameterTable(;graph, observed_vars, latent_vars, g = 1, parname = :θ)
     n = length(graph)
     from = Vector{Symbol}(undef, n)
     parameter_type = Vector{Symbol}(undef, n)
@@ -64,13 +64,21 @@ function ParameterTable(;graph, observed_vars, latent_vars)
             end
             for modifier in values(element.modifiers)
                 if modifier isa Fixed
-                    free[i] = false
-                    value_fixed[i] = modifier.value
+                    if modifier.value[g] == :NaN
+                        free[i] = true
+                        value_fixed[i] = 0.0
+                    else
+                        free[i] = false
+                        value_fixed[i] = modifier.value[g]
+                    end
                 elseif modifier isa Start
-                    start_partable[i] = true
-                    start[i] = modifier.value
+                    start_partable[i] = modifier.value[g] == :NaN
+                    start[i] = modifier.value[g]
                 elseif modifier isa Label
-                    identifier[i] = modifier.value
+                    if modifier.value[g] == :NaN
+                        @error "NaN is not allowed as a parameter label."
+                    end
+                    identifier[i] = modifier.value[g]
                 end
             end
         end 
@@ -80,7 +88,7 @@ function ParameterTable(;graph, observed_vars, latent_vars)
     current_id = 1
     for i in 1:length(identifier)
         if (identifier[i] == Symbol("")) & free[i]
-            identifier[i] = Symbol(:θ_, current_id)
+            identifier[i] = Symbol(parname, :_, current_id)
             current_id += 1
         elseif (identifier[i] == Symbol("")) & !free[i]
             identifier[i] = :const
@@ -105,4 +113,27 @@ function ParameterTable(;graph, observed_vars, latent_vars)
             :observed_vars => observed_vars,
             :sorted_vars => sorted_vars)
     )
+end
+
+############################################################################
+### constructor for EnsembleParameterTable from graph
+############################################################################
+
+function EnsembleParameterTable(;graph, observed_vars, latent_vars, groups)
+
+    partable = EnsembleParameterTable(nothing)
+
+    for (i, group) in enumerate(groups)
+        push!(
+            partable.tables, 
+            Symbol(group) => 
+                ParameterTable(;
+                graph = graph, 
+                observed_vars = observed_vars, 
+                latent_vars = latent_vars, 
+                g = i,
+                parname = Symbol(:g, i)))
+    end
+
+        return partable
 end
