@@ -39,17 +39,20 @@ end =#
 ############################################################################
 
 function Base.show(io::IO, partable::EnsembleParameterTable)
-    print(io, "Groups: ", keys(partable.tables))
+    print(io, "EnsembleParameterTable with groups: ")
+    for key in keys(partable.tables) print(io, "|", key, "|") end
+    print(io, "\n")
     for key in keys(partable.tables)
+        print("\n")
         print(io, key, ": \n")
         print(partable.tables[key])
     end
 end
 
-function Base.show(io::IO, partable::EnsembleParameterTable)
+#= function Base.show(io::IO, partable::EnsembleParameterTable)
     print(io, "EnsembleParameterTable with groups \n")
     print(partable.tables)
-end
+end =#
 
 ############################################################################
 ### Additional Methods
@@ -69,6 +72,10 @@ function push!(partable::EnsembleParameterTable, d::AbstractDict, group)
 end
 
 push!(partable::EnsembleParameterTable, d::Nothing, group) = nothing
+
+# get group -------------------------------------------------------------------
+
+get_group(partable::EnsembleParameterTable, group) = get_group(partable.tables, group)
 
 ############################################################################
 ### Update Partable from Fitted Model
