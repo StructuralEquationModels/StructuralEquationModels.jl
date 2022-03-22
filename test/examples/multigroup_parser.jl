@@ -159,7 +159,7 @@ end
 
 # fit
 @testset "solution_user_defined_loss" begin
-    solution_ml = sem_fit(model_ml_multigroup; start_val = start_val_ml)
+    solution_ml = sem_fit(model_ml_multigroup)
     @test SEM.compare_estimates(par_ml.est[par_order], solution_ml.solution, 0.01)
 end
 
@@ -183,13 +183,13 @@ model_ls_g2 = Sem(
 
 start_val_ls = Vector{Float64}(par_ls.start[par_order])
 
-model_ls_multigroup = SemEnsemble((model_ls_g1, model_ls_g2), SemDiffOptim(), start_val_ls)
+model_ls_multigroup = SemEnsemble(model_ls_g1, model_ls_g2)
 
 @testset "ls_gradients_multigroup" begin
     @test test_gradient(model_ls_multigroup, start_val_ls)
 end
 
 @testset "ls_solution_multigroup" begin
-    solution_ls = sem_fit(model_ls_multigroup; start_val = start_val_ls)
+    solution_ls = sem_fit(model_ls_multigroup)
     @test SEM.compare_estimates(par_ls.est[par_order], solution_ls.solution, 0.01)
 end
