@@ -170,15 +170,6 @@ function RAMMatrices(partable::ParameterTable)
     return RAMMatrices(A_ind, S_ind, F_ind, M_ind, parameters, colnames, constants, (n_observed, n_node))
 end
 
-function set_RAM_index(A, S, parameter_type, row_ind, col_ind, parameter)
-    if parameter_type == :→
-        A[row_ind, col_ind] = parameter
-    else
-        S[row_ind, col_ind] = parameter
-        S[col_ind, row_ind] = parameter
-    end
-end
-
 ############################################################################
 ### get parameter table from RAMMatrices
 ############################################################################
