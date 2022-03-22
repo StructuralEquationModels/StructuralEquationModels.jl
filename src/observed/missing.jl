@@ -115,7 +115,7 @@ end
 ### Recommended methods
 ############################################################################
 
-n_obs(observed::SemObsMissing) = observed.n_par
+n_obs(observed::SemObsMissing) = observed.n_obs
 
 ############################################################################
 ### Pretty Printing
