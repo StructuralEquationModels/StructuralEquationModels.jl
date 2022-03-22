@@ -35,6 +35,7 @@ include("loss/constant/constant.jl")
 # diff
 include("diff/optim.jl")
 include("diff/NLopt.jl")
+include("diff/Empty.jl")
 # optimizer
 include("optimizer/optim.jl")
 include("optimizer/NLopt.jl")
@@ -72,7 +73,7 @@ export  AbstractSem,
             SemLossFunction, SemML, SemFIML, em_mvn, SemLasso, SemRidge,
             SemConstant, SemWLS,
         SemDiff, 
-            SemDiffOptim, SemDiffNLopt, NLoptConstraint,
+            SemDiffEmpty, SemDiffOptim, SemDiffNLopt, NLoptConstraint,
         SemObs, 
             SemObsCommon, SemObsMissing,
         sem_fit, SemFit,
