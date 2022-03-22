@@ -8,7 +8,7 @@ struct SemDiffEmpty <: SemDiff end
 ### Constructor
 ############################################################################
 
-SemDiffEmpty(; kwargs...) = SemDiffEmpty()
+# SemDiffEmpty(;kwargs...) = SemDiffEmpty()
 
 ############################################################################
 ### Pretty Printing
