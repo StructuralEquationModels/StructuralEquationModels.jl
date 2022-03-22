@@ -15,6 +15,8 @@ n_par(sem_fit::SemFit{Mi, So, St, Mo, O} where {Mi, So, St, Mo <: AbstractSemSin
 # RAM + SemML
 n_par(sem_fit::SemFit, obs, imply::Union{RAM, RAMSymbolic}, diff, loss) = n_par(imply)
 
+n_par(model::AbstractSemSingle) = n_par(model.imply)
+
 ############################################################################
 ### based on χ² - 2df
 ############################################################################

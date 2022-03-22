@@ -92,9 +92,14 @@ end
 ### get RAMMatrices from parameter table
 ############################################################################
 
-function RAMMatrices(partable::ParameterTable)
+function RAMMatrices(partable::ParameterTable; par_id = nothing)
 
-    parameters, n_par, par_positions = get_par_npar_identifier(partable)
+    if isnothing(par_id)
+        parameters, n_par, par_positions = get_par_npar_identifier(partable)
+    else
+        parameters, n_par, par_positions = 
+        par_id[:parameters], par_id[:n_par], par_id[:par_positions]
+    end
 
     n_observed = size(partable.variables[:observed_vars], 1)
     n_latent = size(partable.variables[:latent_vars], 1)
@@ -170,15 +175,6 @@ function RAMMatrices(partable::ParameterTable)
     return RAMMatrices(A_ind, S_ind, F_ind, M_ind, parameters, colnames, constants, (n_observed, n_node))
 end
 
-function set_RAM_index(A, S, parameter_type, row_ind, col_ind, parameter)
-    if parameter_type == :→
-        A[row_ind, col_ind] = parameter
-    else
-        S[row_ind, col_ind] = parameter
-        S[col_ind, row_ind] = parameter
-    end
-end
-
 ############################################################################
 ### get parameter table from RAMMatrices
 ############################################################################
@@ -219,6 +215,26 @@ function ParameterTable(ram_matrices::RAMMatrices)
     return partable
 end
 
+
+############################################################################
+### get RAMMatrices from EnsembleParameterTable
+############################################################################
+
+function RAMMatrices(partable::EnsembleParameterTable)
+
+    ram_matrices = Dict{Symbol, RAMMatrices}()
+
+    parameters, n_par, par_positions = get_par_npar_identifier(partable)
+    par_id = Dict(:parameters => parameters, :n_par => n_par, :par_positions => par_positions)
+
+    for key in keys(partable.tables)
+        ram_mat = RAMMatrices(partable.tables[key]; par_id = par_id)
+        push!(ram_matrices, key => ram_mat)
+    end
+
+    return ram_matrices
+end
+
 ############################################################################
 ### Pretty Printing
 ############################################################################
@@ -237,6 +253,22 @@ function get_par_npar_identifier(partable::ParameterTable)
     filter!(x -> x != :const, parameters)
     n_par = length(parameters)
     par_positions = Dict(parameters .=> 1:n_par)
+    return parameters, n_par, par_positions
+end
+
+function get_par_npar_identifier(partable::EnsembleParameterTable)
+
+    parameters = Vector{Symbol}()
+    for key in keys(partable.tables)
+        append!(parameters, partable.tables[key].columns[:identifier])
+    end
+    parameters = unique(parameters)
+    filter!(x -> x != :const, parameters)
+
+    n_par = length(parameters)
+
+    par_positions = Dict(parameters .=> 1:n_par)
+
     return parameters, n_par, par_positions
 end
 
@@ -357,4 +389,8 @@ function ==(mat1::RAMMatrices, mat2::RAMMatrices)
             (mat1.constants == mat2.constants)
     )
     return res
+end
+
+function get_group(d::Dict, group)
+    return d[group]
 end
