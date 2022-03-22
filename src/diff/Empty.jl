@@ -15,6 +15,6 @@ SemDiffEmpty(; kwargs...) = SemDiffEmpty()
 ############################################################################
 
 function Base.show(io::IO, struct_inst::SemDiffEmpty)
-    print_type_name(io, struct_inst)
+    StructuralEquationModels.print_type_name(io, struct_inst)
 end
 
