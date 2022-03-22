@@ -71,7 +71,7 @@ end
 ### Recommended methods
 ############################################################################
 
-n_obs(observed::SemObsCommon) = observed.n_par
+n_obs(observed::SemObsCommon) = observed.n_obs
 
 ############################################################################
 ### Additional functions
