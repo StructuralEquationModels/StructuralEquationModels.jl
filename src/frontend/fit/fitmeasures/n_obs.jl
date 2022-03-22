@@ -9,4 +9,6 @@ n_obs(sem_fit::SemFit{Mi, So, St, Mo, O} where {Mi, So, St, Mo <: AbstractSemSin
 
 # RAM + SemML
 n_obs(sem_fit::SemFit, obs::Union{SemObsCommon, SemObsMissing}, imp, diff, loss_ml) =
-    obs.n_obs
+    n_obs(sem_fit.model)
+
+n_obs(model::AbstractSemSingle) = n_obs(model.observed)
