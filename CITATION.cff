@@ -18,11 +18,6 @@ authors:
     email: peikert@mpib-berlin.mpg.de
     affiliation: Max Planck Institute for Human Development
     orcid: 'https://orcid.org/0000-0001-7813-818X'
-  - given-names: Andreas Markus
-    family-names: Brandmaier
-    orcid: 'https://orcid.org/0000-0001-8765-6982'
-    email: brandmaier@mpib-berlin.mpg.de
-    affiliation: Max Planck Institute for Human Development
 repository-code: >-
   https://github.com/StructuralEquationModels/StructuralEquationModels.jl
 license: MIT
