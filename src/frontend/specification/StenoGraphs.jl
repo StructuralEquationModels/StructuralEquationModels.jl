@@ -8,37 +8,37 @@
 struct Fixed{N} <: EdgeModifier
     value::N
 end
-fixed(value) = Fixed(value)
+fixed(args...) = Fixed(args)
 Fixed(value::Int) = Fixed(Float64(value))
 
 # start values
 struct Start{N} <: EdgeModifier
     value::N
 end
-start(value) = Start(value)
+start(args...) = Start(args)
 Start(value::Int) = Start(Float64(value))
 
 # labels for equality constraints
-struct Label{N <: Symbol} <: EdgeModifier
+struct Label{N} <: EdgeModifier
     value::N
 end
-label(value) = Label(value)
+label(args...) = Label(args)
 
 ############################################################################
 ### constructor for parameter table from graph
 ############################################################################
 
-function ParameterTable(;graph, observed_vars, latent_vars)
+function ParameterTable(;graph, observed_vars, latent_vars, g = 1, parname = :θ)
+    graph = unique(graph)
     n = length(graph)
     from = Vector{Symbol}(undef, n)
     parameter_type = Vector{Symbol}(undef, n)
     to = Vector{Symbol}(undef, n)
     free = ones(Bool, n)
     value_fixed = zeros(n)
-    label = Vector{Symbol}(undef, n); label .= Symbol("")
     start = zeros(n)
     estimate = zeros(n)
-    identifier = Vector{Symbol}(undef, n)
+    identifier = Vector{Symbol}(undef, n); identifier .= Symbol("")
     # group = Vector{Symbol}(undef, n)
     # start_partable = zeros(Bool, n)
 
@@ -65,43 +65,38 @@ function ParameterTable(;graph, observed_vars, latent_vars)
             end
             for modifier in values(element.modifiers)
                 if modifier isa Fixed
-                    free[i] = false
-                    value_fixed[i] = modifier.value
+                    if modifier.value[g] == :NaN
+                        free[i] = true
+                        value_fixed[i] = 0.0
+                    else
+                        free[i] = false
+                        value_fixed[i] = modifier.value[g]
+                    end
                 elseif modifier isa Start
-                    start_partable[i] = true
-                    start[i] = modifier.value
+                    start_partable[i] = modifier.value[g] == :NaN
+                    start[i] = modifier.value[g]
                 elseif modifier isa Label
-                    label[i] = modifier.value
+                    if modifier.value[g] == :NaN
+                        @error "NaN is not allowed as a parameter label."
+                    end
+                    identifier[i] = modifier.value[g]
                 end
             end
         end 
     end
 
-    n_labels_unique = size(unique(label), 1) - 1
-    n_labels = sum(.!(label .== Symbol("")))
-    n_parameters = sum(free) - n_labels + n_labels_unique
-    
-    identifier = Symbol.(:θ_, 1:n_parameters)
-    identifier_copy = copy(identifier)
-    label_identifier = Dict{Symbol, Symbol}()
-    identifier_long = Vector{Symbol}()
-
-    for label in label[free]
-        if label == Symbol("")
-            push!(identifier_long, popfirst!(identifier_copy))
-        else
-            if haskey(label_identifier, label)
-                push!(identifier_long, label_identifier[label])
-            else
-                push!(label_identifier, label => first(identifier_copy))
-                push!(identifier_long, popfirst!(identifier_copy))
-            end
+    # make identifiers for parameters that are not labeled
+    current_id = 1
+    for i in 1:length(identifier)
+        if (identifier[i] == Symbol("")) & free[i]
+            identifier[i] = Symbol(parname, :_, current_id)
+            current_id += 1
+        elseif (identifier[i] == Symbol("")) & !free[i]
+            identifier[i] = :const
+        elseif (identifier[i] != Symbol("")) & !free[i]
+            @warn "You labeled a constant. Please check if the labels of your graph are correct."
         end
     end
-
-    identifier_out = Vector{Symbol}(undef, length(to))
-    identifier_out[.!free] .= :const
-    identifier_out[free] .= identifier_long
 
     return StructuralEquationModels.ParameterTable(
         Dict(
@@ -113,12 +108,35 @@ function ParameterTable(;graph, observed_vars, latent_vars)
             :label => label,
             :start => start,
             :estimate => estimate,
-            :identifier => identifier_out),
-            #:group => ,
-            #:start_partable => start_partable),
+            :identifier => identifier),
         Dict(
             :latent_vars => latent_vars,
             :observed_vars => observed_vars,
             :sorted_vars => sorted_vars)
     )
+end
+
+############################################################################
+### constructor for EnsembleParameterTable from graph
+############################################################################
+
+function EnsembleParameterTable(;graph, observed_vars, latent_vars, groups)
+
+    graph = unique(graph)
+
+    partable = EnsembleParameterTable(nothing)
+
+    for (i, group) in enumerate(groups)
+        push!(
+            partable.tables, 
+            Symbol(group) => 
+                ParameterTable(;
+                graph = graph, 
+                observed_vars = observed_vars, 
+                latent_vars = latent_vars, 
+                g = i,
+                parname = Symbol(:g, i)))
+    end
+
+        return partable
 end

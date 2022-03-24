@@ -11,6 +11,7 @@ include("types.jl")
 include("frontend/fit/SemFit.jl")
 # specification of models
 include("frontend/specification/ParameterTable.jl")
+include("frontend/specification/EnsembleParameterTable.jl")
 include("frontend/specification/RAMMatrices.jl")
 include("frontend/specification/StenoGraphs.jl")
 # pretty printing
@@ -34,6 +35,7 @@ include("loss/constant/constant.jl")
 # diff
 include("diff/optim.jl")
 include("diff/NLopt.jl")
+include("diff/Empty.jl")
 # optimizer
 include("optimizer/optim.jl")
 include("optimizer/NLopt.jl")
@@ -45,15 +47,15 @@ include("additional_functions/start_val/start_fabin3.jl")
 include("additional_functions/start_val/start_partable.jl")
 include("additional_functions/start_val/start_simple.jl")
 # identifier
-include("frontend/identifier.jl")
+include("additional_functions/identifier.jl")
 # fit measures
 include("frontend/fit/fitmeasures/AIC.jl")
 include("frontend/fit/fitmeasures/BIC.jl")
 include("frontend/fit/fitmeasures/chi2.jl")
 include("frontend/fit/fitmeasures/df.jl")
 include("frontend/fit/fitmeasures/minus2ll.jl")
-include("frontend/fit/fitmeasures/npar.jl")
-include("frontend/fit/fitmeasures/nobs.jl")
+include("frontend/fit/fitmeasures/n_par.jl")
+include("frontend/fit/fitmeasures/n_obs.jl")
 include("frontend/fit/fitmeasures/p.jl")
 include("frontend/fit/fitmeasures/RMSEA.jl")
 include("frontend/fit/fitmeasures/fit_measures.jl")
@@ -71,20 +73,19 @@ export  AbstractSem,
             SemLossFunction, SemML, SemFIML, em_mvn, SemLasso, SemRidge,
             SemConstant, SemWLS,
         SemDiff, 
-            SemDiffOptim, SemDiffNLopt, NLoptConstraint,
+            SemDiffEmpty, SemDiffOptim, SemDiffNLopt, NLoptConstraint,
         SemObs, 
             SemObsCommon, SemObsMissing,
         sem_fit, SemFit,
         objective, objective!, gradient, gradient!, hessian, hessian!, objective_gradient!,
-        SemSpec,
-            ParameterTable, update_partable!, update_estimate!, update_start!,
-            SpecEmpty,
+        ParameterTable, 
+            EnsembleParameterTable, update_partable!, update_estimate!, update_start!,
+            Fixed, fixed, Start, start, Label, label,
+            get_identifier_indices,
         RAMMatrices, 
             RAMMatrices!,
         fit_measures,
-            AIC, BIC, χ², df, fit_measures, minus2ll, npar, nobs, p_value, RMSEA,
+            AIC, BIC, χ², df, fit_measures, minus2ll, n_par, n_obs, p_value, RMSEA,
             EmMVNModel,
-        se_hessian,
-        Fixed, fixed, Start, start, Label, label,
-        get_identifier_indices
+        se_hessian
 end

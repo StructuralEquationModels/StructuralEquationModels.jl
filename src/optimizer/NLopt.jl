@@ -53,6 +53,32 @@ function sem_fit(model::Sem{O, I, L, D}; start_val = start_val, kwargs...) where
     return SemFit_NLopt(result, model, start_val, opt)
 end
 
+function sem_fit(model::SemEnsemble{N, T , V, D, S}; start_val = start_val, kwargs...) where {N, T, V, D <: SemDiffNLopt, S}
+
+    # starting values
+    if !isa(start_val, Vector)
+        start_val = start_val(model; kwargs...)
+    end
+
+    # construct the NLopt problem
+    opt = construct_NLopt_problem(model.diff.algorithm, model.diff.options, length(start_val))
+    set_NLopt_constraints!(opt, model.diff)   
+    opt.min_objective = (par, G) -> sem_wrap_nlopt(par, G, model)
+
+    if !isnothing(model.diff.local_algorithm)
+        opt_local = construct_NLopt_problem(
+            model.diff.local_algorithm,
+            model.diff.local_options,
+            length(start_val))
+        opt.local_optimizer = opt_local
+    end
+
+    # fit
+    result = NLopt.optimize(opt, start_val)
+
+    return SemFit_NLopt(result, model, start_val, opt)
+end
+
 ############################################################################
 ### additional functions
 ############################################################################

@@ -36,6 +36,15 @@ struct RAMConstant
     value
 end
 
+import Base.==
+
+function ==(c1::RAMConstant, c2::RAMConstant)
+    res = ( (c1.matrix == c2.matrix) & (c1.index == c2.index) & 
+            (c1.value == c2.value)
+    )
+    return res
+end
+
 function get_RAMConstants(A, S, M)
     
     constants = Vector{RAMConstant}()
@@ -83,12 +92,14 @@ end
 ### get RAMMatrices from parameter table
 ############################################################################
 
-function RAMMatrices(partable::ParameterTable)
+function RAMMatrices(partable::ParameterTable; par_id = nothing)
 
-    parameters = unique(partable.columns[:identifier])
-    filter!(x -> x != :const, parameters)
-    n_par = length(parameters)
-    par_positions = Dict(parameters .=> 1:n_par)
+    if isnothing(par_id)
+        parameters, n_par, par_positions = get_par_npar_identifier(partable)
+    else
+        parameters, n_par, par_positions = 
+        par_id[:parameters], par_id[:n_par], par_id[:par_positions]
+    end
 
     n_observed = size(partable.variables[:observed_vars], 1)
     n_latent = size(partable.variables[:latent_vars], 1)
@@ -131,7 +142,7 @@ function RAMMatrices(partable::ParameterTable)
     
     for i in 1:length(partable)
 
-        from, parameter_type, to, free, value_fixed, label, identifier = partable[i]
+        from, parameter_type, to, free, value_fixed, identifier = partable[i]
 
         row_ind = positions[to]
         if from != Symbol("1") col_ind = positions[from] end
@@ -164,136 +175,65 @@ function RAMMatrices(partable::ParameterTable)
     return RAMMatrices(A_ind, S_ind, F_ind, M_ind, parameters, colnames, constants, (n_observed, n_node))
 end
 
-function set_RAM_index(A, S, parameter_type, row_ind, col_ind, parameter)
-    if parameter_type == :→
-        A[row_ind, col_ind] = parameter
-    else
-        S[row_ind, col_ind] = parameter
-        S[col_ind, row_ind] = parameter
-    end
-end
-
 ############################################################################
 ### get parameter table from RAMMatrices
 ############################################################################
-#= 
+
 function ParameterTable(ram_matrices::RAMMatrices)
     
-    new_partable = ParameterTable(nothing)
+    partable = ParameterTable(nothing)
 
-    # n_obs = size(ram_matrices.F, 1)
-    # n_nod = size(ram_matrices.F, 2)
-    # n_lat = n_nod - n_obs
+    colnames = ram_matrices.colnames
+    position_names = Dict{Int64, Symbol}(1:length(colnames) .=> colnames)
 
-    F = Matrix(ram_matrices.F)
-    A = Matrix(ram_matrices.A)
-    S = Matrix(ram_matrices.S)
+    # observed and latent variables
+    names_obs = colnames[ram_matrices.F_ind]
+    names_lat = colnames[findall(x -> !(x ∈ ram_matrices.F_ind), 1:length(colnames))]
 
-    A_string = string.(A)
-    S_string = string.(S)
+    partable.variables = Dict(
+        :sorted_vars => Vector{Symbol}(),
+        :observed_vars => names_obs,
+        :latent_vars => names_lat
+    )
 
-    A_isfloat = check_str_number.(A_string)
-    S_isfloat = check_str_number.(S_string)
-
-    position_names = Dict{Int64, String}(1:length(ram_matrices.colnames) .=> ram_matrices.colnames)
-
-    names_lat = Vector{String}()
-    names_obs = Vector{String}()
-
-    for (i, varname) in enumerate(ram_matrices.colnames)
-        if any(isone.(F[:, i]))
-            push!(names_obs, varname)
-        else
-            push!(names_lat, varname)
-        end
+    # constants
+    for c in ram_matrices.constants
+        push!(partable, get_partable_row(c, position_names))
     end
 
-    new_partable.observed_vars = copy(names_obs)
-    new_partable.latent_vars = copy(names_lat)
-
-    parameter_identifier = Dict([ram_matrices.parameters...] .=> ram_matrices.identifier)
-
-    for index in CartesianIndices(A)
-        value = A[index]
-        if iszero(value)
-        elseif A_isfloat[index]
-            from = position_names[index[2]]
-            to = position_names[index[1]]
-            parameter_type = "→"
-            free = false
-            value_fixed = tryparse(Float64, A_string[index])
-            label = "const"
-            start = 0.0
-            estimate = 0.0
-            identifier = :const
-            push!(new_partable, from, parameter_type, to, free, value_fixed, label, start, estimate, identifier)
-        else
-            from = position_names[index[2]]
-            to = position_names[index[1]]
-            parameter_type = "→"
-            free = true
-            value_fixed = 0.0
-            label = string(parameter_identifier[value])
-            start = 0.0
-            estimate = 0.0
-            identifier = parameter_identifier[value]
-            push!(new_partable, from, parameter_type, to, free, value_fixed, label, start, estimate, identifier)
-        end
+    # parameters
+    for (i, par) in enumerate(ram_matrices.parameters)
+        push_partable_rows!(
+            partable, position_names,
+            par, i,
+            ram_matrices.A_ind,
+            ram_matrices.S_ind,
+            ram_matrices.M_ind,
+            ram_matrices.size_F[2])
     end
 
-    for index in CartesianIndices(S)
-        value = S[index]
-        if iszero(value)
-        elseif S_isfloat[index]
-            from = position_names[index[2]]
-            to = position_names[index[1]]
-            parameter_type = "↔"
-            free = false
-            value_fixed = tryparse(Float64, S_string[index])
-            label = "const"
-            start = 0.0
-            estimate = 0.0
-            identifier = :const
-            push!(new_partable, from, parameter_type, to, free, value_fixed, label, start, estimate, identifier)
-        else
-            from = position_names[index[2]]
-            to = position_names[index[1]]
-            parameter_type = "↔"
-            free = true
-            value_fixed = 0.0
-            label = string(parameter_identifier[value])
-            start = 0.0
-            estimate = 0.0
-            identifier = parameter_identifier[value]
-            push!(new_partable, from, parameter_type, to, free, value_fixed, label, start, estimate, identifier)
-        end
+    return partable
+end
+
+
+############################################################################
+### get RAMMatrices from EnsembleParameterTable
+############################################################################
+
+function RAMMatrices(partable::EnsembleParameterTable)
+
+    ram_matrices = Dict{Symbol, RAMMatrices}()
+
+    parameters, n_par, par_positions = get_par_npar_identifier(partable)
+    par_id = Dict(:parameters => parameters, :n_par => n_par, :par_positions => par_positions)
+
+    for key in keys(partable.tables)
+        ram_mat = RAMMatrices(partable.tables[key]; par_id = par_id)
+        push!(ram_matrices, key => ram_mat)
     end
 
-    label_position = Dict{String, Vector{Int64}}()
-
-    for (i, label) in enumerate(new_partable.label)
-        if haskey(label_position, label)
-            push!(label_position[label], i)
-        else
-            push!(label_position, label => [i])
-        end
-    end
-
-    counter = 1
-
-    for label in keys(label_position)
-        if label == "const"
-            new_partable.label[label_position[label]] .= ""
-        elseif length(label_position[label]) == 1
-            new_partable.label[label_position[label]] .= ""
-        else
-            new_partable.label[label_position[label]] .= "label_"*string(counter)
-            counter += 1
-        end
-    end
-
-    return new_partable
-end =#
+    return ram_matrices
+end
 
 ############################################################################
 ### Pretty Printing
@@ -302,4 +242,155 @@ end =#
 function Base.show(io::IO, ram_matrices::RAMMatrices)
     print_type_name(io, ram_matrices)
     print_field_types(io, ram_matrices)
+end
+
+############################################################################
+### Additional Functions
+############################################################################
+
+function get_par_npar_identifier(partable::ParameterTable)
+    parameters = unique(partable.columns[:identifier])
+    filter!(x -> x != :const, parameters)
+    n_par = length(parameters)
+    par_positions = Dict(parameters .=> 1:n_par)
+    return parameters, n_par, par_positions
+end
+
+function get_par_npar_identifier(partable::EnsembleParameterTable)
+
+    parameters = Vector{Symbol}()
+    for key in keys(partable.tables)
+        append!(parameters, partable.tables[key].columns[:identifier])
+    end
+    parameters = unique(parameters)
+    filter!(x -> x != :const, parameters)
+
+    n_par = length(parameters)
+
+    par_positions = Dict(parameters .=> 1:n_par)
+
+    return parameters, n_par, par_positions
+end
+
+function get_partable_row(c::RAMConstant, position_names)
+    # variable names
+    from = position_names[c.index[2]]
+    to = position_names[c.index[1]]
+    # parameter type
+    if c.matrix == :A 
+        parameter_type = :→
+    elseif c.matrix == :S
+        parameter_type = :↔
+    elseif c.matrix == :M
+        parameter_type = :→
+    end
+    free = false
+    value_fixed = c.value
+    start = 0.0
+    estimate = 0.0
+    identifier = :const
+    return Dict(
+        :from => from, 
+        :parameter_type => parameter_type, 
+        :to => to, 
+        :free => free, 
+        :value_fixed => value_fixed, 
+        :start => start, 
+        :estimate => estimate, 
+        :identifier => identifier)
+end
+
+function cartesian_is_known(index, known_indices)
+    known = false
+    for k_in in known_indices
+        if (index == k_in) | ((index[1] == k_in[2]) & (index[2] == k_in[1]))
+            known = true
+        end
+    end
+    return known
+end
+
+cartesian_is_known(index, known_indices::Nothing) = false
+
+function get_partable_row(par, position_names, index, matrix, n_nod, known_indices)
+
+    # variable names
+    if matrix == :M
+        from = symbol("1")
+        to = position_names[index]
+    else
+        index = linear2cartesian(index, (n_nod, n_nod))
+
+        if (matrix == :S) & (cartesian_is_known(index, known_indices))
+            return nothing
+        elseif matrix == :S
+            push!(known_indices, index)
+        end
+
+        from = position_names[index[2]]
+        to = position_names[index[1]]
+    end
+
+    # parameter type
+    if matrix == :A 
+        parameter_type = :→
+    elseif matrix == :S
+        parameter_type = :↔
+    elseif matrix == :M
+        parameter_type = :→
+    end
+
+    free = true
+    value_fixed = 0.0
+    start = 0.0
+    estimate = 0.0
+    identifier = par
+
+    return Dict(
+        :from => from, 
+        :parameter_type => parameter_type, 
+        :to => to, 
+        :free => free, 
+        :value_fixed => value_fixed,
+        :start => start, 
+        :estimate => estimate, 
+        :identifier => identifier)
+end
+
+function push_partable_rows!(partable, position_names, par, i, A_ind, S_ind, M_ind, n_nod)
+    A_ind = A_ind[i]
+    S_ind = S_ind[i]
+    isnothing(M_ind) || (M_ind = M_ind[i])
+
+    for ind in A_ind
+        push!(partable, get_partable_row(par, position_names, ind, :A, n_nod, nothing))
+    end
+
+    known_indices = Vector{CartesianIndex}()
+    for ind in S_ind
+        push!(partable, get_partable_row(par, position_names, ind, :S, n_nod, known_indices))
+    end
+
+    if !isnothing(M_ind)
+        for ind in M_ind
+            push!(partable, get_partable_row(par, position_names, ind, :M, n_nod, nothing))
+        end
+    end
+
+    return nothing
+
+end
+
+function ==(mat1::RAMMatrices, mat2::RAMMatrices)
+    res = ( (mat1.A_ind == mat2.A_ind) & (mat1.S_ind == mat2.S_ind) & 
+            (mat1.F_ind == mat2.F_ind) & (mat1.M_ind == mat2.M_ind) &
+            (mat1.parameters == mat2.parameters) &
+            (mat1.colnames == mat2.colnames) & (mat1.size_F == mat2.size_F) &
+            (mat1.constants == mat2.constants)
+    )
+    return res
+end
+
+function get_group(d::Dict, group)
+    return d[group]
 end

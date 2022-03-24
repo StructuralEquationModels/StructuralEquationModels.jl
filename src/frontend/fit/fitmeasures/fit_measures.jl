@@ -10,7 +10,7 @@ fit_measures(sem_fit::SemFit{Mi, So, St, Mo, O} where {Mi, So, St, Mo <: Abstrac
 fit_measures(sem_fit, obs, imp, diff, loss::Union{SemML, SemFIML}) = 
     fit_measures(
         sem_fit,
-        npar,
+        n_par,
         df,
         AIC,
         BIC,
@@ -23,7 +23,7 @@ fit_measures(sem_fit, obs, imp, diff, loss::Union{SemML, SemFIML}) =
 fit_measures(sem_fit, obs, imp, diff, loss::SemWLS) = 
     fit_measures(
         sem_fit,
-        npar,
+        n_par,
         df,
         RMSEA,
         χ²,

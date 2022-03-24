@@ -20,7 +20,6 @@ function ParameterTable(disambig::Nothing)
         :to => Vector{Symbol}(),
         :free => Vector{Bool}(),
         :value_fixed => Vector{Float64}(),
-        :label => Vector{Symbol}(),
         :start => Vector{Float64}(),
         :estimate => Vector{Float64}(),
         :identifier => Vector{Symbol}(),
@@ -48,7 +47,8 @@ end
 
 function DataFrame(
         partable::ParameterTable; 
-        columns = [:from, :parameter_type, :to, :free, :value_fixed, :label, :start, :estimate, :identifier])
+        columns = nothing)
+    if isnothing(columns) columns = keys(partable.columns) end
     out = DataFrame([key => partable.columns[key] for key in columns])
     return DataFrame(out)
 end
@@ -64,7 +64,6 @@ function Base.show(io::IO, partable::ParameterTable)
         :to,
         :free,
         :value_fixed,
-        :label,
         :start,
         :estimate,
         :se,
@@ -101,7 +100,6 @@ Base.getindex(partable::ParameterTable, i::Int) =
     partable.columns[:to][i], 
     partable.columns[:free][i], 
     partable.columns[:value_fixed][i], 
-    partable.columns[:label][i],
     partable.columns[:identifier][i])
 
 function Base.length(partable::ParameterTable)
@@ -163,21 +161,22 @@ end
 
 # add a row -------------------------------------------------------------------
 
-#= import Base.push!
+import Base.push!
 
-function push!(partable::ParameterTable, from, parameter_type, to, free, value_fixed, label, start, estimate, identifier)
-    
-    push!(partable.from, from)
-    push!(partable.parameter_type, parameter_type)
-    push!(partable.to, to)
-    push!(partable.free, free)
-    push!(partable.value_fixed, value_fixed)
-    push!(partable.label, label)
-    push!(partable.start, start)
-    push!(partable.estimate, estimate)
-    push!(partable.identifier, identifier)
+function push!(partable::ParameterTable, d::AbstractDict)
 
-end =#
+    if !(keys(d) == keys(partable.columns))
+        @error "Can not push row to partable as the columns do not match. \n
+                Got columns $(keys(d)) and $(keys(partable.columns))"
+    end
+
+    for key in keys(d)
+        push!(partable.columns[key], d[key])
+    end
+
+end
+
+push!(partable::ParameterTable, d::Nothing) = nothing
 
 ############################################################################
 ### Update Partable from Fitted Model

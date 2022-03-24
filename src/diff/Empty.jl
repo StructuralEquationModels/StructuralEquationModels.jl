@@ -1,18 +1,20 @@
 ############################################################################
-### based on -2ll
+### Types
 ############################################################################
 
-AIC(sem_fit::SemFit{Mi, So, St, Mo, O} where {Mi, So, St, Mo <: AbstractSemSingle, O}) =
-    minus2ll(sem_fit) + 2n_par(sem_fit)
+struct SemDiffEmpty <: SemDiff end
 
 ############################################################################
-### based on χ² - 2df
+### Constructor
 ############################################################################
 
-# AICχ²(sem_fit::SemFit{Mi, S, Mo, O} where {Mi, S, Mo <: AbstractSemSingle, O}) = χ²(sem_fit) - 2df(sem_fit)
+# SemDiffEmpty(;kwargs...) = SemDiffEmpty()
 
 ############################################################################
-### based on χ² + 2q
+### Pretty Printing
 ############################################################################
 
-# AICq(sem_fit::SemFit{Mi, S, Mo, O} where {Mi, S, Mo <: AbstractSemSingle, O}) = χ²(sem_fit) + 2npar(sem_fit)
+function Base.show(io::IO, struct_inst::SemDiffEmpty)
+    StructuralEquationModels.print_type_name(io, struct_inst)
+end
+

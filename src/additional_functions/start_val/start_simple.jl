@@ -1,3 +1,5 @@
+# Single Models ---------------------------------------------------------------------------------
+
 function start_simple(model::Union{Sem, SemForwardDiff, SemFiniteDiff}; kwargs...)
     return start_simple(
         model.observed, 
@@ -9,6 +11,27 @@ end
 
 function start_simple(observed, imply::Union{RAM, RAMSymbolic}, diff, args...; kwargs...)
     return start_simple(imply.ram_matrices; kwargs...)
+end
+
+# Ensemble Models --------------------------------------------------------------------------------
+function start_simple(model::SemEnsemble; kwargs...)
+    
+    start_vals = []
+
+    for sem in model.sems
+        push!(start_vals, start_simple(sem; kwargs...))
+    end
+
+    has_start_val = [.!iszero.(start_val) for start_val in start_vals]
+
+    start_val = similar(start_vals[1])
+
+    for (j, indices) in enumerate(has_start_val)
+        start_val[indices] .= start_vals[j][indices]
+    end
+
+    return start_val
+
 end
 
 function start_simple(
@@ -60,7 +83,7 @@ function start_simple(
             else
                 start_val[i] = start_regressions
             end
-        elseif !isnothing(M) && (length(M_ind[i]) != 0)
+        elseif !isnothing(M_ind) && (length(M_ind[i]) != 0)
             start_val[i] = start_means
         end
     end

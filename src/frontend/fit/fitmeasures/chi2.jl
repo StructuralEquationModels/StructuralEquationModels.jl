@@ -14,10 +14,10 @@
 
 # RAM + SemML
 χ²(sem_fit::SemFit, observed, imp::Union{RAM, RAMSymbolic}, diff, loss_ml::SemML) = 
-    (nobs(sem_fit)-1)*(sem_fit.minimum - logdet(observed.obs_cov) - observed.n_man)
+    (n_obs(sem_fit)-1)*(sem_fit.minimum - logdet(observed.obs_cov) - observed.n_man)
 
 χ²(sem_fit::SemFit, observed, imp::Union{RAM, RAMSymbolic}, diff, loss_ml::SemWLS) = 
-    (nobs(sem_fit)-1)*sem_fit.minimum
+    (n_obs(sem_fit)-1)*sem_fit.minimum
 
 # FIML
 function χ²(sem_fit::SemFit, observed::SemObsMissing, imp::RAM, diff, loss_ml::SemFIML)

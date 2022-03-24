@@ -45,14 +45,14 @@ F =[1.0 0 0 0 0 0 0 0 0 0 0 0 0 0
     0 0 0 0 0 0 0 0 0 1 0 0 0 0
     0 0 0 0 0 0 0 0 0 0 1 0 0 0]
 
-A =[0  0  0  0  0  0  0  0  0  0  0     1     0     0
+A =[0  0  0  0  0  0  0  0  0  0  0     1.0     0     0
     0  0  0  0  0  0  0  0  0  0  0     :x21  0     0
     0  0  0  0  0  0  0  0  0  0  0     :x22  0     0
-    0  0  0  0  0  0  0  0  0  0  0     0     1     0
+    0  0  0  0  0  0  0  0  0  0  0     0     1.0     0
     0  0  0  0  0  0  0  0  0  0  0     0     :x23  0
     0  0  0  0  0  0  0  0  0  0  0     0     :x24  0
     0  0  0  0  0  0  0  0  0  0  0     0     :x25  0
-    0  0  0  0  0  0  0  0  0  0  0     0     0     1
+    0  0  0  0  0  0  0  0  0  0  0     0     0     1.0
     0  0  0  0  0  0  0  0  0  0  0     0     0     :x26
     0  0  0  0  0  0  0  0  0  0  0     0     0     :x27
     0  0  0  0  0  0  0  0  0  0  0     0     0     :x28
@@ -65,7 +65,7 @@ ram_matrices = RAMMatrices(;
     S = S, 
     F = F, 
     parameters = x,
-    colnames = string.([:x1, :x2, :x3, :y1, :y2, :y3, :y4, :y5, :y6, :y7, :y8, :ind60, :dem60, :dem65]))
+    colnames = [:x1, :x2, :x3, :y1, :y2, :y3, :y4, :y5, :y6, :y7, :y8, :ind60, :dem60, :dem65])
 
 # models
 model_ml = Sem(
@@ -78,14 +78,14 @@ model_ls_sym = Sem(
     specification = ram_matrices,
     data = dat,
     imply = RAMSymbolic,
-    loss = (SemWLS, ),
+    loss = SemWLS,
     diff = SemDiffNLopt
 )
 
 model_ridge = Sem(
     specification = ram_matrices,
     data = dat,
-    loss = (SemML, SemRidge,),
+    loss = (SemML, SemRidge),
     diff = SemDiffNLopt,
     α_ridge = .001,
     which_ridge = [:x16, :x17, :x18, :x19, :x20]
