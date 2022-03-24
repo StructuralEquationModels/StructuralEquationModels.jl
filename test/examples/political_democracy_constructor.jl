@@ -425,5 +425,5 @@ end
 @testset "fitmeasures_fiml" begin
     solution_ml = sem_fit(model_ml)
     @test all(test_fitmeasures(fit_measures(solution_ml), measures_ml; rtol = 1e-2))
-    @test par_ml.se[par_order] ≈ se_hessian(solution_ml) rtol = 1e-4
+    @test par_ml.se[par_order] ≈ se_hessian(solution_ml) rtol = 1e-3
 end
