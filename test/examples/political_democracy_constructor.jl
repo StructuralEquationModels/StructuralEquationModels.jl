@@ -200,7 +200,7 @@ end
 @testset "fitmeasures/se_ls" begin
     solution_ls = sem_fit(model_ls_sym)
     @test all(test_fitmeasures(fit_measures(solution_ls), measures_ls; rtol = 1e-2, fitmeasure_names = fitmeasure_names_ls))
-    @test_skip par_ls.se[par_order] ≈ se_hessian(solution_ls) rtol = 1e-3
+    @test par_ls.se[par_order] ≈ se_hessian(solution_ls) rtol = 1e-2
 end
 
 ############################################################################
@@ -363,13 +363,13 @@ measures_ml = DataFrame(CSV.read("examples/data/measures_dem_fiml.csv", DataFram
 ### define models
 ############################################################################
 
-ram_matrices = RAMMatrices(;
+#= ram_matrices = RAMMatrices(;
     A = A, 
     S = S, 
     F = F,
     M = M,
     parameters = x,
-    colnames = string.([:x1, :x2, :x3, :y1, :y2, :y3, :y4, :y5, :y6, :y7, :y8]))
+    colnames = string.([:x1, :x2, :x3, :y1, :y2, :y3, :y4, :y5, :y6, :y7, :y8])) =#
 
 ### start values
 par_order = [collect(29:42); collect(15:20); 2;3; 5;6;7; collect(9:14); collect(43:45); collect(21:24)]
@@ -425,4 +425,5 @@ end
 @testset "fitmeasures_fiml" begin
     solution_ml = sem_fit(model_ml)
     @test all(test_fitmeasures(fit_measures(solution_ml), measures_ml; rtol = 1e-2))
+    @test par_ml.se[par_order] ≈ se_hessian(solution_ml) rtol = 1e-4
 end

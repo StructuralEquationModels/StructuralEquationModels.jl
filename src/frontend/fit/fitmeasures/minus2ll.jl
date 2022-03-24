@@ -19,15 +19,16 @@ function minus2ll(sem_fit::SemFit, obs, imp::Union{RAM, RAMSymbolic}, diff, loss
 end
 
 # compute likelihood for missing data - H0 -------------------------------------------------------------
+# -2ll = (∑ log(2π)*(nᵢ + mᵢ)) + F*n
 function minus2ll(sem_fit::SemFit, observed, imp::Union{RAM, RAMSymbolic}, diff, loss_ml::SemFIML)
     F = sem_fit.minimum
-    F += sum(log(2π)*observed.pattern_n_obs.*observed.pattern_nvar_obs)/observed.n_obs
-    F *= observed.n_obs
+    F *= n_obs(observed)
+    F += sum(log(2π)*observed.pattern_n_obs.*observed.pattern_nvar_obs)
     return F
 end
 
 # compute likelihood for missing data - H1 -------------------------------------------------------------
-# -2ll = N*p*ln(2π) + ∑ ln(Σᵢ) + (mᵢ - μᵢ)ᵀ Σᵢ⁻¹ (mᵢ - μᵢ)) + tr(SᵢΣᵢ)
+# -2ll =  ∑ log(2π)*(nᵢ + mᵢ) + ln(Σᵢ) + (mᵢ - μᵢ)ᵀ Σᵢ⁻¹ (mᵢ - μᵢ)) + tr(SᵢΣᵢ)
 function minus2ll(observed::SemObsMissing)
     if observed.em_model.fitted
         minus2ll(
