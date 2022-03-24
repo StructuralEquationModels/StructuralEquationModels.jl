@@ -45,10 +45,10 @@ F =[1.0 0 0 0 0 0 0 0 0 0 0 0 0 0
     0 0 0 0 0 0 0 0 0 1 0 0 0 0
     0 0 0 0 0 0 0 0 0 0 1 0 0 0]
 
-A =[0  0  0  0  0  0  0  0  0  0  0     1     0     0
+A =[0  0  0  0  0  0  0  0  0  0  0     1.0   0     0
     0  0  0  0  0  0  0  0  0  0  0     :x21  0     0
     0  0  0  0  0  0  0  0  0  0  0     :x22  0     0
-    0  0  0  0  0  0  0  0  0  0  0     0     1     0
+    0  0  0  0  0  0  0  0  0  0  0     0     1.0   0
     0  0  0  0  0  0  0  0  0  0  0     0     :x23  0
     0  0  0  0  0  0  0  0  0  0  0     0     :x24  0
     0  0  0  0  0  0  0  0  0  0  0     0     :x25  0
@@ -65,7 +65,12 @@ ram_matrices = RAMMatrices(;
     S = S, 
     F = F, 
     parameters = x,
-    colnames = string.([:x1, :x2, :x3, :y1, :y2, :y3, :y4, :y5, :y6, :y7, :y8, :ind60, :dem60, :dem65]))
+    colnames = [:x1, :x2, :x3, :y1, :y2, :y3, :y4, :y5, :y6, :y7, :y8, :ind60, :dem60, :dem65])
+
+@testset "ParameterTable - RAMMatrices conversion" begin
+    partable = ParameterTable(ram_matrices)
+    @test ram_matrices == RAMMatrices(partable)
+end
 
 # models
 model_ml = Sem(
@@ -79,7 +84,7 @@ model_ls_sym = Sem(
     specification = ram_matrices,
     data = dat,
     imply = RAMSymbolic,
-    loss = (SemWLS, ),
+    loss = SemWLS,
     start_val = start_simple
 )
 
@@ -92,7 +97,7 @@ model_ml_sym = Sem(
 model_ridge = Sem(
     specification = ram_matrices,
     data = dat,
-    loss = (SemML, SemRidge,),
+    loss = (SemML, SemRidge),
     α_ridge = .001,
     which_ridge = 16:20
 )
@@ -100,7 +105,7 @@ model_ridge = Sem(
 model_ridge_id = Sem(
     specification = ram_matrices,
     data = dat,
-    loss = (SemML, SemRidge,),
+    loss = (SemML, SemRidge),
     α_ridge = .001,
     which_ridge = [:x16, :x17, :x18, :x19, :x20]
 )
@@ -108,7 +113,7 @@ model_ridge_id = Sem(
 model_constant = Sem(
     specification = ram_matrices,
     data = dat,
-    loss = (SemML, SemConstant,),
+    loss = (SemML, SemConstant),
     constant_loss = 3.465
 )
 
@@ -195,7 +200,7 @@ end
 @testset "fitmeasures/se_ls" begin
     solution_ls = sem_fit(model_ls_sym)
     @test all(test_fitmeasures(fit_measures(solution_ls), measures_ls; rtol = 1e-2, fitmeasure_names = fitmeasure_names_ls))
-    @test_skip par_ls.se[par_order] ≈ se_hessian(solution_ls) rtol = 1e-3
+    @test par_ls.se[par_order] ≈ se_hessian(solution_ls) rtol = 1e-2
 end
 
 ############################################################################
@@ -206,7 +211,7 @@ model_ls = Sem(
     specification = ram_matrices,
     data = dat,
     imply = RAMSymbolic,
-    loss = (SemWLS, ),
+    loss = SemWLS,
     hessian = true,
     algorithm = Newton(
         ;linesearch = BackTracking(order=3), 
@@ -271,7 +276,7 @@ model_ls = Sem(
     specification = ram_matrices,
     data = dat,
     imply = RAMSymbolic,
-    loss = (SemWLS, ),
+    loss = SemWLS,
     meanstructure = true,
     start_val = start_val_ls
 )
@@ -358,13 +363,13 @@ measures_ml = DataFrame(CSV.read("examples/data/measures_dem_fiml.csv", DataFram
 ### define models
 ############################################################################
 
-ram_matrices = RAMMatrices(;
+#= ram_matrices = RAMMatrices(;
     A = A, 
     S = S, 
     F = F,
     M = M,
     parameters = x,
-    colnames = string.([:x1, :x2, :x3, :y1, :y2, :y3, :y4, :y5, :y6, :y7, :y8]))
+    colnames = string.([:x1, :x2, :x3, :y1, :y2, :y3, :y4, :y5, :y6, :y7, :y8])) =#
 
 ### start values
 par_order = [collect(29:42); collect(15:20); 2;3; 5;6;7; collect(9:14); collect(43:45); collect(21:24)]
@@ -375,7 +380,7 @@ model_ml = Sem(
     specification = ram_matrices,
     data = dat,
     observed = SemObsMissing,
-    loss = (SemFIML,)
+    loss = SemFIML
 )
 
 model_ml_sym = Sem(
@@ -383,7 +388,7 @@ model_ml_sym = Sem(
     data = dat,
     observed = SemObsMissing,
     imply = RAMSymbolic,
-    loss = (SemFIML,),
+    loss = SemFIML,
     start_val = start_val_ml
 )
 
@@ -420,4 +425,5 @@ end
 @testset "fitmeasures_fiml" begin
     solution_ml = sem_fit(model_ml)
     @test all(test_fitmeasures(fit_measures(solution_ml), measures_ml; rtol = 1e-2))
+    @test par_ml.se[par_order] ≈ se_hessian(solution_ml) rtol = 1e-3
 end
