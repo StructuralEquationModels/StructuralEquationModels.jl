@@ -48,6 +48,12 @@ model_ml = Sem(
     data = dat
 )
 
+model_ml_weighted = Sem(
+    specification = partable,
+    data = dat,
+    loss_weights = (n_obs(model_ml),)
+)
+
 model_ls_sym = Sem(
     specification = partable,
     data = dat,
@@ -85,6 +91,10 @@ end
     @test test_gradient(model_ls_sym, test_start_val)
 end
 
+@testset "ml_gradients_weighted" begin
+    @test test_gradient(model_ml_weighted, test_start_val)
+end
+
 ############################################################################
 ### test solution
 ############################################################################
@@ -99,6 +109,13 @@ end
     solution_ls = sem_fit(model_ls_sym)
     update_estimate!(partable, solution_ls)
     @test SEM.compare_estimates(par_ls, partable, 0.01)
+end
+
+@testset "ml_solution_weighted" begin
+    solution_ml = sem_fit(model_ml)
+    solution_ml_weighted = sem_fit(model_ml_weighted)
+    @test isapprox(solution_ml.solution, solution_ml_weighted.solution, rtol = 1e-6)
+    @test isapprox(n_obs(model_ml)*solution_ml.minimum, solution_ml_weighted.minimum, rtol = 1e-6)
 end
 
 ############################################################################

@@ -29,20 +29,23 @@ my_ridge_loss = SemRidge(...)
 my_loss = SemLoss(SemML, SemRidge)
 ```
 """
-mutable struct SemLoss{F <: Tuple, FT, GT, HT}
+mutable struct SemLoss{F <: Tuple, T, FT, GT, HT}
     functions::F
+    weights::T
 
     F::FT
     G::GT
     H::HT
 end
 
-function SemLoss(functions...; parameter_type = Float64)
+function SemLoss(functions...; loss_weights = nothing, parameter_type = Float64)
 
     n_par = length(functions[1].G)
+    !isnothing(loss_weights) || (loss_weights = Tuple(nothing for _ in 1:length(functions)))
 
     return SemLoss(
         functions,
+        loss_weights,
 
         zeros(parameter_type, 1),
         zeros(parameter_type, n_par),
@@ -108,20 +111,32 @@ function (loss::SemLoss)(par, F, G, H, model)
     for lossfun in loss.functions lossfun(par, F, G, H, model) end
     if H
         loss.H .= 0.0
-        for lossfun in loss.functions
-            loss.H .+= lossfun.H
+        for (lossfun, c) in (loss.functions, loss.weights)
+            if isnothing(c)
+                loss.H .+= lossfun.H
+            else
+                loss.H .+= c*lossfun.H
+            end
         end
     end
     if G
         loss.G .= 0.0
-        for lossfun in loss.functions
-            loss.G .+= lossfun.G
+        for (lossfun, c) in (loss.functions, loss.weights)
+            if isnothing(c)
+                loss.G .+= lossfun.G
+            else
+                loss.G .+= c*lossfun.G
+            end
         end
     end
     if F
         loss.F[1] = 0.0
-        for lossfun in loss.functions
-            loss.F[1] += lossfun.F[1]
+        for (lossfun, c) in (loss.functions, loss.weights)
+            if isnothing(c)
+                loss.F[1] .+= lossfun.F[1]
+            else
+                loss.F[1] .+= c*lossfun.F[1]
+            end
         end
     end
 end
