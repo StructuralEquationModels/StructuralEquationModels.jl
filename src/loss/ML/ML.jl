@@ -54,8 +54,8 @@ function (semml::SemML)(
     a = cholesky!(Symmetric(semml.inverses); check = false)
 
     if !isposdef(a)
-        if G semml.G .= 0.0 end
-        if H semml.H .= 0.0 end
+        if G semml.G .= 1.0 end
+        if H semml.H .= 1.0 end
         if F semml.F[1] = Inf end
     else
         ld = logdet(a)
@@ -143,8 +143,8 @@ function (semml::SemML)(par, F, G, H, model::Sem{O, I, L, D}) where {O, I <: RAM
     a = cholesky!(Symmetric(semml.inverses); check = false)
 
     if !isposdef(a)
-        if G semml.G .= 0.0 end
-        if H semml.H .= 0.0 end
+        if G semml.G .= 1.0 end
+        if H semml.H .= 1.0 end
         if F semml.F[1] = Inf end
     else
         ld = logdet(a)
