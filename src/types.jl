@@ -38,7 +38,7 @@ mutable struct SemLoss{F <: Tuple, T, FT, GT, HT}
     H::HT
 end
 
-function SemLoss(functions...; loss_weights = nothing, parameter_type = Float64)
+function SemLoss(functions...; loss_weights = nothing, parameter_type = Float64, kwargs...)
 
     n_par = length(functions[1].G)
     !isnothing(loss_weights) || (loss_weights = Tuple(nothing for _ in 1:length(functions)))
@@ -111,7 +111,7 @@ function (loss::SemLoss)(par, F, G, H, model)
     for lossfun in loss.functions lossfun(par, F, G, H, model) end
     if H
         loss.H .= 0.0
-        for (lossfun, c) in (loss.functions, loss.weights)
+        for (lossfun, c) in zip(loss.functions, loss.weights)
             if isnothing(c)
                 loss.H .+= lossfun.H
             else
@@ -121,7 +121,7 @@ function (loss::SemLoss)(par, F, G, H, model)
     end
     if G
         loss.G .= 0.0
-        for (lossfun, c) in (loss.functions, loss.weights)
+        for (lossfun, c) in zip(loss.functions, loss.weights)
             if isnothing(c)
                 loss.G .+= lossfun.G
             else
@@ -131,11 +131,11 @@ function (loss::SemLoss)(par, F, G, H, model)
     end
     if F
         loss.F[1] = 0.0
-        for (lossfun, c) in (loss.functions, loss.weights)
+        for (lossfun, c) in zip(loss.functions, loss.weights)
             if isnothing(c)
-                loss.F[1] .+= lossfun.F[1]
+                loss.F[1] += lossfun.F[1]
             else
-                loss.F[1] .+= c*lossfun.F[1]
+                loss.F[1] += c*lossfun.F[1]
             end
         end
     end

@@ -117,10 +117,10 @@ function get_SemLoss(loss; kwargs...)
                 push!(loss_out, lossfun)
             end
         end
-        loss = SemLoss(loss_out...)
+        loss = SemLoss(loss_out...; kwargs...)
     else
         if !isa(loss, SemLossFunction)
-            loss = SemLoss(loss(;kwargs...))
+            loss = SemLoss(loss(;kwargs...); kwargs...)
         end
     end
     return loss
