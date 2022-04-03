@@ -114,7 +114,7 @@ end
 @testset "ml_solution_weighted" begin
     solution_ml = sem_fit(model_ml)
     solution_ml_weighted = sem_fit(model_ml_weighted)
-    @test isapprox(solution_ml.solution, solution_ml_weighted.solution, rtol = 1e-6)
+    @test isapprox(solution_ml.solution, solution_ml_weighted.solution, rtol = 1e-3)
     @test isapprox(n_obs(model_ml)*solution_ml.minimum, solution_ml_weighted.minimum, rtol = 1e-6)
 end
 
