@@ -7,7 +7,7 @@ df(model::SemEnsemble) = n_dp(model) - n_par(model)
 function n_dp(model::AbstractSemSingle)
     nman = n_man(model)
     ndp = 0.5(nman^2 + nman)
-    if !isnothing(imply.μ)
+    if !isnothing(model.imply.μ)
         ndp += n_man(model)
     end
     return ndp
