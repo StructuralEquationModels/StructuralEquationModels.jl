@@ -232,7 +232,7 @@ function SemEnsemble(models...; diff = SemDiffOptim, weights = nothing, paramete
     
     if isnothing(weights)
         nobs_total = sum(n_obs.(models))
-        weights = [(n_obs(model)-1)/nobs_total for model in models]
+        weights = [n_obs(model)/nobs_total for model in models]
     end
 
     # check identifier equality
