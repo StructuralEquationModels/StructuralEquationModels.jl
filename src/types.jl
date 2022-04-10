@@ -229,8 +229,9 @@ function SemEnsemble(models...; diff = SemDiffOptim, weights = nothing, paramete
     n = length(models)
 
     # default weights
-    nobs_total = sum(n_obs.(models))
+    
     if isnothing(weights)
+        nobs_total = sum(n_obs.(models))
         weights = [(n_obs(model)-1)/nobs_total for model in models]
     end
 
