@@ -8,7 +8,7 @@ n_par(model::AbstractSemSingle) = n_par(model.imply)
 
 n_par(model::SemEnsemble) = n_par(model.identifier)
 
-n_par(identifier::dict) = length(keys(identifier))
+n_par(identifier::Dict) = length(identifier)
 
 # SemFit splices loss functions ---------------------------------------------------------------------
 #= n_par(sem_fit::SemFit{Mi, So, St, Mo, O} where {Mi, So, St, Mo <: AbstractSemSingle, O}) = 
