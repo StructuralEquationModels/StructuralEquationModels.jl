@@ -16,6 +16,7 @@
 χ²(sem_fit::SemFit, observed, imp::Union{RAM, RAMSymbolic}, diff, loss_ml::SemML) = 
     (n_obs(sem_fit)-1)*(sem_fit.minimum - logdet(observed.obs_cov) - observed.n_man)
 
+# bollen, p. 115, only correct for GLS weight matrix
 χ²(sem_fit::SemFit, observed, imp::Union{RAM, RAMSymbolic}, diff, loss_ml::SemWLS) = 
     (n_obs(sem_fit)-1)*sem_fit.minimum
 

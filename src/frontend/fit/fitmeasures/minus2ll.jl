@@ -12,11 +12,9 @@ minus2ll(sem_fit::SemFit{Mi, So, St, Mo, O} where {Mi, So, St, Mo <: AbstractSem
         sem_fit.model.loss.functions...
         )
 
-# RAM(Symbolic) + SemML -----------------------------------------------------------------------------
-function minus2ll(sem_fit::SemFit, obs, imp::Union{RAM, RAMSymbolic}, diff, loss_ml::SemML)
-    m2ll = obs.n_obs*(sem_fit.minimum + log(2π)obs.n_man)
-    return m2ll
-end
+# SemML -----------------------------------------------------------------------------
+minus2ll(sem_fit::SemFit, obs, imp::Union{RAM, RAMSymbolic}, diff, loss_ml::SemML) =
+    n_obs(obs)*(sem_fit.minimum + log(2π)obs.n_man)
 
 # compute likelihood for missing data - H0 -------------------------------------------------------------
 # -2ll = (∑ log(2π)*(nᵢ + mᵢ)) + F*n
