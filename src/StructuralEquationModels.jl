@@ -58,6 +58,7 @@ include("frontend/fit/fitmeasures/n_par.jl")
 include("frontend/fit/fitmeasures/n_obs.jl")
 include("frontend/fit/fitmeasures/p.jl")
 include("frontend/fit/fitmeasures/RMSEA.jl")
+include("frontend/fit/fitmeasures/n_man.jl")
 include("frontend/fit/fitmeasures/fit_measures.jl")
 # standard errors
 include("frontend/fit/standard_errors/hessian.jl")
@@ -85,7 +86,7 @@ export  AbstractSem,
         RAMMatrices, 
             RAMMatrices!,
         fit_measures,
-            AIC, BIC, χ², df, fit_measures, minus2ll, n_par, n_obs, p_value, RMSEA,
+            AIC, BIC, χ², df, fit_measures, minus2ll, n_par, n_obs, p_value, RMSEA, n_man,
             EmMVNModel,
         se_hessian
 end

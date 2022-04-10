@@ -116,6 +116,7 @@ end
 ############################################################################
 
 n_obs(observed::SemObsMissing) = observed.n_obs
+n_man(observed::SemObsMissing) = observed.n_man
 
 ############################################################################
 ### Pretty Printing

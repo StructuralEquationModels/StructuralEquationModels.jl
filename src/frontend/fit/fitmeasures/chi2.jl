@@ -31,3 +31,37 @@ end
 #####################################################################################################
 # Collections
 #####################################################################################################
+
+# SemFit splices loss functions ---------------------------------------------------------------------
+χ²(sem_fit::SemFit{Mi, So, St, Mo, O} where {Mi, So, St, Mo <: SemEnsemble, O}) = 
+    χ²(
+        sem_fit,
+        sem_fit.model,
+        sem_fit.model.sems[1].loss.functions[1]
+        )
+
+function χ²(sem_fit::SemFit, model::SemEnsemble, lossfun::L) where {L <: SemML}
+    check_ensemble_length(model)
+    check_lossfun_types(model, L)
+    F_G = sem_fit.minimum
+    F_G -= sum([w*(logdet(m.observed.obs_cov) + m.observed.n_man) for (w, m) in zip(model.weights, model.sems)])
+    return (sum(n_obs.(model.sems))-1)*F_G
+end
+
+function check_ensemble_length(model)
+    for sem in model.sems
+        if length(sem.loss.functions) > 1
+            @error "A model for one of the groups contains multiple loss functions."
+        end
+    end
+end
+
+function check_lossfun_types(model, type)
+    for sem in model.sems
+        for lossfun in sem.loss.functions
+            if !isa(lossfun, type)
+                @error "Your model(s) contain multiple lossfunctions with differing types."
+            end
+        end
+    end
+end

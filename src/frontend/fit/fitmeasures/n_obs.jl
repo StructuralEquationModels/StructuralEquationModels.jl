@@ -1,4 +1,10 @@
-n_obs(sem_fit::SemFit{Mi, So, St, Mo, O} where {Mi, So, St, Mo <: AbstractSemSingle, O}) = 
+n_obs(sem_fit) = n_obs(sem_fit.model)
+
+n_obs(model::AbstractSemSingle) = n_obs(model.observed)
+
+n_obs(model::SemEnsemble) = sum(n_obs.(model.sems))
+
+#= n_obs(sem_fit::SemFit{Mi, So, St, Mo, O} where {Mi, So, St, Mo <: AbstractSemSingle, O}) = 
     n_obs(
         sem_fit,
         sem_fit.model.observed,
@@ -11,4 +17,4 @@ n_obs(sem_fit::SemFit{Mi, So, St, Mo, O} where {Mi, So, St, Mo <: AbstractSemSin
 n_obs(sem_fit::SemFit, obs::Union{SemObsCommon, SemObsMissing}, imp, diff, loss_ml) =
     n_obs(sem_fit.model)
 
-n_obs(model::AbstractSemSingle) = n_obs(model.observed)
+n_obs(model::AbstractSemSingle) = n_obs(model.observed) =#

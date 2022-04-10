@@ -72,6 +72,7 @@ end
 ############################################################################
 
 n_obs(observed::SemObsCommon) = observed.n_obs
+n_man(observed::SemObsCommon) = observed.n_man
 
 ############################################################################
 ### Additional functions
