@@ -1,3 +1,9 @@
+# Licence
+
+Keep it	friendly at all times and adhere to the [CODE_OF_CONDUCT](Code of Conduct).
+Please note that if you add a contribution we consider it to be a donation under our [LICENSE](lizense).
+Please inquire before investing time if you want to be listed as coauthor.
+
 # Release Process
 
 This file documents the release process of StructuralEquationModels.jl.

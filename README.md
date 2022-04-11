@@ -37,3 +37,8 @@ The package makes use of
 
 Before the release of the package, we are still working on
 - optimizing performance for big models with hundreds of parameters
+
+# Questions?
+
+If you have questions you may ask them here in the [issues](https://github.com/StructuralEquationModels/StructuralEquationModels.jl/issues/new).
+Please observe our [code of conduct](/CODE_OF_CONDUCT.md).
