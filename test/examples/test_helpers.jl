@@ -41,7 +41,7 @@ fitmeasure_names_ml = Dict(
     :df => "df",
     :χ² => "chisq",
     :p_value => "pvalue",
-    :npar => "npar",
+    :n_par => "npar",
     :RMSEA => "rmsea",
 )
 
@@ -49,7 +49,7 @@ fitmeasure_names_ls = Dict(
     :df => "df",
     :χ² => "chisq",
     :p_value => "pvalue",
-    :npar => "npar",
+    :n_par => "npar",
     :RMSEA => "rmsea",
 )
 

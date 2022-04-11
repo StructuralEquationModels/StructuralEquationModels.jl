@@ -29,27 +29,28 @@ my_ridge_loss = SemRidge(...)
 my_loss = SemLoss(SemML, SemRidge)
 ```
 """
-mutable struct SemLoss{F <: Tuple, FT, GT, HT}
+mutable struct SemLoss{F <: Tuple, T, FT, GT, HT}
     functions::F
+    weights::T
 
     F::FT
     G::GT
     H::HT
 end
 
-function SemLoss(functions; parameter_type = Float64)
+function SemLoss(functions...; loss_weights = nothing, parameter_type = Float64, kwargs...)
 
     n_par = length(functions[1].G)
+    !isnothing(loss_weights) || (loss_weights = Tuple(nothing for _ in 1:length(functions)))
 
     return SemLoss(
         functions,
+        loss_weights,
 
         zeros(parameter_type, 1),
         zeros(parameter_type, n_par),
         zeros(parameter_type, n_par, n_par))
 end
-
-SemLoss(args...; parameter_type = Float64) = SemLoss(args; parameter_type = parameter_type)
 
 """
 Supertype of all objects that can serve as the diff field of a SEM.
@@ -110,20 +111,32 @@ function (loss::SemLoss)(par, F, G, H, model)
     for lossfun in loss.functions lossfun(par, F, G, H, model) end
     if H
         loss.H .= 0.0
-        for lossfun in loss.functions
-            loss.H .+= lossfun.H
+        for (lossfun, c) in zip(loss.functions, loss.weights)
+            if isnothing(c)
+                loss.H .+= lossfun.H
+            else
+                loss.H .+= c*lossfun.H
+            end
         end
     end
     if G
         loss.G .= 0.0
-        for lossfun in loss.functions
-            loss.G .+= lossfun.G
+        for (lossfun, c) in zip(loss.functions, loss.weights)
+            if isnothing(c)
+                loss.G .+= lossfun.G
+            else
+                loss.G .+= c*lossfun.G
+            end
         end
     end
     if F
         loss.F[1] = 0.0
-        for lossfun in loss.functions
-            loss.F[1] += lossfun.F[1]
+        for (lossfun, c) in zip(loss.functions, loss.weights)
+            if isnothing(c)
+                loss.F[1] += lossfun.F[1]
+            else
+                loss.F[1] += c*lossfun.F[1]
+            end
         end
     end
 end
@@ -200,36 +213,54 @@ end
 # ensemble models
 #####################################################################################################
 
-struct SemEnsemble{N, T <: Tuple, V <: AbstractVector, D, S, FT, GT, HT} <: AbstractSemCollection
+struct SemEnsemble{N, T <: Tuple, V <: AbstractVector, D, I, FT, GT, HT} <: AbstractSemCollection
     n::N
     sems::T
     weights::V
     diff::D
-    start_val::S
+    identifier::I
 
     F::FT
     G::GT
     H::HT
 end
 
-function SemEnsemble(T::Tuple, semdiff, start_val; weights = nothing, parameter_type = Float64)
-    n = size(T, 1)
-    sems = T
-    nobs_total = sum([model.observed.n_obs for model in T])
+function SemEnsemble(models...; diff = SemDiffOptim, weights = nothing, parameter_type = Float64, kwargs...)
+    n = length(models)
+
+    # default weights
+    nobs_total = sum(n_obs.(models))
     if isnothing(weights)
-        weights = [(model.observed.n_obs-1)/nobs_total for model in T]
+        weights = [(n_obs(model)-1)/nobs_total for model in models]
     end
-    n_par = length(start_val)
+
+    # check identifier equality
+    id = identifier(models[1])
+    for model in models
+        if id != identifier(model)
+            @error "The identifier of your models do not match. \n
+            Maybe you tried to specify models of an ensemble via ParameterTables. \n
+            In that case, you may use RAMMatrices instead."
+        end
+    end
+
+    npar = n_par(models[1])
+
+    # diff
+    if !isa(diff, SemDiff)
+        diff = diff(;kwargs...)
+    end
+
     return SemEnsemble(
         n,
-        sems,
+        models,
         weights,
-        semdiff,
-        start_val,
+        diff,
+        id,
 
         zeros(parameter_type, 1),
-        zeros(parameter_type, n_par),
-        zeros(parameter_type, n_par, n_par))
+        zeros(parameter_type, npar),
+        zeros(parameter_type, npar, npar))
 end
 
 function (ensemble::SemEnsemble)(par, F, G, H)

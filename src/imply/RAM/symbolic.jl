@@ -35,10 +35,10 @@ function RAMSymbolic(;
 
     if specification isa RAMMatrices
         ram_matrices = specification
-        identifier = Dict{Symbol, Int64}(ram_matrices.parameters .=> 1:length(ram_matrices.parameters))
+        identifier = StructuralEquationModels.identifier(ram_matrices)
     elseif specification isa ParameterTable
         ram_matrices = RAMMatrices(specification)
-        identifier = Dict{Symbol, Int64}(ram_matrices.parameters .=> 1:length(ram_matrices.parameters))
+        identifier = StructuralEquationModels.identifier(ram_matrices)
     else
         @error "The RAMSymbolic constructor does not know how to handle your specification object. 
         \n Please specify your model as either a ParameterTable or RAMMatrices."
@@ -159,6 +159,12 @@ function (imply::RAMSymbolic)(par, F, G, H, model)
     end
 end
 
+############################################################################
+### Recommended methods
+############################################################################
+
+identifier(imply::RAMSymbolic) = imply.identifier
+n_par(imply::RAMSymbolic) = imply.n_par
 
 ############################################################################
 ### additional functions
@@ -194,9 +200,3 @@ function Base.show(io::IO, struct_inst::RAMSymbolic)
     print_type_name(io, struct_inst)
     print_field_types(io, struct_inst)
 end
-
-############################################################################
-### Identifier
-############################################################################
-
-identifier(imply::RAMSymbolic) = imply.identifier
