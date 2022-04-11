@@ -64,6 +64,6 @@ We follow the Gitflow workflow described [here](https://www.atlassian.com/git/tu
 ### testing/xxx
 - changes that do not touch the code but only test
 - **only** changes that fix faulty tests or increase test coverage
-- forked from main/release/devel merged into main/release
+- forked from main/release/devel merged into main/release/devel
 
 
