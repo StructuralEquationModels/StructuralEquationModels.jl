@@ -66,4 +66,5 @@ We follow the Gitflow workflow described [here](https://www.atlassian.com/git/tu
 - **only** changes that fix faulty tests or increase test coverage
 - forked from main/release/devel merged into main/release/devel
 
-
+## merging
+- all merges should use `git merge --no-ff`
