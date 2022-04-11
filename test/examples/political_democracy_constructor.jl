@@ -199,7 +199,9 @@ end
 
 @testset "fitmeasures/se_ls" begin
     solution_ls = sem_fit(model_ls_sym)
-    @test all(test_fitmeasures(fit_measures(solution_ls), measures_ls; rtol = 1e-2, fitmeasure_names = fitmeasure_names_ls))
+    fm = fit_measures(solution_ls)
+    @test all(test_fitmeasures(fm, measures_ls; rtol = 1e-2, fitmeasure_names = fitmeasure_names_ls))
+    @test (fm[:AIC] === missing) & (fm[:BIC] === missing) & (fm[:minus2ll] === missing)
     @test par_ls.se[par_order] ≈ se_hessian(solution_ls) rtol = 1e-2
 end
 
@@ -344,7 +346,9 @@ end
 
 @testset "fitmeasures_ls" begin
     solution_ls = sem_fit(model_ls)
-    @test all(test_fitmeasures(fit_measures(solution_ls), measures_ls; rtol = 1e-2, fitmeasure_names = fitmeasure_names_ls))
+    fm = fit_measures(solution_ls)
+    @test all(test_fitmeasures(fm, measures_ls; rtol = 1e-2, fitmeasure_names = fitmeasure_names_ls))
+    @test (fm[:AIC] === missing) & (fm[:BIC] === missing) & (fm[:minus2ll] === missing)
 end
 
 ############################################################################

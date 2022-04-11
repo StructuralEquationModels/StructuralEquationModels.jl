@@ -13,7 +13,7 @@ fit_measures(sem_fit) =
 
 function fit_measures(sem_fit, args...)
 
-    measures = Dict{Symbol, Float64}()
+    measures = Dict{Symbol, Union{Float64, Missing}}()
     
     for arg in args
         push!(measures, Symbol(arg) => arg(sem_fit))
