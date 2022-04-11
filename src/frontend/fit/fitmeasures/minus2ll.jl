@@ -18,6 +18,10 @@ minus2ll(sem_fit::SemFit, obs, imp, diff, args...) = minus2ll(sem_fit.minimum, o
 minus2ll(minimum::Number, obs, imp::Union{RAM, RAMSymbolic}, diff, loss_ml::SemML) =
     n_obs(obs)*(minimum + log(2π)*n_man(obs))
 
+# WLS -------------------------------------------------------------------------------
+minus2ll(minimum::Number, obs, imp::Union{RAM, RAMSymbolic}, diff, loss_ml::SemWLS) =
+    missing
+
 # compute likelihood for missing data - H0 -------------------------------------------------------------
 # -2ll = (∑ log(2π)*(nᵢ + mᵢ)) + F*n
 function minus2ll(minimum::Number, observed, imp::Union{RAM, RAMSymbolic}, diff, loss_ml::SemFIML)
