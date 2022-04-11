@@ -43,10 +43,10 @@ function RAM(;
     # else if ...
     if specification isa RAMMatrices
         ram_matrices = specification
-        identifier = Dict{Symbol, Int64}(ram_matrices.parameters .=> 1:length(ram_matrices.parameters))
+        identifier = StructuralEquationModels.identifier(ram_matrices)
     elseif specification isa ParameterTable
         ram_matrices = RAMMatrices(specification)
-        identifier = Dict{Symbol, Int64}(ram_matrices.parameters .=> 1:length(ram_matrices.parameters))
+        identifier = StructuralEquationModels.identifier(ram_matrices)
     else
         @error "The RAM constructor does not know how to handle your specification object. 
         \n Please specify your model as either a ParameterTable or RAMMatrices."
@@ -169,6 +169,13 @@ function (imply::RAM)(parameters, F, G, H, model)
 end
 
 ############################################################################
+### Recommended methods
+############################################################################
+
+identifier(imply::RAM) = imply.identifier
+n_par(imply::RAM) = imply.n_par
+
+############################################################################
 ### additional functions
 ############################################################################
 
@@ -214,9 +221,3 @@ function Base.show(io::IO, struct_inst::RAM)
     print_type_name(io, struct_inst)
     print_field_types(io, struct_inst)
 end
-
-############################################################################
-### Identifier
-############################################################################
-
-identifier(imply::RAM) = imply.identifier

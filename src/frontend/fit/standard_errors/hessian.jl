@@ -2,25 +2,9 @@
 ### observed
 ############################################################################
 
-# SemFit splices loss functions ---------------------------------------------------------------------
-#= se_hessian(sem_fit::SemFit{Mi, So, St, Mo, O} where {Mi, So, St, Mo <: AbstractSemSingle, O}; analytic = false) = 
-    se_hessian(
-        sem_fit,
-        sem_fit.model.observed,
-        sem_fit.model.imply,
-        sem_fit.model.diff,
-        sem_fit.model.loss.functions...;
-        analytic = analytic
-        )
-
-# RAM + SemML
-se_hessian(sem_fit::SemFit, obs, imp::RAM, diff, loss_ml::SemML; analytic) = se_hessian(sem_fit; analytic = analytic)
-se_hessian(sem_fit::SemFit, obs, imp::RAMSymbolic, diff, loss_ml::SemML; analytic) = se_hessian(sem_fit; analytic = analytic) =#
-
-# se_hessian(sem_fit::SemFit, obs, imp::RAM, diff, loss_ml::SemFIML; analytic) = se_hessian(sem_fit; analytic = analytic)
-# se_hessian(sem_fit::SemFit, obs, imp::RAMSymbolic, diff, loss_ml::SemFIML; analytic) = se_hessian(sem_fit; analytic = analytic)
-
 function se_hessian(sem_fit::SemFit; hessian = :finitediff)
+
+    c = H_scaling(sem_fit.model)
 
     if hessian == :analytic
         H = hessian!(sem_fit.model, sem_fit.solution)
@@ -39,11 +23,26 @@ function se_hessian(sem_fit::SemFit; hessian = :finitediff)
         @error "I dont know how to compute $how standard-errors"
     end
 
-    invH = inv(0.5(sem_fit.model.observed.n_obs-1)*H)
+    invH = c*inv(H)
     se = sqrt.(diag(invH))
 
     return se
 end
+
+# Addition functions -------------------------------------------------------------
+H_scaling(model::AbstractSemSingle) = 
+    H_scaling(
+        model,
+        model.observed,
+        model.imply,
+        model.diff,
+        model.loss.functions...)
+
+H_scaling(model, obs, imp, diff, lossfun::Union{SemML, SemWLS}) =
+    2/(n_obs(model)-1)
+
+H_scaling(model, obs, imp, diff, lossfun::SemFIML) =
+    2/(n_obs(model))
 
 ############################################################################
 ### expected

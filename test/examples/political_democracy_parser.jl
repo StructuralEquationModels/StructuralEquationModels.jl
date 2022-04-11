@@ -24,7 +24,7 @@ graph = @StenoGraph begin
     dem60 → fixed(1)*y1 + y2 + y3 + y4
     dem65 → fixed(1)*y5 + y6 + y7 + y8
     # latent regressions
-    dem60 ← ind60
+    label(:a)*dem60 ← ind60
     dem65 ← dem60
     dem65 ← ind60
     # variances
@@ -48,11 +48,17 @@ model_ml = Sem(
     data = dat
 )
 
+model_ml_weighted = Sem(
+    specification = partable,
+    data = dat,
+    loss_weights = (n_obs(model_ml),)
+)
+
 model_ls_sym = Sem(
     specification = partable,
     data = dat,
     imply = RAMSymbolic,
-    loss = (SemWLS, ),
+    loss = SemWLS,
     start_val = start_simple
 )
 
@@ -64,6 +70,16 @@ test_start_val = [fill(0.5, 8); fill(0.05, 3); fill(0.1, 3); fill(1.0, 11); fill
 start_val_fabin3 = start_val(model_ml)
 
 ############################################################################
+### test parameter index retrieval
+############################################################################
+
+@testset "get_identifier_indices" begin
+    pars = [:θ_1, :θ_7, :θ_21]
+    @test get_identifier_indices(pars, model_ml) == get_identifier_indices(pars, partable)
+    @test get_identifier_indices(pars, model_ml) == get_identifier_indices(pars, RAMMatrices(partable))
+end
+
+############################################################################
 ### test gradients
 ############################################################################
 
@@ -73,6 +89,10 @@ end
 
 @testset "ls_gradients" begin
     @test test_gradient(model_ls_sym, test_start_val)
+end
+
+@testset "ml_gradients_weighted" begin
+    @test test_gradient(model_ml_weighted, test_start_val)
 end
 
 ############################################################################
@@ -89,6 +109,13 @@ end
     solution_ls = sem_fit(model_ls_sym)
     update_estimate!(partable, solution_ls)
     @test SEM.compare_estimates(par_ls, partable, 0.01)
+end
+
+@testset "ml_solution_weighted" begin
+    solution_ml = sem_fit(model_ml)
+    solution_ml_weighted = sem_fit(model_ml_weighted)
+    @test isapprox(solution_ml.solution, solution_ml_weighted.solution, rtol = 1e-3)
+    @test isapprox(n_obs(model_ml)*solution_ml.minimum, solution_ml_weighted.minimum, rtol = 1e-6)
 end
 
 ############################################################################
