@@ -10,6 +10,9 @@ dat = DataFrame(CSV.File("examples/data/data_multigroup.csv"))
 par_ml = DataFrame(CSV.File("examples/data/par_multigroup_ml.csv"))
 par_ls = DataFrame(CSV.File("examples/data/par_multigroup_ls.csv"))
 
+measures_ml = DataFrame(CSV.File("examples/data/measures_mg_ml.csv"))
+measures_ls = DataFrame(CSV.File("examples/data/measures_mg_ls.csv"))
+
 par_ml = filter(row -> (row.free != 0)&(row.op != "~1"), par_ml)
 par_ls = filter(row -> (row.free != 0)&(row.op != "~1"), par_ls)
 
@@ -94,6 +97,12 @@ end
 @testset "ml_solution_multigroup" begin
     solution_ml = sem_fit(model_ml_multigroup)
     @test par_ml.est[par_order] ≈ solution_ml.solution rtol = 0.01
+end
+
+@testset "fitmeasures/se_ml" begin
+    solution_ml = sem_fit(model_ml_multigroup)
+    @test all(test_fitmeasures(fit_measures(solution_ml), measures_ml; rtol = 1e-2))
+    @test isapprox(par_ml.se[par_order], se_hessian(solution_ml); rtol = 1e-3, atol = 1e-2)
 end
 
 ####################################################################
@@ -192,4 +201,10 @@ end
 @testset "ls_solution_multigroup" begin
     solution_ls = sem_fit(model_ls_multigroup)
     @test SEM.compare_estimates(par_ls.est[par_order], solution_ls.solution, 0.01)
+end
+
+@testset "fitmeasures/se_ml" begin
+    solution_ls = sem_fit(model_ls_multigroup)
+    @test all(test_fitmeasures(fit_measures(solution_ls), measures_ls; rtol = 1e-2, fitmeasure_names = fitmeasure_names_ls))
+    @test isapprox(par_ls.se[par_order], se_hessian(solution_ls), rtol = 1e-3, atol = 1e-2)
 end

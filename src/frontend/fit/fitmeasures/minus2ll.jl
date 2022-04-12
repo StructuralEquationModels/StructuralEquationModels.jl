@@ -99,7 +99,7 @@ function minus2ll(sem_fit::SemFit{Mi, So, St, Mo, O} where {Mi, So, St, Mo <: Se
     m2ll = 0.0
     for sem in sem_fit.model.sems
         minimum = objective!(sem, sem_fit.solution)
-        m2ll += m2ll(minimum, sem)
+        m2ll += minus2ll(minimum, sem)
     end
     return m2ll
 end

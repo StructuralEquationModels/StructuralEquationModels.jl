@@ -40,6 +40,12 @@ end
         sem_fit.model.sems[1].loss.functions[1]
         )
 
+function χ²(sem_fit::SemFit, model::SemEnsemble, lossfun::L) where {L <: SemWLS}
+    check_ensemble_length(model)
+    check_lossfun_types(model, L)
+    return (sum(n_obs.(model.sems))-1)*sem_fit.minimum
+end
+
 function χ²(sem_fit::SemFit, model::SemEnsemble, lossfun::L) where {L <: SemML}
     check_ensemble_length(model)
     check_lossfun_types(model, L)
