@@ -268,10 +268,13 @@ ram_matrices = RAMMatrices(;
     parameters = x,
     colnames = string.([:x1, :x2, :x3, :y1, :y2, :y3, :y4, :y5, :y6, :y7, :y8]))
 
-### start values
+# starting values
 par_order = [collect(29:42); collect(15:20); 2;3; 5;6;7; collect(9:14); collect(43:45); collect(21:24)]
 start_val_ml = Vector{Float64}(par_ml.start[par_order])
 start_val_ls = Vector{Float64}(par_ls.start[par_order])
+
+@test start_simple(model_ls_sym) == [fill(1.0, 11); fill(0.05, 3); fill(0.0, 6); fill(0.5, 8); fill(0.0, 3)]
+@test start_val(model_ml) ≈ start_val_ml
 
 # models
 model_ls = Sem(
@@ -279,15 +282,13 @@ model_ls = Sem(
     data = dat,
     imply = RAMSymbolic,
     loss = SemWLS,
-    meanstructure = true,
-    start_val = start_val_ls
+    meanstructure = true
 )
 
 model_ml = Sem(
     specification = ram_matrices,
     data = dat,
-    meanstructure = true,
-    start_val = start_val_ml
+    meanstructure = true
 )
 
 model_ml_sym = Sem(
@@ -297,6 +298,13 @@ model_ml_sym = Sem(
     meanstructure = true,
     start_val = start_val_ml
 )
+
+############################################################################
+### test starting values
+############################################################################
+
+@test start_simple(model_ls) == [fill(1.0, 11); fill(0.05, 3); fill(0.0, 6); fill(0.5, 8); fill(0.0, 3); fill(0.0, 7)]
+@test start_val(model_ml) ≈ start_val_ml
 
 ############################################################################
 ### test solution
