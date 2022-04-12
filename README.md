@@ -5,7 +5,7 @@
 [![Project Status: WIP – Initial development is in progress, but there has not yet been a stable, usable release suitable for the public.](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
 
 
-<img src="images/g5014.png" width = 250>
+<img src="https://github.com/StructuralEquationModels/Data/blob/main/images/logo.png" width = 250>
 
 This is a package for Structural Equation Modeling.
 It is still *in development*.
