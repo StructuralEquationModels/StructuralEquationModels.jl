@@ -273,9 +273,6 @@ par_order = [collect(29:42); collect(15:20); 2;3; 5;6;7; collect(9:14); collect(
 start_val_ml = Vector{Float64}(par_ml.start[par_order])
 start_val_ls = Vector{Float64}(par_ls.start[par_order])
 
-@test start_simple(model_ls_sym) == [fill(1.0, 11); fill(0.05, 3); fill(0.0, 6); fill(0.5, 8); fill(0.0, 3)]
-@test start_val(model_ml) ≈ start_val_ml
-
 # models
 model_ls = Sem(
     specification = ram_matrices,
