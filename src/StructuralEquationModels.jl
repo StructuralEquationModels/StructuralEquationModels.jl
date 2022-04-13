@@ -3,7 +3,7 @@ module StructuralEquationModels
 using LinearAlgebra, Optim,
     NLSolversBase, Statistics, SparseArrays, Symbolics,
     NLopt, FiniteDiff, ForwardDiff, PrettyTables,
-    Distributions, StenoGraphs, Pkg.Artifacts, DelimitedFiles,
+    Distributions, StenoGraphs, LazyArtifacts, DelimitedFiles,
     DataFrames
 
 import DataFrames: DataFrame
