@@ -3,7 +3,10 @@ module StructuralEquationModels
 using LinearAlgebra, Optim,
     NLSolversBase, Statistics, SparseArrays, Symbolics,
     NLopt, FiniteDiff, ForwardDiff, PrettyTables,
-    Distributions, StenoGraphs
+    Distributions, StenoGraphs, Pkg.Artifacts, DelimitedFiles,
+    DataFrames
+
+import DataFrames: DataFrame
 
 # type hierarchy
 include("types.jl")
@@ -46,6 +49,7 @@ include("additional_functions/start_val/start_val.jl")
 include("additional_functions/start_val/start_fabin3.jl")
 include("additional_functions/start_val/start_partable.jl")
 include("additional_functions/start_val/start_simple.jl")
+include("additional_functions/artifacts.jl")
 # identifier
 include("additional_functions/identifier.jl")
 # fit measures
@@ -88,5 +92,6 @@ export  AbstractSem,
         fit_measures,
             AIC, BIC, χ², df, fit_measures, minus2ll, n_par, n_obs, p_value, RMSEA, n_man,
             EmMVNModel,
-        se_hessian
+        se_hessian,
+        example_data
 end

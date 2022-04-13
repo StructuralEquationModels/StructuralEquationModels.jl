@@ -6,7 +6,8 @@ include("test_helpers.jl")
 ### observed data
 ############################################################################
 
-dat = DataFrame(CSV.File("examples/data/data_dem.csv"))
+dat = example_data("political_democracy")
+#dat = DataFrame(CSV.File("examples/data/data_dem.csv"))
 par_ml = DataFrame(CSV.File("examples/data/par_dem_ml.csv"))
 par_ls = DataFrame(CSV.File("examples/data/par_dem_ls.csv"))
 measures_ml = DataFrame(CSV.File("examples/data/measures_dem_ml.csv"))

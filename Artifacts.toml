@@ -1,0 +1,7 @@
+[political_democracy]
+git-tree-sha1 = "a02b07e3523570d8a27c9fe10dcac3a1e4705c33"
+lazy = true
+
+    [[political_democracy.download]]
+    sha256 = "665368aa89c339161899ac9a3bb3e020c71fcd7a118620632b7d5f0c84942036"
+    url = "https://github.com/StructuralEquationModels/Data/datasets/political_democracy/compressed"
