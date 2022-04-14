@@ -1,8 +1,10 @@
+abstract type AbstractParameterTable end
+
 ############################################################################
 ### Types
 ############################################################################
 
-mutable struct ParameterTable{C, V}
+mutable struct ParameterTable{C, V} <: AbstractParameterTable
     columns::C
     variables::V
 end
@@ -197,21 +199,21 @@ function update_partable!(partable::ParameterTable, model_identifier::AbstractDi
     return partable
 end
 
-update_partable!(partable::ParameterTable, sem_fit::SemFit, vec, column) =
-    update_partable!(partable::ParameterTable, identifier(sem_fit::SemFit), vec, column)
+update_partable!(partable::AbstractParameterTable, sem_fit::SemFit, vec, column) =
+    update_partable!(partable, identifier(sem_fit), vec, column)
 
 
 # update estimates ---------------------------------------------------------
 
-update_estimate!(partable::ParameterTable, sem_fit::SemFit) =
+update_estimate!(partable::AbstractParameterTable, sem_fit::SemFit) =
     update_partable!(partable, sem_fit, sem_fit.solution, :estimate)
 
 # update starting values -----------------------------------------------------
 
-update_start!(partable::ParameterTable, sem_fit::SemFit) =
+update_start!(partable::AbstractParameterTable, sem_fit::SemFit) =
     update_partable!(partable, sem_fit, sem_fit.start_val, :start)
 
-function update_start!(partable::ParameterTable, model::AbstractSem, start_val)
+function update_start!(partable::AbstractParameterTable, model::AbstractSem, start_val)
     if !(start_val isa Vector)
         start_val = start_val(model)
     end
@@ -220,7 +222,7 @@ end
 
 # update partable standard errors ---------------------------------------------
 
-function update_se_hessian!(partable::ParameterTable, sem_fit::SemFit; hessian = :finitediff)
+function update_se_hessian!(partable::AbstractParameterTable, sem_fit::SemFit; hessian = :finitediff)
     se = se_hessian(sem_fit; hessian = hessian)
     return update_partable!(partable, sem_fit, se, :se)
 end
