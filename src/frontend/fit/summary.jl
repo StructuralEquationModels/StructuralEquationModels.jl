@@ -187,8 +187,3 @@ function sort_partially(sorted, to_sort)
     append!(out, remaining)
     return out
 end
-
-#function summary(partable::EnsembleParameterTable)
-
-#function summary(partable::AbstractParameterTable)
-

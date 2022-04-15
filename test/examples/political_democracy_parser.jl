@@ -48,18 +48,6 @@ model_ml = Sem(
     data = dat
 )
 
-partable
-
-update_estimate!(partable, solution_ml)
-SEM.update_se_hessian!(partable, solution_ml)
-
-
-model_ml_nlopt = Sem(
-    specification = partable,
-    data = dat,
-    diff = SemDiffNLopt
-)
-
 model_ml_weighted = Sem(
     specification = partable,
     data = dat,
