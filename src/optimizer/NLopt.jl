@@ -15,6 +15,10 @@ mutable struct NLoptResult
     problem
 end
 
+optimizer(res::NLoptResult) = res.problem.algorithm
+n_iterations(res::NLoptResult) = res.problem.numevals
+convergence(res::NLoptResult) = res.result[3]
+
 # construct SemFit from fitted NLopt object
 function SemFit_NLopt(optimization_result, model::AbstractSem, start_val, opt)
     return SemFit(

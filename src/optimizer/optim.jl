@@ -16,6 +16,10 @@ function SemFit(optimization_result::Optim.MultivariateOptimizationResults, mode
     )
 end
 
+optimizer(res::Optim.MultivariateOptimizationResults) = Optim.summary(res)
+n_iterations(res::Optim.MultivariateOptimizationResults) = Optim.iterations(res)
+convergence(res::Optim.MultivariateOptimizationResults) = Optim.converged(res)
+
 function sem_fit(model::Sem{O, I, L, D}; start_val = start_val, kwargs...) where {O, I, L, D <: SemDiffOptim}
     
     if !isa(start_val, Vector)

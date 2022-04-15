@@ -12,6 +12,7 @@ import DataFrames: DataFrame
 include("types.jl")
 # fitted objects
 include("frontend/fit/SemFit.jl")
+include("frontend/fit/summary.jl")
 # specification of models
 include("frontend/specification/ParameterTable.jl")
 include("frontend/specification/EnsembleParameterTable.jl")
@@ -81,7 +82,7 @@ export  AbstractSem,
             SemDiffEmpty, SemDiffOptim, SemDiffNLopt, NLoptConstraint,
         SemObs, 
             SemObsCommon, SemObsMissing,
-        sem_fit, SemFit,
+        sem_fit, SemFit, sem_summary,
         objective, objective!, gradient, gradient!, hessian, hessian!, objective_gradient!,
         ParameterTable, 
             EnsembleParameterTable, update_partable!, update_estimate!, update_start!,

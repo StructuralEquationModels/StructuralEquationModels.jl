@@ -38,14 +38,26 @@ graph = @StenoGraph begin
 end
 
 partable = ParameterTable(
-    latent_vars = latent_vars, 
-    observed_vars = observed_vars, 
+    latent_vars = latent_vars,
+    observed_vars = observed_vars,
     graph = graph)
 
 # models
 model_ml = Sem(
     specification = partable,
     data = dat
+)
+
+partable
+
+update_estimate!(partable, solution_ml)
+SEM.update_se_hessian!(partable, solution_ml)
+
+
+model_ml_nlopt = Sem(
+    specification = partable,
+    data = dat,
+    diff = SemDiffNLopt
 )
 
 model_ml_weighted = Sem(

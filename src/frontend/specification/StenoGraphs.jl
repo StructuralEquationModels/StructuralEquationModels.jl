@@ -105,7 +105,6 @@ function ParameterTable(;graph, observed_vars, latent_vars, g = 1, parname = :θ
             :to => to,
             :free => free,
             :value_fixed => value_fixed,
-            :label => label,
             :start => start,
             :estimate => estimate,
             :identifier => identifier),

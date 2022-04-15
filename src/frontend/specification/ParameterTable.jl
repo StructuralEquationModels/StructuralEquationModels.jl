@@ -192,7 +192,7 @@ function update_partable!(partable::ParameterTable, model_identifier::AbstractDi
         if !(identifier == :const)
             new_col[i] = vec[model_identifier[identifier]]
         elseif identifier == :const
-            new_col[i] == zero(eltype(vec))
+            new_col[i] = zero(eltype(vec))
         end
     end
     push!(partable.columns, column => new_col)
