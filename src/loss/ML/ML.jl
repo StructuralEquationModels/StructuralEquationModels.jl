@@ -113,7 +113,7 @@ function (semml::SemML)(
         # with means
         μ_diff = model.observed.obs_mean - model.imply.μ
         diff⨉inv = μ_diff'*semml.inverses
-            if H throw(DomainError(H, "hessian of ML + meanstructure is not implemented yet"))
+            if H throw(DomainError(H, "hessian of ML + meanstructure is not implemented yet")) end
             if G
                 gradient = 
                     vec(

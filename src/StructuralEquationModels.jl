@@ -12,12 +12,12 @@ import DataFrames: DataFrame
 include("types.jl")
 # fitted objects
 include("frontend/fit/SemFit.jl")
-include("frontend/fit/summary.jl")
 # specification of models
 include("frontend/specification/ParameterTable.jl")
 include("frontend/specification/EnsembleParameterTable.jl")
 include("frontend/specification/RAMMatrices.jl")
 include("frontend/specification/StenoGraphs.jl")
+include("frontend/fit/summary.jl")
 # pretty printing
 include("frontend/pretty_printing.jl")
 # observed
