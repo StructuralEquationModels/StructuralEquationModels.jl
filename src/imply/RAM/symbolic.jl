@@ -166,6 +166,13 @@ end
 identifier(imply::RAMSymbolic) = imply.identifier
 n_par(imply::RAMSymbolic) = imply.n_par
 
+function update_observed(imply::RAMSymbolic, observed::SemObs; kwargs...) 
+    if n_man(observed) == size(imply.Σ)
+        return imply
+    else
+        return RAMSymbolic(;kwargs...)
+    end
+end
 ############################################################################
 ### additional functions
 ############################################################################

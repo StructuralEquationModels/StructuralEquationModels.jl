@@ -6,6 +6,12 @@ end
 SemDiffOptim(;algorithm = LBFGS(), options = Optim.Options(;f_tol = 1e-10, x_tol = 1.5e-8), kwargs...) = SemDiffOptim(algorithm, options)
 
 ############################################################################
+### Recommended methods
+############################################################################
+
+update_observed(diff::SemDiffOptim, observed::SemObs) = diff
+
+############################################################################
 ### Pretty Printing
 ############################################################################
 

@@ -46,6 +46,8 @@ function (imply::ImplyEmpty)(par, F, G, H, model) end
 identifier(imply::ImplyEmpty) = imply.identifier
 n_par(imply::ImplyEmpty) = imply.n_par
 
+update_observed(imply::ImplyEmpty, observed::SemObs) = imply
+
 ############################################################################
 ### Pretty Printing
 ############################################################################
