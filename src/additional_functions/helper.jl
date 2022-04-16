@@ -196,7 +196,7 @@ function compare_estimates(partable_lav, partable::ParameterTable, tol)
         if length(lav_ind) == 0
             lav_ind = findall((partable_lav.lhs .== String(to)) .& (partable_lav.rhs .== String(from)))
             if length(lav_ind) == 0
-                @error "At least one parameter could not be found in the lavaan solution"
+                throw(ErrorException("At least one parameter could not be found in the lavaan solution"))
             end
             is_correct = isapprox(estimate, partable_lav.est[lav_ind[1]]; rtol = tol)
             push!(correct, is_correct)

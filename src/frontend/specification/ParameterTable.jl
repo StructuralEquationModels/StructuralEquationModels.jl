@@ -115,6 +115,12 @@ end
 
 # Sorting -------------------------------------------------------------------
 
+struct CyclicModelError <: Exception
+    msg::AbstractString
+end
+
+Base.showerror(io::IO, e::CyclicModelError) = print(io, e.msg)
+
 import Base.sort!, Base.sort
 
 function sort!(partable::ParameterTable)
@@ -144,7 +150,7 @@ function sort!(partable::ParameterTable)
             end
         end
         
-        if !acyclic error("Your model is cyclic and therefore can not be ordered") end
+        if !acyclic throw(CyclicModelError("your model is cyclic and therefore can not be ordered")) end
         acyclic = false
 
         if length(variables) == 0 sorted = true end
@@ -166,16 +172,9 @@ end
 import Base.push!
 
 function push!(partable::ParameterTable, d::AbstractDict)
-
-    if !(keys(d) == keys(partable.columns))
-        @error "Can not push row to partable as the columns do not match. \n
-                Got columns $(keys(d)) and $(keys(partable.columns))"
-    end
-
     for key in keys(d)
         push!(partable.columns[key], d[key])
     end
-
 end
 
 push!(partable::ParameterTable, d::Nothing) = nothing

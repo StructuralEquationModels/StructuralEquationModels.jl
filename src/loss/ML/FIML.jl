@@ -72,7 +72,7 @@ end
 
 function (semfiml::SemFIML)(par, F, G, H, model::Sem{O, I, L, D}) where {O, I <: SemImplySymbolic, L, D}
 
-    if H stop("hessian for FIML is not implemented (yet)") end
+    if H throw(DomainError(H, "hessian for FIML is not implemented (yet)")) end
 
     if !check_fiml(semfiml, model)
         if G semfiml.G .+= 1.0 end
@@ -103,7 +103,7 @@ end
 
 function (semfiml::SemFIML)(par, F, G, H, model::Sem{O, I, L, D}) where {O, I <: RAM, L, D}
 
-    if H stop("hessian for FIML is not implemented (yet)") end
+    if H throw(DomainError(H, "hessian for FIML is not implemented (yet)")) end
 
     if !check_fiml(semfiml, model)
         if G semfiml.G .+= 1.0 end

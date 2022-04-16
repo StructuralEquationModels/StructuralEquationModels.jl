@@ -160,14 +160,14 @@ function get_partition(A_indices, S_indices)
 
     for i in first_A:last_A
         if length(A_indices[i]) == 0
-            @error "Your parameter vector is not partitioned into directed and undirected effects"
+            throw(ErrorException("Your parameter vector is not partitioned into directed and undirected effects"))
             return nothing
         end
     end
 
     for i in first_S:last_S
         if length(S_indices[i]) == 0
-            @error "Your parameter vector is not partitioned into directed and undirected effects"
+            throw(ErrorException("Your parameter vector is not partitioned into directed and undirected effects"))
             return nothing
         end
     end
@@ -199,7 +199,7 @@ function get_partition(M_indices)
 
     for i in first_M:last_M
         if length(M_indices[i]) == 0
-            @error "Your parameter vector is not partitioned into directed, undirected and mean effects"
+            throw(ErrorException("Your parameter vector is not partitioned into directed, undirected and mean effects"))
             return nothing
         end
     end

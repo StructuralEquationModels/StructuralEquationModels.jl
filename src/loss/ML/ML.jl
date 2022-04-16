@@ -113,7 +113,7 @@ function (semml::SemML)(
         # with means
         μ_diff = model.observed.obs_mean - model.imply.μ
         diff⨉inv = μ_diff'*semml.inverses
-            if H stop("hessian of ML + meanstructure is not implemented yet") end
+            if H throw(DomainError(H, "hessian of ML + meanstructure is not implemented yet"))
             if G
                 gradient = 
                     vec(
@@ -136,7 +136,7 @@ end
 function (semml::SemML)(par, F, G, H, model::Sem{O, I, L, D}) where {O, I <: RAM, L, D}
 
     if H
-        stop("Hessian for ML estimation with non-symbolic imply type is not implemented")
+        throw(DomainError(H, "hessian for ML estimation with non-symbolic imply type is not implemented"))
     end
 
     semml.inverses .= model.imply.Σ

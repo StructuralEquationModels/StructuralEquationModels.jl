@@ -89,7 +89,7 @@ function (semwls::SemWLS)(par, F, G, H, model)
     else
     # with meanstructure
     μ_diff = model.observed.obs_mean - model.imply.μ
-        if H stop("hessian of GLS with meanstructure is not available") end
+        if H throw(DomainError(H, "hessian of WLS with meanstructure is not available")) end
         if G
             gradient = -2*(σ_diff'*semwls.V*model.imply.∇Σ + μ_diff'*semwls.V_μ*model.imply.∇μ)'
             semwls.G .= gradient

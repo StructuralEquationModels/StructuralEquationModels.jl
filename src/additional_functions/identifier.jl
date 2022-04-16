@@ -29,6 +29,6 @@ function get_identifier_indices(parameters, obj::Union{ParameterTable, RAMMatric
     @warn "You are trying to find parameter indices from a ParameterTable or RAMMatrices object. \n
            If your model contains user-defined types, this may lead to wrong results. \n
            To be on the safe side, try to reference parameters by labels or query the indices from 
-           the constructed model (`get_identifier_indices(parameters, model)`)."
+           the constructed model (`get_identifier_indices(parameters, model)`)." maxlog=1
     return get_identifier_indices(parameters, identifier(obj))
 end

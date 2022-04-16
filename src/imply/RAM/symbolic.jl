@@ -40,8 +40,8 @@ function RAMSymbolic(;
         ram_matrices = RAMMatrices(specification)
         identifier = StructuralEquationModels.identifier(ram_matrices)
     else
-        @error "The RAMSymbolic constructor does not know how to handle your specification object. 
-        \n Please specify your model as either a ParameterTable or RAMMatrices."
+        throw(ErrorException("The RAMSymbolic constructor does not know how to handle your specification object. 
+        \n Please specify your model as either a ParameterTable or RAMMatrices."))
     end
 
     n_par = length(ram_matrices.parameters)

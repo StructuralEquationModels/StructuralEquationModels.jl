@@ -16,11 +16,11 @@ function se_hessian(sem_fit::SemFit; hessian = :finitediff)
                 sem_fit.solution
                 )
     elseif hessian == :optimizer
-        @error "Standard errors from the optimizer hessian are not implemented yet"
+        throw(ArgumentError("standard errors from the optimizer hessian are not implemented yet"))
     elseif hessian == :expected
-        @error "Standard errors based on the expected hessian are not implemented yet"
+        throw(ArgumentError("standard errors based on the expected hessian are not implemented yet"))
     else
-        @error "I dont know how to compute $how standard-errors"
+        throw(ArgumentError("I dont know how to compute `$how` standard-errors"))
     end
 
     invH = c*inv(H)

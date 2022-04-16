@@ -239,9 +239,9 @@ function SemEnsemble(models...; diff = SemDiffOptim, weights = nothing, paramete
     id = identifier(models[1])
     for model in models
         if id != identifier(model)
-            @error "The identifier of your models do not match. \n
+            throw(ErrorException("The identifier of your models do not match. \n
             Maybe you tried to specify models of an ensemble via ParameterTables. \n
-            In that case, you may use RAMMatrices instead."
+            In that case, you may use RAMMatrices instead."))
         end
     end
 

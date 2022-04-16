@@ -38,9 +38,6 @@ function RAM(;
         gradient = true,
         kwargs...)
 
-    # check the model specification
-    # if isa(specification, ParameterTable)
-    # else if ...
     if specification isa RAMMatrices
         ram_matrices = specification
         identifier = StructuralEquationModels.identifier(ram_matrices)
@@ -48,8 +45,8 @@ function RAM(;
         ram_matrices = RAMMatrices(specification)
         identifier = StructuralEquationModels.identifier(ram_matrices)
     else
-        @error "The RAM constructor does not know how to handle your specification object. 
-        \n Please specify your model as either a ParameterTable or RAMMatrices."
+        throw(ErrorException("The RAM constructor does not know how to handle your specification object. 
+        \n Please specify your model as either a ParameterTable or RAMMatrices."))
     end
 
     # get dimensions of the model
@@ -207,7 +204,7 @@ function check_acyclic(A_pre, n_par, A_indices)
     elseif iszero(A_rand[.!tril(ones(Bool, size(A_pre)...))'])
         A_pre = UpperTriangular(A_pre)
     elseif acyclic
-        @info "Your model is acyclic, specifying the A Matrix as either Upper or Lower Triangular can have great performance benefits.\n"
+        @info "Your model is acyclic, specifying the A Matrix as either Upper or Lower Triangular can have great performance benefits.\n" maxlog=1
     end
 
     return A_pre

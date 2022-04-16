@@ -96,13 +96,13 @@ reorder_observed(data, obs_cov::Nothing, spec_colnames::Nothing, data_colnames) 
 
 # too much or not enough data specified
 reorder_observed(data, obs_cov, spec_colnames, data_colnames) = 
-    @error "You specified both an observed dataset and an observed covariance matrix"
+    throw(ArgumentError("you specified both an observed dataset and an observed covariance matrix"))
 reorder_observed(data::Nothing, obs_cov::Nothing, spec_colnames, data_colnames) = 
-    @error "You specified neither an observed dataset nor an observed covariance matrix"
+    throw(ArgumentError("you specified neither an observed dataset nor an observed covariance matrix"))
 
 # reorder data ------------------------------------------------------------------------------------------------------------
 reorder_data(data::AbstractArray, spec_colnames, data_colnames::Nothing) =
-    @error "If your data format does not provide column names, please provide them via the `data_colnames = ...` argument."
+    throw(ArgumentError("if your data format does not provide column names, please provide them via the `data_colnames = ...` argument."))
 
 function reorder_data(data::AbstractArray, spec_colnames, data_colnames)
     new_position = [findall(x .== data_colnames)[1] for x in spec_colnames]
@@ -112,11 +112,11 @@ end
 
 reorder_data(data::DataFrame, spec_colnames, data_colnames::Nothing) = Matrix(data[:, spec_colnames]), nothing
 reorder_data(data::DataFrame, spec_colnames, data_colnames) = 
-    @error "Your data format has column names but you also provided column names via the `data_colnames = ...` argument."
+    throw(ArgumentError("your data format has column names but you also provided column names via the `data_colnames = ...` argument."))
 
 # reorder covariance matrices ---------------------------------------------------------------------------------------------
 reorder_obs_cov(obs_cov::AbstractArray, spec_colnames, data_colnames::Nothing) =
-    @error "If an observed covariance is given, `data_colnames = ...` has to be specified."
+    throw(ArgumentError("If an observed covariance is given, `data_colnames = ...` has to be specified."))
 
 function reorder_obs_cov(obs_cov::AbstractArray, spec_colnames, data_colnames)
     new_position = [findall(x .== data_colnames)[1] for x in spec_colnames]
