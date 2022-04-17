@@ -3,7 +3,7 @@ function sem_wrap_optim(par, F, G, H, sem::AbstractSem)
     sem(par, !isnothing(F), !isnothing(G), !isnothing(H))
     if !isnothing(G) G .= gradient(sem) end
     if !isnothing(H) H .= hessian(sem) end
-    if !isnothing(F) return objective(sem) end
+    if !isnothing(F) return objective(sem)[1] end
 end
 
 function SemFit(optimization_result::Optim.MultivariateOptimizationResults, model::AbstractSem, start_val)
