@@ -114,7 +114,7 @@ function (semfiml::SemFIML)(par, F, G, H, model::Sem{O, I, L, D}) where {O, I <:
         #batch_sym_inv_update!(semfiml, model)
         batch_inv!(semfiml, model)
         for i in 1:size(pattern_n_obs(observed(model)), 1)
-            @. semfiml.meandiff[i] = obs_mean(observed(model))[i] - semfiml.imp_mean[i]
+            semfiml.meandiff[i] .= obs_mean(observed(model))[i] - semfiml.imp_mean[i]
         end
         #semfiml.logdets .= -logdet.(semfiml.inverses)
 
