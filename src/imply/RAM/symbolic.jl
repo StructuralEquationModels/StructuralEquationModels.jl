@@ -185,6 +185,10 @@ end
 μ(imply::RAMSymbolic) = imply.μ
 ∇μ(imply::RAMSymbolic) = imply.∇μ
 
+Σ_function(imply::RAMSymbolic) = imply.Σ_function
+∇Σ_function(imply::RAMSymbolic) = imply.∇Σ_function
+∇²Σ_function(imply::RAMSymbolic) = imply.∇²Σ_function
+
 ############################################################################
 ### additional functions
 ############################################################################
