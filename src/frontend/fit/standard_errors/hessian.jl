@@ -42,10 +42,10 @@ H_scaling(model, obs, imp, diff, lossfun::Union{SemML, SemWLS}) =
     2/(n_obs(model)-1)
 
 H_scaling(model, obs, imp, diff, lossfun::SemFIML) =
-    2/(n_obs(model))
+    2/n_obs(model)
 
 H_scaling(model::SemEnsemble) =
-    2/(n_obs(model)-1)
+    2/n_obs(model)
 
 ############################################################################
 ### expected
