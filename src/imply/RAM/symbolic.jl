@@ -173,6 +173,18 @@ function update_observed(imply::RAMSymbolic, observed::SemObs; kwargs...)
         return RAMSymbolic(;kwargs...)
     end
 end
+
+############################################################################
+### additional methods
+############################################################################
+
+Σ(imply::RAMSymbolic) = imply.Σ
+∇Σ(imply::RAMSymbolic) = imply.∇Σ
+∇²Σ(imply::RAMSymbolic) = imply.∇²Σ
+
+μ(imply::RAMSymbolic) = imply.μ
+∇μ(imply::RAMSymbolic) = imply.∇μ
+
 ############################################################################
 ### additional functions
 ############################################################################

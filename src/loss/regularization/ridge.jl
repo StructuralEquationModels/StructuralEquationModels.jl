@@ -9,9 +9,9 @@ struct SemRidge{P, W1, W2, FT, GT, HT} <: SemLossFunction
     which::W1
     which_H::W2
 
-    F::FT
-    G::GT
-    H::HT
+    objective::FT
+    gradient::GT
+    hessian::HT
 end
 
 ############################################################################
@@ -41,18 +41,26 @@ end
 function (ridge::SemRidge)(par, F, G, H, model)
 
     if G
-        ridge.G[ridge.which] .= 2*ridge.α*par[ridge.which]
+        ridge.gradient[ridge.which] .= 2*ridge.α*par[ridge.which]
     end
 
     if H
-        @views @. ridge.H[ridge.which_H] += ridge.α*2.0
+        @views @. ridge.hessian[ridge.which_H] += ridge.α*2.0
     end
 
     if F
-        ridge.F[1] = ridge.α*sum(par[ridge.which].^2)
+        ridge.objective[1] = ridge.α*sum(par[ridge.which].^2)
     end
     
 end
+
+############################################################################
+### Recommended methods
+############################################################################
+
+objective(lossfun::SemRidge) = lossfun.objective
+gradient(lossfun::SemRidge) = lossfun.gradient
+hessian(lossfun::SemRidge) = lossfun.hessian
 
 ############################################################################
 ### Pretty Printing

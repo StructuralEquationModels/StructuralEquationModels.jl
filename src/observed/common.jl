@@ -60,6 +60,15 @@ n_obs(observed::SemObsCommon) = observed.n_obs
 n_man(observed::SemObsCommon) = observed.n_man
 
 ############################################################################
+### additional methods
+############################################################################
+
+data(observed::SemObsCommon) = observed.data
+obs_cov(observed::SemObsCommon) = observed.obs_cov
+obs_mean(observed::SemObsCommon) = observed.obs_mean
+data_rowwise(observed::SemObsCommon) = observed.data_rowwise
+
+############################################################################
 ### Additional functions
 ############################################################################
 

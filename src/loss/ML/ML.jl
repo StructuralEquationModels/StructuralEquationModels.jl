@@ -12,9 +12,9 @@ struct SemML{INV,C,L,M,M2,B,FT,GT,HT} <: SemLossFunction
     meandiff::M2
     approx_H::B
 
-    F::FT
-    G::GT
-    H::HT
+    objective::FT
+    gradient::GT
+    hessian::HT
 end
 
 ############################################################################
@@ -54,9 +54,9 @@ function (semml::SemML)(
     a = cholesky!(Symmetric(semml.inverses); check = false)
 
     if !isposdef(a)
-        if G semml.G .= 1.0 end
-        if H semml.H .= 1.0 end
-        if F semml.F[1] = Inf end
+        if G semml.gradient .= 1.0 end
+        if H semml.hessian .= 1.0 end
+        if F semml.objective[1] = Inf end
     else
         ld = logdet(a)
         semml.inverses .= LinearAlgebra.inv!(a)
@@ -67,7 +67,7 @@ function (semml::SemML)(
             if G && H
                 J = (vec(semml.inverses)-vec(semml.inverses*model.observed.obs_cov*semml.inverses))'
                 gradient = J*model.imply.∇Σ
-                semml.G .= gradient'
+                semml.gradient .= gradient'
                 if semml.approx_H
                     hessian = 2*model.imply.∇Σ'*kron(semml.inverses, semml.inverses)*model.imply.∇Σ
                 end
@@ -80,12 +80,12 @@ function (semml::SemML)(
                     model.imply.∇²Σ_function(model.imply.∇²Σ, J, par)
                     hessian += model.imply.∇²Σ
                 end
-                semml.H .= hessian
+                semml.hessian .= hessian
             end
 
             if G && !H
                 gradient = (vec(semml.inverses)-vec(semml.inverses*model.observed.obs_cov*semml.inverses))'*model.imply.∇Σ
-                semml.G .= gradient'
+                semml.gradient .= gradient'
             end
 
             if !G && H
@@ -102,12 +102,12 @@ function (semml::SemML)(
                     model.imply.∇²Σ_function(model.imply.∇²Σ, J, par)
                     hessian += model.imply.∇²Σ 
                 end
-                semml.H .= hessian
+                semml.hessian .= hessian
             end
 
             if F
                 mul!(semml.mult, semml.inverses, model.observed.obs_cov)
-                semml.F[1] = ld + tr(semml.mult)
+                semml.objective[1] = ld + tr(semml.mult)
             end
         else
         # with means
@@ -122,11 +122,11 @@ function (semml::SemML)(
                             model.observed.obs_cov*semml.inverses - 
                             μ_diff*diff⨉inv))'*model.imply.∇Σ -
                     2*diff⨉inv*model.imply.∇μ
-                semml.G .= gradient'
+                semml.gradient .= gradient'
             end
             if F
                 mul!(semml.mult, semml.inverses, model.observed.obs_cov)
-                semml.F[1] = ld + tr(semml.mult) + diff⨉inv*μ_diff
+                semml.objective[1] = ld + tr(semml.mult) + diff⨉inv*μ_diff
             end
         end
     end
@@ -143,9 +143,9 @@ function (semml::SemML)(par, F, G, H, model::Sem{O, I, L, D}) where {O, I <: RAM
     a = cholesky!(Symmetric(semml.inverses); check = false)
 
     if !isposdef(a)
-        if G semml.G .= 1.0 end
-        if H semml.H .= 1.0 end
-        if F semml.F[1] = Inf end
+        if G semml.gradient .= 1.0 end
+        if H semml.hessian .= 1.0 end
+        if F semml.objective[1] = Inf end
     else
         ld = logdet(a)
         semml.inverses .= LinearAlgebra.inv!(a)
@@ -156,18 +156,18 @@ function (semml::SemML)(par, F, G, H, model::Sem{O, I, L, D}) where {O, I <: RAM
             if G
                 gradient = SemML_gradient(
                     model.imply.S, 
-                    model.imply.F⨉I_A⁻¹, 
+                    model.imply.objective⨉I_A⁻¹, 
                     semml.inverses, 
                     model.imply.I_A, 
                     model.imply.∇A, 
                     model.imply.∇S,
                     model.observed.obs_cov)
-                semml.G .= gradient'
+                semml.gradient .= gradient'
             end
 
             if F
                 mul!(semml.mult, semml.inverses, model.observed.obs_cov)
-                semml.F[1] = ld + tr(semml.mult)
+                semml.objective[1] = ld + tr(semml.mult)
             end
             
         else # with means
@@ -178,7 +178,7 @@ function (semml::SemML)(par, F, G, H, model::Sem{O, I, L, D}) where {O, I <: RAM
             if G
                 gradient = SemML_gradient(
                         model.imply.S, 
-                        model.imply.F⨉I_A⁻¹, 
+                        model.imply.objective⨉I_A⁻¹, 
                         semml.inverses, 
                         model.imply.I_A, 
                         model.imply.∇A, 
@@ -186,19 +186,19 @@ function (semml::SemML)(par, F, G, H, model::Sem{O, I, L, D}) where {O, I <: RAM
                         model.observed.obs_cov) +
                     SemML_gradient_meanstructure(
                         diff⨉inv, 
-                        model.imply.F⨉I_A⁻¹, 
+                        model.imply.objective⨉I_A⁻¹, 
                         model.imply.I_A, 
                         model.imply.S,
                         model.imply.M, 
                         model.imply.∇M, 
                         model.imply.∇A,
                         model.imply.∇S)
-                semml.G .= gradient'
+                semml.gradient .= gradient'
             end
 
             if F
                 mul!(semml.mult, semml.inverses, model.observed.obs_cov)
-                semml.F[1] = ld + tr(semml.mult) + diff⨉inv*μ_diff
+                semml.objective[1] = ld + tr(semml.mult) + diff⨉inv*μ_diff
             end
 
         end
@@ -206,12 +206,16 @@ function (semml::SemML)(par, F, G, H, model::Sem{O, I, L, D}) where {O, I <: RAM
 end
 
 ############################################################################
-### additional functions
+### recommended methods
 ############################################################################
 
-#= function SemML_gradient_A(F⨉I_A⁻¹, S, Σ⁻¹, Ω, ∇A)
-    2*vec()
-end =#
+objective(lossfun::SemML) = lossfun.objective
+gradient(lossfun::SemML) = lossfun.gradient
+hessian(lossfun::SemML) = lossfun.hessian
+
+############################################################################
+### additional functions
+############################################################################
 
 function SemML_gradient_common(F⨉I_A⁻¹, obs_cov, Σ⁻¹)
     M = transpose(F⨉I_A⁻¹)*transpose(LinearAlgebra.I-obs_cov*Σ⁻¹)*Σ⁻¹*F⨉I_A⁻¹

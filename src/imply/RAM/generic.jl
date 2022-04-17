@@ -181,6 +181,30 @@ function update_observed(imply::RAM, observed::SemObs; kwargs...)
 end
 
 ############################################################################
+### additional methods
+############################################################################
+
+Σ(imply::RAM) = imply.Σ
+μ(imply::RAM) = imply.μ
+
+A(imply::RAM) = imply.A
+S(imply::RAM) = imply.S
+F(imply::RAM) = imply.F
+M(imply::RAM) = imply.M
+
+∇A(imply::RAM) = imply.∇A
+∇S(imply::RAM) = imply.∇S
+∇M(imply::RAM) = imply.∇M
+
+A_indices(imply::RAM) = imply.A_indices
+S_indices(imply::RAM) = imply.S_indices
+M_indices(imply::RAM) = imply.M_indices
+
+F⨉I_A⁻¹(imply::RAM) = imply.F⨉I_A⁻¹
+F⨉I_A⁻¹S(imply::RAM) = imply.F⨉I_A⁻¹S
+I_A(imply::RAM) = imply.I_A
+
+############################################################################
 ### additional functions
 ############################################################################
 

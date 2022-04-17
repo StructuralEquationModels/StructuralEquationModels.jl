@@ -117,6 +117,21 @@ n_obs(observed::SemObsMissing) = observed.n_obs
 n_man(observed::SemObsMissing) = observed.n_man
 
 ############################################################################
+### Additional methods
+############################################################################
+
+data(observed::SemObsMissing) = observed.data
+patterns(observed::SemObsMissing) = observed.patterns
+patterns_not(observed::SemObsMissing) = observed.patterns_not
+rows(observed::SemObsMissing) = observed.rows
+data_rowwise(observed::SemObsMissing) = observed.data_rowwise
+pattern_n_obs(observed::SemObsMissing) = observed.pattern_n_obs
+pattern_nvar_obs(observed::SemObsMissing) = observed.pattern_nvar_obs
+obs_mean(observed::SemObsMissing) = observed.obs_mean
+obs_cov(observed::SemObsMissing) = observed.obs_cov
+em_model(observed::SemObsMissing) = observed.em_model
+
+############################################################################
 ### Additional functions
 ############################################################################
 

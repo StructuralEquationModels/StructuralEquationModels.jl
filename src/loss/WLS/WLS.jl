@@ -10,9 +10,9 @@ struct SemWLS{Vt, St, B, C, FT, GT, HT} <: SemLossFunction
     approx_H::B
     V_μ::C
 
-    F::FT
-    G::GT
-    H::HT
+    objective::FT
+    gradient::GT
+    hessian::HT
 end
 
 ############################################################################
@@ -62,13 +62,13 @@ function (semwls::SemWLS)(par, F, G, H, model)
         if G && H
             J = (-2*(σ_diff)'*semwls.V)'
             gradient = model.imply.∇Σ'*J
-            semwls.G .= gradient
+            semwls.gradient .= gradient
             hessian = 2*model.imply.∇Σ'*semwls.V*model.imply.∇Σ
             if !semwls.approx_H
                 model.imply.∇²Σ_function(model.imply.∇²Σ, J, par)
                 hessian += model.imply.∇²Σ 
             end
-            semwls.H .= hessian
+            semwls.hessian .= hessian
         end
         if !G && H
             hessian = 2*model.imply.∇Σ'*semwls.V*model.imply.∇Σ
@@ -77,14 +77,14 @@ function (semwls::SemWLS)(par, F, G, H, model)
                 model.imply.∇²Σ_function(model.imply.∇²Σ, J, par)
                 hessian += model.imply.∇²Σ
             end
-            semwls.H .= hessian
+            semwls.hessian .= hessian
         end
         if G && !H
             gradient = (-2*(σ_diff)'*semwls.V*model.imply.∇Σ)'
-            semwls.G .= gradient
+            semwls.gradient .= gradient
         end
         if F
-            semwls.F[1] = dot(σ_diff, semwls.V, σ_diff)   
+            semwls.objective[1] = dot(σ_diff, semwls.V, σ_diff)   
         end
     else
     # with meanstructure
@@ -92,13 +92,21 @@ function (semwls::SemWLS)(par, F, G, H, model)
         if H throw(DomainError(H, "hessian of WLS with meanstructure is not available")) end
         if G
             gradient = -2*(σ_diff'*semwls.V*model.imply.∇Σ + μ_diff'*semwls.V_μ*model.imply.∇μ)'
-            semwls.G .= gradient
+            semwls.gradient .= gradient
         end
         if F
-            semwls.F[1] = σ_diff'*semwls.V*σ_diff + μ_diff'*semwls.V_μ*μ_diff
+            semwls.objective[1] = σ_diff'*semwls.V*σ_diff + μ_diff'*semwls.V_μ*μ_diff
         end
     end
 end
+
+############################################################################
+### Recommended methods
+############################################################################
+
+objective(lossfun::SemWLS) = lossfun.objective
+gradient(lossfun::SemWLS) = lossfun.gradient
+hessian(lossfun::SemWLS) = lossfun.hessian
 
 ############################################################################
 ### Pretty Printing
