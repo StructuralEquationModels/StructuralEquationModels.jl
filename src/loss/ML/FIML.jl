@@ -42,8 +42,8 @@ function SemFIML(;observed, specification, n_par, parameter_type = Float64, kwar
     imp_inv = zeros(Int64(n_obs(observed)), Int64(n_obs(observed)))
     mult = similar.(inverses)
 
-    n_man = Int64(n_man(observed))
-    ∇ind = vec(CartesianIndices(Array{Float64}(undef, n_man, n_man)))
+    nman = Int64(n_man(observed))
+    ∇ind = vec(CartesianIndices(Array{Float64}(undef, nman, nman)))
     ∇ind = [findall(x -> !(x[1] ∈ ind || x[2] ∈ ind), ∇ind) for ind in patterns_not(observed)]
 
     commutation_indices = get_commutation_lookup(get_n_nodes(specification)^2)
