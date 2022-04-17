@@ -283,6 +283,11 @@ function (ensemble::SemEnsemble)(par, F, G, H)
 
 end
 
+n_models(ensemble::SemEnsemble) = ensemble.n
+models(ensemble::SemEnsemble) = ensemble.sems
+weights(ensemble::SemEnsemble) = ensemble.weights
+diff(ensemble::SemEnsemble) = ensemble.diff
+
 #####################################################################################################
 # additional methods
 #####################################################################################################
