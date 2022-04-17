@@ -40,7 +40,7 @@ end
 
 function SemLoss(functions...; loss_weights = nothing, parameter_type = Float64, kwargs...)
 
-    n_par = length(functions[1].gradient)
+    n_par = length(gradient(functions[1]))
     !isnothing(loss_weights) || (loss_weights = Tuple(nothing for _ in 1:length(functions)))
 
     return SemLoss(
@@ -117,9 +117,9 @@ function (loss::SemLoss)(par, F, G, H, model)
         loss.hessian .= 0.0
         for (lossfun, c) in zip(loss.functions, loss.weights)
             if isnothing(c)
-                loss.hessian .+= lossfun.hessian
+                loss.hessian .+= hessian(lossfun)
             else
-                loss.hessian .+= c*lossfun.hessian
+                loss.hessian .+= c*hessian(lossfun)
             end
         end
     end
@@ -127,9 +127,9 @@ function (loss::SemLoss)(par, F, G, H, model)
         loss.gradient .= 0.0
         for (lossfun, c) in zip(loss.functions, loss.weights)
             if isnothing(c)
-                loss.gradient .+= lossfun.gradient
+                loss.gradient .+= gradient(lossfun)
             else
-                loss.gradient .+= c*lossfun.gradient
+                loss.gradient .+= c*gradient(lossfun)
             end
         end
     end
@@ -137,9 +137,9 @@ function (loss::SemLoss)(par, F, G, H, model)
         loss.objective[1] = 0.0
         for (lossfun, c) in zip(loss.functions, loss.weights)
             if isnothing(c)
-                loss.objective[1] += lossfun.objective[1]
+                loss.objective[1] += objective(lossfun)[1]
             else
-                loss.objective[1] += c*lossfun.objective[1]
+                loss.objective[1] += c*objective(lossfun)[1]
             end
         end
     end
@@ -308,6 +308,10 @@ has_gradient(model::SemFiniteDiff) = model.has_gradient
 #####################################################################################################
 # gradient, objective, hessian helpers
 #####################################################################################################
+
+objective(lossfun::SemLossFunction) = lossfun.objective[1]
+gradient(lossfun::SemLossFunction) = lossfun.gradient
+hessian(lossfun::SemLossFunction) = lossfun.hessian
 
 objective(model::AbstractSem) = model.loss.objective[1]
 gradient(model::AbstractSem) = model.loss.gradient
