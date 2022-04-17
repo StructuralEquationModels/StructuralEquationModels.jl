@@ -39,10 +39,10 @@ function SemFIML(;observed, specification, n_par, parameter_type = Float64, kwar
     imp_mean = zeros.(Int64.(pattern_nvar_obs(observed)))
     meandiff = zeros.(Int64.(pattern_nvar_obs(observed)))
 
-    imp_inv = zeros(Int64(n_obs(observed)), Int64(n_obs(observed)))
-    mult = similar.(inverses)
-
     nman = Int64(n_man(observed))
+    imp_inv = zeros(nman, nman)
+    mult = similar.(inverses)
+    
     ∇ind = vec(CartesianIndices(Array{Float64}(undef, nman, nman)))
     ∇ind = [findall(x -> !(x[1] ∈ ind || x[2] ∈ ind), ∇ind) for ind in patterns_not(observed)]
 
