@@ -309,99 +309,52 @@ has_gradient(model::SemFiniteDiff) = model.has_gradient
 # gradient, objective, hessian helpers
 #####################################################################################################
 
-objective(lossfun::SemLossFunction) = lossfun.objective[1]
+objective(lossfun::SemLossFunction) = lossfun.objective
 gradient(lossfun::SemLossFunction) = lossfun.gradient
 hessian(lossfun::SemLossFunction) = lossfun.hessian
 
-objective(model::AbstractSem) = model.loss.objective[1]
+objective(model::AbstractSem) = model.loss.objective
 gradient(model::AbstractSem) = model.loss.gradient
 hessian(model::AbstractSem) = model.loss.hessian
 
-objective(model::SemEnsemble) = model.objective[1]
+objective(model::SemEnsemble) = model.objective
 gradient(model::SemEnsemble) = model.gradient
 hessian(model::SemEnsemble) = model.hessian
 
 function objective!(model::AbstractSem, parameters)
     model(parameters, true, false, false)
-    return model.loss.objective[1]
+    return objective(model)[1]
 end
 
 function gradient!(model::AbstractSem, parameters)
     model(parameters, false, true, false)
-    return model.loss.gradient
+    return gradient(model)
 end
 
 function gradient!(grad, model::AbstractSem, parameters)
     model(parameters, false, true, false)
-    copyto!(grad, model.loss.gradient)
-    return model.loss.gradient
+    copyto!(grad, gradient(model))
+    return gradient(model)
 end
 
 function hessian!(model::AbstractSem, parameters)
     model(parameters, false, false, true)
-    return model.loss.hessian
+    return hessian(model)
 end
 
 function hessian!(hessian, model::AbstractSem, parameters)
     model(parameters, false, false, true)
-    copyto!(hessian, model.loss.hessian)
-    return model.loss.hessian
+    copyto!(hessian, hessian(model))
+    return hessian(model)
 end
-
-function objective!(model::SemEnsemble, parameters)
-    model(parameters, true, false, false)
-    return model.objective[1]
-end
-
-function gradient!(model::SemEnsemble, parameters)
-    model(parameters, false, true, false)
-    return model.gradient
-end
-
-function gradient!(grad, model::SemEnsemble, parameters)
-    model(parameters, false, true, false)
-    copyto!(grad, model.gradient)
-    return model.gradient
-end
-
-function hessian!(model::SemEnsemble, parameters)
-    model(parameters, false, false, true)
-    return model.hessian
-end
-
-function hessian!(hessian, model::SemEnsemble, parameters)
-    model(parameters, false, false, true)
-    copyto!(hessian, model.hessian)
-    return model.hessian
-end
-
-#objective(model::AbstractSem, parameters) = objective!(model, parameters)
-#gradient(model::AbstractSem, parameters) = gradient!(model, parameters)
-#hessian(model::AbstractSem, parameters) = hessian!(model, parameters)
-
-#objective(model::SemEnsemble, parameters) = objective!(model, parameters)
-#gradient(model::SemEnsemble, parameters) = gradient!(model, parameters)
-#hessian(model::SemEnsemble, parameters) = hessian!(model, parameters)
 
 function objective_gradient!(model::AbstractSem, parameters)
     model(parameters, true, true, false)
-    return model.loss.objective[1], copy(model.loss.gradient)
+    return objective(model)[1], copy(gradient(model))
 end
-
-function objective_gradient!(model::SemEnsemble, parameters)
-    model(parameters, true, true, false)
-    return model.objective[1], copy(model.gradient)
-end
-
 
 function objective_gradient!(grad, model::AbstractSem, parameters)
     model(parameters, true, true, false)
-    copyto!(grad, model.loss.gradient)
-    return model.loss.objective[1]
-end
-
-function objective_gradient!(grad, model::SemEnsemble, parameters)
-    model(parameters, true, true, false)
-    copyto!(grad, model.gradient)
-    return model.objective[1]
+    copyto!(grad, gradient(model))
+    return objective(model)[1]
 end
