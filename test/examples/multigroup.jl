@@ -104,10 +104,10 @@ end
 ####################################################################
 
 struct UserSemML <: SemLossFunction
-    F
-    G
-    H
-end 
+    objective
+    gradient
+    hessian
+end
 
 ############################################################################
 ### constructor
@@ -125,13 +125,13 @@ function (semml::UserSemML)(par, F, G, H, model)
 
     a = cholesky(Symmetric(model.imply.Σ); check = false)
     if !isposdef(a)
-        semml.F[1] = Inf
+        semml.objective[1] = Inf
     else
         ld = logdet(a)
         Σ_inv = LinearAlgebra.inv(a)
         if !isnothing(F)
             prod = Σ_inv*model.observed.obs_cov
-            semml.F[1] = ld + tr(prod)
+            semml.objective[1] = ld + tr(prod)
         end
     end
 end
