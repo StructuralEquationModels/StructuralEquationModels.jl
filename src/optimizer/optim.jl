@@ -1,4 +1,4 @@
-## connect do Optim.jl as backend
+## connect to Optim.jl as backend
 function sem_wrap_optim(par, F, G, H, sem::AbstractSem)
     sem(par, !isnothing(F), !isnothing(G), !isnothing(H))
     if !isnothing(G) G .= gradient(sem) end
