@@ -7,7 +7,7 @@ function sem_wrap_nlopt(par, G, sem::AbstractSem)
     need_gradient = length(G) != 0
     sem(par, true, need_gradient, false)
     if need_gradient G .= gradient(sem) end
-    return objective(sem)
+    return objective(sem)[1]
 end
 
 mutable struct NLoptResult
