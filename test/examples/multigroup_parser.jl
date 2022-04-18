@@ -208,3 +208,108 @@ end
     @test all(test_fitmeasures(fit_measures(solution_ls), measures_ls; rtol = 1e-2, fitmeasure_names = fitmeasure_names_ls))
     @test isapprox(par_ls.se[par_order], se_hessian(solution_ls), rtol = 1e-3, atol = 1e-2)
 end
+
+############################################################################
+### observed data - FIML
+############################################################################
+
+dat = DataFrame(CSV.File("examples/data/data_multigroup_miss.csv"; missingstring = "NA"))
+par_ml = DataFrame(CSV.File("examples/data/par_multigroup_fiml.csv"))
+measures_ml = DataFrame(CSV.File("examples/data/measures_mg_fiml.csv"))
+
+par_ml = filter(row -> (row.free != 0), par_ml)
+
+dat_g1 = select(filter(row -> row.school == "Pasteur", dat), Not(:school))
+dat_g2 = select(filter(row -> row.school == "Grant-White", dat), Not(:school))
+
+# dat = select(dat, Not(:school))
+
+############################################################################
+### define models - FIML
+############################################################################
+
+latent_vars = [:visual, :textual, :speed]
+observed_vars = Symbol.(:x, 1:9)
+
+graph = @StenoGraph begin
+    # measurement model
+    visual  → fixed(1.0, 1.0)*x1 + label(:λ₂, :λ₂)*x2 + label(:λ₃, :λ₃)*x3
+    textual → fixed(1.0, 1.0)*x4 + label(:λ₅, :λ₅)*x5 + label(:λ₆, :λ₆)*x6
+    speed   → fixed(1.0, 1.0)*x7 + label(:λ₈, :λ₈)*x8 + label(:λ₉, :λ₉)*x9
+    # variances and covariances
+    _(observed_vars) ↔ _(observed_vars)
+    _(latent_vars)   ⇔ _(latent_vars)
+
+    Symbol("1") → _(observed_vars)
+end
+
+partable = EnsembleParameterTable(;
+    graph = graph, 
+    observed_vars = observed_vars,
+    latent_vars = latent_vars,
+    groups = [:Pasteur, Symbol("Grant-White")])
+
+ram_matrices = RAMMatrices(partable)
+
+id_rev = SEM.identifier(ram_matrices[:Pasteur])
+id_rev = Dict(value => key for (key, value) in id_rev)
+
+for i = 1:54 print(id_rev[i], "\n") end
+
+### start values
+par_ml
+
+show(stdout, "text/plain", par_ml)
+
+par_order = [
+    collect(1:6); 
+    collect(37:46); [49, 50, 47, 51, 48]; collect(52:60); 
+    collect(10:19); [22, 23, 20, 24, 21]; collect(22:30)]
+
+####################################################################
+# FIML estimation
+####################################################################
+
+start_val_ml = Vector{Float64}(par_ml.start[par_order])
+
+model_g1 = Sem(
+    specification = ram_matrices[:Pasteur],
+    observed = SemObsMissing,
+    loss = SemFIML,
+    data = dat_g1,
+    imply = RAM,
+    diff = SemDiffEmpty()
+)
+
+model_g2 = Sem(
+    specification = ram_matrices[Symbol("Grant-White")],
+    observed = SemObsMissing,
+    loss = SemFIML,
+    data = dat_g2,
+    imply = RAM,
+    diff = SemDiffEmpty()
+)
+
+model_ml_multigroup = SemEnsemble(model_g1, model_g2; diff = SemDiffOptim)
+
+############################################################################
+### test gradients
+############################################################################
+
+using FiniteDiff
+
+@testset "ml_gradients_multigroup" begin
+    @test test_gradient(model_ml_multigroup, start_val_ml)
+end
+
+# fit
+@testset "ml_solution_multigroup" begin
+    solution_ml = sem_fit(model_ml_multigroup)
+    @test par_ml.est[par_order] ≈ solution_ml.solution rtol = 0.01
+end
+
+@testset "fitmeasures/se_ml" begin
+    solution_ml = sem_fit(model_ml_multigroup)
+    @test all(test_fitmeasures(fit_measures(solution_ml), measures_ml; rtol = 1e-2))
+    @test isapprox(par_ml.se[par_order], se_hessian(solution_ml); rtol = 1e-3, atol = 1e-2)
+end

@@ -9,16 +9,16 @@ model <- '  visual  =~ x1 + x2 + x3
 
 data <- HolzingerSwineford1939
 
-fit_ml <- cfa(model, 
-           data, 
+fit_ml <- cfa(model,
+           data,
            group = "school",
            group.equal = c("loadings"),
            likelihood = "wishart",
            information = "observed",
            meanstructure = FALSE)
 
-fit_ls <- cfa(model, 
-           data, 
+fit_ls <- cfa(model,
+           data,
            group = "school",
            group.equal = c("loadings"),
            estimator = "GLS",
@@ -37,3 +37,29 @@ write.csv(data, "test/examples/data/data_multigroup.csv")
 
 write.csv(measures_ml, "test/examples/data/measures_mg_ml.csv")
 write.csv(measures_ls, "test/examples/data/measures_mg_ls.csv")
+
+# fiml
+p_miss <- 0.2
+n_obs <- nrow(data)
+
+data_miss <- mutate(data, 
+    across(
+        starts_with("x"), 
+        ~ifelse(rbinom(n_obs, 1, p_miss), NA, .x)
+        )
+    )
+
+fit_ml <- cfa(model,
+           data_miss,
+           missing = "fiml",
+           group = "school",
+           group.equal = c("loadings"),
+           likelihood = "wishart",
+           information = "observed")
+
+par_ml <- select(parTable(fit_ml), lhs, op, rhs, est, start, free, se)
+measures_ml <- fitMeasures(fit_ml)
+
+write.csv(par_ml, "test/examples/data/par_multigroup_fiml.csv")
+write.csv(data_miss, "test/examples/data/data_multigroup_miss.csv")
+write.csv(measures_ml, "test/examples/data/measures_mg_fiml.csv")
