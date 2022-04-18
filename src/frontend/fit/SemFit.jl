@@ -31,7 +31,7 @@ end
 
 # access fields
 minimum(sem_fit::SemFit) = sem_fit.minimum
-solution(sem_fit::SemFit) = sem_fit.solution
+get_solution(sem_fit::SemFit) = sem_fit.solution
 start_val(sem_fit::SemFit) = sem_fit.start_val
 model(sem_fit::SemFit) = sem_fit.model
 optimization_result(sem_fit::SemFit) = sem_fit.optimization_result

@@ -1,5 +1,5 @@
 ############################################################################
-### observed
+### hessian based standard errors
 ############################################################################
 
 function se_hessian(sem_fit::SemFit; hessian = :finitediff)
@@ -46,9 +46,3 @@ H_scaling(model, obs, imp, diff, lossfun::SemFIML) =
 
 H_scaling(model::SemEnsemble) =
     2/n_obs(model)
-
-############################################################################
-### expected
-############################################################################
-
-# not available yet

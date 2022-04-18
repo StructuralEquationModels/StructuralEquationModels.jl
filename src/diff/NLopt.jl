@@ -37,7 +37,7 @@ end
 ### Recommended methods
 ############################################################################
 
-update_observed(diff::SemDiffNLopt, observed::SemObs) = diff
+update_observed(diff::SemDiffNLopt, observed::SemObs; kwargs...) = diff
 
 ############################################################################
 ### additional methods

@@ -173,10 +173,10 @@ identifier(imply::RAM) = imply.identifier
 n_par(imply::RAM) = imply.n_par
 
 function update_observed(imply::RAM, observed::SemObs; kwargs...) 
-    if n_man(observed) == size(imply.Σ)
+    if n_man(observed) == size(imply.Σ, 1)
         return imply
     else
-        return RAM(;kwargs...)
+        return RAM(;observed = observed, kwargs...)
     end
 end
 

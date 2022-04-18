@@ -14,7 +14,7 @@ struct SemDiffEmpty <: SemDiff end
 ### Recommended methods
 ############################################################################
 
-update_observed(diff::SemDiffEmpty, observed::SemObs) = diff
+update_observed(diff::SemDiffEmpty, observed::SemObs; kwargs...) = diff
 
 ############################################################################
 ### Pretty Printing

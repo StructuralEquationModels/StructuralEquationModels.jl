@@ -9,7 +9,7 @@ SemDiffOptim(;algorithm = LBFGS(), options = Optim.Options(;f_tol = 1e-10, x_tol
 ### Recommended methods
 ############################################################################
 
-update_observed(diff::SemDiffOptim, observed::SemObs) = diff
+update_observed(diff::SemDiffOptim, observed::SemObs; kwargs...) = diff
 
 ############################################################################
 ### additional methods

@@ -51,6 +51,7 @@ include("additional_functions/start_val/start_fabin3.jl")
 include("additional_functions/start_val/start_partable.jl")
 include("additional_functions/start_val/start_simple.jl")
 include("additional_functions/artifacts.jl")
+include("additional_functions/simulation.jl")
 # identifier
 include("additional_functions/identifier.jl")
 # fit measures
@@ -67,6 +68,8 @@ include("frontend/fit/fitmeasures/n_man.jl")
 include("frontend/fit/fitmeasures/fit_measures.jl")
 # standard errors
 include("frontend/fit/standard_errors/hessian.jl")
+include("frontend/fit/standard_errors/bootstrap.jl")
+
 
 
 export  AbstractSem, 
@@ -94,6 +97,6 @@ export  AbstractSem,
         fit_measures,
             AIC, BIC, χ², df, fit_measures, minus2ll, n_par, n_obs, p_value, RMSEA, n_man,
             EmMVNModel,
-        se_hessian,
+        se_hessian, se_bootstrap,
         example_data
 end

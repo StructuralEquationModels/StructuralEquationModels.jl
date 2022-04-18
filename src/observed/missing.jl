@@ -120,7 +120,7 @@ n_man(observed::SemObsMissing) = observed.n_man
 ### Additional methods
 ############################################################################
 
-data(observed::SemObsMissing) = observed.data
+get_data(observed::SemObsMissing) = observed.data
 patterns(observed::SemObsMissing) = observed.patterns
 patterns_not(observed::SemObsMissing) = observed.patterns_not
 rows(observed::SemObsMissing) = observed.rows

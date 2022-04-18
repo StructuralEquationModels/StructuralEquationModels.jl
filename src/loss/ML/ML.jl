@@ -4,11 +4,9 @@
 ### Types
 ############################################################################
 
-struct SemML{INV,C,L,M,M2,B,FT,GT,HT} <: SemLossFunction
+struct SemML{INV,M,M2,B,FT,GT,HT} <: SemLossFunction
     inverses::INV #preallocated inverses of imp_cov
-    choleskys::C #preallocated choleskys
     mult::M
-    logdets::L #logdets of implied covmats
     meandiff::M2
     approx_H::B
 
@@ -27,9 +25,7 @@ function SemML(;observed, n_par, approx_H = false, parameter_type = Float64, kwa
         meandiff = copy(obs_mean(observed))
     return SemML(
         copy(obs_cov(observed)),
-        nothing,
         copy(obs_cov(observed)),
-        nothing,
         meandiff,
         approx_H,
 
@@ -212,6 +208,17 @@ end
 objective(lossfun::SemML) = lossfun.objective
 gradient(lossfun::SemML) = lossfun.gradient
 hessian(lossfun::SemML) = lossfun.hessian
+
+update_observed(lossfun::SemML, observed::SemObsMissing; kwargs...) = 
+    throw(ArgumentError("ML estimation does not work with missing data - use FIML instead"))
+
+function update_observed(lossfun::SemML, observed::SemObs; kwargs...)
+    if (size(lossfun.inverses) == size(obs_cov(observed))) & (isnothing(lossfun.meandiff) == isnothing(obs_mean(observed)))
+        return lossfun
+    else
+        return SemML(;observed = observed, kwargs...)
+    end
+end
 
 ############################################################################
 ### additional functions

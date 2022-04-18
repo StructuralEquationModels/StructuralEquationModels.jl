@@ -31,7 +31,7 @@ function (constant::SemConstant)(par, F, G, H, model) end
 ### Recommended methods
 ############################################################################
 
-update_observed(loss::SemConstant, observed::SemObs) = loss
+update_observed(loss::SemConstant, observed::SemObs; kwargs...) = loss
 
 ############################################################################
 ### Pretty Printing

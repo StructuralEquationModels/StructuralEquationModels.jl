@@ -42,10 +42,13 @@ partable = ParameterTable(
     observed_vars = observed_vars,
     graph = graph)
 
+sort!(partable)
+
 # models
 model_ml = Sem(
     specification = partable,
-    data = dat
+    data = dat,
+    #algorithm = LBFGS(linesearch = LineSearches.BackTracking())
 )
 
 model_ml_weighted = Sem(
@@ -104,6 +107,13 @@ end
     update_estimate!(partable, solution_ml)
     @test SEM.compare_estimates(par_ml, partable, 0.01)
 end
+
+solution_ml = sem_fit(model_ml)
+bs = se_bootstrap(solution_ml; n_boot = 20)
+se = se_hessian(solution_ml)
+
+update_partable!(partable, solution_ml, se, :se)
+update_partable!(partable, solution_ml, bs, :se_boot)
 
 @testset "ls_solution" begin
     solution_ls = sem_fit(model_ls_sym)

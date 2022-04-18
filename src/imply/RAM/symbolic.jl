@@ -170,7 +170,7 @@ function update_observed(imply::RAMSymbolic, observed::SemObs; kwargs...)
     if n_man(observed) == size(imply.Σ)
         return imply
     else
-        return RAMSymbolic(;kwargs...)
+        return RAMSymbolic(;observed = observed, kwargs...)
     end
 end
 

@@ -108,6 +108,8 @@ objective(lossfun::SemWLS) = lossfun.objective
 gradient(lossfun::SemWLS) = lossfun.gradient
 hessian(lossfun::SemWLS) = lossfun.hessian
 
+update_observed(lossfun::SemWLS, observed::SemObs; kwargs...) = SemWLS(;observed = observed, kwargs...)
+
 ############################################################################
 ### Pretty Printing
 ############################################################################

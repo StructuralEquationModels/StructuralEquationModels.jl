@@ -136,10 +136,11 @@ end
 ### Recommended methods
 ############################################################################
 
-# update_observed(loss::SemFIML, observed::SemObs) = loss
 objective(lossfun::SemFIML) = lossfun.objective
 gradient(lossfun::SemFIML) = lossfun.gradient
 hessian(lossfun::SemFIML) = lossfun.hessian
+
+update_observed(lossfun::SemFIML, observed::SemObs; kwargs...) = SemFIML(;observed = observed, kwargs...)
 
 ############################################################################
 ### additional functions

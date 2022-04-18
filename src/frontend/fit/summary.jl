@@ -130,7 +130,7 @@ function sem_summary(partable::ParameterTable; color = :light_cyan, secondary_co
     sorted_columns = [:from, :parameter_type, :to, :estimate, :identifier, :value_fixed, :start]
     variance_columns = sort_partially(sorted_columns, columns)
         
-    variance_array = reduce(hcat, my_round(partable.columns[c][variance_indices]; digits = digits) for c in variance_columns)
+    variance_array = reduce(hcat, check_round(partable.columns[c][variance_indices]; digits = digits) for c in variance_columns)
     variance_columns[2] = Symbol("")
 
     print("\n")
