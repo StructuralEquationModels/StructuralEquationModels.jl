@@ -114,9 +114,13 @@ reorder_data(data::AbstractArray, spec_colnames, data_colnames::Nothing) =
     throw(ArgumentError("if your data format does not provide column names, please provide them via the `data_colnames = ...` argument."))
 
 function reorder_data(data::AbstractArray, spec_colnames, data_colnames)
-    new_position = [findall(x .== data_colnames)[1] for x in spec_colnames]
-    data = Matrix(data[:, new_position])
-    return data, nothing
+    if spec_colnames == data_colnames
+        return data, nothing
+    else
+        new_position = [findall(x .== data_colnames)[1] for x in spec_colnames]
+        data = Matrix(data[:, new_position])
+        return data, nothing
+    end
 end
 
 reorder_data(data::DataFrame, spec_colnames, data_colnames::Nothing) = Matrix(data[:, spec_colnames]), nothing
