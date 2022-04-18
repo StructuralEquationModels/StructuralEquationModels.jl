@@ -16,7 +16,7 @@ minus2ll(sem_fit::SemFit, obs, imp, diff, args...) = minus2ll(sem_fit.minimum, o
 
 # SemML -----------------------------------------------------------------------------
 minus2ll(minimum::Number, obs, imp::Union{RAM, RAMSymbolic}, diff, loss_ml::SemML) =
-    (n_obs(obs)-1)*(minimum + log(2π)*n_man(obs))
+    n_obs(obs)*(minimum + log(2π)*n_man(obs))
 
 # WLS -------------------------------------------------------------------------------
 minus2ll(minimum::Number, obs, imp::Union{RAM, RAMSymbolic}, diff, loss_ml::SemWLS) =
