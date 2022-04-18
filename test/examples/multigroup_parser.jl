@@ -251,16 +251,6 @@ partable = EnsembleParameterTable(;
 
 ram_matrices = RAMMatrices(partable)
 
-id_rev = SEM.identifier(ram_matrices[:Pasteur])
-id_rev = Dict(value => key for (key, value) in id_rev)
-
-for i ∈ ind_wrong print(id_rev[i], "\n") end
-
-### start values
-par_ml
-
-show(stdout, "text/plain", par_ml)
-
 par_order = [
     collect(1:6); 
     collect(37:46); [49, 50, 47, 51, 48]; collect(52:60); 
