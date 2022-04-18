@@ -254,7 +254,7 @@ ram_matrices = RAMMatrices(partable)
 id_rev = SEM.identifier(ram_matrices[:Pasteur])
 id_rev = Dict(value => key for (key, value) in id_rev)
 
-for i = 1:54 print(id_rev[i], "\n") end
+for i ∈ ind_wrong print(id_rev[i], "\n") end
 
 ### start values
 par_ml
@@ -264,7 +264,7 @@ show(stdout, "text/plain", par_ml)
 par_order = [
     collect(1:6); 
     collect(37:46); [49, 50, 47, 51, 48]; collect(52:60); 
-    collect(10:19); [22, 23, 20, 24, 21]; collect(22:30)]
+    collect(7:16); [19, 20, 17, 21, 18]; collect(22:30)]
 
 ####################################################################
 # FIML estimation
@@ -298,6 +298,8 @@ model_ml_multigroup = SemEnsemble(model_g1, model_g2; diff = SemDiffOptim)
 
 using FiniteDiff
 
+sv = start_val(model_ml_multigroup)
+
 @testset "ml_gradients_multigroup" begin
     @test test_gradient(model_ml_multigroup, start_val_ml)
 end
@@ -305,11 +307,11 @@ end
 # fit
 @testset "ml_solution_multigroup" begin
     solution_ml = sem_fit(model_ml_multigroup)
-    @test par_ml.est[par_order] ≈ solution_ml.solution rtol = 0.01
+    @test par_ml.est[par_order] ≈ solution_ml.solution rtol = 1e-3
 end
 
 @testset "fitmeasures/se_ml" begin
     solution_ml = sem_fit(model_ml_multigroup)
     @test all(test_fitmeasures(fit_measures(solution_ml), measures_ml; rtol = 1e-2))
-    @test isapprox(par_ml.se[par_order], se_hessian(solution_ml); rtol = 1e-3, atol = 1e-2)
+    @test isapprox(par_ml.se[par_order], se_hessian(solution_ml); rtol = 1e-3)
 end

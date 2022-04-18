@@ -54,7 +54,6 @@ fit_ml <- cfa(model,
            missing = "fiml",
            group = "school",
            group.equal = c("loadings"),
-           likelihood = "wishart",
            information = "observed")
 
 par_ml <- select(parTable(fit_ml), lhs, op, rhs, est, start, free, se)

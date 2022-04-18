@@ -21,7 +21,7 @@
     (n_obs(sem_fit)-1)*sem_fit.minimum
 
 # FIML
-function χ²(sem_fit::SemFit, observed::SemObsMissing, imp::RAM, diff, loss_ml::SemFIML)
+function χ²(sem_fit::SemFit, observed::SemObsMissing, imp, diff, loss_ml::SemFIML)
     ll_H0 = minus2ll(sem_fit)
     ll_H1 = minus2ll(observed)
     chi2 = ll_H0 - ll_H1
@@ -52,6 +52,17 @@ function χ²(sem_fit::SemFit, model::SemEnsemble, lossfun::L) where {L <: SemML
     F_G = sem_fit.minimum
     F_G -= sum([w*(logdet(m.observed.obs_cov) + m.observed.n_man) for (w, m) in zip(model.weights, model.sems)])
     return (sum(n_obs.(model.sems))-1)*F_G
+end
+
+function χ²(sem_fit::SemFit, model::SemEnsemble, lossfun::L) where {L <: SemFIML}
+    check_ensemble_length(model)
+    check_lossfun_types(model, L)
+
+    ll_H0 = minus2ll(sem_fit)
+    ll_H1 = sum(minus2ll.(observed.(models(model))))
+    chi2 = ll_H0 - ll_H1
+
+    return chi2
 end
 
 function check_ensemble_length(model)
