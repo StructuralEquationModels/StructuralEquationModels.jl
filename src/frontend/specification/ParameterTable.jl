@@ -127,7 +127,7 @@ function sort!(partable::ParameterTable)
 
     variables = [partable.variables[:latent_vars]; partable.variables[:observed_vars]]
 
-    is_regression = partable.columns[:parameter_type] .== :→
+    is_regression = (partable.columns[:parameter_type] .== :→) .& (partable.columns[:from] .!= Symbol("1"))
 
     to = partable.columns[:to][is_regression]
     from = partable.columns[:from][is_regression]
