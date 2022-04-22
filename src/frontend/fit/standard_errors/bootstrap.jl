@@ -10,11 +10,11 @@ function se_bootstrap(semfit::SemFit; n_boot = 3000, data = nothing, kwargs...)
 
     data = prepare_data_bootstrap(data)
 
-    solution = get_solution(semfit)
+    start = solution(semfit)
 
-    new_solution = zero(solution)
-    sum = zero(solution)
-    squared_sum = zero(solution)
+    new_solution = zero(start)
+    sum = zero(start)
+    squared_sum = zero(start)
 
     n_failed = 0.0
 
@@ -28,7 +28,7 @@ function se_bootstrap(semfit::SemFit; n_boot = 3000, data = nothing, kwargs...)
         new_solution .= 0.0
 
         try
-            new_solution = get_solution(sem_fit(new_model; start_val = solution))
+            new_solution = get_solution(sem_fit(new_model; start_val = start))
         catch
             n_failed += 1
         end
