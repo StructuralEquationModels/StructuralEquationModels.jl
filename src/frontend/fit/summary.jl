@@ -137,6 +137,27 @@ function sem_summary(partable::ParameterTable; color = :light_cyan, secondary_co
     pretty_table(variance_array; header = variance_columns, tf = PrettyTables.tf_borderless, alignment = :l)
     print("\n")
 
+    mean_indices = 
+        findall(
+            (partable.columns[:parameter_type] .== :→) .&
+            (partable.columns[:from] .== Symbol("1"))
+        )
+
+    if length(mean_indices) > 0
+
+        printstyled("Means: \n"; color = color)
+
+        sorted_columns = [:from, :parameter_type, :to, :estimate, :identifier, :value_fixed, :start]
+        variance_columns = sort_partially(sorted_columns, columns)
+            
+        variance_array = reduce(hcat, check_round(partable.columns[c][mean_indices]; digits = digits) for c in variance_columns)
+        variance_columns[2] = Symbol("")
+
+        print("\n")
+        pretty_table(variance_array; header = variance_columns, tf = PrettyTables.tf_borderless, alignment = :l)
+        print("\n")
+    end
+
     #printstyled("""No need to copy and paste results, you can use CSV.write(DataFrame(my_partable), "myfile.csv")"""; hidden = true)
 
 end
