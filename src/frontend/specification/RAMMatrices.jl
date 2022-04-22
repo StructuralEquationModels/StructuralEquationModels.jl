@@ -316,7 +316,7 @@ function get_partable_row(par, position_names, index, matrix, n_nod, known_indic
 
     # variable names
     if matrix == :M
-        from = symbol("1")
+        from = Symbol("1")
         to = position_names[index]
     else
         index = linear2cartesian(index, (n_nod, n_nod))
