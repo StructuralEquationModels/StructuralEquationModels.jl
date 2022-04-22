@@ -91,6 +91,8 @@ semdiff = SemDiffOptim
 semdiff = SemDiffNLopt
 @testset "RAMMatrices | constructor | NLopt" begin include("constructor.jl") end
 
+@testset "constraints | NLopt" begin include("constraints.jl") end
+
 ############################################################################
 ### specification - RAMMatrices → ParameterTable
 ############################################################################
