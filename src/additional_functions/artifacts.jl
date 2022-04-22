@@ -6,6 +6,9 @@ function example_data(name)
         path = joinpath(basepath, paths[1])
         data, header = readdlm(path, ',', header = true)
         data_raw = DataFrame(data, vec(header))
+        for col in eachcol(data_raw)
+            replace!(col,"NA" => missing)
+        end
         data = identity.(data_raw)
         return data
     else
@@ -15,6 +18,9 @@ function example_data(name)
             path = joinpath(basepath, path)
             data, header = readdlm(path, ',', header = true)
             data_raw = DataFrame(data, vec(header))
+            for col in eachcol(data_raw)
+                replace!(col,"NA" => missing)
+            end
             data = identity.(data_raw)
             push!(out, key => data)
         end
