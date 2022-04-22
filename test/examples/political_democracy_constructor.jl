@@ -1,20 +1,17 @@
-using StructuralEquationModels, CSV, DataFrames, SparseArrays, Symbolics, LineSearches, Optim, Test, FiniteDiff, LinearAlgebra
-import StructuralEquationModels as SEM
-include("test_helpers.jl")
+using StructuralEquationModels, Test, FiniteDiff
+# import StructuralEquationModels as SEM
+include("helper.jl")
 
 ############################################################################
-### observed data
+### data
 ############################################################################
 
 dat = example_data("political_democracy")
-#dat = DataFrame(CSV.File("examples/data/data_dem.csv"))
-par_ml = DataFrame(CSV.File("examples/data/par_dem_ml.csv"))
-par_ls = DataFrame(CSV.File("examples/data/par_dem_ls.csv"))
-measures_ml = DataFrame(CSV.File("examples/data/measures_dem_ml.csv"))
-measures_ls = DataFrame(CSV.File("examples/data/measures_dem_ls.csv"))
+dat_missing = example_data("political_democracy_missing")
+solution_lav = example_data("political_democracy_solution")
 
 ############################################################################
-### define models
+### specification
 ############################################################################
 
 x = Symbol.("x".*string.(1:31))
@@ -61,28 +58,23 @@ A =[0  0  0  0  0  0  0  0  0  0  0     1.0   0     0
     0  0  0  0  0  0  0  0  0  0  0     :x29  0     0
     0  0  0  0  0  0  0  0  0  0  0     :x30  :x31  0]
 
-ram_matrices = RAMMatrices(;
+spec = RAMMatrices(;
     A = A, 
     S = S, 
     F = F, 
     parameters = x,
-    colnames = [:x1, :x2, :x3, :y1, :y2, :y3, :y4, :y5, :y6, :y7, :y8, :ind60, :dem60, :dem65])
+    colnames = [:x1, :x2, :x3, :y1, :y2, :y3, :y4, :y5, :y6, :y7, :y8, :ind60, :dem60, :dem65]
+)
 
-@testset "ParameterTable - RAMMatrices conversion" begin
-    partable = ParameterTable(ram_matrices)
-    @test ram_matrices == RAMMatrices(partable)
-end
+partable = ParameterTable(spec)
 
-# models
 model_ml = Sem(
-    specification = ram_matrices,
+    specification = spec,
     data = dat
 )
 
-@test get_identifier_indices([:x2, :x10, :x28], model_ml) == [2, 10, 28]
-
 model_ls_sym = Sem(
-    specification = ram_matrices,
+    specification = spec,
     data = dat,
     imply = RAMSymbolic,
     loss = SemWLS,
@@ -90,13 +82,13 @@ model_ls_sym = Sem(
 )
 
 model_ml_sym = Sem(
-    specification = ram_matrices,
+    specification = spec,
     data = dat,
     imply = RAMSymbolic
 )
 
 model_ridge = Sem(
-    specification = ram_matrices,
+    specification = spec,
     data = dat,
     loss = (SemML, SemRidge),
     α_ridge = .001,
@@ -104,7 +96,7 @@ model_ridge = Sem(
 )
 
 model_ridge_id = Sem(
-    specification = ram_matrices,
+    specification = spec,
     data = dat,
     loss = (SemML, SemRidge),
     α_ridge = .001,
@@ -112,80 +104,59 @@ model_ridge_id = Sem(
 )
 
 model_constant = Sem(
-    specification = ram_matrices,
+    specification = spec,
     data = dat,
     loss = (SemML, SemConstant),
     constant_loss = 3.465
 )
 
 ############################################################################
-### test starting values
-############################################################################
-
-par_order = [collect(21:34); collect(15:20); 2;3; 5;6;7; collect(9:14)]
-start_val_ml = Vector{Float64}(par_ml.start[par_order])
-
-@test start_simple(model_ls_sym) == [fill(1.0, 11); fill(0.05, 3); fill(0.0, 6); fill(0.5, 8); fill(0.0, 3)]
-@test start_val(model_ml) ≈ start_val_ml
-
-############################################################################
 ### test gradients
 ############################################################################
 
-@testset "ml_gradients" begin
-    @test test_gradient(model_ml, start_val_ml)
-end
+start_test = [fill(1.0, 11); fill(0.05, 3); fill(0.05, 6); fill(0.5, 8); fill(0.05, 3)]
 
-@testset "ls_gradients" begin
-    @test test_gradient(model_ls_sym, start_val_ml)
-end
+models = [model_ml, model_ls_sym, model_ridge, model_ridge_id, model_constant, model_ml_sym]
+names = ["ml", "ls_sym", "ridge", "ridge_id", "constant", "ml_sym"]
 
-@testset "ridge_gradients" begin
-    @test test_gradient(model_ridge, start_val_ml)
-end
-
-@testset "constant_gradients" begin
-    @test test_gradient(model_constant, start_val_ml)
-end
-
-@testset "ml_symbolic_gradients" begin
-    @test test_gradient(model_ml_sym, start_val_ml)
+for (model, name) in zip(models, names)
+    try
+        @testset "$(name)_gradient" begin
+            @test test_gradient(model, start_test; rtol = 1e-9)
+        end
+    catch
+    end
 end
 
 ############################################################################
 ### test solution
 ############################################################################
 
-@testset "ml_solution" begin
-    solution_ml = sem_fit(model_ml)
-    @test isapprox(par_ml.est[par_order], solution_ml.solution; rtol = 0.01)
+models = [model_ml, model_ls_sym, model_ml_sym, model_constant]
+names = ["ml", "ls_sym", "ml_sym", "constant"]
+solution_names = Symbol.("parameter_estimates_".*["ml", "ls", "ml", "ml"])
+
+for (model, name, solution_name) in zip(models, names, solution_names)
+    try
+        @testset "$(name)_solution" begin
+            solution = sem_fit(model)
+            update_estimate!(partable, solution)
+            @test compare_estimates(partable, solution_lav[solution_name]; atol = 1e-2)
+        end
+    catch
+    end
 end
 
-@testset "ls_solution" begin
-    solution_ls = sem_fit(model_ls_sym)
-    @test SEM.compare_estimates(par_ls.est[par_order], solution_ls.solution, 0.01)
-end
-
-@testset "ridge_solution" begin
+@testset "ridge_solution_id" begin
     solution_ridge = sem_fit(model_ridge)
     solution_ridge_id = sem_fit(model_ridge_id)
-    @test solution_ridge.solution ≈ solution_ridge_id.solution rtol = 1e-6
-end
-
-@testset "constant_solution" begin
-    solution_constant = sem_fit(model_constant)
-    @test SEM.compare_estimates(par_ml.est[par_order], solution_constant.solution, 0.01)
+    @test solution_ridge.solution ≈ solution_ridge_id.solution atol = 1e-6
 end
 
 # test constant objective value
 @testset "constant_objective_and_gradient" begin
-    @test (objective!(model_constant, start_val_ml) - 3.465) ≈ objective!(model_ml, start_val_ml)
-    @test gradient!(model_constant, start_val_ml) ≈ gradient!(model_ml, start_val_ml)
-end
-
-@testset "ml_symbolic_solution" begin
-    solution_ml_symbolic = sem_fit(model_ml_sym)
-    @test SEM.compare_estimates(par_ml.est[par_order], solution_ml_symbolic.solution, 0.01)
+    @test (objective!(model_constant, start_test) - 3.465) ≈ objective!(model_ml, start_test)
+    @test gradient!(model_constant, start_test) ≈ gradient!(model_ml, start_test)
 end
 
 ############################################################################
@@ -194,24 +165,30 @@ end
 
 @testset "fitmeasures/se_ml" begin
     solution_ml = sem_fit(model_ml)
-    @test all(test_fitmeasures(fit_measures(solution_ml), measures_ml; rtol = 1e-3))
-    @test par_ml.se[par_order] ≈ se_hessian(solution_ml) rtol = 1e-3
+    @test all(test_fitmeasures(fit_measures(solution_ml), solution_lav[:fitmeasures_ml]; atol = 1e-3))
+
+    update_partable!(partable, identifier(model_ml), se_hessian(solution_ml), :se)
+    @test compare_estimates(partable, solution_lav[:parameter_estimates_ml]; atol = 1e-3, col = :se, lav_col = :se)
 end
 
 @testset "fitmeasures/se_ls" begin
     solution_ls = sem_fit(model_ls_sym)
     fm = fit_measures(solution_ls)
-    @test all(test_fitmeasures(fm, measures_ls; rtol = 1e-3, fitmeasure_names = fitmeasure_names_ls))
+    @test all(test_fitmeasures(fm, solution_lav[:fitmeasures_ls]; atol = 1e-3, fitmeasure_names = fitmeasure_names_ls))
     @test (fm[:AIC] === missing) & (fm[:BIC] === missing) & (fm[:minus2ll] === missing)
-    @test par_ls.se[par_order] ≈ se_hessian(solution_ls) rtol = 1e-2
+
+    update_partable!(partable, identifier(model_ls_sym), se_hessian(solution_ls), :se)
+    @test compare_estimates(partable, solution_lav[:parameter_estimates_ls]; atol = 1e-2, col = :se, lav_col = :se)
 end
 
 ############################################################################
 ### test hessians
 ############################################################################
 
+using Optim, LineSearches
+
 model_ls = Sem(
-    specification = ram_matrices,
+    specification = spec,
     data = dat,
     imply = RAMSymbolic,
     loss = SemWLS,
@@ -222,7 +199,7 @@ model_ls = Sem(
 )
 
 model_ml = Sem(
-    specification = ram_matrices,
+    specification = spec,
     data = dat,
     imply = RAMSymbolic,
     hessian = true,
@@ -230,53 +207,49 @@ model_ml = Sem(
 )
 
 @testset "ml_hessians" begin
-    @test test_hessian(model_ml, start_val_ml)
+    @test test_hessian(model_ml, start_test; atol = 1e-4)
 end
 
 @testset "ls_hessians" begin
-    @test test_hessian(model_ls, start_val_ml)
+    @test test_hessian(model_ls, start_test; atol = 1e-4)
 end
 
 @testset "ml_solution_hessian" begin
-    solution_ml = sem_fit(model_ml)
-    @test SEM.compare_estimates(par_ml.est[par_order], solution_ml.solution, 0.01)
+    solution = sem_fit(model_ml)
+    update_estimate!(partable, solution)
+    @test compare_estimates(partable, solution_lav[:parameter_estimates_ml]; atol = 1e-3)
 end
 
 @testset "ls_solution_hessian" begin
-    solution_ls = sem_fit(model_ls)
-    @test SEM.compare_estimates(par_ls.est[par_order], solution_ls.solution, 0.01)
+    solution = sem_fit(model_ls)
+    update_estimate!(partable, solution)
+    @test compare_estimates(partable, solution_lav[:parameter_estimates_ls]; atol = 1e-3)
 end
 
 ############################################################################
 ### meanstructure
 ############################################################################
 
-par_ml = DataFrame(CSV.File("examples/data/par_dem_ml_mean.csv"))
-par_ls = DataFrame(CSV.File("examples/data/par_dem_ls_mean.csv"))
-
-measures_ml = DataFrame(CSV.File("examples/data/measures_dem_ml_mean.csv"))
-measures_ls = DataFrame(CSV.File("examples/data/measures_dem_ls_mean.csv"))
-
 x = Symbol.("x".*string.(1:38))
 
 M = [:x32; :x33; :x34; :x35; :x36; :x37; :x38; :x35; :x36; :x37; :x38; 0.0; 0.0; 0.0]
 
-ram_matrices = RAMMatrices(;
+spec_mean = RAMMatrices(;
     A = A, 
     S = S, 
     F = F,
     M = M,
     parameters = x,
-    colnames = string.([:x1, :x2, :x3, :y1, :y2, :y3, :y4, :y5, :y6, :y7, :y8]))
+    colnames = [:x1, :x2, :x3, :y1, :y2, :y3, :y4, :y5, :y6, :y7, :y8, :ind60, :dem60, :dem65])
+
+partable = ParameterTable(spec_mean)
 
 # starting values
-par_order = [collect(29:42); collect(15:20); 2;3; 5;6;7; collect(9:14); collect(43:45); collect(21:24)]
-start_val_ml = Vector{Float64}(par_ml.start[par_order])
-start_val_ls = Vector{Float64}(par_ls.start[par_order])
+start_test = [fill(1.0, 11); fill(0.05, 3); fill(0.05, 6); fill(0.5, 8); fill(0.05, 3); fill(0.1, 7)]
 
 # models
 model_ls = Sem(
-    specification = ram_matrices,
+    specification = spec_mean,
     data = dat,
     imply = RAMSymbolic,
     loss = SemWLS,
@@ -284,122 +257,93 @@ model_ls = Sem(
 )
 
 model_ml = Sem(
-    specification = ram_matrices,
+    specification = spec_mean,
     data = dat,
     meanstructure = true
 )
 
 model_ml_sym = Sem(
-    specification = ram_matrices,
+    specification = spec_mean,
     data = dat,
     imply = RAMSymbolic,
     meanstructure = true,
-    start_val = start_val_ml
+    start_val = start_test
 )
-
-############################################################################
-### test starting values
-############################################################################
-
-@test start_simple(model_ls) == [fill(1.0, 11); fill(0.05, 3); fill(0.0, 6); fill(0.5, 8); fill(0.0, 3); fill(0.0, 7)]
-@test start_val(model_ml) ≈ start_val_ml
-
-############################################################################
-### test solution
-############################################################################
-
-@testset "ml_solution_meanstructure" begin
-    solution_ml = sem_fit(model_ml)
-    @test SEM.compare_estimates(par_ml.est[par_order], solution_ml.solution, 0.01)
-end
-
-@testset "ls_solution_meanstructure" begin
-    solution_ls = sem_fit(model_ls)
-    @test SEM.compare_estimates(par_ls.est[par_order], solution_ls.solution, 0.01)
-end
-
-@testset "ml_solution_meanstructure_nsymbolic" begin
-    solution_ml_symbolic = sem_fit(model_ml_sym)
-    @test SEM.compare_estimates(par_ml.est[par_order], solution_ml_symbolic.solution, 0.01)
-end
 
 ############################################################################
 ### test gradients
 ############################################################################
 
-@testset "ml_gradients_meanstructure" begin
-    @test test_gradient(model_ml, start_val_ml)
+models = [model_ml, model_ls, model_ml_sym]
+names = ["ml", "ls_sym", "ml_sym"]
+
+for (model, name) in zip(models, names)
+    try
+        @testset "$(name)_gradient_mean" begin
+            @test test_gradient(model, start_test; rtol = 1e-9)
+        end
+    catch
+    end
 end
 
-@testset "ls_gradients_meanstructure" begin
-    @test test_gradient(model_ls, start_val_ls)
-end
+############################################################################
+### test solution
+############################################################################
 
-@testset "ml_gradients_meanstructure_symbolic" begin
-    @test test_gradient(model_ml_sym, start_val_ml)
+solution_names = Symbol.("parameter_estimates_".*["ml", "ls", "ml"].*"_mean")
+
+for (model, name, solution_name) in zip(models, names, solution_names)
+    try
+        @testset "$(name)_solution_mean" begin
+            solution = sem_fit(model)
+            update_estimate!(partable, solution)
+            @test compare_estimates(partable, solution_lav[solution_name]; atol = 1e-2)
+        end
+    catch
+    end
 end
 
 ############################################################################
 ### test fit assessment
 ############################################################################
 
-solution_ml = sem_fit(model_ml)
-
-@testset "fitmeasures_ml_mean" begin
+@testset "fitmeasures/se_ml_mean" begin
     solution_ml = sem_fit(model_ml)
-    @test all(test_fitmeasures(fit_measures(solution_ml), measures_ml; rtol = 1e-2))
+    @test all(test_fitmeasures(fit_measures(solution_ml), solution_lav[:fitmeasures_ml_mean]; atol = 1e-3))
+
+    update_partable!(partable, identifier(model_ml), se_hessian(solution_ml), :se)
+    @test compare_estimates(partable, solution_lav[:parameter_estimates_ml_mean]; atol = 1e-3, col = :se, lav_col = :se)
 end
 
-@testset "fitmeasures_ls" begin
+@testset "fitmeasures/se_ls_mean" begin
     solution_ls = sem_fit(model_ls)
     fm = fit_measures(solution_ls)
-    @test all(test_fitmeasures(fm, measures_ls; rtol = 1e-2, fitmeasure_names = fitmeasure_names_ls))
+    @test all(test_fitmeasures(fm, solution_lav[:fitmeasures_ls_mean]; atol = 1e-3, fitmeasure_names = fitmeasure_names_ls))
     @test (fm[:AIC] === missing) & (fm[:BIC] === missing) & (fm[:minus2ll] === missing)
+
+    update_partable!(partable, identifier(model_ls), se_hessian(solution_ls), :se)
+    @test compare_estimates(partable, solution_lav[:parameter_estimates_ls_mean]; atol = 1e-2, col = :se, lav_col = :se)
 end
 
 ############################################################################
 ### fiml
 ############################################################################
 
-############################################################################
-### observed data
-############################################################################
-
-dat = DataFrame(CSV.read("examples/data/data_dem_fiml.csv", DataFrame; missingstring = "NA"))
-par_ml = DataFrame(CSV.read("examples/data/par_dem_ml_fiml.csv", DataFrame))
-measures_ml = DataFrame(CSV.read("examples/data/measures_dem_fiml.csv", DataFrame))
-
-############################################################################
-### define models
-############################################################################
-
-#= ram_matrices = RAMMatrices(;
-    A = A, 
-    S = S, 
-    F = F,
-    M = M,
-    parameters = x,
-    colnames = string.([:x1, :x2, :x3, :y1, :y2, :y3, :y4, :y5, :y6, :y7, :y8])) =#
-
-### start values
-par_order = [collect(29:42); collect(15:20); 2;3; 5;6;7; collect(9:14); collect(43:45); collect(21:24)]
-start_val_ml = Vector{Float64}(par_ml.start[par_order])
-
 # models
 model_ml = Sem(
-    specification = ram_matrices,
-    data = dat,
+    specification = spec_mean,
+    data = dat_missing,
     observed = SemObsMissing,
     loss = SemFIML
 )
 
 model_ml_sym = Sem(
-    specification = ram_matrices,
-    data = dat,
+    specification = spec_mean,
+    data = dat_missing,
     observed = SemObsMissing,
     imply = RAMSymbolic,
     loss = SemFIML,
-    start_val = start_val_ml
+    start_val = start_test
 )
 
 ############################################################################
@@ -407,11 +351,11 @@ model_ml_sym = Sem(
 ############################################################################
 
 @testset "fiml_gradient" begin
-    @test test_gradient(model_ml, start_val_ml)
+    @test test_gradient(model_ml, start_test; atol = 1e-6)
 end
 
 @testset "fiml_gradient_symbolic" begin
-    @test test_gradient(model_ml_sym, start_val_ml)
+    @test test_gradient(model_ml_sym, start_test; atol = 1e-6)
 end
 
 ############################################################################
@@ -419,21 +363,25 @@ end
 ############################################################################
 
 @testset "fiml_solution" begin
-    solution_ml = sem_fit(model_ml)
-    @test SEM.compare_estimates(par_ml.est[par_order], solution_ml.solution, 0.01)
+    solution = sem_fit(model_ml)
+    update_estimate!(partable, solution)
+    @test compare_estimates(partable, solution_lav[:parameter_estimates_fiml]; atol = 1e-2)
 end
 
 @testset "fiml_solution_symbolic" begin
-    solution_ml_symbolic = sem_fit(model_ml_sym)
-    @test SEM.compare_estimates(par_ml.est[par_order], solution_ml_symbolic.solution, 0.01)
+    solution = sem_fit(model_ml_sym)
+    update_estimate!(partable, solution)
+    @test compare_estimates(partable, solution_lav[:parameter_estimates_fiml]; atol = 1e-2)
 end
 
 ############################################################################
 ### test fit measures
 ############################################################################
 
-@testset "fitmeasures_fiml" begin
+@testset "fitmeasures/se_fiml" begin
     solution_ml = sem_fit(model_ml)
-    @test all(test_fitmeasures(fit_measures(solution_ml), measures_ml; rtol = 1e-2))
-    @test par_ml.se[par_order] ≈ se_hessian(solution_ml) rtol = 1e-3
+    @test all(test_fitmeasures(fit_measures(solution_ml), solution_lav[:fitmeasures_fiml]; atol = 1e-3))
+
+    update_partable!(partable, identifier(model_ml), se_hessian(solution_ml), :se)
+    @test compare_estimates(partable, solution_lav[:parameter_estimates_fiml]; atol = 1e-3, col = :se, lav_col = :se)
 end
