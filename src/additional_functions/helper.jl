@@ -175,39 +175,6 @@ function commutation_matrix(n; tosparse = false)
 
 end
 
-function compare_estimates(solution_true, solution_sus, tol)
-    # margin = tol*abs.(solution_true)
-    # is_close = all(abs.(solution_sus - solution_true) .< margin)
-    return isapprox(solution_true, solution_sus; rtol = tol)
-end
-
-function compare_estimates(partable_lav, partable::ParameterTable, tol)
-
-    correct = []
-
-    for i in findall(partable.columns[:free])
-
-        from = partable.columns[:from][i]
-        to = partable.columns[:to][i]
-        estimate = partable.columns[:estimate][i]
-
-        lav_ind = findall((partable_lav.lhs .== String(from)) .& (partable_lav.rhs .== String(to)))
-
-        if length(lav_ind) == 0
-            lav_ind = findall((partable_lav.lhs .== String(to)) .& (partable_lav.rhs .== String(from)))
-            if length(lav_ind) == 0
-                throw(ErrorException("At least one parameter could not be found in the lavaan solution"))
-            end
-            is_correct = isapprox(estimate, partable_lav.est[lav_ind[1]]; rtol = tol)
-            push!(correct, is_correct)
-        else
-            is_correct = isapprox(estimate, partable_lav.est[lav_ind[1]]; rtol = tol)
-            push!(correct, is_correct)
-        end
-    end
-    return all(correct)
-end
-
 function commutation_matrix_pre_square(A)
 
     n2 = size(A, 1)
