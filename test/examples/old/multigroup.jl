@@ -1,7 +1,3 @@
-using StructuralEquationModels, CSV, DataFrames, SparseArrays, Symbolics, LineSearches, Optim, Test, LinearAlgebra
-import StructuralEquationModels as SEM
-include("test_helpers.jl")
-
 ############################################################################
 ### observed data
 ############################################################################
