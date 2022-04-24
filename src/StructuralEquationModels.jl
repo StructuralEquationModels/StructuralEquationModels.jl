@@ -101,5 +101,6 @@ export  AbstractSem,
             AIC, BIC, χ², df, fit_measures, minus2ll, n_par, n_obs, p_value, RMSEA, n_man,
             EmMVNModel,
         se_hessian, se_bootstrap,
-        example_data
+        example_data,
+        @StenoGraph
 end
