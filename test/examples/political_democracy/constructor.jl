@@ -52,8 +52,6 @@ model_ml_weighted = Sem(
 ### test gradients
 ############################################################################
 
-start_test = [fill(1.0, 11); fill(0.05, 3); fill(0.05, 6); fill(0.5, 8); fill(0.05, 3)]
-
 models = [model_ml, model_ls_sym, model_ridge, model_constant, model_ml_sym, model_ml_weighted]
 names = ["ml", "ls_sym", "ridge", "constant", "ml_sym", "ml_weighted"]
 
@@ -89,7 +87,7 @@ end
     solution_ridge = sem_fit(model_ridge)
     solution_ml = sem_fit(model_ml)
     # solution_ridge_id = sem_fit(model_ridge_id)
-    @test abs(solution_ridge.solution - solution_ml.solution) < 1
+    @test abs(solution_ridge.minimum - solution_ml.minimum) < 1
 end
 
 # test constant objective value
@@ -180,7 +178,6 @@ end
 ############################################################################
 
 # starting values
-start_test = [fill(1.0, 11); fill(0.05, 3); fill(0.05, 6); fill(0.5, 8); fill(0.05, 3); fill(0.1, 7)]
 
 # models
 model_ls = Sem(
@@ -204,7 +201,7 @@ model_ml_sym = Sem(
     data = dat,
     imply = RAMSymbolic,
     meanstructure = true,
-    start_val = start_test,
+    start_val = start_test_mean,
     diff = semdiff
 )
 
@@ -218,7 +215,7 @@ names = ["ml", "ls_sym", "ml_sym"]
 for (model, name) in zip(models, names)
     try
         @testset "$(name)_gradient_mean" begin
-            @test test_gradient(model, start_test; rtol = 1e-9)
+            @test test_gradient(model, start_test_mean; rtol = 1e-9)
         end
     catch
     end
@@ -282,7 +279,7 @@ model_ml_sym = Sem(
     observed = SemObsMissing,
     imply = RAMSymbolic,
     loss = SemFIML,
-    start_val = start_test,
+    start_val = start_test_mean,
     diff = semdiff
 )
 
@@ -291,11 +288,11 @@ model_ml_sym = Sem(
 ############################################################################
 
 @testset "fiml_gradient" begin
-    @test test_gradient(model_ml, start_test; atol = 1e-6)
+    @test test_gradient(model_ml, start_test_mean; atol = 1e-6)
 end
 
 @testset "fiml_gradient_symbolic" begin
-    @test test_gradient(model_ml_sym, start_test; atol = 1e-6)
+    @test test_gradient(model_ml_sym, start_test_mean; atol = 1e-6)
 end
 
 ############################################################################

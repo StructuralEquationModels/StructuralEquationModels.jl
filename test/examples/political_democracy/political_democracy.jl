@@ -86,6 +86,9 @@ spec_mean = RAMMatrices(;
 
 partable_mean = ParameterTable(spec_mean)
 
+start_test = [fill(1.0, 11); fill(0.05, 3); fill(0.05, 6); fill(0.5, 8); fill(0.05, 3)]
+start_test_mean = [fill(1.0, 11); fill(0.05, 3); fill(0.05, 6); fill(0.5, 8); fill(0.05, 3); fill(0.1, 7)]
+
 semdiff = SemDiffOptim
 @testset "RAMMatrices | constructor | Optim" begin include("constructor.jl") end
 semdiff = SemDiffNLopt
@@ -176,6 +179,9 @@ spec_mean = ParameterTable(
 sort!(spec_mean)
 
 partable_mean = spec_mean
+
+start_test = [fill(0.5, 8); fill(0.05, 3); fill(1.0, 11);  fill(0.05, 9)]
+start_test_mean = [fill(1.0, 11); fill(0.05, 3); fill(0.05, 6); fill(0.5, 8); fill(0.05, 3); fill(0.1, 7)]
 
 semdiff = SemDiffOptim
 @testset "Graph → ParameterTable | constructor | Optim" begin include("constructor.jl") end
