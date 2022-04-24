@@ -33,15 +33,6 @@ model_ridge = Sem(
     diff = semdiff
 )
 
-model_ridge_id = Sem(
-    specification = spec,
-    data = dat,
-    loss = (SemML, SemRidge),
-    α_ridge = .001,
-    which_ridge = [:x16, :x17, :x18, :x19, :x20],
-    diff = semdiff
-)
-
 model_constant = Sem(
     specification = spec,
     data = dat,
@@ -94,10 +85,11 @@ for (model, name, solution_name) in zip(models, names, solution_names)
     end
 end
 
-@testset "ridge_solution_id" begin
+@testset "ridge_solution" begin
     solution_ridge = sem_fit(model_ridge)
-    solution_ridge_id = sem_fit(model_ridge_id)
-    @test solution_ridge.solution ≈ solution_ridge_id.solution atol = 1e-6
+    solution_ml = sem_fit(model_ml)
+    # solution_ridge_id = sem_fit(model_ridge_id)
+    @test abs(solution_ridge.solution - solution_ml.solution) < 1
 end
 
 # test constant objective value

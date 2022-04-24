@@ -1,4 +1,4 @@
-using StructuralEquationModels, Distributions
+using StructuralEquationModels, Distributions, Random, Optim, LineSearches
 import StructuralEquationModels as SEM
 include("helper.jl")
 

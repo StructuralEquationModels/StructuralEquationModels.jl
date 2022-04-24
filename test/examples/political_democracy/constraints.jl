@@ -50,7 +50,7 @@ solution_constrained = sem_fit(model_ml_constrained)
 # NLopt option setting --------------------------------------------
 
 model_ml_maxeval = Sem(
-    specification = ram_matrices,
+    specification = spec,
     data = dat,
     diff = SemDiffNLopt,
     options = Dict(:maxeval => 10)
