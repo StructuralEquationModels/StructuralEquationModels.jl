@@ -7,6 +7,7 @@ using LinearAlgebra, Optim,
     DataFrames
 
 import DataFrames: DataFrame
+export *, ==, @StenoGraph, AbstractEdge, AbstractNode, DirectedEdge, Edge, EdgeModifier, MetaEdge, MetaNode, ModifiedEdge, ModifiedNode, Modifier, ModifyingNode, Node, NodeModifier, NodeOrEdgeModifier, SimpleNode, StenoGraphs, UndirectedEdge, convert, promote_rule, show, unarrow, unmeta, ←, →, ↔, ⇐, ⇒, ⇔
 
 # type hierarchy
 include("types.jl")
@@ -102,5 +103,5 @@ export  AbstractSem,
             EmMVNModel,
         se_hessian, se_bootstrap,
         example_data,
-        @StenoGraph
+        @StenoGraph, →, ←, ↔, ⇔
 end
