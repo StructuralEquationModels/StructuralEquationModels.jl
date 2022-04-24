@@ -181,7 +181,7 @@ sort!(spec_mean)
 partable_mean = spec_mean
 
 start_test = [fill(0.5, 8); fill(0.05, 3); fill(1.0, 11);  fill(0.05, 9)]
-start_test_mean = [fill(1.0, 11); fill(0.05, 3); fill(0.05, 6); fill(0.5, 8); fill(0.05, 3); fill(0.1, 7)]
+start_test_mean = [fill(0.5, 8); fill(0.05, 3); fill(1.0, 11); fill(0.05, 3); fill(0.05, 13)]
 
 semdiff = SemDiffOptim
 @testset "Graph → ParameterTable | constructor | Optim" begin include("constructor.jl") end

@@ -177,8 +177,6 @@ end
 ### meanstructure
 ############################################################################
 
-# starting values
-
 # models
 model_ls = Sem(
     specification = spec_mean,
