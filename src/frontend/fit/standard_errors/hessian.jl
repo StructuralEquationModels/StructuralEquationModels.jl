@@ -1,5 +1,5 @@
 ############################################################################
-### observed
+### hessian based standard errors
 ############################################################################
 
 function se_hessian(sem_fit::SemFit; hessian = :finitediff)
@@ -12,15 +12,15 @@ function se_hessian(sem_fit::SemFit; hessian = :finitediff)
         H = hessian(sem_fit.model)
     elseif hessian == :finitediff
         H = FiniteDiff.finite_difference_hessian(
-                x -> objective!(sem_fit.model, x), 
+                x -> objective!(sem_fit.model, x)[1], 
                 sem_fit.solution
                 )
     elseif hessian == :optimizer
-        @error "Standard errors from the optimizer hessian are not implemented yet"
+        throw(ArgumentError("standard errors from the optimizer hessian are not implemented yet"))
     elseif hessian == :expected
-        @error "Standard errors based on the expected hessian are not implemented yet"
+        throw(ArgumentError("standard errors based on the expected hessian are not implemented yet"))
     else
-        @error "I dont know how to compute $how standard-errors"
+        throw(ArgumentError("I dont know how to compute `$how` standard-errors"))
     end
 
     invH = c*inv(H)
@@ -42,10 +42,7 @@ H_scaling(model, obs, imp, diff, lossfun::Union{SemML, SemWLS}) =
     2/(n_obs(model)-1)
 
 H_scaling(model, obs, imp, diff, lossfun::SemFIML) =
-    2/(n_obs(model))
+    2/n_obs(model)
 
-############################################################################
-### expected
-############################################################################
-
-# not available yet
+H_scaling(model::SemEnsemble) =
+    2/n_obs(model)

@@ -7,13 +7,17 @@ function sem_wrap_nlopt(par, G, sem::AbstractSem)
     need_gradient = length(G) != 0
     sem(par, true, need_gradient, false)
     if need_gradient G .= gradient(sem) end
-    return objective(sem)
+    return objective(sem)[1]
 end
 
 mutable struct NLoptResult
     result
     problem
 end
+
+optimizer(res::NLoptResult) = res.problem.algorithm
+n_iterations(res::NLoptResult) = res.problem.numevals
+convergence(res::NLoptResult) = res.result[3]
 
 # construct SemFit from fitted NLopt object
 function SemFit_NLopt(optimization_result, model::AbstractSem, start_val, opt)

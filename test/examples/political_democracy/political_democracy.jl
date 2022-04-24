@@ -1,0 +1,189 @@
+using StructuralEquationModels, Test, FiniteDiff
+# import StructuralEquationModels as SEM
+include("helper.jl")
+
+############################################################################
+### data
+############################################################################
+
+dat = example_data("political_democracy")
+dat_missing = example_data("political_democracy_missing")
+solution_lav = example_data("political_democracy_solution")
+
+############################################################################
+### specification - RAMMatrices
+############################################################################
+
+# w.o. meanstructure -------------------------------------------------------
+
+x = Symbol.("x".*string.(1:31))
+
+S =[:x1   0    0     0     0      0     0     0     0     0     0     0     0     0
+    0     :x2  0     0     0      0     0     0     0     0     0     0     0     0
+    0     0     :x3  0     0      0     0     0     0     0     0     0     0     0
+    0     0     0     :x4  0      0     0     :x15  0     0     0     0     0     0
+    0     0     0     0     :x5   0     :x16  0     :x17  0     0     0     0     0
+    0     0     0     0     0     :x6  0      0     0     :x18  0     0     0     0
+    0     0     0     0     :x16  0     :x7   0     0     0     :x19  0     0     0
+    0     0     0     :x15 0      0     0     :x8   0     0     0     0     0     0
+    0     0     0     0     :x17  0     0     0     :x9   0     :x20  0     0     0
+    0     0     0     0     0     :x18 0      0     0     :x10  0     0     0     0
+    0     0     0     0     0     0     :x19  0     :x20  0     :x11  0     0     0
+    0     0     0     0     0     0     0     0     0     0     0     :x12  0     0
+    0     0     0     0     0     0     0     0     0     0     0     0     :x13  0
+    0     0     0     0     0     0     0     0     0     0     0     0     0     :x14]
+
+F =[1.0 0 0 0 0 0 0 0 0 0 0 0 0 0
+    0 1 0 0 0 0 0 0 0 0 0 0 0 0
+    0 0 1 0 0 0 0 0 0 0 0 0 0 0
+    0 0 0 1 0 0 0 0 0 0 0 0 0 0
+    0 0 0 0 1 0 0 0 0 0 0 0 0 0
+    0 0 0 0 0 1 0 0 0 0 0 0 0 0
+    0 0 0 0 0 0 1 0 0 0 0 0 0 0
+    0 0 0 0 0 0 0 1 0 0 0 0 0 0
+    0 0 0 0 0 0 0 0 1 0 0 0 0 0
+    0 0 0 0 0 0 0 0 0 1 0 0 0 0
+    0 0 0 0 0 0 0 0 0 0 1 0 0 0]
+
+A =[0  0  0  0  0  0  0  0  0  0  0     1.0   0     0
+    0  0  0  0  0  0  0  0  0  0  0     :x21  0     0
+    0  0  0  0  0  0  0  0  0  0  0     :x22  0     0
+    0  0  0  0  0  0  0  0  0  0  0     0     1.0   0
+    0  0  0  0  0  0  0  0  0  0  0     0     :x23  0
+    0  0  0  0  0  0  0  0  0  0  0     0     :x24  0
+    0  0  0  0  0  0  0  0  0  0  0     0     :x25  0
+    0  0  0  0  0  0  0  0  0  0  0     0     0     1
+    0  0  0  0  0  0  0  0  0  0  0     0     0     :x26
+    0  0  0  0  0  0  0  0  0  0  0     0     0     :x27
+    0  0  0  0  0  0  0  0  0  0  0     0     0     :x28
+    0  0  0  0  0  0  0  0  0  0  0     0     0     0
+    0  0  0  0  0  0  0  0  0  0  0     :x29  0     0
+    0  0  0  0  0  0  0  0  0  0  0     :x30  :x31  0]
+
+spec = RAMMatrices(;
+    A = A, 
+    S = S, 
+    F = F, 
+    parameters = x,
+    colnames = [:x1, :x2, :x3, :y1, :y2, :y3, :y4, :y5, :y6, :y7, :y8, :ind60, :dem60, :dem65]
+)
+
+partable = ParameterTable(spec)
+
+# w. meanstructure ----------------------------------------------------------------------------
+
+x = Symbol.("x".*string.(1:38))
+
+M = [:x32; :x33; :x34; :x35; :x36; :x37; :x38; :x35; :x36; :x37; :x38; 0.0; 0.0; 0.0]
+
+spec_mean = RAMMatrices(;
+    A = A, 
+    S = S, 
+    F = F,
+    M = M,
+    parameters = x,
+    colnames = [:x1, :x2, :x3, :y1, :y2, :y3, :y4, :y5, :y6, :y7, :y8, :ind60, :dem60, :dem65])
+
+partable_mean = ParameterTable(spec_mean)
+
+start_test = [fill(1.0, 11); fill(0.05, 3); fill(0.05, 6); fill(0.5, 8); fill(0.05, 3)]
+start_test_mean = [fill(1.0, 11); fill(0.05, 3); fill(0.05, 6); fill(0.5, 8); fill(0.05, 3); fill(0.1, 7)]
+
+semdiff = SemDiffOptim
+@testset "RAMMatrices | constructor | Optim" begin include("constructor.jl") end
+semdiff = SemDiffNLopt
+@testset "RAMMatrices | constructor | NLopt" begin include("constructor.jl") end
+
+@testset "constraints | NLopt" begin include("constraints.jl") end
+
+############################################################################
+### specification - RAMMatrices → ParameterTable
+############################################################################
+
+spec = ParameterTable(spec)
+spec_mean = ParameterTable(spec_mean)
+
+partable = spec
+partable_mean = spec_mean
+
+semdiff = SemDiffOptim
+@testset "RAMMatrices → ParameterTable | constructor | Optim" begin include("constructor.jl") end
+semdiff = SemDiffNLopt
+@testset "RAMMatrices → ParameterTable | constructor | NLopt" begin include("constructor.jl") end
+
+############################################################################
+### specification - Graph
+############################################################################
+using StenoGraphs
+
+observed_vars = [:x1, :x2, :x3, :y1, :y2, :y3, :y4, :y5, :y6, :y7, :y8]
+latent_vars = [:ind60, :dem60, :dem65]
+
+graph = @StenoGraph begin
+    # loadings
+    ind60 → fixed(1)*x1 + x2 + x3
+    dem60 → fixed(1)*y1 + y2 + y3 + y4
+    dem65 → fixed(1)*y5 + y6 + y7 + y8
+    # latent regressions
+    label(:a)*dem60 ← ind60
+    dem65 ← dem60
+    dem65 ← ind60
+    # variances
+    _(observed_vars) ↔ _(observed_vars)
+    _(latent_vars) ↔ _(latent_vars)
+    # covariances
+    y1 ↔ y5
+    y2 ↔ y4 + y6
+    y3 ↔ y7
+    y8 ↔ y4 + y6
+end
+
+spec = ParameterTable(
+    latent_vars = latent_vars,
+    observed_vars = observed_vars,
+    graph = graph)
+
+sort!(spec)
+
+partable = spec
+
+# meanstructure
+mean_labels = label.([:m1, :m2, :m3, :m4, :m5, :m6, :m7, :m4, :m5, :m6, :m7])
+
+graph = @StenoGraph begin
+    # loadings
+    ind60 → fixed(1)*x1 + x2 + x3
+    dem60 → fixed(1)*y1 + y2 + y3 + y4
+    dem65 → fixed(1)*y5 + y6 + y7 + y8
+    # latent regressions
+    label(:a)*dem60 ← ind60
+    dem65 ← dem60
+    dem65 ← ind60
+    # variances
+    _(observed_vars) ↔ _(observed_vars)
+    _(latent_vars) ↔ _(latent_vars)
+    # covariances
+    y1 ↔ y5
+    y2 ↔ y4 + y6
+    y3 ↔ y7
+    y8 ↔ y4 + y6
+    # means
+    Symbol("1") → _(mean_labels).*_(observed_vars)
+end
+
+spec_mean = ParameterTable(
+    latent_vars = latent_vars,
+    observed_vars = observed_vars,
+    graph = graph)
+
+sort!(spec_mean)
+
+partable_mean = spec_mean
+
+start_test = [fill(0.5, 8); fill(0.05, 3); fill(1.0, 11);  fill(0.05, 9)]
+start_test_mean = [fill(0.5, 8); fill(0.05, 3); fill(1.0, 11); fill(0.05, 3); fill(0.05, 13)]
+
+semdiff = SemDiffOptim
+@testset "Graph → ParameterTable | constructor | Optim" begin include("constructor.jl") end
+semdiff = SemDiffNLopt
+@testset "Graph → ParameterTable | constructor | NLopt" begin include("constructor.jl") end

@@ -156,8 +156,6 @@ function start_em_observed(observed::SemObsMissing; kwargs...)
         end
         return EmMVNModel(Σ, μ, false)
     else
-        @warn "Could not use Cov and Mean of observed samples as starting values for EM.
-        Fall back to simple starting values"
         return start_em_simple(observed, kwargs...)
     end
 

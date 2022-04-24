@@ -42,12 +42,10 @@ end
 ### Constructors
 ############################################################################
 
-function SemObsMissing(;data, specification = nothing, kwargs...)
+function SemObsMissing(;data, specification = nothing, spec_colnames = nothing, data_colnames = nothing, kwargs...)
 
-    # sort columns
-    colnames = get_colnames(specification)
-    if !isnothing(colnames) data = data[:, colnames] end
-    data = Matrix(data)
+    if isnothing(spec_colnames) spec_colnames = get_colnames(specification) end
+    data, _ = reorder_observed(data, spec_colnames, data_colnames)
 
     # remove persons with only missings
     keep = Vector{Int64}()
@@ -116,6 +114,29 @@ end
 ############################################################################
 
 n_obs(observed::SemObsMissing) = observed.n_obs
+n_man(observed::SemObsMissing) = observed.n_man
+
+############################################################################
+### Additional methods
+############################################################################
+
+get_data(observed::SemObsMissing) = observed.data
+patterns(observed::SemObsMissing) = observed.patterns
+patterns_not(observed::SemObsMissing) = observed.patterns_not
+rows(observed::SemObsMissing) = observed.rows
+data_rowwise(observed::SemObsMissing) = observed.data_rowwise
+pattern_n_obs(observed::SemObsMissing) = observed.pattern_n_obs
+pattern_nvar_obs(observed::SemObsMissing) = observed.pattern_nvar_obs
+obs_mean(observed::SemObsMissing) = observed.obs_mean
+obs_cov(observed::SemObsMissing) = observed.obs_cov
+em_model(observed::SemObsMissing) = observed.em_model
+
+############################################################################
+### Additional functions
+############################################################################
+
+reorder_observed(data, spec_colnames::Nothing, data_colnames) = data, nothing
+reorder_observed(data, spec_colnames, data_colnames) = reorder_data(data, spec_colnames, data_colnames)
 
 ############################################################################
 ### Pretty Printing

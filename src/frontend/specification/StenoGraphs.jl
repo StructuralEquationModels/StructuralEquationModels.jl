@@ -77,7 +77,7 @@ function ParameterTable(;graph, observed_vars, latent_vars, g = 1, parname = :θ
                     start[i] = modifier.value[g]
                 elseif modifier isa Label
                     if modifier.value[g] == :NaN
-                        @error "NaN is not allowed as a parameter label."
+                        throw(DomainError(NaN, "NaN is not allowed as a parameter label."))
                     end
                     identifier[i] = modifier.value[g]
                 end
@@ -105,7 +105,6 @@ function ParameterTable(;graph, observed_vars, latent_vars, g = 1, parname = :θ
             :to => to,
             :free => free,
             :value_fixed => value_fixed,
-            :label => label,
             :start => start,
             :estimate => estimate,
             :identifier => identifier),

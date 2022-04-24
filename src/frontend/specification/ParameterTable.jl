@@ -1,8 +1,10 @@
+abstract type AbstractParameterTable end
+
 ############################################################################
 ### Types
 ############################################################################
 
-mutable struct ParameterTable{C, V}
+mutable struct ParameterTable{C, V} <: AbstractParameterTable
     columns::C
     variables::V
 end
@@ -113,13 +115,19 @@ end
 
 # Sorting -------------------------------------------------------------------
 
+struct CyclicModelError <: Exception
+    msg::AbstractString
+end
+
+Base.showerror(io::IO, e::CyclicModelError) = print(io, e.msg)
+
 import Base.sort!, Base.sort
 
 function sort!(partable::ParameterTable)
 
     variables = [partable.variables[:latent_vars]; partable.variables[:observed_vars]]
 
-    is_regression = partable.columns[:parameter_type] .== :→
+    is_regression = (partable.columns[:parameter_type] .== :→) .& (partable.columns[:from] .!= Symbol("1"))
 
     to = partable.columns[:to][is_regression]
     from = partable.columns[:from][is_regression]
@@ -142,7 +150,7 @@ function sort!(partable::ParameterTable)
             end
         end
         
-        if !acyclic error("Your model is cyclic and therefore can not be ordered") end
+        if !acyclic throw(CyclicModelError("your model is cyclic and therefore can not be ordered")) end
         acyclic = false
 
         if length(variables) == 0 sorted = true end
@@ -164,16 +172,9 @@ end
 import Base.push!
 
 function push!(partable::ParameterTable, d::AbstractDict)
-
-    if !(keys(d) == keys(partable.columns))
-        @error "Can not push row to partable as the columns do not match. \n
-                Got columns $(keys(d)) and $(keys(partable.columns))"
-    end
-
     for key in keys(d)
         push!(partable.columns[key], d[key])
     end
-
 end
 
 push!(partable::ParameterTable, d::Nothing) = nothing
@@ -185,38 +186,33 @@ push!(partable::ParameterTable, d::Nothing) = nothing
 # update generic ---------------------------------------------------------------
 
 function update_partable!(partable::ParameterTable, model_identifier::AbstractDict, vec, column)
-    if !haskey(partable.columns, column)
-        @info "Your parameter table does not have the column $column, so it was added."
-        new_col = Vector{eltype(vec)}(undef, length(partable))
-        for (i, identifier) in enumerate(partable.columns[:identifier])
-            if !(identifier == :const)
-                new_col[i] = vec[model_identifier[identifier]]
-            elseif identifier == :const
-                new_col[i] == zero(eltype(vec))
-            end
-        end
-        push!(partable.columns, column => new_col)
-    else
-        for (i, identifier) in enumerate(partable.columns[:identifier])
-            if !(identifier == :const)
-                partable.columns[column][i] = vec[model_identifier[identifier]]
-            end
+    new_col = Vector{eltype(vec)}(undef, length(partable))
+    for (i, identifier) in enumerate(partable.columns[:identifier])
+        if !(identifier == :const)
+            new_col[i] = vec[model_identifier[identifier]]
+        elseif identifier == :const
+            new_col[i] = zero(eltype(vec))
         end
     end
+    push!(partable.columns, column => new_col)
     return partable
 end
 
+update_partable!(partable::AbstractParameterTable, sem_fit::SemFit, vec, column) =
+    update_partable!(partable, identifier(sem_fit), vec, column)
+
+
 # update estimates ---------------------------------------------------------
 
-update_estimate!(partable::ParameterTable, sem_fit::SemFit) =
-    update_partable!(partable, identifier(sem_fit), sem_fit.solution, :estimate)
+update_estimate!(partable::AbstractParameterTable, sem_fit::SemFit) =
+    update_partable!(partable, sem_fit, sem_fit.solution, :estimate)
 
 # update starting values -----------------------------------------------------
 
-update_start!(partable::ParameterTable, sem_fit::SemFit) =
-    update_partable!(partable, identifier(sem_fit), sem_fit.start_val, :start)
+update_start!(partable::AbstractParameterTable, sem_fit::SemFit) =
+    update_partable!(partable, sem_fit, sem_fit.start_val, :start)
 
-function update_start!(partable::ParameterTable, model::AbstractSem, start_val) where{O, I, L, D}
+function update_start!(partable::AbstractParameterTable, model::AbstractSem, start_val)
     if !(start_val isa Vector)
         start_val = start_val(model)
     end
@@ -225,7 +221,7 @@ end
 
 # update partable standard errors ---------------------------------------------
 
-function update_se_hessian!(partable::ParameterTable, sem_fit::SemFit; hessian = :finitediff)
+function update_se_hessian!(partable::AbstractParameterTable, sem_fit::SemFit; hessian = :finitediff)
     se = se_hessian(sem_fit; hessian = hessian)
-    return update_partable!(partable, identifier(model), se, :se)
+    return update_partable!(partable, sem_fit, se, :se)
 end

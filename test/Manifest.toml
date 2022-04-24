@@ -266,6 +266,10 @@ git-tree-sha1 = "a4b12a1bd2ebade87891ab7e36fdbce582301a92"
 uuid = "23fbe1c1-3f47-55db-b15f-69d7ec21a316"
 version = "0.15.6"
 
+[[deps.LazyArtifacts]]
+deps = ["Artifacts", "Pkg"]
+uuid = "4af54fe1-eca0-43a8-85a7-787d91b784e3"
+
 [[deps.LibCURL]]
 deps = ["LibCURL_jll", "MozillaCACerts_jll"]
 uuid = "b27032c2-a3e7-50c8-80cd-2d36dbcbfd21"

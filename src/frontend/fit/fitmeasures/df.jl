@@ -1,24 +1,16 @@
-# SemFit splices loss functions ---------------------------------------------------------------------
-df(sem_fit::SemFit{Mi, So, St, Mo, O} where {Mi, So, St, Mo <: AbstractSemSingle, O}) = 
-    df(
-        sem_fit,
-        sem_fit.model.observed,
-        sem_fit.model.imply,
-        sem_fit.model.diff,
-        sem_fit.model.loss.functions...
-        )
+df(sem_fit) = df(sem_fit.model)
 
-# RAM + SemML
-function df(
-        sem_fit::SemFit, 
-        observed::Union{SemObsCommon, SemObsMissing}, 
-        imply::Union{RAM, RAMSymbolic}, 
-        diff, 
-        loss_ml::Union{SemML, SemFIML, SemWLS})
-    npar = n_par(sem_fit)
-    n_dp = 0.5(observed.n_man^2 + observed.n_man)
-    if !isnothing(imply.μ)
-        n_dp += observed.n_man
+df(model::AbstractSemSingle) = n_dp(model) - n_par(model)
+
+df(model::SemEnsemble) = n_dp(model) - n_par(model)
+
+function n_dp(model::AbstractSemSingle)
+    nman = n_man(model)
+    ndp = 0.5(nman^2 + nman)
+    if !isnothing(model.imply.μ)
+        ndp += n_man(model)
     end
-    return n_dp - npar
+    return ndp
 end
+
+n_dp(model::SemEnsemble) = sum(n_dp.(model.sems))

@@ -22,10 +22,6 @@ makedocs(
 )
 
 deploydocs(
-    repo = "github.com/StructuralEquationModels/StructuralEquationModels.jl.git",
+    repo = "github.com/StructuralEquationModels/StructuralEquationModels.jl",
     devbranch = "devel"
 )
-
-function testfun(args...)
-    print(args)
-end

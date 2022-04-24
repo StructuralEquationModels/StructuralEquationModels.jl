@@ -3,7 +3,10 @@ module StructuralEquationModels
 using LinearAlgebra, Optim,
     NLSolversBase, Statistics, SparseArrays, Symbolics,
     NLopt, FiniteDiff, ForwardDiff, PrettyTables,
-    Distributions, StenoGraphs
+    Distributions, StenoGraphs, LazyArtifacts, DelimitedFiles,
+    DataFrames
+
+import DataFrames: DataFrame
 
 # type hierarchy
 include("types.jl")
@@ -14,6 +17,7 @@ include("frontend/specification/ParameterTable.jl")
 include("frontend/specification/EnsembleParameterTable.jl")
 include("frontend/specification/RAMMatrices.jl")
 include("frontend/specification/StenoGraphs.jl")
+include("frontend/fit/summary.jl")
 # pretty printing
 include("frontend/pretty_printing.jl")
 # observed
@@ -46,6 +50,8 @@ include("additional_functions/start_val/start_val.jl")
 include("additional_functions/start_val/start_fabin3.jl")
 include("additional_functions/start_val/start_partable.jl")
 include("additional_functions/start_val/start_simple.jl")
+include("additional_functions/artifacts.jl")
+include("additional_functions/simulation.jl")
 # identifier
 include("additional_functions/identifier.jl")
 # fit measures
@@ -58,9 +64,12 @@ include("frontend/fit/fitmeasures/n_par.jl")
 include("frontend/fit/fitmeasures/n_obs.jl")
 include("frontend/fit/fitmeasures/p.jl")
 include("frontend/fit/fitmeasures/RMSEA.jl")
+include("frontend/fit/fitmeasures/n_man.jl")
 include("frontend/fit/fitmeasures/fit_measures.jl")
 # standard errors
 include("frontend/fit/standard_errors/hessian.jl")
+include("frontend/fit/standard_errors/bootstrap.jl")
+
 
 
 export  AbstractSem, 
@@ -76,7 +85,10 @@ export  AbstractSem,
             SemDiffEmpty, SemDiffOptim, SemDiffNLopt, NLoptConstraint,
         SemObs, 
             SemObsCommon, SemObsMissing,
-        sem_fit, SemFit,
+        sem_fit, 
+        SemFit,
+            minimum, solution,
+        sem_summary,
         objective, objective!, gradient, gradient!, hessian, hessian!, objective_gradient!,
         ParameterTable, 
             EnsembleParameterTable, update_partable!, update_estimate!, update_start!,
@@ -84,8 +96,10 @@ export  AbstractSem,
             get_identifier_indices,
         RAMMatrices, 
             RAMMatrices!,
+        identifier,
         fit_measures,
-            AIC, BIC, χ², df, fit_measures, minus2ll, n_par, n_obs, p_value, RMSEA,
+            AIC, BIC, χ², df, fit_measures, minus2ll, n_par, n_obs, p_value, RMSEA, n_man,
             EmMVNModel,
-        se_hessian
+        se_hessian, se_bootstrap,
+        example_data
 end

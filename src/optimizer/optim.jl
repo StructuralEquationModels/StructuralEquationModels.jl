@@ -1,9 +1,9 @@
-## connect do Optim.jl as backend
+## connect to Optim.jl as backend
 function sem_wrap_optim(par, F, G, H, sem::AbstractSem)
     sem(par, !isnothing(F), !isnothing(G), !isnothing(H))
     if !isnothing(G) G .= gradient(sem) end
     if !isnothing(H) H .= hessian(sem) end
-    if !isnothing(F) return objective(sem) end
+    if !isnothing(F) return objective(sem)[1] end
 end
 
 function SemFit(optimization_result::Optim.MultivariateOptimizationResults, model::AbstractSem, start_val)
@@ -15,6 +15,10 @@ function SemFit(optimization_result::Optim.MultivariateOptimizationResults, mode
         optimization_result
     )
 end
+
+optimizer(res::Optim.MultivariateOptimizationResults) = Optim.summary(res)
+n_iterations(res::Optim.MultivariateOptimizationResults) = Optim.iterations(res)
+convergence(res::Optim.MultivariateOptimizationResults) = Optim.converged(res)
 
 function sem_fit(model::Sem{O, I, L, D}; start_val = start_val, kwargs...) where {O, I, L, D <: SemDiffOptim}
     

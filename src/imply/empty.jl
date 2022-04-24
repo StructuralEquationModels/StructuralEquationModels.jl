@@ -24,8 +24,8 @@ function ImplyEmpty(;
                 ram_matrices = RAMMatrices!(specification)
                 identifier = StructuralEquationModels.identifier(ram_matrices)
             else
-                @error "The RAM constructor does not know how to handle your specification object. 
-                \n Please specify your model as either a ParameterTable or RAMMatrices."
+                throw(ErrorException("The RAM constructor does not know how to handle your specification object. 
+                \n Please specify your model as either a ParameterTable or RAMMatrices."))
             end
             start_val = start_val(;ram_matrices = ram_matrices, specification = specification, kwargs...)
         end
@@ -45,6 +45,8 @@ function (imply::ImplyEmpty)(par, F, G, H, model) end
 
 identifier(imply::ImplyEmpty) = imply.identifier
 n_par(imply::ImplyEmpty) = imply.n_par
+
+update_observed(imply::ImplyEmpty, observed::SemObs; kwargs...) = imply
 
 ############################################################################
 ### Pretty Printing

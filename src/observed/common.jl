@@ -16,33 +16,18 @@ end
 function SemObsCommon(;
         specification = nothing,
         data = nothing,
-        colnames = nothing,
+        spec_colnames = nothing,
         obs_cov = nothing,
-        cov_colnames = nothing,
+        data_colnames = nothing,
         meanstructure = false,
         rowwise = false,
         n_obs = nothing,
         kwargs...)
 
     # sort columns/rows
-    if isnothing(colnames) colnames = get_colnames(specification) end
-    
-    if !isnothing(data) 
-        if !isnothing(colnames)
-            data = data[:, colnames]
-        end
-        data = Matrix(data)
-    end
+    if isnothing(spec_colnames) spec_colnames = get_colnames(specification) end
 
-    if !isnothing(obs_cov) && isnothing(cov_colnames)
-        @error "An observed covariance was given, but no cov_colnames where specified"
-    end
-
-    if !isnothing(obs_cov) && !isnothing(cov_colnames)
-        new_position = [findall(x .== cov_colnames)[1] for x in colnames]
-        indices = reshape([CartesianIndex(i, j) for j in new_position for i in new_position], size(obs_cov, 1), size(obs_cov, 1))
-        obs_cov = obs_cov[indices]
-    end
+    data, obs_cov = reorder_observed(data, obs_cov, spec_colnames, data_colnames)
 
     # if no cov. matrix was given, compute one
     if isnothing(obs_cov) obs_cov = Statistics.cov(data) end
@@ -72,11 +57,22 @@ end
 ############################################################################
 
 n_obs(observed::SemObsCommon) = observed.n_obs
+n_man(observed::SemObsCommon) = observed.n_man
+
+############################################################################
+### additional methods
+############################################################################
+
+get_data(observed::SemObsCommon) = observed.data
+obs_cov(observed::SemObsCommon) = observed.obs_cov
+obs_mean(observed::SemObsCommon) = observed.obs_mean
+data_rowwise(observed::SemObsCommon) = observed.data_rowwise
 
 ############################################################################
 ### Additional functions
 ############################################################################
 
+# specification colnames
 function get_colnames(specification::ParameterTable)
     if !haskey(specification.variables, :sorted_vars) || (length(specification.variables[:sorted_vars]) == 0)
         colnames = specification.variables[:observed_vars]
@@ -100,3 +96,45 @@ end
 function get_colnames(specification::Nothing)
     return nothing
 end
+
+# reorder data to match spec_colnames --------------------------------------------------------------
+reorder_observed(data::Nothing, obs_cov, spec_colnames, data_colnames) = reorder_obs_cov(obs_cov, spec_colnames, data_colnames)
+reorder_observed(data, obs_cov::Nothing, spec_colnames, data_colnames) = reorder_data(data, spec_colnames, data_colnames)
+reorder_observed(data::Nothing, obs_cov, spec_colnames::Nothing, data_colnames) = nothing, obs_cov
+reorder_observed(data, obs_cov::Nothing, spec_colnames::Nothing, data_colnames) = data, nothing
+
+# too much or not enough data specified
+reorder_observed(data, obs_cov, spec_colnames, data_colnames) = 
+    throw(ArgumentError("you specified both an observed dataset and an observed covariance matrix"))
+reorder_observed(data::Nothing, obs_cov::Nothing, spec_colnames, data_colnames) = 
+    throw(ArgumentError("you specified neither an observed dataset nor an observed covariance matrix"))
+
+# reorder data ------------------------------------------------------------------------------------------------------------
+reorder_data(data::AbstractArray, spec_colnames, data_colnames::Nothing) =
+    throw(ArgumentError("if your data format does not provide column names, please provide them via the `data_colnames = ...` argument."))
+
+function reorder_data(data::AbstractArray, spec_colnames, data_colnames)
+    if spec_colnames == data_colnames
+        return data, nothing
+    else
+        new_position = [findall(x .== data_colnames)[1] for x in spec_colnames]
+        data = Matrix(data[:, new_position])
+        return data, nothing
+    end
+end
+
+reorder_data(data::DataFrame, spec_colnames, data_colnames::Nothing) = Matrix(data[:, spec_colnames]), nothing
+reorder_data(data::DataFrame, spec_colnames, data_colnames) = 
+    throw(ArgumentError("your data format has column names but you also provided column names via the `data_colnames = ...` argument."))
+
+# reorder covariance matrices ---------------------------------------------------------------------------------------------
+reorder_obs_cov(obs_cov::AbstractArray, spec_colnames, data_colnames::Nothing) =
+    throw(ArgumentError("If an observed covariance is given, `data_colnames = ...` has to be specified."))
+
+function reorder_obs_cov(obs_cov::AbstractArray, spec_colnames, data_colnames)
+    new_position = [findall(x .== data_colnames)[1] for x in spec_colnames]
+    indices = reshape([CartesianIndex(i, j) for j in new_position for i in new_position], size(obs_cov, 1), size(obs_cov, 1))
+    obs_cov = obs_cov[indices]
+    return nothing, obs_cov
+end
+

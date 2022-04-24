@@ -1,0 +1,47 @@
+[holzinger_swineford]
+git-tree-sha1 = "ecbc654bfd8a29343099e750f366dfaf811b0cd1"
+lazy = true
+
+    [[holzinger_swineford.download]]
+    sha256 = "6721742052d7a87b9674d82a2c4c85ca4a930e1c5f5a7e8ed748b7ad89bf82fc"
+    url = "https://github.com/StructuralEquationModels/Data/raw/684747d424625c6bcc170ec44a88f48600be3d44/datasets/holzinger_swineford/compressed/data.csv.tar.gz"
+
+[holzinger_swineford_missing]
+git-tree-sha1 = "044e11352e9d79e3c4a92d99bc273c8c790d9cdf"
+lazy = true
+
+    [[holzinger_swineford_missing.download]]
+    sha256 = "1896a4eaa7d1797e7480176d0fca96b2cdf835a7cab6f71b16bded8844f8a6fc"
+    url = "https://github.com/StructuralEquationModels/Data/raw/0462a36018c71b8559dc76819d56a538857593c8/datasets/holzinger_swineford/compressed/data_fiml.csv.tar.gz"
+
+[holzinger_swineford_solution]
+git-tree-sha1 = "e2ba8a13e85ea1eeaa1353bc54c9e6bf915dea3b"
+lazy = true
+
+    [[holzinger_swineford_solution.download]]
+    sha256 = "6c77146c68817302df0b28469d98ea650a158f375102bafa94dbe5945033eee2"
+    url = "https://github.com/StructuralEquationModels/Data/raw/a34d06ea80738f8d0f640ef421e310b03f88be23/datasets/holzinger_swineford/compressed/holzinger_swineford_solution.tar.gz"
+
+[political_democracy]
+git-tree-sha1 = "a02b07e3523570d8a27c9fe10dcac3a1e4705c33"
+lazy = true
+
+    [[political_democracy.download]]
+    sha256 = "e8b4d62067923d36d232e1e356d3634ff3942353cfe080f10699467260af2652"
+    url = "https://github.com/StructuralEquationModels/Data/raw/b29d2da78e5e9abc9bda101bde9a1bf4c4b2b98b/datasets/political_democracy/compressed/data.csv.tar.gz"
+
+[political_democracy_missing]
+git-tree-sha1 = "3f8c5ccce43ced81c6fbcc76e9b91c5268ea0393"
+lazy = true
+
+    [[political_democracy_missing.download]]
+    sha256 = "0d8f91f89f3a3161510e798b4097f4caec15274f7fdc2435bb08f27919f4e6c5"
+    url = "https://github.com/StructuralEquationModels/Data/raw/e083f4ccadda2422119a098a717a16dd6adb1f20/datasets/political_democracy/compressed/data_fiml.csv.tar.gz"
+
+[political_democracy_solution]
+git-tree-sha1 = "43a0ccaaaf63e13a8597da4d536d38726c41e3cb"
+lazy = true
+
+    [[political_democracy_solution.download]]
+    sha256 = "2c61f39d24b48a01e69013f1433582a121b80acf6b585e10754898fa0b3bbe0a"
+    url = "https://github.com/StructuralEquationModels/Data/raw/5809c862b23e884f722adad03aba3a27d0bf0854/datasets/political_democracy/compressed/political_democracy_solution.tar.gz"

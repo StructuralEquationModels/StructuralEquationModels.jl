@@ -19,9 +19,9 @@ mutable struct SemFIML{INV, C, L, O, M, IM, I, T, U, W, FT, GT, HT} <: SemLossFu
 
     interaction::W
 
-    F::FT
-    G::GT
-    H::HT
+    objective::FT
+    gradient::GT
+    hessian::HT
 end
 
 ############################################################################
@@ -30,21 +30,21 @@ end
 
 function SemFIML(;observed, specification, n_par, parameter_type = Float64, kwargs...)
 
-    inverses = broadcast(x -> zeros(x, x), Int64.(observed.pattern_nvar_obs))
+    inverses = broadcast(x -> zeros(x, x), Int64.(pattern_nvar_obs(observed)))
     choleskys = Array{Cholesky{Float64,Array{Float64,2}},1}(undef, length(inverses))
 
-    n_patterns = size(observed.rows, 1)
+    n_patterns = size(rows(observed), 1)
     logdets = zeros(n_patterns)
 
-    imp_mean = zeros.(Int64.(observed.pattern_nvar_obs))
-    meandiff = zeros.(Int64.(observed.pattern_nvar_obs))
+    imp_mean = zeros.(Int64.(pattern_nvar_obs(observed)))
+    meandiff = zeros.(Int64.(pattern_nvar_obs(observed)))
 
-    imp_inv = zeros(size(observed.data, 2), size(observed.data, 2))
+    nman = Int64(n_man(observed))
+    imp_inv = zeros(nman, nman)
     mult = similar.(inverses)
-
-    n_man = Int64(observed.n_man)
-    ∇ind = vec(CartesianIndices(Array{Float64}(undef, n_man, n_man)))
-    ∇ind = [findall(x -> !(x[1] ∈ ind || x[2] ∈ ind), ∇ind) for ind in observed.patterns_not]
+    
+    ∇ind = vec(CartesianIndices(Array{Float64}(undef, nman, nman)))
+    ∇ind = [findall(x -> !(x[1] ∈ ind || x[2] ∈ ind), ∇ind) for ind in patterns_not(observed)]
 
     commutation_indices = get_commutation_lookup(get_n_nodes(specification)^2)
 
@@ -72,29 +72,29 @@ end
 
 function (semfiml::SemFIML)(par, F, G, H, model::Sem{O, I, L, D}) where {O, I <: SemImplySymbolic, L, D}
 
-    if H stop("hessian for FIML is not implemented (yet)") end
+    if H throw(DomainError(H, "hessian for FIML is not implemented (yet)")) end
 
     if !check_fiml(semfiml, model)
-        if G semfiml.G .+= 1.0 end
-        if F semfiml.F[1] = Inf end
+        if G semfiml.gradient .+= 1.0 end
+        if F semfiml.objective[1] = Inf end
     else
         copy_per_pattern!(semfiml, model)
         batch_cholesky!(semfiml, model)
         #batch_sym_inv_update!(semfiml, model)
         batch_inv!(semfiml, model)
-        for i in 1:size(model.observed.pattern_n_obs, 1)
-            @. semfiml.meandiff[i] = model.observed.obs_mean[i] - semfiml.imp_mean[i]
+        for i in 1:size(pattern_n_obs(observed(model)), 1)
+            semfiml.meandiff[i] .= obs_mean(observed(model))[i] - semfiml.imp_mean[i]
         end
         #semfiml.logdets .= -logdet.(semfiml.inverses)
 
         if G
-            ∇F_FIML(semfiml.G, model.observed.rows, semfiml, model)
-            @. semfiml.G = semfiml.G/model.observed.n_obs
+            ∇F_FIML(semfiml.gradient, rows(observed(model)), semfiml, model)
+            semfiml.gradient .= semfiml.gradient/n_obs(observed(model))
         end
 
         if F
-            F_FIML(semfiml.F, model.observed.rows, semfiml, model)
-            semfiml.F[1] = semfiml.F[1]/model.observed.n_obs
+            F_FIML(semfiml.objective, rows(observed(model)), semfiml, model)
+            semfiml.objective[1] = semfiml.objective[1]/n_obs(observed(model))
         end
 
     end
@@ -103,34 +103,44 @@ end
 
 function (semfiml::SemFIML)(par, F, G, H, model::Sem{O, I, L, D}) where {O, I <: RAM, L, D}
 
-    if H stop("hessian for FIML is not implemented (yet)") end
+    if H throw(DomainError(H, "hessian for FIML is not implemented (yet)")) end
 
     if !check_fiml(semfiml, model)
-        if G semfiml.G .+= 1.0 end
-        if F semfiml.F[1] = Inf end
+        if G semfiml.gradient .+= 1.0 end
+        if F semfiml.objective[1] = Inf end
     else
         copy_per_pattern!(semfiml, model)
         batch_cholesky!(semfiml, model)
         #batch_sym_inv_update!(semfiml, model)
         batch_inv!(semfiml, model)
-        for i in 1:size(model.observed.pattern_n_obs, 1)
-            @. semfiml.meandiff[i] = model.observed.obs_mean[i] - semfiml.imp_mean[i]
+        for i in 1:size(pattern_n_obs(observed(model)), 1)
+            semfiml.meandiff[i] .= obs_mean(observed(model))[i] - semfiml.imp_mean[i]
         end
         #semfiml.logdets .= -logdet.(semfiml.inverses)
 
         if G
-            ∇F_FIML(semfiml.G, model.observed.rows, semfiml, model)
-            @. semfiml.G = semfiml.G/model.observed.n_obs
+            ∇F_FIML(semfiml.gradient, rows(observed(model)), semfiml, model)
+            semfiml.gradient .= semfiml.gradient/n_obs(observed(model))
         end
 
         if F
-            F_FIML(semfiml.F, model.observed.rows, semfiml, model)
-            semfiml.F[1] = semfiml.F[1]/model.observed.n_obs
+            F_FIML(semfiml.objective, rows(observed(model)), semfiml, model)
+            semfiml.objective[1] = semfiml.objective[1]/n_obs(observed(model))
         end
 
     end
     
 end
+
+############################################################################
+### Recommended methods
+############################################################################
+
+objective(lossfun::SemFIML) = lossfun.objective
+gradient(lossfun::SemFIML) = lossfun.gradient
+hessian(lossfun::SemFIML) = lossfun.hessian
+
+update_observed(lossfun::SemFIML, observed::SemObs; kwargs...) = SemFIML(;observed = observed, kwargs...)
 
 ############################################################################
 ### additional functions
@@ -161,21 +171,21 @@ function ∇F_one_pattern(μ_diff, Σ⁻¹, S, pattern, ∇ind, N, Jμ, JΣ, mod
 end
 
 function ∇F_fiml_outer(JΣ, Jμ, imply::SemImplySymbolic, model, semfiml)
-    G = transpose(JΣ'*imply.∇Σ-Jμ'*imply.∇μ)
+    G = transpose(JΣ'*∇Σ(imply)-Jμ'*∇μ(imply))
     return G
 end
 
 function ∇F_fiml_outer(JΣ, Jμ, imply, model, semfiml)
 
-    Iₙ = sparse(1.0I, size(imply.A)...)
-    P = kron(imply.F⨉I_A⁻¹, imply.F⨉I_A⁻¹)
-    Q = kron(imply.S*imply.I_A', Iₙ)
+    Iₙ = sparse(1.0I, size(A(imply))...)
+    P = kron(F⨉I_A⁻¹(imply), F⨉I_A⁻¹(imply))
+    Q = kron(S(imply)*I_A(imply)', Iₙ)
     #commutation_matrix_pre_square_add!(Q, Q)
     Q2 = commutation_matrix_pre_square(Q, semfiml.commutation_indices)
 
-    ∇Σ = P*(imply.∇S + (Q+Q2)*imply.∇A)
+    ∇Σ = P*(∇S(imply) + (Q+Q2)*∇A(imply))
 
-    ∇μ = imply.F⨉I_A⁻¹*imply.∇M + kron((imply.I_A*imply.M)', imply.F⨉I_A⁻¹)*imply.∇A
+    ∇μ = F⨉I_A⁻¹(imply)*∇M(imply) + kron((I_A(imply)*M(imply))', F⨉I_A⁻¹(imply))*∇A(imply)
 
     G = transpose(JΣ'*∇Σ-Jμ'*∇μ)
 
@@ -188,29 +198,29 @@ function F_FIML(F, rows, semfiml, model)
         F[1] += F_one_pattern(
             semfiml.meandiff[i], 
             semfiml.inverses[i], 
-            model.observed.obs_cov[i], 
+            obs_cov(observed(model))[i], 
             semfiml.logdets[i], 
-            model.observed.pattern_n_obs[i])
+            pattern_n_obs(observed(model))[i])
     end
 end
 
 function ∇F_FIML(G, rows, semfiml, model)
-    Jμ = zeros(Int64(model.observed.n_man))
-    JΣ = zeros(Int64(model.observed.n_man^2))
+    Jμ = zeros(Int64(n_man(model)))
+    JΣ = zeros(Int64(n_man(model)^2))
     
     for i = 1:size(rows, 1)
         ∇F_one_pattern(
             semfiml.meandiff[i], 
             semfiml.inverses[i], 
-            model.observed.obs_cov[i], 
-            model.observed.patterns[i],
+            obs_cov(observed(model))[i], 
+            patterns(observed(model))[i],
             semfiml.∇ind[i],
-            model.observed.pattern_n_obs[i],
+            pattern_n_obs(observed(model))[i],
             Jμ,
             JΣ,
             model)
     end
-    G .= ∇F_fiml_outer(JΣ, Jμ, model.imply, model, semfiml)
+    G .= ∇F_fiml_outer(JΣ, Jμ, imply(model), model, semfiml)
 end
 
 function copy_per_pattern!(inverses, source_inverses, means, source_means, patterns)
@@ -246,20 +256,20 @@ copy_per_pattern!(
     model::M where {M <: AbstractSem}) = 
     copy_per_pattern!(
         semfiml.inverses, 
-        model.imply.Σ, 
+        Σ(imply(model)), 
         semfiml.imp_mean, 
-        model.imply.μ, 
-        model.observed.patterns)
+        μ(imply(model)), 
+        patterns(observed(model)))
 
 #= copy_per_pattern!(semfiml, model::Sem{O, I, L, D}) where
     {O <: SemObsMissing, L , I <: ImplyDefinition, D} = 
     copy_per_pattern!(
         semfiml.inverses, 
-        model.imply.imp_cov, 
+        imply(model).imp_cov, 
         semfiml.imp_mean, 
-        model.imply.imp_mean, 
+        imply(model).imp_mean, 
         semfiml.interaction.missing_patterns,
-        semfiml.interaction.group_imp_per_comb) =#
+        semfiml.interaction.gradientroup_imp_per_comb) =#
 
 
 function batch_cholesky!(semfiml, model)
@@ -280,13 +290,13 @@ end
 end =#
 
 function check_fiml(semfiml, model)
-    copyto!(semfiml.imp_inv, model.imply.Σ)
+    copyto!(semfiml.imp_inv, Σ(imply(model)))
     a = cholesky!(Symmetric(semfiml.imp_inv); check = false)
     return isposdef(a)
 end
 
 get_n_nodes(specification::RAMMatrices) = specification.size_F[2]
-get_n_nodes(specification::ParameterTable) = length(specification.observed_vars) + length(specification.latent_vars)
+get_n_nodes(specification::ParameterTable) = length(specification.variables[:observed_vars]) + length(specification.variables[:latent_vars])
 
 ############################################################################
 ### Pretty Printing

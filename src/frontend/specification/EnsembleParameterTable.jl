@@ -2,7 +2,7 @@
 ### Types
 ############################################################################
 
-mutable struct EnsembleParameterTable{C}
+mutable struct EnsembleParameterTable{C} <: AbstractParameterTable
     tables::C
 end
 
@@ -33,6 +33,21 @@ end
     out = DataFrame([key => partable.columns[key] for key in columns])
     return DataFrame(out)
 end =#
+
+############################################################################
+### get parameter table from RAMMatrices
+############################################################################
+
+function EnsembleParameterTable(args...; groups)
+    partable = EnsembleParameterTable(nothing)
+
+    for (group, ram_matrices) in zip(groups, args)
+        push!(partable.tables, group => ParameterTable(ram_matrices))
+    end
+
+    return partable
+end
+
 
 ############################################################################
 ### Pretty Printing
@@ -81,4 +96,11 @@ get_group(partable::EnsembleParameterTable, group) = get_group(partable.tables, 
 ### Update Partable from Fitted Model
 ############################################################################
 
-# ToDo
+# update generic ---------------------------------------------------------------
+
+function update_partable!(partable::EnsembleParameterTable, model_identifier::AbstractDict, vec, column)
+    for k in keys(partable.tables)
+        update_partable!(partable.tables[k], model_identifier, vec, column)
+    end
+    return partable
+end

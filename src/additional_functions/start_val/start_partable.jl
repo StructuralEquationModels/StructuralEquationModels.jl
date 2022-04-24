@@ -28,7 +28,7 @@ function start_parameter_table(ram_matrices::RAMMatrices; parameter_table::Param
                 break
             end
         end
-        if !found @error "At least one parameter could not be found in the parameter table." end
+        if !found throw(ErrorException("At least one parameter could not be found in the parameter table.")) end
     end
 
     return start_val

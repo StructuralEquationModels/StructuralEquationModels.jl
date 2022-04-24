@@ -25,6 +25,7 @@ function start_simple(model::SemEnsemble; kwargs...)
     has_start_val = [.!iszero.(start_val) for start_val in start_vals]
 
     start_val = similar(start_vals[1])
+    start_val .= 0.0
 
     for (j, indices) in enumerate(has_start_val)
         start_val[indices] .= start_vals[j][indices]

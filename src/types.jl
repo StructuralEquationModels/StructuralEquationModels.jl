@@ -33,14 +33,14 @@ mutable struct SemLoss{F <: Tuple, T, FT, GT, HT}
     functions::F
     weights::T
 
-    F::FT
-    G::GT
-    H::HT
+    objective::FT
+    gradient::GT
+    hessian::HT
 end
 
 function SemLoss(functions...; loss_weights = nothing, parameter_type = Float64, kwargs...)
 
-    n_par = length(functions[1].G)
+    n_par = length(gradient(functions[1]))
     !isnothing(loss_weights) || (loss_weights = Tuple(nothing for _ in 1:length(functions)))
 
     return SemLoss(
@@ -51,6 +51,10 @@ function SemLoss(functions...; loss_weights = nothing, parameter_type = Float64,
         zeros(parameter_type, n_par),
         zeros(parameter_type, n_par, n_par))
 end
+
+objective(loss::SemLoss) = loss.objective
+gradient(loss::SemLoss) = loss.gradient
+hessian(loss::SemLoss) = loss.hessian
 
 """
 Supertype of all objects that can serve as the diff field of a SEM.
@@ -110,32 +114,32 @@ end
 function (loss::SemLoss)(par, F, G, H, model)
     for lossfun in loss.functions lossfun(par, F, G, H, model) end
     if H
-        loss.H .= 0.0
+        loss.hessian .= 0.0
         for (lossfun, c) in zip(loss.functions, loss.weights)
             if isnothing(c)
-                loss.H .+= lossfun.H
+                loss.hessian .+= hessian(lossfun)
             else
-                loss.H .+= c*lossfun.H
+                loss.hessian .+= c*hessian(lossfun)
             end
         end
     end
     if G
-        loss.G .= 0.0
+        loss.gradient .= 0.0
         for (lossfun, c) in zip(loss.functions, loss.weights)
             if isnothing(c)
-                loss.G .+= lossfun.G
+                loss.gradient .+= gradient(lossfun)
             else
-                loss.G .+= c*lossfun.G
+                loss.gradient .+= c*gradient(lossfun)
             end
         end
     end
     if F
-        loss.F[1] = 0.0
+        loss.objective[1] = 0.0
         for (lossfun, c) in zip(loss.functions, loss.weights)
             if isnothing(c)
-                loss.F[1] += lossfun.F[1]
+                loss.objective[1] += objective(lossfun)[1]
             else
-                loss.F[1] += c*lossfun.F[1]
+                loss.objective[1] += c*objective(lossfun)[1]
             end
         end
     end
@@ -156,7 +160,7 @@ end
 function (model::SemFiniteDiff)(par, F, G, H)
 
     if H
-        model.loss.H .= FiniteDiff.finite_difference_hessian(x -> objective!(model, x), par)
+        model.loss.hessian .= FiniteDiff.finite_difference_hessian(x -> objective!(model, x), par)
     end
 
     if model.has_gradient
@@ -165,7 +169,7 @@ function (model::SemFiniteDiff)(par, F, G, H)
     else
 
         if G
-            model.loss.G .= FiniteDiff.finite_difference_gradient(x -> objective!(model, x), par)
+            model.loss.gradient .= FiniteDiff.finite_difference_gradient(x -> objective!(model, x), par)
         end
 
         if F
@@ -188,7 +192,7 @@ end
 function (model::SemForwardDiff)(par, F, G, H)
 
     if H
-        model.loss.H .= ForwardDiff.hessian(x -> objective!(model, x), par)
+        model.loss.hessian .= ForwardDiff.hessian(x -> objective!(model, x), par)
     end
 
     if model.has_gradient
@@ -197,7 +201,7 @@ function (model::SemForwardDiff)(par, F, G, H)
     else
 
         if G
-            model.loss.G .= ForwardDiff.gradient(x -> objective!(model, x), par)
+            model.loss.gradient .= ForwardDiff.gradient(x -> objective!(model, x), par)
         end
 
         if F
@@ -220,27 +224,28 @@ struct SemEnsemble{N, T <: Tuple, V <: AbstractVector, D, I, FT, GT, HT} <: Abst
     diff::D
     identifier::I
 
-    F::FT
-    G::GT
-    H::HT
+    objective::FT
+    gradient::GT
+    hessian::HT
 end
 
 function SemEnsemble(models...; diff = SemDiffOptim, weights = nothing, parameter_type = Float64, kwargs...)
     n = length(models)
 
     # default weights
-    nobs_total = sum(n_obs.(models))
+    
     if isnothing(weights)
-        weights = [(n_obs(model)-1)/nobs_total for model in models]
+        nobs_total = sum(n_obs.(models))
+        weights = [n_obs(model)/nobs_total for model in models]
     end
 
     # check identifier equality
     id = identifier(models[1])
     for model in models
         if id != identifier(model)
-            @error "The identifier of your models do not match. \n
+            throw(ErrorException("The identifier of your models do not match. \n
             Maybe you tried to specify models of an ensemble via ParameterTables. \n
-            In that case, you may use RAMMatrices instead."
+            In that case, you may use RAMMatrices instead."))
         end
     end
 
@@ -265,112 +270,96 @@ end
 
 function (ensemble::SemEnsemble)(par, F, G, H)
 
-    if H ensemble.H .= 0.0 end
-    if G ensemble.G .= 0.0 end
-    if F ensemble.F .= 0.0 end
+    if H ensemble.hessian .= 0.0 end
+    if G ensemble.gradient .= 0.0 end
+    if F ensemble.objective .= 0.0 end
             
     for (model, weight) in zip(ensemble.sems, ensemble.weights)
         model(par, F, G, H)
-        if H ensemble.H .+= weight*hessian(model) end
-        if G ensemble.G .+= weight*gradient(model) end
-        if F ensemble.F .+= weight*objective(model) end
+        if H ensemble.hessian .+= weight*hessian(model) end
+        if G ensemble.gradient .+= weight*gradient(model) end
+        if F ensemble.objective .+= weight*objective(model) end
     end
 
 end
+
+n_models(ensemble::SemEnsemble) = ensemble.n
+models(ensemble::SemEnsemble) = ensemble.sems
+weights(ensemble::SemEnsemble) = ensemble.weights
+diff(ensemble::SemEnsemble) = ensemble.diff
+
+#####################################################################################################
+# additional methods
+#####################################################################################################
+
+observed(model::Sem) = model.observed
+imply(model::Sem) = model.imply
+loss(model::Sem) = model.loss
+diff(model::Sem) = model.diff
+
+observed(model::SemForwardDiff) = model.observed
+imply(model::SemForwardDiff) = model.imply
+loss(model::SemForwardDiff) = model.loss
+diff(model::SemForwardDiff) = model.diff
+has_gradient(model::SemForwardDiff) = model.has_gradient
+
+observed(model::SemFiniteDiff) = model.observed
+imply(model::SemFiniteDiff) = model.imply
+loss(model::SemFiniteDiff) = model.loss
+diff(model::SemFiniteDiff) = model.diff
+has_gradient(model::SemFiniteDiff) = model.has_gradient
+
 
 #####################################################################################################
 # gradient, objective, hessian helpers
 #####################################################################################################
 
-objective(model::AbstractSem) = model.loss.F[1]
-gradient(model::AbstractSem) = model.loss.G
-hessian(model::AbstractSem) = model.loss.H
+objective(lossfun::SemLossFunction) = lossfun.objective
+gradient(lossfun::SemLossFunction) = lossfun.gradient
+hessian(lossfun::SemLossFunction) = lossfun.hessian
 
-objective(model::SemEnsemble) = model.F[1]
-gradient(model::SemEnsemble) = model.G
-hessian(model::SemEnsemble) = model.H
+objective(model::AbstractSem) = model.loss.objective
+gradient(model::AbstractSem) = model.loss.gradient
+hessian(model::AbstractSem) = model.loss.hessian
+
+objective(model::SemEnsemble) = model.objective
+gradient(model::SemEnsemble) = model.gradient
+hessian(model::SemEnsemble) = model.hessian
 
 function objective!(model::AbstractSem, parameters)
     model(parameters, true, false, false)
-    return model.loss.F[1]
+    return objective(model)[1]
 end
 
 function gradient!(model::AbstractSem, parameters)
     model(parameters, false, true, false)
-    return model.loss.G
+    return gradient(model)
 end
 
 function gradient!(grad, model::AbstractSem, parameters)
     model(parameters, false, true, false)
-    copyto!(grad, model.loss.G)
-    return model.loss.G
+    copyto!(grad, gradient(model))
+    return gradient(model)
 end
 
 function hessian!(model::AbstractSem, parameters)
     model(parameters, false, false, true)
-    return model.loss.H
+    return hessian(model)
 end
 
 function hessian!(hessian, model::AbstractSem, parameters)
     model(parameters, false, false, true)
-    copyto!(hessian, model.loss.H)
-    return model.loss.H
+    copyto!(hessian, hessian(model))
+    return hessian(model)
 end
-
-function objective!(model::SemEnsemble, parameters)
-    model(parameters, true, false, false)
-    return model.F[1]
-end
-
-function gradient!(model::SemEnsemble, parameters)
-    model(parameters, false, true, false)
-    return model.G
-end
-
-function gradient!(grad, model::SemEnsemble, parameters)
-    model(parameters, false, true, false)
-    copyto!(grad, model.G)
-    return model.G
-end
-
-function hessian!(model::SemEnsemble, parameters)
-    model(parameters, false, false, true)
-    return model.H
-end
-
-function hessian!(hessian, model::SemEnsemble, parameters)
-    model(parameters, false, false, true)
-    copyto!(hessian, model.H)
-    return model.H
-end
-
-#objective(model::AbstractSem, parameters) = objective!(model, parameters)
-#gradient(model::AbstractSem, parameters) = gradient!(model, parameters)
-#hessian(model::AbstractSem, parameters) = hessian!(model, parameters)
-
-#objective(model::SemEnsemble, parameters) = objective!(model, parameters)
-#gradient(model::SemEnsemble, parameters) = gradient!(model, parameters)
-#hessian(model::SemEnsemble, parameters) = hessian!(model, parameters)
 
 function objective_gradient!(model::AbstractSem, parameters)
     model(parameters, true, true, false)
-    return model.loss.F[1], copy(model.loss.G)
+    return objective(model)[1], copy(gradient(model))
 end
-
-function objective_gradient!(model::SemEnsemble, parameters)
-    model(parameters, true, true, false)
-    return model.F[1], copy(model.G)
-end
-
 
 function objective_gradient!(grad, model::AbstractSem, parameters)
     model(parameters, true, true, false)
-    copyto!(grad, model.loss.G)
-    return model.loss.F[1]
-end
-
-function objective_gradient!(grad, model::SemEnsemble, parameters)
-    model(parameters, true, true, false)
-    copyto!(grad, model.G)
-    return model.F[1]
+    copyto!(grad, gradient(model))
+    return objective(model)[1]
 end

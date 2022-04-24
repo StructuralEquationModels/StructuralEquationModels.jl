@@ -34,6 +34,23 @@ function SemDiffNLopt(;
 end
 
 ############################################################################
+### Recommended methods
+############################################################################
+
+update_observed(diff::SemDiffNLopt, observed::SemObs; kwargs...) = diff
+
+############################################################################
+### additional methods
+############################################################################
+
+algorithm(diff::SemDiffNLopt) = diff.algorithm
+local_algorithm(diff::SemDiffNLopt) = diff.local_algorithm
+options(diff::SemDiffNLopt) = diff.options
+local_options(diff::SemDiffNLopt) = diff.local_options
+equality_constraints(diff::SemDiffNLopt) = diff.equality_constraints
+inequality_constraints(diff::SemDiffNLopt) = diff.inequality_constraints
+
+############################################################################
 ### Pretty Printing
 ############################################################################
 

@@ -40,8 +40,8 @@ function RAMSymbolic(;
         ram_matrices = RAMMatrices(specification)
         identifier = StructuralEquationModels.identifier(ram_matrices)
     else
-        @error "The RAMSymbolic constructor does not know how to handle your specification object. 
-        \n Please specify your model as either a ParameterTable or RAMMatrices."
+        throw(ErrorException("The RAMSymbolic constructor does not know how to handle your specification object. 
+        \n Please specify your model as either a ParameterTable or RAMMatrices."))
     end
 
     n_par = length(ram_matrices.parameters)
@@ -165,6 +165,29 @@ end
 
 identifier(imply::RAMSymbolic) = imply.identifier
 n_par(imply::RAMSymbolic) = imply.n_par
+
+function update_observed(imply::RAMSymbolic, observed::SemObs; kwargs...) 
+    if n_man(observed) == size(imply.Σ)
+        return imply
+    else
+        return RAMSymbolic(;observed = observed, kwargs...)
+    end
+end
+
+############################################################################
+### additional methods
+############################################################################
+
+Σ(imply::RAMSymbolic) = imply.Σ
+∇Σ(imply::RAMSymbolic) = imply.∇Σ
+∇²Σ(imply::RAMSymbolic) = imply.∇²Σ
+
+μ(imply::RAMSymbolic) = imply.μ
+∇μ(imply::RAMSymbolic) = imply.∇μ
+
+Σ_function(imply::RAMSymbolic) = imply.Σ_function
+∇Σ_function(imply::RAMSymbolic) = imply.∇Σ_function
+∇²Σ_function(imply::RAMSymbolic) = imply.∇²Σ_function
 
 ############################################################################
 ### additional functions
