@@ -110,7 +110,7 @@ end
     solution_ml = sem_fit(model_ml)
     solution_ml_weighted = sem_fit(model_ml_weighted)
     @test isapprox(solution(solution_ml), solution(solution_ml_weighted), rtol = 1e-3)
-    @test isapprox(n_obs(model_ml)*minimum(solution_ml), minimum(solution_ml_weighted), rtol = 1e-6)
+    @test isapprox(n_obs(model_ml)*StructuralEquationModels.minimum(solution_ml), minimum(solution_ml_weighted), rtol = 1e-6)
 end
 
 ############################################################################
