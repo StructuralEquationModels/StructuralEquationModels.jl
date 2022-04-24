@@ -34,11 +34,5 @@ Pkd.add("https://github.com/StructuralEquationModels/StructuralEquationModels.jl
 
 ## Citing the package
 
-```@docs
-AbstractSem
-SemLoss
-Sem
-SemObs
-SemLossFunction
-SemImply
-```
+To cite our package, see
+https://github.com/StructuralEquationModels/StructuralEquationModels.jl/blob/main/CITATION.cff

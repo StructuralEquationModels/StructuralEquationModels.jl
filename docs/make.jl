@@ -18,8 +18,14 @@ makedocs(
             "Custom imply types" => "tutorials/imply.md",
             "Custom sem types" => "tutorials/sem.md"
         ],
-    ]
+    ],
+    format = Documenter.HTML(
+        prettyurls = get(ENV, "CI", nothing) == "true"
+    ),
+    doctest = :fix
 )
+
+doctest(MyPackage, fix=true)
 
 deploydocs(
     repo = "github.com/StructuralEquationModels/StructuralEquationModels.jl",
