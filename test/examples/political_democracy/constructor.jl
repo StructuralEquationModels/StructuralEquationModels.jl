@@ -54,8 +54,8 @@ model_ml_weighted = Sem(
 
 start_test = [fill(1.0, 11); fill(0.05, 3); fill(0.05, 6); fill(0.5, 8); fill(0.05, 3)]
 
-models = [model_ml, model_ls_sym, model_ridge, model_ridge_id, model_constant, model_ml_sym, model_ml_weighted]
-names = ["ml", "ls_sym", "ridge", "ridge_id", "constant", "ml_sym", "ml_weighted"]
+models = [model_ml, model_ls_sym, model_ridge, model_constant, model_ml_sym, model_ml_weighted]
+names = ["ml", "ls_sym", "ridge", "constant", "ml_sym", "ml_weighted"]
 
 for (model, name) in zip(models, names)
     try
