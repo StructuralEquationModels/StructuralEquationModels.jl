@@ -35,6 +35,21 @@ end
 end =#
 
 ############################################################################
+### get parameter table from RAMMatrices
+############################################################################
+
+function EnsembleParameterTable(args...; groups)
+    partable = EnsembleParameterTable(nothing)
+
+    for (group, ram_matrices) in zip(groups, args)
+        push!(partable.tables, group => ParameterTable(ram_matrices))
+    end
+
+    return partable
+end
+
+
+############################################################################
 ### Pretty Printing
 ############################################################################
 
