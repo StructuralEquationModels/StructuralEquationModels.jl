@@ -1,6 +1,7 @@
 # StructuralEquationModels.jl
 
 [![Github Action CI](https://github.com/sem-jl/SEM.jl/workflows/CI/badge.svg)](https://github.com/sem-jl/SEM.jl/actions)
+[![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://structuralequationmodels.github.io/StructuralEquationModels.jl/dev/)
 [![codecov](https://codecov.io/gh/StructuralEquationModels/StructuralEquationModels.jl/branch/main/graph/badge.svg?token=P2kjzpvM4V)](https://codecov.io/gh/StructuralEquationModels/StructuralEquationModels.jl)
 [![Project Status: WIP – Initial development is in progress, but there has not yet been a stable, usable release suitable for the public.](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
 
