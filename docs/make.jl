@@ -29,7 +29,7 @@ makedocs(
     doctest = false
 )
 
-doctest(StructuralEquationModels, fix=true)
+# doctest(StructuralEquationModels, fix=true)
 
 deploydocs(
     repo = "github.com/StructuralEquationModels/StructuralEquationModels.jl",
