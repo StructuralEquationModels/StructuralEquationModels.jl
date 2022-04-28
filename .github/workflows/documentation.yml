@@ -3,11 +3,13 @@ name: Documentation
 on:
   push:
     branches:
-      - main
+      - 'main'
+      - 'documentation/**'
     tags: '*'
   pull_request:
     branches:
       - main
+  workflow_dispatch:
 jobs:
   build:
     runs-on: ubuntu-latest
