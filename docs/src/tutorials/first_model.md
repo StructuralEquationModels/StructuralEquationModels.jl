@@ -374,7 +374,7 @@ Covariances:
 ```
 
 Congratulations, you fitted and inspected your very first model! To learn more about the different parts, 
-you may visit the sections on model specification (XXX), model construction (XXX), model fitting (XXX) and
+you may visit the sections on [Model specification](@ref), [Model construction](@ref), model fitting (XXX) and
 model inspection (XXX).
 
 If you want to learn how to extend the package (e.g., add a new loss function), you may visit the developer documentation (XXX).

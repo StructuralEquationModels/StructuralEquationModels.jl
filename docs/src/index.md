@@ -34,5 +34,4 @@ Pkd.add("https://github.com/StructuralEquationModels/StructuralEquationModels.jl
 
 ## Citing the package
 
-To cite our package, see
-https://github.com/StructuralEquationModels/StructuralEquationModels.jl/blob/main/CITATION.cff
+To cite our package, see [this page](https://github.com/StructuralEquationModels/StructuralEquationModels.jl/blob/main/CITATION.cff).
