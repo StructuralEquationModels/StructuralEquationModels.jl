@@ -1,7 +1,5 @@
 using Documenter, StructuralEquationModels
 
-# push!(LOAD_PATH,"/home/maximilian/Documents/repositories/StructuralEquationModels.jl/src")
-
 makedocs(
     sitename="StructuralEquationModels.jl",
     pages = [
