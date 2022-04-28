@@ -1,0 +1,23 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: StructuralEquationModels.jl
+message: >-
+  Please cite StructuralEquationModels.jl if you use
+  it for your research.
+type: software
+authors:
+  - given-names: Maximilian Stefan
+    name-suffix: Ernst
+    email: ernst@mpib-berlin.mpg.de
+    affiliation: Max Planck Institute for Human Development
+    orcid: 'https://orcid.org/0000-0003-2237-6255'
+  - given-names: Aaron
+    family-names: Peikert
+    email: peikert@mpib-berlin.mpg.de
+    affiliation: Max Planck Institute for Human Development
+    orcid: 'https://orcid.org/0000-0001-7813-818X'
+repository-code: >-
+  https://github.com/StructuralEquationModels/StructuralEquationModels.jl
+license: MIT
