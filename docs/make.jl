@@ -6,7 +6,10 @@ makedocs(
         "index.md",
         "Tutorials" => [
             "A first model" => "tutorials/first_model.md",
-            "Model specification" => [],
+            "Model specification" => [
+                "tutorials/specification/specification.md",
+                "tutorials/specification/graph_interface.md",
+                "tutorials/specification/ram_matrices.md"],
             "Model construction" => ["tutorials/construction/build_by_parts.md"],
             "Model fitting" => [],
             "Model inspection" => [],
