@@ -19,13 +19,13 @@ end
 ### Constructors
 ############################################################################
 
-function SemWLS(;observed, n_par, V = nothing, meanstructure = false, V_μ = nothing, approx_H = false, parameter_type = Float64, kwargs...)
+function SemWLS(;observed, n_par, wls_weight_matrix = nothing, meanstructure = false, V_μ = nothing, approx_H = false, parameter_type = Float64, kwargs...)
     ind = CartesianIndices(obs_cov(observed))
     ind = filter(x -> (x[1] >= x[2]), ind)
     s = obs_cov(observed)[ind]
 
     # compute V here
-    if isnothing(V)
+    if isnothing(wls_weight_matrix)
         D = duplication_matrix(n_man(observed))
         S = inv(obs_cov(observed))
         S = kron(S, S)
