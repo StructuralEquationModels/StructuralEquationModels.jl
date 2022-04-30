@@ -60,7 +60,7 @@ function Base.show(io::IO, partable::EnsembleParameterTable)
     for key in keys(partable.tables)
         print("\n")
         print(io, key, ": \n")
-        print(partable.tables[key])
+        print(io, partable.tables[key])
     end
 end
 
