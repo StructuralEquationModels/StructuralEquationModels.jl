@@ -1,3 +1,6 @@
+"""
+    More here soon.
+"""
 struct SemObsCommon{
         A <: Union{AbstractArray, Nothing},
         B <: AbstractArray,
