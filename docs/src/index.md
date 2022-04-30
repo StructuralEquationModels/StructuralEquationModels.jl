@@ -1,4 +1,4 @@
-# StructuralEquationModes.jl: a fast and flexible SEM framework
+# StructuralEquationModels.jl: a fast and flexible SEM framework
 
 This is a package for Structural Equation Modeling.
 It is still *in development*.

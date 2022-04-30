@@ -45,9 +45,9 @@ observed_vars = Symbol.(:x, 1:9)
 
 graph = @StenoGraph begin
     # measurement model
-    visual  → fixed(1.0, 1.0)*x1 + label(:λ₂, :λ₂)*x2 + label(:λ₃, :λ₃)*x3
-    textual → fixed(1.0, 1.0)*x4 + label(:λ₅, :λ₅)*x5 + label(:λ₆, :λ₆)*x6
-    speed   → fixed(1.0, 1.0)*x7 + label(:λ₈, :λ₈)*x8 + label(:λ₉, :λ₉)*x9
+    visual  → fixed(1, 1)*x1 + label(:λ₂, :λ₂)*x2 + label(:λ₃, :λ₃)*x3
+    textual → fixed(1, 1)*x4 + label(:λ₅, :λ₅)*x5 + label(:λ₆, :λ₆)*x6
+    speed   → fixed(1, 1)*x7 + label(:λ₈, :λ₈)*x8 + label(:λ₉, :λ₉)*x9
     # variances and covariances
     _(observed_vars) ↔ _(observed_vars)
     _(latent_vars)   ⇔ _(latent_vars)

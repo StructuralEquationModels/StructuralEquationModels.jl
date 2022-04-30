@@ -24,6 +24,7 @@ makedocs(
             ]
         ],
         "Developer documentation" => [
+            "Extending the package" => "developer/extending.md",
             "Custom loss functions" => "developer/loss.md",
             "Custom imply types" => "developer/imply.md",
             "Custom sem types" => "developer/sem.md"
@@ -35,7 +36,8 @@ makedocs(
     ],
     format = Documenter.HTML(
         prettyurls = get(ENV, "CI", nothing) == "true",
-        assets = ["assets/favicon_zeta.ico"]
+        assets = ["assets/favicon_zeta.ico"],
+        ansicolor = true
     ),
     doctest = false
 )
