@@ -1,0 +1,1 @@
+Those parts are what is called [`abstract type`](https://docs.julialang.org/en/v1/manual/types/#man-abstract-types)s in julia - every type that can serve in the `SemObs` part of a model is a subtype of `SemObs`

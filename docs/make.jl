@@ -10,9 +10,14 @@ makedocs(
                 "tutorials/specification/specification.md",
                 "tutorials/specification/graph_interface.md",
                 "tutorials/specification/ram_matrices.md"],
-            "Model construction" => ["tutorials/construction/build_by_parts.md"],
-            "Model fitting" => [],
-            "Model inspection" => [],
+            "Model construction" => [
+                "tutorials/construction/construction.md",
+                "tutorials/construction/outer_constructor.md",
+                "tutorials/construction/build_by_parts.md"],
+            "Model fitting" => "tutorials/fitting/fitting.md",
+            "Model inspection" => [
+                "tutorials/inspection/inspection.md"
+            ],
             "Multigroup SEM" => [
                 "tutorials/multigroup/multigroup.md",
                 "tutorials/multigroup/collection.md"
@@ -23,6 +28,10 @@ makedocs(
             "Custom imply types" => "developer/imply.md",
             "Custom sem types" => "developer/sem.md"
         ],
+        "Performance tips" => [
+            "Symbolic precomputation" => "performance/symbolic.md",
+            "Starting values" => "performance/starting_values.md"
+        ]
     ],
     format = Documenter.HTML(
         prettyurls = get(ENV, "CI", nothing) == "true"

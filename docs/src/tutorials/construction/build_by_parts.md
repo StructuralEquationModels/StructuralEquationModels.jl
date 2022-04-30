@@ -1,1 +1,1 @@
-# Building a model by parts
+# Build by parts
