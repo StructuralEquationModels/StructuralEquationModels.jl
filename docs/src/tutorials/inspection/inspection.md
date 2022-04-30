@@ -51,7 +51,7 @@ After you fitted a model,
 model_fit = sem_fit(model)
 ```
 
-you and up with an object of type `SemFit`.
+you end up with an object of type `SemFit`.
 
 You can get some more information about it by using the `sem_summary` function:
 
@@ -73,8 +73,29 @@ update_estimate!(partable, model_fit)
 sem_summary(partable)
 ```
 
-We can also update the `ParameterTable` object with other information. For example, if we want to compare hessian-based and bootstrap-based standard errors, we may write
+We can also update the `ParameterTable` object with other information via `update_partable!`. For example, if we want to compare hessian-based and bootstrap-based standard errors, we may write
 
-```@example color; ansicolor = true
+```@example colored; ansicolor = true
+se_bs = se_bootstrap(model_fit; n_boot = 20)
+se_he = se_hessian(model_fit)
 
+update_partable!(partable, model_fit, se_he, :se_hessian)
+update_partable!(partable, model_fit, se_bs, :se_bootstrap)
+
+sem_summary(partable)
 ```
+
+## Export results
+
+You may convert a `ParameterTable` to a `DataFrame` and use the [`DataFrames`](https://github.com/JuliaData/DataFrames.jl) package for further analysis (or write to disk).
+
+```@example colored; ansicolor = true
+using DataFrames
+
+parameters_df = DataFrame(partable)
+```
+
+## Additional functions
+Additional functions that can be used to extract information from a `SemFit` object:
+
+-- MISSING DOCSTRINGS --

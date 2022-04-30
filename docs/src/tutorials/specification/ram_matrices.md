@@ -54,7 +54,7 @@ A =[0  0  0  0  0  0  0  0  0  0  0     1.0   0     0
     0  0  0  0  0  0  0  0  0  0  0     :θ29  0     0
     0  0  0  0  0  0  0  0  0  0  0     :θ30  :θ31  0]
 
-θ = Symbol.("θ".*string.(1:31))
+θ = Symbol.(:θ, 1:31)
 
 spec = RAMMatrices(;
     A = A, 
@@ -97,7 +97,7 @@ where `M` is a vector of mean parameters. To estimate the means of the observed 
 
 M = [:x32; :x33; :x34; :x35; :x36; :x37; :x38; :x39; :x40; :x41; :x42; 0; 0; 0]
 
-θ = Symbol.("θ".*string.(1:42))
+θ = Symbol.(:θ, 1:42)
 
 spec = RAMMatrices(;
     ...,

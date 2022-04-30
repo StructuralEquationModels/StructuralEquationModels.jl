@@ -89,3 +89,34 @@ help(SemWLS)
 OUTPUT MISSING!
 
 ```
+
+## Optimize loss functions without implemented analytic gradient
+
+For loss functions without analytic gradients, it is possible to use finite difference approximation or forward mode automatic differentiation. 
+All loss functions provided in the package do have analytic gradients (and some even hessians or approximations thereof), so there is no need do use this feature if you are only working with them.
+However, if you implement your own loss function, you do not have to provide analytic gradients.
+In that case, you may construct your model just as before, but swap the `Sem` constructor for either `SemFiniteDiff` or `SemForwardDiff`. For example
+
+```julia
+model = SemFiniteDiff(
+    specification = partable,
+    data = data
+)
+```
+
+constructs a model that will use finite difference approximation if you estimate the parameters via `sem_fit(model)`.
+Both `SemFiniteDiff` and `SemForwardDiff` have an additional keyword argument, `has_gradient = ...` that can be set to `true` to indicate that the model has analytic gradients, and only the hessian should be computed via finite difference approximation / automatic differentiation.
+For example
+
+```julia
+using Optim, LineSearches
+
+model = SemFiniteDiff(
+    specification = partable,
+    data = data,
+    has_gradient = true,
+    algorithm = Newton()
+)
+```
+
+will construct a model that, when fitted, will use [Newton's Method](https://julianlsolvers.github.io/Optim.jl/stable/#algo/newton/) from the `Optim.jl` package with analytic gradients and hessians computed via finite difference approximation.

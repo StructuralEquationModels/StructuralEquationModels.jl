@@ -83,7 +83,11 @@ partable = ParameterTable(
 
 load the example data
 
-```@example high_level; ansicolor = true
+```julia
+data = example_data("political_democracy")
+```
+
+```@setup high_level
 data = example_data("political_democracy")
 ```
 

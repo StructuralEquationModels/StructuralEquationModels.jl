@@ -18,9 +18,9 @@ makedocs(
             "Model inspection" => [
                 "tutorials/inspection/inspection.md"
             ],
-            "Multigroup SEM" => [
-                "tutorials/multigroup/multigroup.md",
-                "tutorials/multigroup/collection.md"
+            "Collections" => [
+                "tutorials/collection/collection.md",
+                "tutorials/collection/multigroup.md"
             ]
         ],
         "Developer documentation" => [
@@ -34,7 +34,8 @@ makedocs(
         ]
     ],
     format = Documenter.HTML(
-        prettyurls = get(ENV, "CI", nothing) == "true"
+        prettyurls = get(ENV, "CI", nothing) == "true",
+        assets = ["assets/favicon_zeta.ico"]
     ),
     doctest = false
 )
