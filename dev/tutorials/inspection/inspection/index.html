@@ -2,7 +2,7 @@
 <html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Model inspection · StructuralEquationModels.jl</title><script data-outdated-warner src="../../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.039/juliamono-regular.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.11/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../../assets/documenter.js"></script><script src="../../../siteinfo.js"></script><script src="../../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../../assets/themeswap.js"></script><link href="../../../assets/favicon_zeta.ico" rel="icon" type="image/x-icon"/></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../../../"><img src="../../../assets/logo.svg" alt="StructuralEquationModels.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href="../../../">StructuralEquationModels.jl</a></span></div><form class="docs-search" action="../../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../../../">StructuralEquationModels.jl: a fast and flexible SEM framework</a></li><li><span class="tocitem">Tutorials</span><ul><li><a class="tocitem" href="../../first_model/">A first model</a></li><li><input class="collapse-toggle" id="menuitem-2-2" type="checkbox"/><label class="tocitem" for="menuitem-2-2"><span class="docs-label">Model specification</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../specification/specification/">Model specification</a></li><li><a class="tocitem" href="../../specification/graph_interface/">Graph interface</a></li><li><a class="tocitem" href="../../specification/ram_matrices/">RAMMatrices interface</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-2-3" type="checkbox"/><label class="tocitem" for="menuitem-2-3"><span class="docs-label">Model construction</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../construction/construction/">Model construction</a></li><li><a class="tocitem" href="../../construction/outer_constructor/">Outer Constructor</a></li><li><a class="tocitem" href="../../construction/build_by_parts/">Build by parts</a></li></ul></li><li><a class="tocitem" href="../../fitting/fitting/">Model fitting</a></li><li><input class="collapse-toggle" id="menuitem-2-5" type="checkbox" checked/><label class="tocitem" for="menuitem-2-5"><span class="docs-label">Model inspection</span><i class="docs-chevron"></i></label><ul class="collapsed"><li class="is-active"><a class="tocitem" href>Model inspection</a><ul class="internal"><li><a class="tocitem" href="#Export-results"><span>Export results</span></a></li><li><a class="tocitem" href="#Additional-functions"><span>Additional functions</span></a></li></ul></li></ul></li><li><input class="collapse-toggle" id="menuitem-2-6" type="checkbox"/><label class="tocitem" for="menuitem-2-6"><span class="docs-label">Collections</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../collection/collection/">Collections</a></li><li><a class="tocitem" href="../../collection/multigroup/">Multigroup models</a></li></ul></li></ul></li><li><span class="tocitem">Developer documentation</span><ul><li><a class="tocitem" href="../../../developer/extending/">Extending the package</a></li><li><a class="tocitem" href="../../../developer/loss/">Custom loss functions</a></li><li><a class="tocitem" href="../../../developer/imply/">Custom imply types</a></li><li><a class="tocitem" href="../../../developer/sem/">Custom sem types</a></li></ul></li><li><span class="tocitem">Performance tips</span><ul><li><a class="tocitem" href="../../../performance/symbolic/">Symbolic precomputation</a></li><li><a class="tocitem" href="../../../performance/starting_values/">Starting values</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Tutorials</a></li><li><a class="is-disabled">Model inspection</a></li><li class="is-active"><a href>Model inspection</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Model inspection</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/StructuralEquationModels/StructuralEquationModels.jl/blob/master/docs/src/tutorials/inspection/inspection.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Model-inspection"><a class="docs-heading-anchor" href="#Model-inspection">Model inspection</a><a id="Model-inspection-1"></a><a class="docs-heading-anchor-permalink" href="#Model-inspection" title="Permalink"></a></h1><p>After you fitted a model,</p><pre><code class="language-julia hljs">model_fit = sem_fit(model)</code></pre><p>you end up with an object of type <code>SemFit</code>.</p><p>You can get some more information about it by using the <code>sem_summary</code> function:</p><pre><code class="language-julia hljs">sem_summary(model_fit)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">
 Fitted Structural Equation Model
 
---------------------------------- Properties ---------------------------------
+<span class="sgr96">--------------------------------- Properties --------------------------------- </span>
 
 Optimization algorithm:      L-BFGS
 Convergence:                 true
@@ -11,7 +11,7 @@ No. iterations/evaluations:  156
 Number of parameters:        31
 Number of observations:      75.0
 
------------------------------------ Model -----------------------------------
+<span class="sgr96">----------------------------------- Model ----------------------------------- </span>
 
 Structural Equation Model
 - Loss Functions
@@ -30,52 +30,52 @@ Structural Equation Model
   :n_par    =&gt; 31.0</code></pre><p>To inspect the parameter estimates, we can update a <code>ParameterTable</code> object and call <code>sem_summary</code> on it:</p><pre><code class="language-julia hljs">update_estimate!(partable, model_fit)
 
 sem_summary(partable)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">
---------------------------------- Variables ---------------------------------
+<span class="sgr96">--------------------------------- Variables --------------------------------- </span>
 
-Latent variables:    ind60 dem60 dem65
-Observed variables:  x1 x2 x3 y1 y2 y3 y4 y5 y6 y7 y8
+<span class="sgr96">Latent variables:    </span>ind60 dem60 dem65
+<span class="sgr96">Observed variables:  </span>x1 x2 x3 y1 y2 y3 y4 y5 y6 y7 y8
 
----------------------------- Parameter Estimates -----------------------------
+<span class="sgr96">---------------------------- Parameter Estimates ----------------------------- </span>
 
-Loadings:
+<span class="sgr96">Loadings: </span>
 
-ind60
+<span class="sgr93">ind60</span>
 
-  to   estimate   identifier   value_fixed   start   free   from    type
+ <span class="sgr1"> to </span> <span class="sgr1"> estimate </span> <span class="sgr1"> identifier </span> <span class="sgr1"> value_fixed </span> <span class="sgr1"> start </span> <span class="sgr1"> free </span> <span class="sgr1"> from  </span> <span class="sgr1"> type </span>
 
   x1   0.0        const        1.0           0.0     0.0    ind60   →
   x2   2.18       θ_1          0.0           0.0     1.0    ind60   →
   x3   1.82       θ_2          0.0           0.0     1.0    ind60   →
 
-dem60
+<span class="sgr93">dem60</span>
 
-  to   estimate   identifier   value_fixed   start   free   from    type
+ <span class="sgr1"> to </span> <span class="sgr1"> estimate </span> <span class="sgr1"> identifier </span> <span class="sgr1"> value_fixed </span> <span class="sgr1"> start </span> <span class="sgr1"> free </span> <span class="sgr1"> from  </span> <span class="sgr1"> type </span>
 
   y1   0.0        const        1.0           0.0     0.0    dem60   →
   y2   1.26       θ_3          0.0           0.0     1.0    dem60   →
   y3   1.06       θ_4          0.0           0.0     1.0    dem60   →
   y4   1.26       θ_5          0.0           0.0     1.0    dem60   →
 
-dem65
+<span class="sgr93">dem65</span>
 
-  to   estimate   identifier   value_fixed   start   free   from    type
+ <span class="sgr1"> to </span> <span class="sgr1"> estimate </span> <span class="sgr1"> identifier </span> <span class="sgr1"> value_fixed </span> <span class="sgr1"> start </span> <span class="sgr1"> free </span> <span class="sgr1"> from  </span> <span class="sgr1"> type </span>
 
   y5   0.0        const        1.0           0.0     0.0    dem65   →
   y6   1.19       θ_6          0.0           0.0     1.0    dem65   →
   y7   1.28       θ_7          0.0           0.0     1.0    dem65   →
   y8   1.27       θ_8          0.0           0.0     1.0    dem65   →
 
-Directed Effects:
+<span class="sgr96">Directed Effects: </span>
 
-  from        to      estimate   identifier   value_fixed   start   free
+ <span class="sgr1"> from  </span> <span class="sgr1">   </span> <span class="sgr1"> to    </span> <span class="sgr1"> estimate </span> <span class="sgr1"> identifier </span> <span class="sgr1"> value_fixed </span> <span class="sgr1"> start </span> <span class="sgr1"> free </span>
 
   ind60   →   dem60   1.48       θ_9          0.0           0.0     1.0
   dem60   →   dem65   0.84       θ_10         0.0           0.0     1.0
   ind60   →   dem65   0.57       θ_11         0.0           0.0     1.0
 
-Variances:
+<span class="sgr96">Variances: </span>
 
-  from        to      estimate   identifier   value_fixed   start   free
+ <span class="sgr1"> from  </span> <span class="sgr1">   </span> <span class="sgr1"> to    </span> <span class="sgr1"> estimate </span> <span class="sgr1"> identifier </span> <span class="sgr1"> value_fixed </span> <span class="sgr1"> start </span> <span class="sgr1"> free </span>
 
   x1      ↔   x1      0.08       θ_12         0.0           0.0     1.0
   x2      ↔   x2      0.12       θ_13         0.0           0.0     1.0
@@ -92,9 +92,9 @@ Variances:
   dem60   ↔   dem60   4.01       θ_24         0.0           0.0     1.0
   dem65   ↔   dem65   0.17       θ_25         0.0           0.0     1.0
 
-Covariances:
+<span class="sgr96">Covariances: </span>
 
-  from       to   estimate   identifier   value_fixed   start   free
+ <span class="sgr1"> from </span> <span class="sgr1">   </span> <span class="sgr1"> to </span> <span class="sgr1"> estimate </span> <span class="sgr1"> identifier </span> <span class="sgr1"> value_fixed </span> <span class="sgr1"> start </span> <span class="sgr1"> free </span>
 
   y1     ↔   y5   0.63       θ_26         0.0           0.0     1.0
   y2     ↔   y4   1.33       θ_27         0.0           0.0     1.0
@@ -109,52 +109,52 @@ update_partable!(partable, model_fit, se_bs, :se_bootstrap)
 
 sem_summary(partable)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">20.0
 
---------------------------------- Variables ---------------------------------
+<span class="sgr96">--------------------------------- Variables --------------------------------- </span>
 
-Latent variables:    ind60 dem60 dem65
-Observed variables:  x1 x2 x3 y1 y2 y3 y4 y5 y6 y7 y8
+<span class="sgr96">Latent variables:    </span>ind60 dem60 dem65
+<span class="sgr96">Observed variables:  </span>x1 x2 x3 y1 y2 y3 y4 y5 y6 y7 y8
 
----------------------------- Parameter Estimates -----------------------------
+<span class="sgr96">---------------------------- Parameter Estimates ----------------------------- </span>
 
-Loadings:
+<span class="sgr96">Loadings: </span>
 
-ind60
+<span class="sgr93">ind60</span>
 
-  to   estimate   identifier   value_fixed   start   free   from    type   se_bootstrap   se_hessian
+ <span class="sgr1"> to </span> <span class="sgr1"> estimate </span> <span class="sgr1"> identifier </span> <span class="sgr1"> value_fixed </span> <span class="sgr1"> start </span> <span class="sgr1"> free </span> <span class="sgr1"> from  </span> <span class="sgr1"> type </span> <span class="sgr1"> se_bootstrap </span> <span class="sgr1"> se_hessian </span>
 
   x1   0.0        const        1.0           0.0     0.0    ind60   →      0.0            0.0
   x2   2.18       θ_1          0.0           0.0     1.0    ind60   →      NaN            0.14
   x3   1.82       θ_2          0.0           0.0     1.0    ind60   →      NaN            0.15
 
-dem60
+<span class="sgr93">dem60</span>
 
-  to   estimate   identifier   value_fixed   start   free   from    type   se_bootstrap   se_hessian
+ <span class="sgr1"> to </span> <span class="sgr1"> estimate </span> <span class="sgr1"> identifier </span> <span class="sgr1"> value_fixed </span> <span class="sgr1"> start </span> <span class="sgr1"> free </span> <span class="sgr1"> from  </span> <span class="sgr1"> type </span> <span class="sgr1"> se_bootstrap </span> <span class="sgr1"> se_hessian </span>
 
   y1   0.0        const        1.0           0.0     0.0    dem60   →      0.0            0.0
   y2   1.26       θ_3          0.0           0.0     1.0    dem60   →      NaN            0.19
   y3   1.06       θ_4          0.0           0.0     1.0    dem60   →      NaN            0.15
   y4   1.26       θ_5          0.0           0.0     1.0    dem60   →      NaN            0.15
 
-dem65
+<span class="sgr93">dem65</span>
 
-  to   estimate   identifier   value_fixed   start   free   from    type   se_bootstrap   se_hessian
+ <span class="sgr1"> to </span> <span class="sgr1"> estimate </span> <span class="sgr1"> identifier </span> <span class="sgr1"> value_fixed </span> <span class="sgr1"> start </span> <span class="sgr1"> free </span> <span class="sgr1"> from  </span> <span class="sgr1"> type </span> <span class="sgr1"> se_bootstrap </span> <span class="sgr1"> se_hessian </span>
 
   y5   0.0        const        1.0           0.0     0.0    dem65   →      0.0            0.0
   y6   1.19       θ_6          0.0           0.0     1.0    dem65   →      NaN            0.17
   y7   1.28       θ_7          0.0           0.0     1.0    dem65   →      NaN            0.16
   y8   1.27       θ_8          0.0           0.0     1.0    dem65   →      NaN            0.16
 
-Directed Effects:
+<span class="sgr96">Directed Effects: </span>
 
-  from        to      estimate   identifier   value_fixed   start   free   se_bootstrap   se_hessian
+ <span class="sgr1"> from  </span> <span class="sgr1">   </span> <span class="sgr1"> to    </span> <span class="sgr1"> estimate </span> <span class="sgr1"> identifier </span> <span class="sgr1"> value_fixed </span> <span class="sgr1"> start </span> <span class="sgr1"> free </span> <span class="sgr1"> se_bootstrap </span> <span class="sgr1"> se_hessian </span>
 
   ind60   →   dem60   1.48       θ_9          0.0           0.0     1.0    NaN            0.4
   dem60   →   dem65   0.84       θ_10         0.0           0.0     1.0    NaN            0.1
   ind60   →   dem65   0.57       θ_11         0.0           0.0     1.0    NaN            0.24
 
-Variances:
+<span class="sgr96">Variances: </span>
 
-  from        to      estimate   identifier   value_fixed   start   free   se_bootstrap   se_hessian
+ <span class="sgr1"> from  </span> <span class="sgr1">   </span> <span class="sgr1"> to    </span> <span class="sgr1"> estimate </span> <span class="sgr1"> identifier </span> <span class="sgr1"> value_fixed </span> <span class="sgr1"> start </span> <span class="sgr1"> free </span> <span class="sgr1"> se_bootstrap </span> <span class="sgr1"> se_hessian </span>
 
   x1      ↔   x1      0.08       θ_12         0.0           0.0     1.0    NaN            0.02
   x2      ↔   x2      0.12       θ_13         0.0           0.0     1.0    NaN            0.07
@@ -171,9 +171,9 @@ Variances:
   dem60   ↔   dem60   4.01       θ_24         0.0           0.0     1.0    NaN            0.96
   dem65   ↔   dem65   0.17       θ_25         0.0           0.0     1.0    NaN            0.22
 
-Covariances:
+<span class="sgr96">Covariances: </span>
 
-  from       to   estimate   identifier   value_fixed   start   free   se_bootstrap   se_hessian
+ <span class="sgr1"> from </span> <span class="sgr1">   </span> <span class="sgr1"> to </span> <span class="sgr1"> estimate </span> <span class="sgr1"> identifier </span> <span class="sgr1"> value_fixed </span> <span class="sgr1"> start </span> <span class="sgr1"> free </span> <span class="sgr1"> se_bootstrap </span> <span class="sgr1"> se_hessian </span>
 
   y1     ↔   y5   0.63       θ_26         0.0           0.0     1.0    NaN            0.38
   y2     ↔   y4   1.33       θ_27         0.0           0.0     1.0    NaN            0.71
@@ -182,4 +182,4 @@ Covariances:
   y8     ↔   y4   0.35       θ_30         0.0           0.0     1.0    NaN            0.47
   y8     ↔   y6   1.37       θ_31         0.0           0.0     1.0    NaN            0.58</code></pre><h2 id="Export-results"><a class="docs-heading-anchor" href="#Export-results">Export results</a><a id="Export-results-1"></a><a class="docs-heading-anchor-permalink" href="#Export-results" title="Permalink"></a></h2><p>You may convert a <code>ParameterTable</code> to a <code>DataFrame</code> and use the <a href="https://github.com/JuliaData/DataFrames.jl"><code>DataFrames</code></a> package for further analysis (or write to disk).</p><pre><code class="language- hljs">using DataFrames
 
-parameters_df = DataFrame(partable)</code></pre><h2 id="Additional-functions"><a class="docs-heading-anchor" href="#Additional-functions">Additional functions</a><a id="Additional-functions-1"></a><a class="docs-heading-anchor-permalink" href="#Additional-functions" title="Permalink"></a></h2><p>Additional functions that can be used to extract information from a <code>SemFit</code> object:</p><p>– MISSING DOCSTRINGS –</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../fitting/fitting/">« Model fitting</a><a class="docs-footer-nextpage" href="../../collection/collection/">Collections »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.14 on <span class="colophon-date" title="Monday 2 May 2022 09:18">Monday 2 May 2022</span>. Using Julia version 1.7.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+parameters_df = DataFrame(partable)</code></pre><h2 id="Additional-functions"><a class="docs-heading-anchor" href="#Additional-functions">Additional functions</a><a id="Additional-functions-1"></a><a class="docs-heading-anchor-permalink" href="#Additional-functions" title="Permalink"></a></h2><p>Additional functions that can be used to extract information from a <code>SemFit</code> object:</p><p>– MISSING DOCSTRINGS –</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../fitting/fitting/">« Model fitting</a><a class="docs-footer-nextpage" href="../../collection/collection/">Collections »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.14 on <span class="colophon-date" title="Tuesday 3 May 2022 07:16">Tuesday 3 May 2022</span>. Using Julia version 1.7.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

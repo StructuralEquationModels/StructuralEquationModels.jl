@@ -22,8 +22,8 @@ partable = EnsembleParameterTable(;
     groups = groups)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">EnsembleParameterTable with groups: |Grant_White||Pasteur|
 Grant_White: 
  --------- ---------------- --------- ------- ------------- --------- ----------
-     from   parameter_type        to    free   value_fixed     start   estimat ⋯
-   Symbol           Symbol    Symbol    Bool       Float64   Float64    Float6 ⋯
+ <span class="sgr1">    from </span> <span class="sgr1"> parameter_type </span> <span class="sgr1">      to </span> <span class="sgr1">  free </span> <span class="sgr1"> value_fixed </span> <span class="sgr1">   start </span> <span class="sgr1"> estimat</span> ⋯
+ <span class="sgr90">  Symbol </span> <span class="sgr90">         Symbol </span> <span class="sgr90">  Symbol </span> <span class="sgr90">  Bool </span> <span class="sgr90">     Float64 </span> <span class="sgr90"> Float64 </span> <span class="sgr90">  Float6</span> ⋯
  --------- ---------------- --------- ------- ------------- --------- ----------
    visual                →        x1   false           1.0       0.0        0. ⋯
    visual                →        x2    true           0.0       0.0        0. ⋯
@@ -42,13 +42,13 @@ Grant_White:
        x6                ↔        x6    true           0.0       0.0        0. ⋯
      ⋮            ⋮             ⋮        ⋮          ⋮           ⋮         ⋮    ⋱
  --------- ---------------- --------- ------- ------------- --------- ----------
-                                                    2 columns and 9 rows omitted
+<span class="sgr36">                                                    2 columns and 9 rows omitted</span>
 Latent Variables:    [:visual, :textual, :speed] 
 Observed Variables:  [:x1, :x2, :x3, :x4, :x5, :x6, :x7, :x8, :x9] 
 Pasteur: 
  --------- ---------------- --------- ------- ------------- --------- ----------
-     from   parameter_type        to    free   value_fixed     start   estimat ⋯
-   Symbol           Symbol    Symbol    Bool       Float64   Float64    Float6 ⋯
+ <span class="sgr1">    from </span> <span class="sgr1"> parameter_type </span> <span class="sgr1">      to </span> <span class="sgr1">  free </span> <span class="sgr1"> value_fixed </span> <span class="sgr1">   start </span> <span class="sgr1"> estimat</span> ⋯
+ <span class="sgr90">  Symbol </span> <span class="sgr90">         Symbol </span> <span class="sgr90">  Symbol </span> <span class="sgr90">  Bool </span> <span class="sgr90">     Float64 </span> <span class="sgr90"> Float64 </span> <span class="sgr90">  Float6</span> ⋯
  --------- ---------------- --------- ------- ------------- --------- ----------
    visual                →        x1   false           1.0       0.0        0. ⋯
    visual                →        x2    true           0.0       0.0        0. ⋯
@@ -67,7 +67,7 @@ Pasteur:
        x6                ↔        x6    true           0.0       0.0        0. ⋯
      ⋮            ⋮             ⋮        ⋮          ⋮           ⋮         ⋮    ⋱
  --------- ---------------- --------- ------- ------------- --------- ----------
-                                                    2 columns and 9 rows omitted
+<span class="sgr36">                                                    2 columns and 9 rows omitted</span>
 Latent Variables:    [:visual, :textual, :speed] 
 Observed Variables:  [:x1, :x2, :x3, :x4, :x5, :x6, :x7, :x8, :x9] 
 </code></pre><p>The parameter table can be used to create a <code>Dict</code> of RAMMatrices with keys equal to the group names and parameter tables as values:</p><pre><code class="language-julia hljs">specification = RAMMatrices(partable)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Dict{Symbol, RAMMatrices} with 2 entries:
@@ -108,48 +108,48 @@ Structural Equation Model
 </code></pre><p>We now fit the model and inspect the parameter estimates:</p><pre><code class="language-julia hljs">solution = sem_fit(model_ml_multigroup)
 update_estimate!(partable, solution)
 sem_summary(partable)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">
---------------------------------- Variables ---------------------------------
+<span class="sgr96">--------------------------------- Variables --------------------------------- </span>
 
-Latent variables:    visual textual speed
-Observed variables:  x1 x2 x3 x4 x5 x6 x7 x8 x9
+<span class="sgr96">Latent variables:    </span>visual textual speed
+<span class="sgr96">Observed variables:  </span>x1 x2 x3 x4 x5 x6 x7 x8 x9
 
 
- Group: Grant_White
+<span class="sgr7"> Group: Grant_White                                                           </span>
 
----------------------------- Parameter Estimates -----------------------------
+<span class="sgr96">---------------------------- Parameter Estimates ----------------------------- </span>
 
-Loadings:
+<span class="sgr96">Loadings: </span>
 
-visual
+<span class="sgr93">visual</span>
 
-  to   estimate   identifier   value_fixed   start   free   from     type
+ <span class="sgr1"> to </span> <span class="sgr1"> estimate </span> <span class="sgr1"> identifier </span> <span class="sgr1"> value_fixed </span> <span class="sgr1"> start </span> <span class="sgr1"> free </span> <span class="sgr1"> from   </span> <span class="sgr1"> type </span>
 
   x1   0.0        const        1.0           0.0     0.0    visual   →
   x2   0.6        λ₂           0.0           0.0     1.0    visual   →
   x3   0.78       λ₃           0.0           0.0     1.0    visual   →
 
-textual
+<span class="sgr93">textual</span>
 
-  to   estimate   identifier   value_fixed   start   free   from      type
+ <span class="sgr1"> to </span> <span class="sgr1"> estimate </span> <span class="sgr1"> identifier </span> <span class="sgr1"> value_fixed </span> <span class="sgr1"> start </span> <span class="sgr1"> free </span> <span class="sgr1"> from    </span> <span class="sgr1"> type </span>
 
   x4   0.0        const        1.0           0.0     0.0    textual   →
   x5   1.08       λ₅           0.0           0.0     1.0    textual   →
   x6   0.91       λ₆           0.0           0.0     1.0    textual   →
 
-speed
+<span class="sgr93">speed</span>
 
-  to   estimate   identifier   value_fixed   start   free   from    type
+ <span class="sgr1"> to </span> <span class="sgr1"> estimate </span> <span class="sgr1"> identifier </span> <span class="sgr1"> value_fixed </span> <span class="sgr1"> start </span> <span class="sgr1"> free </span> <span class="sgr1"> from  </span> <span class="sgr1"> type </span>
 
   x7   0.0        const        1.0           0.0     0.0    speed   →
   x8   1.2        λ₈           0.0           0.0     1.0    speed   →
   x9   1.04       λ₉           0.0           0.0     1.0    speed   →
 
-Directed Effects:
+<span class="sgr96">Directed Effects: </span>
 
 
-Variances:
+<span class="sgr96">Variances: </span>
 
-  from          to        estimate   identifier   value_fixed   start   free
+ <span class="sgr1"> from    </span> <span class="sgr1">   </span> <span class="sgr1"> to      </span> <span class="sgr1"> estimate </span> <span class="sgr1"> identifier </span> <span class="sgr1"> value_fixed </span> <span class="sgr1"> start </span> <span class="sgr1"> free </span>
 
   x1        ↔   x1        0.65       g2_1         0.0           0.0     1.0
   x2        ↔   x2        0.94       g2_2         0.0           0.0     1.0
@@ -164,51 +164,51 @@ Variances:
   textual   ↔   textual   0.91       g2_13        0.0           0.0     1.0
   speed     ↔   speed     0.48       g2_15        0.0           0.0     1.0
 
-Covariances:
+<span class="sgr96">Covariances: </span>
 
-  from          to        estimate   identifier   value_fixed   start   free
+ <span class="sgr1"> from    </span> <span class="sgr1">   </span> <span class="sgr1"> to      </span> <span class="sgr1"> estimate </span> <span class="sgr1"> identifier </span> <span class="sgr1"> value_fixed </span> <span class="sgr1"> start </span> <span class="sgr1"> free </span>
 
   visual    ↔   textual   0.44       g2_11        0.0           0.0     1.0
   visual    ↔   speed     0.32       g2_12        0.0           0.0     1.0
   textual   ↔   speed     0.23       g2_14        0.0           0.0     1.0
 
 
- Group: Pasteur
+<span class="sgr7"> Group: Pasteur                                                               </span>
 
----------------------------- Parameter Estimates -----------------------------
+<span class="sgr96">---------------------------- Parameter Estimates ----------------------------- </span>
 
-Loadings:
+<span class="sgr96">Loadings: </span>
 
-visual
+<span class="sgr93">visual</span>
 
-  to   estimate   identifier   value_fixed   start   free   from     type
+ <span class="sgr1"> to </span> <span class="sgr1"> estimate </span> <span class="sgr1"> identifier </span> <span class="sgr1"> value_fixed </span> <span class="sgr1"> start </span> <span class="sgr1"> free </span> <span class="sgr1"> from   </span> <span class="sgr1"> type </span>
 
   x1   0.0        const        1.0           0.0     0.0    visual   →
   x2   0.6        λ₂           0.0           0.0     1.0    visual   →
   x3   0.78       λ₃           0.0           0.0     1.0    visual   →
 
-textual
+<span class="sgr93">textual</span>
 
-  to   estimate   identifier   value_fixed   start   free   from      type
+ <span class="sgr1"> to </span> <span class="sgr1"> estimate </span> <span class="sgr1"> identifier </span> <span class="sgr1"> value_fixed </span> <span class="sgr1"> start </span> <span class="sgr1"> free </span> <span class="sgr1"> from    </span> <span class="sgr1"> type </span>
 
   x4   0.0        const        1.0           0.0     0.0    textual   →
   x5   1.08       λ₅           0.0           0.0     1.0    textual   →
   x6   0.91       λ₆           0.0           0.0     1.0    textual   →
 
-speed
+<span class="sgr93">speed</span>
 
-  to   estimate   identifier   value_fixed   start   free   from    type
+ <span class="sgr1"> to </span> <span class="sgr1"> estimate </span> <span class="sgr1"> identifier </span> <span class="sgr1"> value_fixed </span> <span class="sgr1"> start </span> <span class="sgr1"> free </span> <span class="sgr1"> from  </span> <span class="sgr1"> type </span>
 
   x7   0.0        const        1.0           0.0     0.0    speed   →
   x8   1.2        λ₈           0.0           0.0     1.0    speed   →
   x9   1.04       λ₉           0.0           0.0     1.0    speed   →
 
-Directed Effects:
+<span class="sgr96">Directed Effects: </span>
 
 
-Variances:
+<span class="sgr96">Variances: </span>
 
-  from          to        estimate   identifier   value_fixed   start   free
+ <span class="sgr1"> from    </span> <span class="sgr1">   </span> <span class="sgr1"> to      </span> <span class="sgr1"> estimate </span> <span class="sgr1"> identifier </span> <span class="sgr1"> value_fixed </span> <span class="sgr1"> start </span> <span class="sgr1"> free </span>
 
   x1        ↔   x1        0.55       g1_1         0.0           0.0     1.0
   x2        ↔   x2        1.27       g1_2         0.0           0.0     1.0
@@ -223,10 +223,10 @@ Variances:
   textual   ↔   textual   0.92       g1_13        0.0           0.0     1.0
   speed     ↔   speed     0.31       g1_15        0.0           0.0     1.0
 
-Covariances:
+<span class="sgr96">Covariances: </span>
 
-  from          to        estimate   identifier   value_fixed   start   free
+ <span class="sgr1"> from    </span> <span class="sgr1">   </span> <span class="sgr1"> to      </span> <span class="sgr1"> estimate </span> <span class="sgr1"> identifier </span> <span class="sgr1"> value_fixed </span> <span class="sgr1"> start </span> <span class="sgr1"> free </span>
 
   visual    ↔   textual   0.42       g1_11        0.0           0.0     1.0
   visual    ↔   speed     0.17       g1_12        0.0           0.0     1.0
-  textual   ↔   speed     0.18       g1_14        0.0           0.0     1.0</code></pre><p>Other things you can query about your fitted model (fit measures, standard errors, etc.) are described in the section <a href="../../inspection/inspection/#Model-inspection">Model inspection</a> and work the same way for multigroup models.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../collection/">« Collections</a><a class="docs-footer-nextpage" href="../../../developer/extending/">Extending the package »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.14 on <span class="colophon-date" title="Monday 2 May 2022 09:18">Monday 2 May 2022</span>. Using Julia version 1.7.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+  textual   ↔   speed     0.18       g1_14        0.0           0.0     1.0</code></pre><p>Other things you can query about your fitted model (fit measures, standard errors, etc.) are described in the section <a href="../../inspection/inspection/#Model-inspection">Model inspection</a> and work the same way for multigroup models.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../collection/">« Collections</a><a class="docs-footer-nextpage" href="../../../developer/extending/">Extending the package »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.14 on <span class="colophon-date" title="Tuesday 3 May 2022 07:16">Tuesday 3 May 2022</span>. Using Julia version 1.7.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
