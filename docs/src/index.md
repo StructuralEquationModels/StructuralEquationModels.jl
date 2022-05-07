@@ -29,7 +29,7 @@ For examples on how to use the package, see the Tutorials.
 To install the latest version from GitHub, use the following commands in your julia REPL:
 ```julia
 using Pkg
-Pkd.add("https://github.com/StructuralEquationModels/StructuralEquationModels.jl")
+Pkg.add("https://github.com/StructuralEquationModels/StructuralEquationModels.jl")
 ```
 
 ## Citing the package
