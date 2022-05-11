@@ -4,7 +4,9 @@ In this tutorial, we will fit our very first Structural Equation Model with our 
 The example we are using is from [the `lavaan` tutorial](https://lavaan.ugent.be/tutorial/sem.html), so it may be familiar.
 It looks like this:
 
--- include image here --
+![Visualization of Political Democracy model](https://lavaan.ugent.be/tutorial/figure/sem-1.png)
+
+[2022 © Yves Roseel](https://lavaan.ugent.be)
 
 We assume the `StructuralEquationModels` package is already installed. To use it in the current session, we run
 
