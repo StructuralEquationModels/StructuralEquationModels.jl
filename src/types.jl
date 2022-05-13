@@ -32,29 +32,28 @@ my_loss = SemLoss(SemML, SemRidge)
 mutable struct SemLoss{F <: Tuple, T, FT, GT, HT}
     functions::F
     weights::T
-
-    objective::FT
-    gradient::GT
-    hessian::HT
 end
 
-function SemLoss(functions...; loss_weights = nothing, parameter_type = Float64, kwargs...)
+function SemLoss(functions...; loss_weights = nothing, kwargs...)
 
-    n_par = length(gradient(functions[1]))
-    !isnothing(loss_weights) || (loss_weights = Tuple(nothing for _ in 1:length(functions)))
+    if !isnothing(loss_weights) 
+        loss_weights = SemWeight.(loss_weights)
+    else
+        loss_weights = Tuple(SemWeight(nothing for _ in 1:length(functions)))
 
     return SemLoss(
         functions,
-        loss_weights,
-
-        zeros(parameter_type, 1),
-        zeros(parameter_type, n_par),
-        zeros(parameter_type, n_par, n_par))
+        loss_weights
+        )
 end
 
-objective(loss::SemLoss) = loss.objective
-gradient(loss::SemLoss) = loss.gradient
-hessian(loss::SemLoss) = loss.hessian
+# weights for loss functions or models. If the weight is nothing, multiplication returs second argument
+struct SemWeight{T}
+    w::T
+end
+
+Base.:*(x::SemWeight{Nothing}, y) = y
+Base.:*(x::SemWeight, y) = x.w*y
 
 """
 Supertype of all objects that can serve as the diff field of a SEM.
@@ -106,45 +105,6 @@ mutable struct Sem{O <: SemObs, I <: SemImply, L <: SemLoss, D <: SemDiff} <: Ab
     diff::D
 end
 
-function (model::Sem)(par, F, G, H)
-    model.imply(par, F, G, H, model)
-    model.loss(par, F, G, H, model)
-end
-
-function (loss::SemLoss)(par, F, G, H, model)
-    for lossfun in loss.functions lossfun(par, F, G, H, model) end
-    if H
-        loss.hessian .= 0.0
-        for (lossfun, c) in zip(loss.functions, loss.weights)
-            if isnothing(c)
-                loss.hessian .+= hessian(lossfun)
-            else
-                loss.hessian .+= c*hessian(lossfun)
-            end
-        end
-    end
-    if G
-        loss.gradient .= 0.0
-        for (lossfun, c) in zip(loss.functions, loss.weights)
-            if isnothing(c)
-                loss.gradient .+= gradient(lossfun)
-            else
-                loss.gradient .+= c*gradient(lossfun)
-            end
-        end
-    end
-    if F
-        loss.objective[1] = 0.0
-        for (lossfun, c) in zip(loss.functions, loss.weights)
-            if isnothing(c)
-                loss.objective[1] += objective(lossfun)[1]
-            else
-                loss.objective[1] += c*objective(lossfun)[1]
-            end
-        end
-    end
-end
-
 #####################################################################################################
 # automatic differentiation
 #####################################################################################################
@@ -155,30 +115,6 @@ struct SemFiniteDiff{O <: SemObs, I <: SemImply, L <: SemLoss, D <: SemDiff, G} 
     loss::L
     diff::D
     has_gradient::G
-end
-
-function (model::SemFiniteDiff)(par, F, G, H)
-
-    if H
-        model.loss.hessian .= FiniteDiff.finite_difference_hessian(x -> objective!(model, x), par)
-    end
-
-    if model.has_gradient
-        model.imply(par, F, G, false, model)
-        model.loss(par, F, G, false, model)
-    else
-
-        if G
-            model.loss.gradient .= FiniteDiff.finite_difference_gradient(x -> objective!(model, x), par)
-        end
-
-        if F
-            model.imply(par, F, false, false, model)
-            model.loss(par, F, false, false, model)
-        end
-
-    end
-
 end
 
 struct SemForwardDiff{O <: SemObs, I <: SemImply, L <: SemLoss, D <: SemDiff, G} <: AbstractSemSingle
@@ -308,58 +244,3 @@ imply(model::SemFiniteDiff) = model.imply
 loss(model::SemFiniteDiff) = model.loss
 diff(model::SemFiniteDiff) = model.diff
 has_gradient(model::SemFiniteDiff) = model.has_gradient
-
-
-#####################################################################################################
-# gradient, objective, hessian helpers
-#####################################################################################################
-
-objective(lossfun::SemLossFunction) = lossfun.objective
-gradient(lossfun::SemLossFunction) = lossfun.gradient
-hessian(lossfun::SemLossFunction) = lossfun.hessian
-
-objective(model::AbstractSem) = model.loss.objective
-gradient(model::AbstractSem) = model.loss.gradient
-hessian(model::AbstractSem) = model.loss.hessian
-
-objective(model::SemEnsemble) = model.objective
-gradient(model::SemEnsemble) = model.gradient
-hessian(model::SemEnsemble) = model.hessian
-
-function objective!(model::AbstractSem, parameters)
-    model(parameters, true, false, false)
-    return objective(model)[1]
-end
-
-function gradient!(model::AbstractSem, parameters)
-    model(parameters, false, true, false)
-    return gradient(model)
-end
-
-function gradient!(grad, model::AbstractSem, parameters)
-    model(parameters, false, true, false)
-    copyto!(grad, gradient(model))
-    return gradient(model)
-end
-
-function hessian!(model::AbstractSem, parameters)
-    model(parameters, false, false, true)
-    return hessian(model)
-end
-
-function hessian!(hessian, model::AbstractSem, parameters)
-    model(parameters, false, false, true)
-    copyto!(hessian, hessian(model))
-    return hessian(model)
-end
-
-function objective_gradient!(model::AbstractSem, parameters)
-    model(parameters, true, true, false)
-    return objective(model)[1], copy(gradient(model))
-end
-
-function objective_gradient!(grad, model::AbstractSem, parameters)
-    model(parameters, true, true, false)
-    copyto!(grad, gradient(model))
-    return objective(model)[1]
-end

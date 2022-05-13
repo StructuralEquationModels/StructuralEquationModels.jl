@@ -41,11 +41,11 @@ end
 
 # for symbolic imply type
 function (semml::SemML)(
-    par, 
-    F, 
-    G, 
-    H, 
-    model::Sem{O, I, L, D}) where {O, I <: SemImplySymbolic, L, D}
+        par, 
+        F, 
+        G, 
+        H, 
+        model::Sem{O, I, L, D}) where {O, I <: SemImplySymbolic, L, D}
     semml.inverses .= Σ(imply(model))
     a = cholesky!(Symmetric(semml.inverses); check = false)
 

@@ -5,9 +5,11 @@
 # wrapper to define the objective
 function sem_wrap_nlopt(par, G, sem::AbstractSem)
     need_gradient = length(G) != 0
-    sem(par, true, need_gradient, false)
-    if need_gradient G .= gradient(sem) end
-    return objective(sem)[1]
+    if need_gradient
+        return objective_gradient!(G, model, par)
+    else
+        return objective!(model, par)
+    end
 end
 
 mutable struct NLoptResult
