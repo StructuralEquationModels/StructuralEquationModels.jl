@@ -125,30 +125,6 @@ struct SemForwardDiff{O <: SemObs, I <: SemImply, L <: SemLoss, D <: SemDiff, G}
     has_gradient::G
 end
 
-function (model::SemForwardDiff)(par, F, G, H)
-
-    if H
-        model.loss.hessian .= ForwardDiff.hessian(x -> objective!(model, x), par)
-    end
-
-    if model.has_gradient
-        model.imply(par, F, G, false, model)
-        model.loss(par, F, G, false, model)
-    else
-
-        if G
-            model.loss.gradient .= ForwardDiff.gradient(x -> objective!(model, x), par)
-        end
-
-        if F
-            model.imply(par, F, false, false, model)
-            model.loss(par, F, false, false, model)
-        end
-        
-    end
-
-end
-
 #####################################################################################################
 # ensemble models
 #####################################################################################################
@@ -159,10 +135,6 @@ struct SemEnsemble{N, T <: Tuple, V <: AbstractVector, D, I, FT, GT, HT} <: Abst
     weights::V
     diff::D
     identifier::I
-
-    objective::FT
-    gradient::GT
-    hessian::HT
 end
 
 function SemEnsemble(models...; diff = SemDiffOptim, weights = nothing, parameter_type = Float64, kwargs...)
@@ -185,8 +157,6 @@ function SemEnsemble(models...; diff = SemDiffOptim, weights = nothing, paramete
         end
     end
 
-    npar = n_par(models[1])
-
     # diff
     if !isa(diff, SemDiff)
         diff = diff(;kwargs...)
@@ -197,11 +167,8 @@ function SemEnsemble(models...; diff = SemDiffOptim, weights = nothing, paramete
         models,
         weights,
         diff,
-        id,
-
-        zeros(parameter_type, 1),
-        zeros(parameter_type, npar),
-        zeros(parameter_type, npar, npar))
+        id
+    )
 end
 
 function (ensemble::SemEnsemble)(par, F, G, H)

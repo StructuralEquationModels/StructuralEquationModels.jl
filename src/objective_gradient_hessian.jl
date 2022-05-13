@@ -56,75 +56,65 @@ function objective_gradient!(model::AbstractSemSingle, parameters)
 end
 
 #####################################################################################################
-# methods for SemFiniteDiff
+# methods for SemFiniteDiff and SemForwardDiff
 #####################################################################################################
 
-# all gradient methods call themselves with the additional model.has_gradient argument
+# gradient methods call themselves with the additional model.has_gradient argument
 
-gradient!(gradient, model::SemFiniteDiff, par) = gradient!(gradient, model, par, model.has_gradient)
-objective_gradient!(gradient, model::SemFiniteDiff, par) = objective_gradient!(gradient, model, par, model.has_gradient)
-gradient_hessian!(gradient, model::SemFiniteDiff, par) = gradient_hessian!(gradient, model, par, model.has_gradient)
-objective_gradient_hessian!(gradient, model::SemFiniteDiff, par) = objective_gradient_hessian!(gradient, model, par, model.has_gradient)
+gradient!(gradient, model::Union{SemFiniteDiff, SemForwardDiff}, par) = 
+    gradient!(gradient, model, par, model.has_gradient)
 
-# hessians are never coputed analytically
+objective_gradient!(gradient, model::Union{SemFiniteDiff, SemForwardDiff}, par) = 
+    objective_gradient!(gradient, model, par, model.has_gradient)
+
+# methods where autodiff takes place - these are specific to the method of automatic differentiation
+
+# FiniteDiff
+gradient!(gradient, model::SemFiniteDiff, par, has_gradient::Val{false}) =
+    FiniteDiff.finite_difference_gradient!(gradient, x -> objective!(model, x), par)
 
 hessian!(hessian, model::SemFiniteDiff, par) = 
     FiniteDiff.finite_difference_hessian!(hessian, x -> objective!(model, x), par)
 
-# now we can handle the cases where models have or don't have gradients
+# ForwardDiff
+gradient!(gradient, model::SemForwardDiff, par, has_gradient::Val{false}) =
+    ForwardDiff.gradient!(gradient, x -> objective!(model, x), par)
 
-function gradient!(gradient, model::SemFiniteDiff, par, has_gradient::Val{true})
+hessian!(hessian, model::SemForwardDiff, par) = 
+    ForwardDiff.hessian!(hessian, x -> objective!(model, x), par)
+
+# gradient!
+function gradient!(gradient, model::Union{SemFiniteDiff, SemForwardDiff}, par, has_gradient::Val{true})
     gradient!(imply(model), parameters, model)
     gradient!(gradient, loss(model), parameters, model)
 end
 
-function gradient!(gradient, model::SemFiniteDiff, par, has_gradient::Val{false})
-    FiniteDiff.finite_difference_gradient!(gradient, x -> objective!(model, x), par)
-end
-
-function objective_gradient!(gradient, model::SemFiniteDiff, par, has_gradient::Val{true})
+# objective_gradient!
+function objective_gradient!(gradient, model::Union{SemFiniteDiff, SemForwardDiff}, par, has_gradient::Val{true})
     objective_gradient!(imply(model), parameters, model)
     return objective_gradient!(gradient, loss(model), parameters, model)
 end
 
-function objective_gradient!(gradient, model::SemFiniteDiff, par, has_gradient::Val{false})
+function objective_gradient!(gradient, model::Union{SemFiniteDiff, SemForwardDiff}, par, has_gradient::Val{false})
     gradient!(gradient, model, par)
     return objective!(model, par)
 end
 
-# 
-
-# 
-
-function gradient!(gradient, model::SemFiniteDiff, par, has_gradient::Val{false})
-    FiniteDiff.finite_difference_gradient!(gradient, x -> objective!(model, x), par)
+# other methods
+function gradient_hessian!(gradient, hessian, model::Union{SemFiniteDiff, SemForwardDiff}, parameters)
+    gradient!(gradient, model, parameters)
+    hessian!(hessian, model, parameters)
 end
 
-    if H
-        
-    end
-
-    if model.has_gradient
-        model.imply(par, F, G, false, model)
-        model.loss(par, F, G, false, model)
-    else
-
-        if G
-            
-        end
-
-        if F
-            model.imply(par, F, false, false, model)
-            model.loss(par, F, false, false, model)
-        end
-
-    end
-
+function objective_hessian!(hessian, model::Union{SemFiniteDiff, SemForwardDiff}, par)
+    hessian!(hessian, model, par)
+    return objective!(model, par)
 end
 
-#####################################################################################################
-# methods for SemForwardDiff
-#####################################################################################################
+function objective_gradient_hessian!(gradient, hessian, model::Union{SemFiniteDiff, SemForwardDiff}, par)
+    hessian!(hessian, model, par)
+    return objective_gradient!(gradient, model, par)
+end
 
 #####################################################################################################
 # methods for SemLoss
