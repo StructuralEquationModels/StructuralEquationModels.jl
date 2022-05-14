@@ -142,7 +142,7 @@ function RAMSymbolic(;
         ∇μ_function,
         ∇μ,
         identifier,
-        has_meanstructure = Val(false)
+        has_meanstructure = has_meanstructure
     )
 end
 
