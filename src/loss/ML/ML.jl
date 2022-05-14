@@ -4,22 +4,19 @@
 ### Types
 ############################################################################
 
-struct SemML{INV,M,M2,B,FT,GT,HT} <: SemLossFunction
+struct SemML{INV,M,M2,B, V} <: SemLossFunction
     inverses::INV #preallocated inverses of imp_cov
     mult::M
     meandiff::M2
     approx_H::B
-
-    objective::FT
-    gradient::GT
-    hessian::HT
+    has_meanstructure::V
 end
 
 ############################################################################
 ### Constructors
 ############################################################################
 
-function SemML(;observed, n_par, approx_H = false, parameter_type = Float64, kwargs...)
+function SemML(;observed, imply, n_par, approx_H = false, parameter_type = Float64, kwargs...)
     isnothing(obs_mean(observed)) ?
         meandiff = nothing :
         meandiff = copy(obs_mean(observed))
@@ -27,35 +24,168 @@ function SemML(;observed, n_par, approx_H = false, parameter_type = Float64, kwa
         copy(obs_cov(observed)),
         copy(obs_cov(observed)),
         meandiff,
-        approx_H,
-
-        zeros(parameter_type, 1),
-        zeros(parameter_type, n_par),
-        zeros(parameter_type, n_par, n_par)
+        Val(approx_H),
+        has_meanstructure(imply)
         )
 end
 
 ############################################################################
-### functors
+### objective, gradient, hessian methods
 ############################################################################
 
-# for symbolic imply type
-function (semml::SemML)(
-        par, 
-        F, 
-        G, 
-        H, 
-        model::Sem{O, I, L, D}) where {O, I <: SemImplySymbolic, L, D}
-    semml.inverses .= Σ(imply(model))
-    a = cholesky!(Symmetric(semml.inverses); check = false)
+function SemML_factorization!(Σ⁻¹, Σ)
+    copyto!(Σ⁻¹, Σ)
+    Σ_chol = cholesky!(Symmetric(Σ⁻¹); check = false)
+    return Σ_chol
+end
 
-    if !isposdef(a)
-        if G semml.gradient .= 1.0 end
-        if H semml.hessian .= 1.0 end
-        if F semml.objective[1] = Inf end
+function SemML_ld_inv_mul!(Σ⁻¹, Σ⁻¹Σₒ, Σ_chol, Σₒ)
+    ld = logdet(Σ_chol)
+    Σ⁻¹ .= LinearAlgebra.inv!(Σ_chol)
+    mul!(Σ⁻¹Σₒ, Σ⁻¹, Σₒ)
+    return ld
+end
+
+# first, dispatch for meanstructure
+objective!(semml::SemML, par, model) = objective!(semml::SemML, par, model, semml.has_meanstructure)
+gradient!(gradient, semml::SemML, par, model) = gradient!(gradient, semml::SemML, par, model, semml.has_meanstructure)
+hessian!(hessian, semml::SemML, par, model) = hessian!(hessian, semml::SemML, par, model, semml.has_meanstructure)
+objective_gradient!(gradient, semml::SemML, par, model) = objective_gradient!(gradient, semml::SemML, par, model, semml.has_meanstructure)
+objective_hessian!(hessian, semml::SemML, par, model) = objective_hessian!(hessian, semml::SemML, par, model, semml.has_meanstructure)
+gradient_hessian!(gradient, hessian, semml::SemML, par, model) = gradient_hessian!(gradient, hessian, semml::SemML, par, model, semml.has_meanstructure)
+objective_gradient_hessian!(gradient, hessian, semml::SemML, par, model) = objective_gradient_hessian!(gradient, hessian, semml::SemML, par, model, semml.has_meanstructure)
+
+
+
+function non_posdef_return(par)
+    if eltype(par) <: AbstractFloat 
+        return floatmax(eltype(par))
     else
-        ld = logdet(a)
-        semml.inverses .= LinearAlgebra.inv!(a)
+        return typemax(eltype(par))
+    end
+end
+
+function objective!(semml::SemML, par, model::Sem{O, I, L, D}, has_meanstructure::Val{false}) where {O, I <: SemImplySymbolic, L, D}
+    let Σ = Σ(imply(model)), Σₒ = obs_cov(observed(model)), Σ⁻¹Σₒ =  semml.mult, Σ⁻¹ = Σ⁻¹(semml)
+
+        copyto!(Σ⁻¹, Σ)
+        Σ_chol = cholesky!(Symmetric(Σ⁻¹); check = false)
+
+        if !isposdef(Σ_chol) return non_posdef_return(par) end
+
+        ld = logdet(Σ_chol)
+        Σ⁻¹ .= LinearAlgebra.inv!(Σ_chol)
+        mul!(Σ⁻¹Σₒ, Σ⁻¹, Σₒ)
+
+        return ld + tr(Σ⁻¹Σₒ)
+    end
+end
+
+function objective!(semml::SemML, par, model::Sem{O, I, L, D}, has_meanstructure::Val{false}) where {O, I <: SemImplySymbolic, L, D}
+    let Σ = Σ(imply(model)), Σₒ = obs_cov(observed(model)), Σ⁻¹Σₒ =  semml.mult, Σ⁻¹ = Σ⁻¹(semml)
+
+        Σ_chol = SemML_factorization!(Σ⁻¹, Σ)
+
+        if !isposdef(Σ_chol) return non_posdef_return(par) end
+
+        ld = SemML_ld_inv_mul!(Σ⁻¹, Σ⁻¹Σₒ, Σ_chol, Σₒ)
+
+        return ld + tr(Σ⁻¹S)
+    end
+end
+
+function SemML_meandiff(μₒ, μ, Σ⁻¹)
+    μ₋ = μₒ - μ
+    μ₋ᵀΣ⁻¹ = μ₋'*Σ⁻¹
+    return μ₋, μ₋ᵀΣ⁻¹
+end
+
+# μ₋ = μ_diff
+# μ₋Σ⁻¹ = diff⨉inv
+
+function objective!(semml::SemML, par, model::Sem{O, I, L, D}, has_meanstructure::Val{true}) where {O, I <: SemImplySymbolic, L, D}
+    let Σ = Σ(imply(model)), Σₒ = obs_cov(observed(model)), Σ⁻¹Σₒ =  semml.mult, Σ⁻¹ = Σ⁻¹(semml),
+        μ = μ(imply(model)), \
+
+        Σ_chol = SemML_factorization!(Σ⁻¹, Σ)
+
+        if !isposdef(Σ_chol) return non_posdef_return(par) end
+
+        ld = SemML_ld_inv_mul!(Σ⁻¹, Σ⁻¹Σₒ, Σ_chol, Σₒ)
+        
+        μ₋ = μₒ - μ
+
+        return ld + tr(semml.mult) + dot(μ₋, Σ⁻¹, μ₋)
+
+    end
+
+    
+end
+
+function gradient!(semml::SemML, par, model::Sem{O, I, L, D}, has_meanstructure::Val{false}) where {O, I <: SemImplySymbolic, L, D}
+
+    # cholesky factorization
+    copyto!(semml.inverses, Σ(imply(model)))
+    a = cholesky!(Symmetric(semml.inverses); check = false)
+    
+    # ld, inverse, mult
+    ld = logdet(a)
+    semml.inverses .= LinearAlgebra.inv!(a)
+    mul!(semml.mult, semml.inverses, obs_cov(observed(model)))
+
+    return (vec(semml.inverses)-vec(semml.mult*semml.inverses))'*∇Σ(imply(model))
+end
+
+function gradient!(semml::SemML, par, model::Sem{O, I, L, D}, has_meanstructure::Val{true}) where {O, I <: SemImplySymbolic, L, D}
+
+    # cholesky factorization
+    copyto!(semml.inverses, Σ(imply(model)))
+    a = cholesky!(Symmetric(semml.inverses); check = false)
+    
+    # ld, inverse, mult
+    ld = logdet(a)
+    semml.inverses .= LinearAlgebra.inv!(a)
+    mul!(semml.mult, semml.inverses, obs_cov(observed(model)))
+
+    # meandiff
+    μ_diff = obs_mean(observed(model)) - μ(imply(model))
+    diff⨉inv = μ_diff'*semml.inverses
+
+    gradient_Σ = vec(semml.inverses*(LinearAlgebra.I - semml.mult - μ_diff*diff⨉inv))'*∇Σ(imply(model))
+    gradient_μ = 2*diff⨉inv*∇μ(imply(model))
+
+    return (gradient_Σ - gradient_μ)'
+end
+
+
+function hessian!(semml::SemML, par, model::Sem{O, I, L, D}, has_meanstructure::Val{false}) where {O, I <: SemImplySymbolic, L, D}
+
+    # cholesky factorization
+    copyto!(semml.inverses, Σ(imply(model)))
+    a = cholesky!(Symmetric(semml.inverses); check = false)
+    
+    # ld, inverse, mult
+    ld = logdet(a)
+    semml.inverses .= LinearAlgebra.inv!(a)
+    mul!(semml.mult, semml.inverses, obs_cov(observed(model)))
+
+    if semml.approx_H
+        hessian = 2*∇Σ(imply(model))'*kron(semml.inverses, semml.inverses)*∇Σ(imply(model))
+    else
+        J = (vec(semml.inverses)-vec(semml.mult*semml.inverses))'
+        H_outer = 2*kron(semml.mult*semml.inverses, semml.inverses) - kron(semml.inverses, semml.inverses)
+        hessian = ∇Σ(imply(model))'*H_outer*∇Σ(imply(model))
+        ∇²Σ_function(imply(model))(∇²Σ(imply(model)), J, par)
+        hessian += ∇²Σ(imply(model))
+    end
+    
+    return hessian
+end
+
+function hessian!(semml::SemML, par, model::Sem{O, I, L, D}, has_meanstructure::Val{true}) where {O, I <: SemImplySymbolic, L, D}
+    throw(DomainError(H, "hessian of ML + meanstructure is not implemented yet"))
+end
+
 
         # without means
         if isnothing(μ(imply(model)))
@@ -107,22 +237,13 @@ function (semml::SemML)(
             end
         else
         # with means
-        μ_diff = obs_mean(observed(model)) - μ(imply(model))
-        diff⨉inv = μ_diff'*semml.inverses
+
             if H throw(DomainError(H, "hessian of ML + meanstructure is not implemented yet")) end
             if G
-                gradient = 
-                    vec(
-                        semml.inverses*(
-                            LinearAlgebra.I - 
-                            obs_cov(observed(model))*semml.inverses - 
-                            μ_diff*diff⨉inv))'*∇Σ(imply(model)) -
-                    2*diff⨉inv*∇μ(imply(model))
-                semml.gradient .= gradient'
+
             end
             if F
-                mul!(semml.mult, semml.inverses, obs_cov(observed(model)))
-                semml.objective[1] = ld + tr(semml.mult) + diff⨉inv*μ_diff
+
             end
         end
     end
