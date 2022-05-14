@@ -130,13 +130,13 @@ end
 
 function gradient!(gradient, loss::SemLoss, par, model)
     for (lossfun, w) in zip(loss.functions, loss.weights)
-        gradient .+= w*gradient!(lossfun, par, model)
+        @. gradient += w*gradient!(lossfun, par, model)
     end
 end
 
 function hessian!(hessian, loss::SemLoss, par, model)
     for (lossfun, w) in zip(loss.functions, loss.weights)
-        hessian .+= w*hessian!(lossfun, par, model)
+        @. hessian += w*hessian!(lossfun, par, model)
     end
 end
 
@@ -159,8 +159,8 @@ end
 function gradient_hessian!(gradient, hessian, loss::SemLoss, par, model)
     for (lossfun, w) in zip(loss.functions, loss.weights)
         new_gradient, new_hessian = gradient_hessian!(lossfun, par, model)
-        gradient .+= w*new_gradient
-        hessian .+= w*new_hessian
+        @. gradient += w*new_gradient
+        @. hessian += w*new_hessian
     end
 end
 
@@ -175,20 +175,109 @@ end
 # wrapper to update gradient/hessian and return objective value
 function objective_gradient_wrap_(gradient, lossfun, par, model, w)
     new_objective, new_gradient = objective_gradient!(lossfun, par, model)
-    gradient .+= w*new_gradient
+    @. gradient += w*new_gradient
     return w*new_objective
 end
 
 function objective_hessian_wrap_(hessian, lossfun, par, model, w)
     new_objective, new_hessian = objective_hessian!(lossfun, par, model)
-    hessian .+= w*new_hessian
+    @. hessian += w*new_hessian
     return w*new_objective
 end
 
 function objective_gradient_hessian_wrap_(gradient, hessian, lossfun, par, model, w)
     new_objective, new_gradient, new_hessian = objective_gradient_hessian!(lossfun, par, model)
-    gradient .+= w*new_gradient
-    hessian .+= w*new_hessian
+    @. gradient += w*new_gradient
+    @. hessian += w*new_hessian
     return w*new_objective
 end
 
+#####################################################################################################
+# methods for SemEnsemble
+#####################################################################################################
+
+function objective!(ensemble::SemEnsemble, par)
+    return mapreduce(
+        model_weight -> model_weight[2]*objective!(model_weight[1], par), 
+        +, 
+        zip(ensemble.sems, ensemble.weights)
+        )
+end
+
+function gradient!(gradient, ensemble::SemEnsemble, par)
+    for (model, w) in zip(ensemble.sems, ensemble.weights)
+        gradient_new = similar(gradient)
+        gradient!(gradient_new, model, par)
+        @. gradient += w*gradient_new
+    end
+end
+
+function hessian!(hessian, ensemble::SemEnsemble, par)
+    for (model, w) in zip(ensemble.sems, ensemble.weights)
+        hessian_new = similar(hessian)
+        hessian!(hessian_new, model, par)
+        @. hessian += w*hessian_new
+    end
+end
+
+function objective_gradient!(gradient, ensemble::SemEnsemble, par)
+    return mapreduce(
+        model_weight -> objective_gradient_wrap_(gradient, model_weight[1], par, model_weight[2]),
+        +, 
+        zip(ensemble.sems, ensemble.weights)
+        )
+end
+
+function objective_hessian!(hessian, ensemble::SemEnsemble, par)
+    return mapreduce(
+        model_weight -> objective_hessian_wrap_(hessian, model_weight[1], par, model_weight[2]),
+        +,
+        zip(ensemble.sems, ensemble.weights)
+        )
+end
+
+function gradient_hessian!(gradient, hessian, ensemble::SemEnsemble, par)
+    for (model, w) in zip(ensemble.sems, ensemble.weights)
+
+        new_gradient = similar(gradient)
+        new_hessian = similar(hessian)
+
+        gradient_hessian!(new_gradient, new_hessian, model, par)
+
+        @. gradient += w*new_gradient
+        @. hessian += w*new_hessian
+
+    end
+end
+
+function objective_gradient_hessian!(gradient, hessian, ensemble::SemEnsemble, par)
+    return mapreduce(
+        model_weight -> objective_gradient_hessian_wrap_(gradient, hessian, model_weight[1], par, model, model_weight[2]),
+        +, 
+        zip(ensemble.sems, ensemble.weights)
+        )
+end
+
+# wrapper to update gradient/hessian and return objective value
+function objective_gradient_wrap_(gradient, model::AbstractSingleSem, par, w)
+    gradient_pre = similar(gradient)
+    new_objective = objective_gradient!(gradient_pre, model, par)
+    @. gradient += w*gradient_pre
+    return w*new_objective
+end
+
+function objective_hessian_wrap_(hessian, model::AbstractSingleSem, par, w)
+    hessian_pre = similar(hessian)
+    new_objective = objective_hessian!(hessian_pre, model, par)
+    @. hessian += w*new_hessian
+    return w*new_objective
+end
+
+function objective_gradient_hessian_wrap_(gradient, hessian, model::AbstractSingleSem, par, w)
+    gradient_pre = similar(gradient)
+    hessian_pre = similar(hessian)
+    new_objective = objective_gradient_hessian!(gradient_pre, hessian_pre, model, par)
+    @. gradient += w*new_gradient
+    @. hessian += w*new_hessian
+    return w*new_objective
+end

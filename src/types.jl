@@ -29,7 +29,7 @@ my_ridge_loss = SemRidge(...)
 my_loss = SemLoss(SemML, SemRidge)
 ```
 """
-mutable struct SemLoss{F <: Tuple, T, FT, GT, HT}
+mutable struct SemLoss{F <: Tuple, T}
     functions::F
     weights::T
 end
@@ -40,6 +40,7 @@ function SemLoss(functions...; loss_weights = nothing, kwargs...)
         loss_weights = SemWeight.(loss_weights)
     else
         loss_weights = Tuple(SemWeight(nothing for _ in 1:length(functions)))
+    end
 
     return SemLoss(
         functions,
@@ -129,7 +130,7 @@ end
 # ensemble models
 #####################################################################################################
 
-struct SemEnsemble{N, T <: Tuple, V <: AbstractVector, D, I, FT, GT, HT} <: AbstractSemCollection
+struct SemEnsemble{N, T <: Tuple, V <: AbstractVector, D, I} <: AbstractSemCollection
     n::N
     sems::T
     weights::V
@@ -139,6 +140,7 @@ end
 
 function SemEnsemble(models...; diff = SemDiffOptim, weights = nothing, parameter_type = Float64, kwargs...)
     n = length(models)
+    npar = n_par(models[1])
 
     # default weights
     
@@ -168,22 +170,7 @@ function SemEnsemble(models...; diff = SemDiffOptim, weights = nothing, paramete
         weights,
         diff,
         id
-    )
-end
-
-function (ensemble::SemEnsemble)(par, F, G, H)
-
-    if H ensemble.hessian .= 0.0 end
-    if G ensemble.gradient .= 0.0 end
-    if F ensemble.objective .= 0.0 end
-            
-    for (model, weight) in zip(ensemble.sems, ensemble.weights)
-        model(par, F, G, H)
-        if H ensemble.hessian .+= weight*hessian(model) end
-        if G ensemble.gradient .+= weight*gradient(model) end
-        if F ensemble.objective .+= weight*objective(model) end
-    end
-
+        )
 end
 
 n_models(ensemble::SemEnsemble) = ensemble.n
