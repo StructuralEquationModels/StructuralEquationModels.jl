@@ -152,9 +152,9 @@ end
 
 # dispatch on meanstructure
 objective!(imply::RAMSymbolic, par, model) = 
-    objective!(imply::RAMSymbolic, par, model, imply.has_meanstructure)
+    objective!(imply, par, model, imply.has_meanstructure)
 gradient!(imply::RAMSymbolic, par, model) = 
-    gradient!(imply::RAMSymbolic, par, model, imply.has_meanstructure)
+    gradient!(imply, par, model, imply.has_meanstructure)
 
 # objective
 function objective!(imply::RAMSymbolic, par, model, has_meanstructure::Val{T}) where T
