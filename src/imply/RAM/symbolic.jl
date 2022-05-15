@@ -142,7 +142,7 @@ function RAMSymbolic(;
         ∇μ_function,
         ∇μ,
         identifier,
-        has_meanstructure = has_meanstructure
+        has_meanstructure
     )
 end
 
@@ -157,16 +157,16 @@ gradient!(imply::RAMSymbolic, par, model) =
     gradient!(imply::RAMSymbolic, par, model, imply.has_meanstructure)
 
 # objective
-function objective!(imply::RAMSymbolic, par, model, imply.has_meanstructure::Val{T}) where T
+function objective!(imply::RAMSymbolic, par, model, has_meanstructure::Val{T}) where T
     imply.Σ_function(imply.Σ, par)
-    T || imply.μ_function(imply.μ, par)
+    T && imply.μ_function(imply.μ, par)
 end
 
 # gradient
-function gradient!(imply::RAMSymbolic, par, model, imply.has_meanstructure::Val{T}) where T
+function gradient!(imply::RAMSymbolic, par, model, has_meanstructure::Val{T}) where T
     objective!(imply, par, model, imply.has_meanstructure)
     imply.∇Σ_function(imply.∇Σ, par)
-    T || imply.∇μ_function(imply.∇μ, par)
+    T && imply.∇μ_function(imply.∇μ, par)
 end
 
 # other methods
@@ -205,6 +205,8 @@ end
 Σ_function(imply::RAMSymbolic) = imply.Σ_function
 ∇Σ_function(imply::RAMSymbolic) = imply.∇Σ_function
 ∇²Σ_function(imply::RAMSymbolic) = imply.∇²Σ_function
+
+has_meanstructure(imply::RAMSymbolic) = imply.has_meanstructure
 
 ############################################################################
 ### additional functions

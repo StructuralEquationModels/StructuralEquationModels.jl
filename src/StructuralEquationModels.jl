@@ -11,6 +11,7 @@ export *, ==, @StenoGraph, AbstractEdge, AbstractNode, DirectedEdge, Edge, EdgeM
 
 # type hierarchy
 include("types.jl")
+include("objective_gradient_hessian.jl")
 # fitted objects
 include("frontend/fit/SemFit.jl")
 # specification of models

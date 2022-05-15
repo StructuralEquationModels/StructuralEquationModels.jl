@@ -5,8 +5,8 @@
 ############################################################################
 
 struct SemML{INV,M,M2,B, V} <: SemLossFunction
-    inverses::INV #preallocated inverses of imp_cov
-    mult::M
+    Σ⁻¹::INV 
+    Σ⁻¹Σₒ::M
     meandiff::M2
     approx_H::B
     has_meanstructure::V
@@ -35,12 +35,12 @@ end
 
 # first, dispatch for meanstructure
 objective!(semml::SemML, par, model) = objective!(semml::SemML, par, model, semml.has_meanstructure)
-gradient!(gradient, semml::SemML, par, model) = gradient!(gradient, semml::SemML, par, model, semml.has_meanstructure)
-hessian!(hessian, semml::SemML, par, model) = hessian!(hessian, semml::SemML, par, model, semml.has_meanstructure)
-objective_gradient!(gradient, semml::SemML, par, model) = objective_gradient!(gradient, semml::SemML, par, model, semml.has_meanstructure)
-objective_hessian!(hessian, semml::SemML, par, model) = objective_hessian!(hessian, semml::SemML, par, model, semml.has_meanstructure)
-gradient_hessian!(gradient, hessian, semml::SemML, par, model) = gradient_hessian!(gradient, hessian, semml::SemML, par, model, semml.has_meanstructure)
-objective_gradient_hessian!(gradient, hessian, semml::SemML, par, model) = objective_gradient_hessian!(gradient, hessian, semml::SemML, par, model, semml.has_meanstructure)
+gradient!(semml::SemML, par, model) = gradient!(semml::SemML, par, model, semml.has_meanstructure)
+hessian!(semml::SemML, par, model) = hessian!(semml::SemML, par, model, semml.has_meanstructure)
+objective_gradient!(semml::SemML, par, model) = objective_gradient!(semml::SemML, par, model, semml.has_meanstructure)
+objective_hessian!(semml::SemML, par, model) = objective_hessian!(semml::SemML, par, model, semml.has_meanstructure)
+gradient_hessian!(semml::SemML, par, model) = gradient_hessian!(semml::SemML, par, model, semml.has_meanstructure)
+objective_gradient_hessian!(semml::SemML, par, model) = objective_gradient_hessian!(semml::SemML, par, model, semml.has_meanstructure)
 
 ############################################################################
 ### Symbolic Imply Types
@@ -49,7 +49,7 @@ objective_gradient_hessian!(gradient, hessian, semml::SemML, par, model) = objec
 
 function objective!(semml::SemML, par, model::Sem{O, I, L, D}, has_meanstructure::Val{false}) where {O, I <: SemImplySymbolic, L, D}
     
-    let Σ = Σ(imply(model)), Σₒ = obs_cov(observed(model)), Σ⁻¹Σₒ =  semml.mult, Σ⁻¹ = Σ⁻¹(semml)
+    let Σ = Σ(imply(model)), Σₒ = obs_cov(observed(model)), Σ⁻¹Σₒ =  Σ⁻¹Σₒ(semml), Σ⁻¹ = Σ⁻¹(semml)
 
         copyto!(Σ⁻¹, Σ)
         Σ_chol = cholesky!(Symmetric(Σ⁻¹); check = false)
@@ -66,7 +66,7 @@ end
 
 function objective!(semml::SemML, par, model::Sem{O, I, L, D}, has_meanstructure::Val{true}) where {O, I <: SemImplySymbolic, L, D}
     
-    let Σ = Σ(imply(model)), Σₒ = obs_cov(observed(model)), Σ⁻¹Σₒ =  semml.mult, Σ⁻¹ = Σ⁻¹(semml),
+    let Σ = Σ(imply(model)), Σₒ = obs_cov(observed(model)), Σ⁻¹Σₒ =  Σ⁻¹Σₒ(semml), Σ⁻¹ = Σ⁻¹(semml),
         μ = μ(imply(model)), μₒ = obs_mean(observed(model))
         
         copyto!(Σ⁻¹, Σ)
@@ -80,7 +80,7 @@ function objective!(semml::SemML, par, model::Sem{O, I, L, D}, has_meanstructure
         
         μ₋ = μₒ - μ
 
-        return ld + tr(semml.mult) + dot(μ₋, Σ⁻¹, μ₋)
+        return ld + tr(Σ⁻¹Σₒ(semml)) + dot(μ₋, Σ⁻¹, μ₋)
     end
 end
 
@@ -88,7 +88,7 @@ end
 
 function gradient!(semml::SemML, par, model::Sem{O, I, L, D}, has_meanstructure::Val{false}) where {O, I <: SemImplySymbolic, L, D}
 
-    let Σ = Σ(imply(model)), Σₒ = obs_cov(observed(model)), Σ⁻¹Σₒ =  semml.mult, Σ⁻¹ = Σ⁻¹(semml), ∇Σ = ∇Σ(imply(model))
+    let Σ = Σ(imply(model)), Σₒ = obs_cov(observed(model)), Σ⁻¹Σₒ =  Σ⁻¹Σₒ(semml), Σ⁻¹ = Σ⁻¹(semml), ∇Σ = ∇Σ(imply(model))
         
         copyto!(Σ⁻¹, Σ)
         Σ_chol = cholesky!(Symmetric(Σ⁻¹); check = false)
@@ -97,13 +97,13 @@ function gradient!(semml::SemML, par, model::Sem{O, I, L, D}, has_meanstructure:
         mul!(Σ⁻¹Σₒ, Σ⁻¹, Σₒ)
 
         gradient = (vec(Σ⁻¹)-vec(Σ⁻¹Σₒ*Σ⁻¹))'*∇Σ
-        return gradient
+        return gradient'
     end
 end
 
 function gradient!(semml::SemML, par, model::Sem{O, I, L, D}, has_meanstructure::Val{true}) where {O, I <: SemImplySymbolic, L, D}
 
-    let Σ = Σ(imply(model)), ∇Σ = ∇Σ(imply(model)), Σₒ = obs_cov(observed(model)), Σ⁻¹Σₒ =  semml.mult, Σ⁻¹ = Σ⁻¹(semml),
+    let Σ = Σ(imply(model)), ∇Σ = ∇Σ(imply(model)), Σₒ = obs_cov(observed(model)), Σ⁻¹Σₒ =  Σ⁻¹Σₒ(semml), Σ⁻¹ = Σ⁻¹(semml),
         μ = μ(imply(model)), ∇μ = ∇μ(imply(model)), μₒ = obs_mean(observed(model))
 
         copyto!(Σ⁻¹, Σ)
@@ -125,7 +125,7 @@ end
 
 function hessian!(semml::SemML, par, model::Sem{O, I, L, D}, has_meanstructure::Val{false}) where {O, I <: SemImplySymbolic, L, D}
 
-    let Σ = Σ(imply(model)), ∇Σ = ∇Σ(imply(model)), Σₒ = obs_cov(observed(model)), Σ⁻¹Σₒ =  semml.mult, Σ⁻¹ = Σ⁻¹(semml),
+    let Σ = Σ(imply(model)), ∇Σ = ∇Σ(imply(model)), Σₒ = obs_cov(observed(model)), Σ⁻¹Σₒ =  Σ⁻¹Σₒ(semml), Σ⁻¹ = Σ⁻¹(semml),
         ∇²Σ_function! = ∇²Σ_function(imply(model)), ∇²Σ = ∇²Σ(imply(model))
 
     copyto!(Σ⁻¹, Σ)
@@ -160,7 +160,8 @@ end
 
 function objective_gradient!(semml::SemML, par, model::Sem{O, I, L, D}, has_meanstructure::Val{false}) where {O, I <: SemImplySymbolic, L, D}
     
-    let Σ = Σ(imply(model)), Σₒ = obs_cov(observed(model)), Σ⁻¹Σₒ =  semml.mult, Σ⁻¹ = Σ⁻¹(semml)
+    let Σ = Σ(imply(model)), Σₒ = obs_cov(observed(model)), Σ⁻¹Σₒ =  Σ⁻¹Σₒ(semml), Σ⁻¹ = Σ⁻¹(semml),
+        ∇Σ = ∇Σ(imply(model))
 
         copyto!(Σ⁻¹, Σ)
         Σ_chol = cholesky!(Symmetric(Σ⁻¹); check = false)
@@ -176,14 +177,15 @@ function objective_gradient!(semml::SemML, par, model::Sem{O, I, L, D}, has_mean
 
         gradient = (vec(Σ⁻¹)-vec(Σ⁻¹Σₒ*Σ⁻¹))'*∇Σ
 
-        return objective, gradient
+        return objective, gradient'
     end
 end
 
 function objective_gradient!(semml::SemML, par, model::Sem{O, I, L, D}, has_meanstructure::Val{true}) where {O, I <: SemImplySymbolic, L, D}
     
-    let Σ = Σ(imply(model)), Σₒ = obs_cov(observed(model)), Σ⁻¹Σₒ =  semml.mult, Σ⁻¹ = Σ⁻¹(semml),
-        μ = μ(imply(model)), μₒ = obs_mean(observed(model))
+    let Σ = Σ(imply(model)), Σₒ = obs_cov(observed(model)), Σ⁻¹Σₒ =  Σ⁻¹Σₒ(semml), Σ⁻¹ = Σ⁻¹(semml),
+        μ = μ(imply(model)), μₒ = obs_mean(observed(model)), 
+        ∇Σ = ∇Σ(imply(model)), ∇μ = ∇μ(imply(model))
         
         copyto!(Σ⁻¹, Σ)
         Σ_chol = cholesky!(Symmetric(Σ⁻¹); check = false)
@@ -195,7 +197,7 @@ function objective_gradient!(semml::SemML, par, model::Sem{O, I, L, D}, has_mean
             Σ⁻¹ .= LinearAlgebra.inv!(Σ_chol)
             mul!(Σ⁻¹Σₒ, Σ⁻¹, Σₒ)
             μ₋ = μₒ - μ
-            objective = ld + tr(semml.mult) + dot(μ₋, Σ⁻¹, μ₋)
+            objective = ld + tr(Σ⁻¹Σₒ(semml)) + dot(μ₋, Σ⁻¹, μ₋)
         end
         
         μ₋ᵀΣ⁻¹ = μ₋'*Σ⁻¹
@@ -209,7 +211,8 @@ end
 
 function objective_hessian!(semml::SemML, par, model::Sem{O, I, L, D}, has_meanstructure::Val{false}) where {O, I <: SemImplySymbolic, L, D}
     
-    let Σ = Σ(imply(model)), Σₒ = obs_cov(observed(model)), Σ⁻¹Σₒ =  semml.mult, Σ⁻¹ = Σ⁻¹(semml),
+    let Σ = Σ(imply(model)), Σₒ = obs_cov(observed(model)), Σ⁻¹Σₒ =  Σ⁻¹Σₒ(semml), Σ⁻¹ = Σ⁻¹(semml),
+        ∇Σ = ∇Σ(imply(model)), ∇μ = ∇μ(imply(model)),
         ∇²Σ_function! = ∇²Σ_function(imply(model)), ∇²Σ = ∇²Σ(imply(model))
 
         copyto!(Σ⁻¹, Σ)
@@ -249,7 +252,8 @@ end
 
 function gradient_hessian!(semml::SemML, par, model::Sem{O, I, L, D}, has_meanstructure::Val{false}) where {O, I <: SemImplySymbolic, L, D}
 
-    let Σ = Σ(imply(model)), Σₒ = obs_cov(observed(model)), Σ⁻¹Σₒ =  semml.mult, Σ⁻¹ = Σ⁻¹(semml), ∇Σ = ∇Σ(imply(model)),
+    let Σ = Σ(imply(model)), Σₒ = obs_cov(observed(model)), Σ⁻¹Σₒ =  Σ⁻¹Σₒ(semml), Σ⁻¹ = Σ⁻¹(semml), 
+        ∇Σ = ∇Σ(imply(model)), ∇μ = ∇μ(imply(model)),
         ∇²Σ_function! = ∇²Σ_function(imply(model)), ∇²Σ = ∇²Σ(imply(model))
         
         copyto!(Σ⁻¹, Σ)
@@ -285,7 +289,7 @@ end
 
 function objective_gradient_hessian!(semml::SemML, par, model::Sem{O, I, L, D}, has_meanstructure::Val{false}) where {O, I <: SemImplySymbolic, L, D}
 
-    let Σ = Σ(imply(model)), Σₒ = obs_cov(observed(model)), Σ⁻¹Σₒ =  semml.mult, Σ⁻¹ = Σ⁻¹(semml), ∇Σ = ∇Σ(imply(model)),
+    let Σ = Σ(imply(model)), Σₒ = obs_cov(observed(model)), Σ⁻¹Σₒ =  Σ⁻¹Σₒ(semml), Σ⁻¹ = Σ⁻¹(semml), ∇Σ = ∇Σ(imply(model)),
         ∇²Σ_function! = ∇²Σ_function(imply(model)), ∇²Σ = ∇²Σ(imply(model))
         
         copyto!(Σ⁻¹, Σ)
@@ -347,7 +351,7 @@ end
 # objective ----------------------------------------------------------------------------------------------------------------------
 
 function objective!(semml::SemML, par, model::Sem{O, I, L, D}, has_meanstructure::Val{false}) where {O, I <: RAM, L, D}
-    let Σ = Σ(imply(model)), Σₒ = obs_cov(observed(model)), Σ⁻¹Σₒ =  semml.mult, Σ⁻¹ = Σ⁻¹(semml)
+    let Σ = Σ(imply(model)), Σₒ = obs_cov(observed(model)), Σ⁻¹Σₒ =  Σ⁻¹Σₒ(semml), Σ⁻¹ = Σ⁻¹(semml)
 
         copyto!(Σ⁻¹, Σ)
         Σ_chol = cholesky!(Symmetric(Σ⁻¹); check = false)
@@ -364,7 +368,7 @@ end
 
 function objective!(semml::SemML, par, model::Sem{O, I, L, D}, has_meanstructure::Val{true}) where {O, I <: RAM, L, D}
     
-    let Σ = Σ(imply(model)), Σₒ = obs_cov(observed(model)), Σ⁻¹Σₒ =  semml.mult, Σ⁻¹ = Σ⁻¹(semml),
+    let Σ = Σ(imply(model)), Σₒ = obs_cov(observed(model)), Σ⁻¹Σₒ =  Σ⁻¹Σₒ(semml), Σ⁻¹ = Σ⁻¹(semml),
         μ = μ(imply(model)), μₒ = obs_mean(observed(model))
         
         copyto!(Σ⁻¹, Σ)
@@ -378,16 +382,16 @@ function objective!(semml::SemML, par, model::Sem{O, I, L, D}, has_meanstructure
         
         μ₋ = μₒ - μ
 
-        return ld + tr(semml.mult) + dot(μ₋, Σ⁻¹, μ₋)
+        return ld + tr(Σ⁻¹Σₒ(semml)) + dot(μ₋, Σ⁻¹, μ₋)
     end
 end
 
 # gradient -----------------------------------------------------------------------------------------------------------------------
 
-function gradient!(semml::SemML, par, model::Sem{O, I, L, D}, has_meanstructure::Val{false}) where {O, I <: SemImplySymbolic, L, D}
+function gradient!(semml::SemML, par, model::Sem{O, I, L, D}, has_meanstructure::Val{false}) where {O, I <: RAM, L, D}
 
-    let Σ = Σ(imply(model)), Σₒ = obs_cov(observed(model)), Σ⁻¹Σₒ =  semml.mult, Σ⁻¹ = Σ⁻¹(semml),
-        S = S(imply(model)), F⨉I_A⁻¹ = F⨉I_A⁻¹(imply(model)), I_A = I_A(imply(model)), 
+    let Σ = Σ(imply(model)), Σₒ = obs_cov(observed(model)), Σ⁻¹Σₒ =  Σ⁻¹Σₒ(semml), Σ⁻¹ = Σ⁻¹(semml),
+        S = S(imply(model)), F⨉I_A⁻¹ = F⨉I_A⁻¹(imply(model)), #I_A = I_A(imply(model)), 
         ∇A = ∇A(imply(model)), ∇S = ∇S(imply(model))
         
         copyto!(Σ⁻¹, Σ)
@@ -403,9 +407,9 @@ function gradient!(semml::SemML, par, model::Sem{O, I, L, D}, has_meanstructure:
     end
 end
 
-function gradient!(semml::SemML, par, model::Sem{O, I, L, D}, has_meanstructure::Val{true}) where {O, I <: SemImplySymbolic, L, D}
+function gradient!(semml::SemML, par, model::Sem{O, I, L, D}, has_meanstructure::Val{true}) where {O, I <: RAM, L, D}
 
-    let Σ = Σ(imply(model)), Σₒ = obs_cov(observed(model)), Σ⁻¹Σₒ =  semml.mult, Σ⁻¹ = Σ⁻¹(semml),
+    let Σ = Σ(imply(model)), Σₒ = obs_cov(observed(model)), Σ⁻¹Σₒ =  Σ⁻¹Σₒ(semml), Σ⁻¹ = Σ⁻¹(semml),
         S = S(imply(model)), F⨉I_A⁻¹ = F⨉I_A⁻¹(imply(model)), I_A = I_A(imply(model)), 
         ∇A = ∇A(imply(model)), ∇S = ∇S(imply(model)), ∇M = ∇M(imply(model)),
         μ = μ(imply(model)), μₒ = obs_mean(observed(model))
@@ -431,9 +435,9 @@ end
 
 # objective_gradient -------------------------------------------------------------------------------------------------------------
 
-function objective_gradient!(semml::SemML, par, model::Sem{O, I, L, D}, has_meanstructure::Val{false}) where {O, I <: SemImplySymbolic, L, D}
+function objective_gradient!(semml::SemML, par, model::Sem{O, I, L, D}, has_meanstructure::Val{false}) where {O, I <: RAM, L, D}
 
-    let Σ = Σ(imply(model)), Σₒ = obs_cov(observed(model)), Σ⁻¹Σₒ =  semml.mult, Σ⁻¹ = Σ⁻¹(semml),
+    let Σ = Σ(imply(model)), Σₒ = obs_cov(observed(model)), Σ⁻¹Σₒ =  Σ⁻¹Σₒ(semml), Σ⁻¹ = Σ⁻¹(semml),
         S = S(imply(model)), F⨉I_A⁻¹ = F⨉I_A⁻¹(imply(model)), I_A = I_A(imply(model)), 
         ∇A = ∇A(imply(model)), ∇S = ∇S(imply(model))
         
@@ -456,9 +460,9 @@ function objective_gradient!(semml::SemML, par, model::Sem{O, I, L, D}, has_mean
     end
 end
 
-function objective_gradient!(semml::SemML, par, model::Sem{O, I, L, D}, has_meanstructure::Val{true}) where {O, I <: SemImplySymbolic, L, D}
+function objective_gradient!(semml::SemML, par, model::Sem{O, I, L, D}, has_meanstructure::Val{true}) where {O, I <: RAM, L, D}
 
-    let Σ = Σ(imply(model)), Σₒ = obs_cov(observed(model)), Σ⁻¹Σₒ =  semml.mult, Σ⁻¹ = Σ⁻¹(semml),
+    let Σ = Σ(imply(model)), Σₒ = obs_cov(observed(model)), Σ⁻¹Σₒ =  Σ⁻¹Σₒ(semml), Σ⁻¹ = Σ⁻¹(semml),
         S = S(imply(model)), F⨉I_A⁻¹ = F⨉I_A⁻¹(imply(model)), I_A = I_A(imply(model)), 
         ∇A = ∇A(imply(model)), ∇S = ∇S(imply(model)), ∇M = ∇M(imply(model)),
         μ = μ(imply(model)), μₒ = obs_mean(observed(model))
@@ -473,7 +477,7 @@ function objective_gradient!(semml::SemML, par, model::Sem{O, I, L, D}, has_mean
             Σ⁻¹ .= LinearAlgebra.inv!(Σ_chol)
             mul!(Σ⁻¹Σₒ, Σ⁻¹, Σₒ)
             μ₋ = μₒ - μ
-            objective = ld + tr(semml.mult) + dot(μ₋, Σ⁻¹, μ₋)
+            objective = ld + tr(Σ⁻¹Σₒ(semml)) + dot(μ₋, Σ⁻¹, μ₋)
         end
 
         M = F⨉I_A⁻¹'*(I-Σ⁻¹Σₒ)'Σ⁻¹*F⨉I_A⁻¹
@@ -504,6 +508,13 @@ function update_observed(lossfun::SemML, observed::SemObs; kwargs...)
         return SemML(;observed = observed, kwargs...)
     end
 end
+
+############################################################################
+### additional methods
+############################################################################
+
+Σ⁻¹(semml::SemML) = semml.Σ⁻¹
+Σ⁻¹Σₒ(semml::SemML) = semml.Σ⁻¹Σₒ
 
 ############################################################################
 ### Pretty Printing

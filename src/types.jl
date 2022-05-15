@@ -39,7 +39,7 @@ function SemLoss(functions...; loss_weights = nothing, kwargs...)
     if !isnothing(loss_weights) 
         loss_weights = SemWeight.(loss_weights)
     else
-        loss_weights = Tuple(SemWeight(nothing for _ in 1:length(functions)))
+        loss_weights = Tuple(SemWeight(nothing) for _ in 1:length(functions))
     end
 
     return SemLoss(
