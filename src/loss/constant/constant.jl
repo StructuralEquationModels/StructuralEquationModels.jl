@@ -4,28 +4,25 @@
 ### Types
 ############################################################################
 
-struct SemConstant{FT, GT, HT} <: SemLossFunction
-    objective::FT
-    gradient::GT
-    hessian::HT
+struct SemConstant{C} <: SemLossFunction 
+    c::C
 end
 
 ############################################################################
 ### Constructors
 ############################################################################
 
-function SemConstant(;constant_loss, n_par, parameter_type = Float64, kwargs...)
-    return SemConstant(
-        [constant_loss],
-        zeros(parameter_type, n_par),
-        zeros(parameter_type, n_par, n_par))
+function SemConstant(;constant_loss, kwargs...)
+    return SemConstant(constant_loss)
 end
 
 ############################################################################
-### functors
+### methods
 ############################################################################
 
-function (constant::SemConstant)(par, F, G, H, model) end
+objective!(constant::SemConstant, par, model) = constant.c
+gradient!(constant::SemConstant, par, model) = zero(par)
+hessian!(constant::SemConstant, par, model) = zeros(eltype(par), length(par), length(par))
 
 ############################################################################
 ### Recommended methods

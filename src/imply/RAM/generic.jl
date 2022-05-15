@@ -203,7 +203,6 @@ function gradient!(imply::RAM, par, model, has_meanstructure::Val{T}) where T
 
 end
 
-# other methods
 objective_gradient!(imply::RAM, par, model, has_meanstructure) = gradient!(imply, par, model, has_meanstructure)
 objective_hessian!(imply::RAM, par, model, has_meanstructure) = gradient!(imply, par, model, has_meanstructure)
 gradient_hessian!(imply::RAM, par, model, has_meanstructure) = gradient!(imply, par, model, has_meanstructure)
