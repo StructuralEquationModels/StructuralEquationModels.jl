@@ -286,3 +286,32 @@ function objective_gradient_hessian_wrap_(gradient, hessian, model::AbstractSemS
     hessian .+= w*new_hessian
     return w*new_objective
 end
+
+#####################################################################################################
+# generic methods for loss functions
+#####################################################################################################
+
+function objective_gradient!(semml::SemLossFunction, par, model)
+    objective = objective!(semml::SemLossFunction, par, model)
+    gradient = gradient!(semml::SemLossFunction, par, model)
+    return objective, gradient
+end
+
+function objective_hessian!(semml::SemLossFunction, par, model)
+    objective = objective!(semml::SemLossFunction, par, model)
+    hessian = hessian!(semml::SemLossFunction, par, model)
+    return objective, hessian
+end
+
+function gradient_hessian!(semml::SemLossFunction, par, model)
+    gradient = gradient!(semml::SemLossFunction, par, model)
+    hessian = hessian!(semml::SemLossFunction, par, model)
+    return gradient, hessian
+end
+
+function objective_gradient_hessian!(semml::SemLossFunction, par, model)
+    objective = objective!(semml::SemLossFunction, par, model)
+    gradient = gradient!(semml::SemLossFunction, par, model)
+    hessian = hessian!(semml::SemLossFunction, par, model)
+    return objective, gradient, hessian
+end
