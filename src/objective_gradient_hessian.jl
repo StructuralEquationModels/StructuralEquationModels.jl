@@ -291,27 +291,56 @@ end
 # generic methods for loss functions
 #####################################################################################################
 
-function objective_gradient!(semml::SemLossFunction, par, model)
-    objective = objective!(semml::SemLossFunction, par, model)
-    gradient = gradient!(semml::SemLossFunction, par, model)
+function objective_gradient!(lossfun::SemLossFunction, par, model)
+    objective = objective!(lossfun::SemLossFunction, par, model)
+    gradient = gradient!(lossfun::SemLossFunction, par, model)
     return objective, gradient
 end
 
-function objective_hessian!(semml::SemLossFunction, par, model)
-    objective = objective!(semml::SemLossFunction, par, model)
-    hessian = hessian!(semml::SemLossFunction, par, model)
+function objective_hessian!(lossfun::SemLossFunction, par, model)
+    objective = objective!(lossfun::SemLossFunction, par, model)
+    hessian = hessian!(lossfun::SemLossFunction, par, model)
     return objective, hessian
 end
 
-function gradient_hessian!(semml::SemLossFunction, par, model)
-    gradient = gradient!(semml::SemLossFunction, par, model)
-    hessian = hessian!(semml::SemLossFunction, par, model)
+function gradient_hessian!(lossfun::SemLossFunction, par, model)
+    gradient = gradient!(lossfun::SemLossFunction, par, model)
+    hessian = hessian!(lossfun::SemLossFunction, par, model)
     return gradient, hessian
 end
 
-function objective_gradient_hessian!(semml::SemLossFunction, par, model)
-    objective = objective!(semml::SemLossFunction, par, model)
-    gradient = gradient!(semml::SemLossFunction, par, model)
-    hessian = hessian!(semml::SemLossFunction, par, model)
+function objective_gradient_hessian!(lossfun::SemLossFunction, par, model)
+    objective = objective!(lossfun::SemLossFunction, par, model)
+    gradient = gradient!(lossfun::SemLossFunction, par, model)
+    hessian = hessian!(lossfun::SemLossFunction, par, model)
     return objective, gradient, hessian
+end
+
+#####################################################################################################
+# generic methods for imply
+#####################################################################################################
+
+function objective_gradient!(semimp::SemImply, par, model)
+    objective!(semimp::SemImply, par, model)
+    gradient!(semimp::SemImply, par, model)
+    return nothing
+end
+
+function objective_hessian!(semimp::SemImply, par, model)
+    objective!(semimp::SemImply, par, model)
+    hessian!(semimp::SemImply, par, model)
+    return nothing
+end
+
+function gradient_hessian!(semimp::SemImply, par, model)
+    gradient!(semimp::SemImply, par, model)
+    hessian!(semimp::SemImply, par, model)
+    return nothing
+end
+
+function objective_gradient_hessian!(semimp::SemImply, par, model)
+    objective!(semimp::SemImply, par, model)
+    gradient!(semimp::SemImply, par, model)
+    hessian!(semimp::SemImply, par, model)
+    return nothing
 end
