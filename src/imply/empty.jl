@@ -34,10 +34,12 @@ function ImplyEmpty(;
 end
 
 ############################################################################
-### functors
+### methods
 ############################################################################
 
-function (imply::ImplyEmpty)(par, F, G, H, model) end
+objective!(imply::ImplyEmpty, par, model) = nothing
+gradient!(imply::ImplyEmpty, par, model) = nothing
+hessian!(imply::ImplyEmpty, par, model) = nothing
 
 ############################################################################
 ### Recommended methods
