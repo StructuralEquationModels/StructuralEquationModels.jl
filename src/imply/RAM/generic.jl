@@ -2,7 +2,7 @@
 ### Types
 ############################################################################
 
-mutable struct RAM{A1, A2, A3, A4, A5, A6, V, V2, I1, I2, I3, M1, M2, M3, S1, S2, S3, D} <: SemImply
+mutable struct RAM{A1, A2, A3, A4, A5, A6, V, V2, I1, I2, I3, M1, M2, M3, M4, S1, S2, S3, B, D} <: SemImply
     Σ::A1
     A::A2
     S::A3
@@ -12,6 +12,7 @@ mutable struct RAM{A1, A2, A3, A4, A5, A6, V, V2, I1, I2, I3, M1, M2, M3, S1, S2
 
     n_par::V
     ram_matrices::V2
+    has_meanstructure::B
 
     A_indices::I1
     S_indices::I2
@@ -20,6 +21,7 @@ mutable struct RAM{A1, A2, A3, A4, A5, A6, V, V2, I1, I2, I3, M1, M2, M3, S1, S2
     F⨉I_A⁻¹::M1
     F⨉I_A⁻¹S::M2
     I_A::M3
+    I_A⁻¹::M4
 
     ∇A::S1
     ∇S::S2
@@ -86,6 +88,8 @@ function RAM(;
     # μ
     if !isnothing(M_indices)
 
+        has_meanstructure = Val(true)
+
         if gradient
             ∇M = get_matrix_derivative(M_indices, parameters, n_nod)
         else
@@ -95,6 +99,7 @@ function RAM(;
         μ = zeros(n_var)
 
     else
+        has_meanstructure = Val(false)
         M_indices = nothing
         M_pre = nothing
         μ = nothing
@@ -111,6 +116,7 @@ function RAM(;
 
         n_par,
         ram_matrices,
+        has_meanstructure,
 
         A_indices,
         S_indices,
@@ -119,6 +125,7 @@ function RAM(;
         F⨉I_A⁻¹,
         F⨉I_A⁻¹S,
         I_A,
+        copy(I_A),
 
         ∇A,
         ∇S,
@@ -129,11 +136,18 @@ function RAM(;
 end
 
 ############################################################################
-### functors
+### methods
 ############################################################################
 
-function (imply::RAM)(parameters, F, G, H, model)
+# dispatch on meanstructure
+objective!(imply::RAM, par, model) = 
+    objective!(imply, par, model, imply.has_meanstructure)
+gradient!(imply::RAM, par, model) = 
+    gradient!(imply, par, model, imply.has_meanstructure)
 
+# objective and gradient
+function objective!(imply::RAM, par, model, has_meanstructure::Val{T}) where T
+    
     fill_A_S_M(
         imply.A, 
         imply.S,
@@ -142,16 +156,11 @@ function (imply::RAM)(parameters, F, G, H, model)
         imply.S_indices,
         imply.M_indices,
         parameters)
-    
+
     imply.I_A .= I - imply.A
-    
-    if !G
-        copyto!(imply.F⨉I_A⁻¹, imply.F)
-        rdiv!(imply.F⨉I_A⁻¹, factorize(imply.I_A))
-    else
-        imply.I_A .= LinearAlgebra.inv!(factorize(imply.I_A))
-        imply.F⨉I_A⁻¹ .= imply.F*imply.I_A
-    end
+
+    copyto!(imply.F⨉I_A⁻¹, imply.F)
+    rdiv!(imply.F⨉I_A⁻¹, factorize(imply.I_A))
 
     Σ_RAM!(
         imply.Σ,
@@ -159,11 +168,46 @@ function (imply::RAM)(parameters, F, G, H, model)
         imply.S,
         imply.F⨉I_A⁻¹S)
 
-    if !isnothing(imply.μ)
+    if T
         μ_RAM!(imply.μ, imply.F⨉I_A⁻¹, imply.M)
     end
-    
+
 end
+
+function gradient!(imply::RAM, par, model, has_meanstructure::Val{T}) where T
+    
+    fill_A_S_M(
+        imply.A, 
+        imply.S,
+        imply.M,
+        imply.A_indices, 
+        imply.S_indices,
+        imply.M_indices,
+        parameters)
+
+    imply.I_A .= I - imply.A
+    copyto!(imply.I_A⁻¹, imply.I_A)
+
+    imply.I_A⁻¹ .= LinearAlgebra.inv!(factorize(imply.I_A⁻¹))
+    imply.F⨉I_A⁻¹ .= imply.F*imply.I_A
+
+    Σ_RAM!(
+        imply.Σ,
+        imply.F⨉I_A⁻¹,
+        imply.S,
+        imply.F⨉I_A⁻¹S)
+
+    if T
+        μ_RAM!(imply.μ, imply.F⨉I_A⁻¹, imply.M)
+    end
+
+end
+
+# other methods
+objective_gradient!(imply::RAM, par, model, has_meanstructure) = gradient!(imply, par, model, has_meanstructure)
+objective_hessian!(imply::RAM, par, model, has_meanstructure) = gradient!(imply, par, model, has_meanstructure)
+gradient_hessian!(imply::RAM, par, model, has_meanstructure) = gradient!(imply, par, model, has_meanstructure)
+objective_gradient_hessian!(imply::RAM, par, model, has_meanstructure) = gradient!(imply, par, model, has_meanstructure)
 
 ############################################################################
 ### Recommended methods
@@ -203,6 +247,7 @@ M_indices(imply::RAM) = imply.M_indices
 F⨉I_A⁻¹(imply::RAM) = imply.F⨉I_A⁻¹
 F⨉I_A⁻¹S(imply::RAM) = imply.F⨉I_A⁻¹S
 I_A(imply::RAM) = imply.I_A
+I_A⁻¹(imply::RAM) = imply.I_A⁻¹ # only for gradient available!
 
 ############################################################################
 ### additional functions

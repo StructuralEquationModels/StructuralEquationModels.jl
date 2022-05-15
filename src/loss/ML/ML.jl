@@ -391,7 +391,7 @@ end
 function gradient!(semml::SemML, par, model::Sem{O, I, L, D}, has_meanstructure::Val{false}) where {O, I <: RAM, L, D}
 
     let Σ = Σ(imply(model)), Σₒ = obs_cov(observed(model)), Σ⁻¹Σₒ =  Σ⁻¹Σₒ(semml), Σ⁻¹ = Σ⁻¹(semml),
-        S = S(imply(model)), F⨉I_A⁻¹ = F⨉I_A⁻¹(imply(model)), #I_A = I_A(imply(model)), 
+        S = S(imply(model)), F⨉I_A⁻¹ = F⨉I_A⁻¹(imply(model)), I_A⁻¹ = I_A⁻¹(imply(model)), 
         ∇A = ∇A(imply(model)), ∇S = ∇S(imply(model))
         
         copyto!(Σ⁻¹, Σ)
@@ -410,7 +410,7 @@ end
 function gradient!(semml::SemML, par, model::Sem{O, I, L, D}, has_meanstructure::Val{true}) where {O, I <: RAM, L, D}
 
     let Σ = Σ(imply(model)), Σₒ = obs_cov(observed(model)), Σ⁻¹Σₒ =  Σ⁻¹Σₒ(semml), Σ⁻¹ = Σ⁻¹(semml),
-        S = S(imply(model)), F⨉I_A⁻¹ = F⨉I_A⁻¹(imply(model)), I_A = I_A(imply(model)), 
+        S = S(imply(model)), F⨉I_A⁻¹ = F⨉I_A⁻¹(imply(model)), I_A⁻¹ = I_A⁻¹(imply(model)), 
         ∇A = ∇A(imply(model)), ∇S = ∇S(imply(model)), ∇M = ∇M(imply(model)),
         μ = μ(imply(model)), μₒ = obs_mean(observed(model))
         
@@ -438,7 +438,7 @@ end
 function objective_gradient!(semml::SemML, par, model::Sem{O, I, L, D}, has_meanstructure::Val{false}) where {O, I <: RAM, L, D}
 
     let Σ = Σ(imply(model)), Σₒ = obs_cov(observed(model)), Σ⁻¹Σₒ =  Σ⁻¹Σₒ(semml), Σ⁻¹ = Σ⁻¹(semml),
-        S = S(imply(model)), F⨉I_A⁻¹ = F⨉I_A⁻¹(imply(model)), I_A = I_A(imply(model)), 
+        S = S(imply(model)), F⨉I_A⁻¹ = F⨉I_A⁻¹(imply(model)), I_A⁻¹ = I_A⁻¹(imply(model)), 
         ∇A = ∇A(imply(model)), ∇S = ∇S(imply(model))
         
         copyto!(Σ⁻¹, Σ)
@@ -463,7 +463,7 @@ end
 function objective_gradient!(semml::SemML, par, model::Sem{O, I, L, D}, has_meanstructure::Val{true}) where {O, I <: RAM, L, D}
 
     let Σ = Σ(imply(model)), Σₒ = obs_cov(observed(model)), Σ⁻¹Σₒ =  Σ⁻¹Σₒ(semml), Σ⁻¹ = Σ⁻¹(semml),
-        S = S(imply(model)), F⨉I_A⁻¹ = F⨉I_A⁻¹(imply(model)), I_A = I_A(imply(model)), 
+        S = S(imply(model)), F⨉I_A⁻¹ = F⨉I_A⁻¹(imply(model)), I_A⁻¹ = I_A⁻¹(imply(model)), 
         ∇A = ∇A(imply(model)), ∇S = ∇S(imply(model)), ∇M = ∇M(imply(model)),
         μ = μ(imply(model)), μₒ = obs_mean(observed(model))
         
