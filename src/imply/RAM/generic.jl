@@ -248,6 +248,8 @@ F⨉I_A⁻¹S(imply::RAM) = imply.F⨉I_A⁻¹S
 I_A(imply::RAM) = imply.I_A
 I_A⁻¹(imply::RAM) = imply.I_A⁻¹ # only for gradient available!
 
+has_meanstructure(imply::RAM) = imply.has_meanstructure
+
 ############################################################################
 ### additional functions
 ############################################################################

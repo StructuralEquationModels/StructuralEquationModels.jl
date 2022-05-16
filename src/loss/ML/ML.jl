@@ -16,7 +16,7 @@ end
 ### Constructors
 ############################################################################
 
-function SemML(;observed, imply, n_par, approx_H = false, parameter_type = Float64, kwargs...)
+function SemML(;observed, imply, approx_H = false, kwargs...)
     isnothing(obs_mean(observed)) ?
         meandiff = nothing :
         meandiff = copy(obs_mean(observed))
