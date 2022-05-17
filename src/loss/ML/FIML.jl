@@ -70,7 +70,7 @@ end
 ### methods
 ############################################################################
 
-function objective!(semfiml::SemFIML, par, model::Sem{O, I, L, D}) where {O, I <: SemImplySymbolic, L, D}
+function objective!(semfiml::SemFIML, par, model)
 
     if !check_fiml(semfiml, model) return Inf end
 
@@ -80,7 +80,7 @@ function objective!(semfiml::SemFIML, par, model::Sem{O, I, L, D}) where {O, I <
     return objective/n_obs(observed(model))
 end
 
-function gradient!(semfiml::SemFIML, par, model::Sem{O, I, L, D}) where {O, I <: SemImplySymbolic, L, D}
+function gradient!(semfiml::SemFIML, par, model)
 
     if !check_fiml(semfiml, model) return one(par) end
 
@@ -90,7 +90,7 @@ function gradient!(semfiml::SemFIML, par, model::Sem{O, I, L, D}) where {O, I <:
     return gradient
 end
 
-function objective_gradient!(semfiml::SemFIML, par, model::Sem{O, I, L, D}) where {O, I <: SemImplySymbolic, L, D}
+function objective_gradient!(semfiml::SemFIML, par, model)
 
     if !check_fiml(semfiml, model) return one(par) end
 
@@ -100,37 +100,6 @@ function objective_gradient!(semfiml::SemFIML, par, model::Sem{O, I, L, D}) wher
     gradient = ∇F_FIML(rows(observed(model)), semfiml, model)/n_obs(observed(model))
 
     return objective, gradient
-end
-
-function (semfiml::SemFIML)(par, F, G, H, model::Sem{O, I, L, D}) where {O, I <: RAM, L, D}
-
-    if H throw(DomainError(H, "hessian for FIML is not implemented (yet)")) end
-
-    if !check_fiml(semfiml, model)
-        if G semfiml.gradient .+= 1.0 end
-        if F semfiml.objective[1] = Inf end
-    else
-        copy_per_pattern!(semfiml, model)
-        batch_cholesky!(semfiml, model)
-        #batch_sym_inv_update!(semfiml, model)
-        batch_inv!(semfiml, model)
-        for i in 1:size(pattern_n_obs(observed(model)), 1)
-            semfiml.meandiff[i] .= obs_mean(observed(model))[i] - semfiml.imp_mean[i]
-        end
-        #semfiml.logdets .= -logdet.(semfiml.inverses)
-
-        if G
-            ∇F_FIML(semfiml.gradient, rows(observed(model)), semfiml, model)
-            semfiml.gradient .= semfiml.gradient/n_obs(observed(model))
-        end
-
-        if F
-            F_FIML(semfiml.objective, rows(observed(model)), semfiml, model)
-            semfiml.objective[1] = semfiml.objective[1]/n_obs(observed(model))
-        end
-
-    end
-    
 end
 
 ############################################################################
