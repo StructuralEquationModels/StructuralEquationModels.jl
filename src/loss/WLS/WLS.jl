@@ -50,9 +50,9 @@ end
 ### methods
 ############################################################################
 
-objective!(semwls::SemWLS, par, model) = objective!(semwls::SemWLS, par, semwls.has_meanstructure)
-gradient!(semwls::SemWLS, par, model) = objective!(semwls::SemWLS, par, semwls.has_meanstructure)
-hessian!(semwls::SemWLS, par, model) = objective!(semwls::SemWLS, par, semwls.has_meanstructure)
+objective!(semwls::SemWLS, par, model) = objective!(semwls::SemWLS, par, model, semwls.has_meanstructure)
+gradient!(semwls::SemWLS, par, model) = objective!(semwls::SemWLS, par, model, semwls.has_meanstructure)
+hessian!(semwls::SemWLS, par, model) = objective!(semwls::SemWLS, par, model, semwls.has_meanstructure)
 
 objective_gradient!(semwls::SemWLS, par, model) = objective_gradient!(semwls::SemWLS, par, semwls.has_meanstructure)
 objective_hessian!(semwls::SemWLS, par, model) = objective_hessian!(semwls::SemWLS, par, semwls.has_meanstructure)

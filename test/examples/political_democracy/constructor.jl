@@ -17,6 +17,14 @@ model_ls_sym = Sem(
     diff = semdiff
 )
 
+objective!(model_ls_sym, start_test)
+
+grad = similar(start_test)
+
+gradient!(grad, model_ls_sym, start_test)
+
+grad2 = FiniteDiff.finite_difference_gradient(x -> objective!(model_ls_sym, x), start_test)
+
 model_ml_sym = Sem(
     specification = spec,
     data = dat,
