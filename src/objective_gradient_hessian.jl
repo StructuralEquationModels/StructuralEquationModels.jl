@@ -316,6 +316,14 @@ function objective_gradient_hessian!(lossfun::SemLossFunction, par, model)
     return objective, gradient, hessian
 end
 
+# throw an error by default if gradient! and hessian! are not implemented
+
+#= gradient!(lossfun::SemLossFunction, par, model) =
+    throw(ArgumentError("gradient for $(typeof(lossfun).name.wrapper) is not available"))
+
+hessian!(lossfun::SemLossFunction, par, model) =
+    throw(ArgumentError("hessian for $(typeof(lossfun).name.wrapper) is not available")) =#
+
 #####################################################################################################
 # generic methods for imply
 #####################################################################################################
