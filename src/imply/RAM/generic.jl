@@ -146,7 +146,7 @@ gradient!(imply::RAM, par, model) =
     gradient!(imply, par, model, imply.has_meanstructure)
 
 # objective and gradient
-function objective!(imply::RAM, par, model, has_meanstructure::Val{T}) where T
+function objective!(imply::RAM, parameters, model, has_meanstructure::Val{T}) where T
     
     fill_A_S_M(
         imply.A, 
@@ -174,7 +174,7 @@ function objective!(imply::RAM, par, model, has_meanstructure::Val{T}) where T
 
 end
 
-function gradient!(imply::RAM, par, model, has_meanstructure::Val{T}) where T
+function gradient!(imply::RAM, parameters, model, has_meanstructure::Val{T}) where T
     
     fill_A_S_M(
         imply.A, 
@@ -189,7 +189,7 @@ function gradient!(imply::RAM, par, model, has_meanstructure::Val{T}) where T
     copyto!(imply.I_A⁻¹, imply.I_A)
 
     imply.I_A⁻¹ .= LinearAlgebra.inv!(factorize(imply.I_A⁻¹))
-    imply.F⨉I_A⁻¹ .= imply.F*imply.I_A
+    imply.F⨉I_A⁻¹ .= imply.F*imply.I_A⁻¹
 
     Σ_RAM!(
         imply.Σ,
