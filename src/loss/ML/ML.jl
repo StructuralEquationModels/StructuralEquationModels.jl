@@ -16,7 +16,7 @@ end
 ### Constructors
 ############################################################################
 
-function SemML(;observed, imply, approx_H = false, kwargs...)
+function SemML(;observed, meanstructure = false, approx_H = false, kwargs...)
     isnothing(obs_mean(observed)) ?
         meandiff = nothing :
         meandiff = copy(obs_mean(observed))
@@ -25,7 +25,7 @@ function SemML(;observed, imply, approx_H = false, kwargs...)
         copy(obs_cov(observed)),
         meandiff,
         approx_H,
-        has_meanstructure(imply)
+        Val(meanstructure)
         )
 end
 

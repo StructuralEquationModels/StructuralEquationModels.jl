@@ -32,6 +32,7 @@ function RAMSymbolic(;
         vech = false,
         gradient = true,
         hessian = false,
+        meanstructure = false,
         kwargs...)
 
     if specification isa RAMMatrices
@@ -104,7 +105,7 @@ function RAMSymbolic(;
     end
 
     # μ
-    if !isnothing(M)
+    if meanstructure
         has_meanstructure = Val(true)
         μ_symbolic = get_μ_symbolic_RAM(M, A, F)
         μ_function = Symbolics.build_function(μ_symbolic, par, expression=Val{false})[2]

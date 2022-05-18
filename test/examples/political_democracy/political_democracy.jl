@@ -1,6 +1,6 @@
 using StructuralEquationModels, Test, FiniteDiff
 # import StructuralEquationModels as SEM
-include("helper.jl")
+include(joinpath(chop(dirname(pathof(StructuralEquationModels)), tail = 3), "test/examples/helper.jl"))
 
 ############################################################################
 ### data

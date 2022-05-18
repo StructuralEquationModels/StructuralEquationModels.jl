@@ -1,8 +1,8 @@
 using StructuralEquationModels, Distributions, Random, Optim, LineSearches
 import StructuralEquationModels as SEM
-include("helper.jl")
+include(joinpath(chop(dirname(pathof(StructuralEquationModels)), tail = 3), "test/examples/helper.jl"))
 
-x = Symbol.("x".*string.(1:13))
+x = Symbol.("x", 1:13)
 
 S = [:x1 0 0 0 0 0 0 0
      0 :x2 0 0 0 0 0 0
@@ -35,10 +35,10 @@ true_val = [repeat([1], 8)
             0.4
             repeat([0.8], 4)]
 
-start_val = [repeat([1], 9)
+start = [repeat([1], 9)
              repeat([0.5], 4)]
 
-imply_ml = RAMSymbolic(;specification = ram_matrices, start_val = start_val)
+imply_ml = RAMSymbolic(;specification = ram_matrices, start_val = start)
 
 imply_ml.Σ_function(imply_ml.Σ, true_val)
 
@@ -48,7 +48,7 @@ Random.seed!(1234)
 x = transpose(rand(true_dist, 100000))
 semobserved = SemObsCommon(data = x)
 
-loss_ml = SemLoss(SEM.SemML(;observed = semobserved, n_par = length(start_val)))
+loss_ml = SemLoss(SEM.SemML(;observed = semobserved, n_par = length(start)))
 
 diff = 
     SemDiffOptim(

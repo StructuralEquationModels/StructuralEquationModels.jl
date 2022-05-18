@@ -16,7 +16,7 @@ end
 ### Constructors
 ############################################################################
 
-function SemWLS(;observed, imply, wls_weight_matrix = nothing, V_μ = nothing, approx_H = false, kwargs...)
+function SemWLS(;observed, wls_weight_matrix = nothing, V_μ = nothing, approx_H = false, kwargs...)
     ind = CartesianIndices(obs_cov(observed))
     ind = filter(x -> (x[1] >= x[2]), ind)
     s = obs_cov(observed)[ind]
@@ -29,7 +29,7 @@ function SemWLS(;observed, imply, wls_weight_matrix = nothing, V_μ = nothing, a
         V = 0.5*(D'*S*D)
     end
 
-    if has_meanstructure(imply) == Val(true)
+    if meanstructure
         if isnothing(V_μ)
             V_μ = inv(obs_cov(observed))
         end
@@ -42,7 +42,7 @@ function SemWLS(;observed, imply, wls_weight_matrix = nothing, V_μ = nothing, a
         s, 
         approx_H, 
         V_μ,
-        has_meanstructure(imply)
+        Val(meanstructure)
     )
 end
 

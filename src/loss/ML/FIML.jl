@@ -18,17 +18,13 @@ mutable struct SemFIML{INV, C, L, O, M, IM, I, T, U, W, FT, GT, HT} <: SemLossFu
     commutation_indices::U
 
     interaction::W
-
-    objective::FT
-    gradient::GT
-    hessian::HT
 end
 
 ############################################################################
 ### Constructors
 ############################################################################
 
-function SemFIML(;observed, specification, n_par, parameter_type = Float64, kwargs...)
+function SemFIML(;observed, specification, kwargs...)
 
     inverses = broadcast(x -> zeros(x, x), Int64.(pattern_nvar_obs(observed)))
     choleskys = Array{Cholesky{Float64,Array{Float64,2}},1}(undef, length(inverses))
@@ -58,11 +54,7 @@ function SemFIML(;observed, specification, n_par, parameter_type = Float64, kwar
     imp_inv,
     mult,
     commutation_indices,
-    nothing,
-
-    zeros(parameter_type, 1),
-    zeros(parameter_type, n_par),
-    zeros(parameter_type, n_par, n_par)
+    nothing
     )
 end
 

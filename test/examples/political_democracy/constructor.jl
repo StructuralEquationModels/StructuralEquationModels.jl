@@ -271,7 +271,8 @@ model_ml = Sem(
     data = dat_missing,
     observed = SemObsMissing,
     loss = SemFIML,
-    diff = semdiff
+    diff = semdiff,
+    meanstructure = true
 )
 
 model_ml_sym = Sem(
@@ -281,7 +282,8 @@ model_ml_sym = Sem(
     imply = RAMSymbolic,
     loss = SemFIML,
     start_val = start_test_mean,
-    diff = semdiff
+    diff = semdiff,
+    meanstructure = true
 )
 
 ############################################################################

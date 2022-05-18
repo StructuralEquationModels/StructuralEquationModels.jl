@@ -1,7 +1,7 @@
 using StructuralEquationModels, Test, FiniteDiff
 import LinearAlgebra: diagind
 # import StructuralEquationModels as SEM
-include("helper.jl")
+include(joinpath(chop(dirname(pathof(StructuralEquationModels)), tail = 3), "test/examples/helper.jl"))
 
 dat = example_data("holzinger_swineford")
 dat_missing = example_data("holzinger_swineford_missing")

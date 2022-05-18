@@ -38,6 +38,7 @@ function RAM(;
         specification,
         vech = false,
         gradient = true,
+        meanstructure = false,
         kwargs...)
 
     if specification isa RAMMatrices
@@ -86,7 +87,7 @@ function RAM(;
     end
 
     # μ
-    if !isnothing(M_indices)
+    if meanstructure
 
         has_meanstructure = Val(true)
 
