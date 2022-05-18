@@ -45,8 +45,6 @@ objective_gradient_hessian!(semml::SemML, par, model::AbstractSemSingle) = objec
 ############################################################################
 ### Symbolic Imply Types
 
-# objective -----------------------------------------------------------------------------------------------------------------------------
-
 function objective!(semml::SemML, par, model::AbstractSemSingle, has_meanstructure::Val{T}, imply::SemImplySymbolic) where T
     
     let Σ = Σ(imply(model)), Σₒ = obs_cov(observed(model)), Σ⁻¹Σₒ =  Σ⁻¹Σₒ(semml), Σ⁻¹ = Σ⁻¹(semml),
@@ -70,8 +68,6 @@ function objective!(semml::SemML, par, model::AbstractSemSingle, has_meanstructu
     end
 end
 
-# gradient -----------------------------------------------------------------------------------------------------------------------------
-
 function gradient!(semml::SemML, par, model::AbstractSemSingle, has_meanstructure::Val{T}, imply::SemImplySymbolic) where T
 
     let Σ = Σ(imply(model)), Σₒ = obs_cov(observed(model)), Σ⁻¹Σₒ =  Σ⁻¹Σₒ(semml), Σ⁻¹ = Σ⁻¹(semml), ∇Σ = ∇Σ(imply(model)),
@@ -93,8 +89,6 @@ function gradient!(semml::SemML, par, model::AbstractSemSingle, has_meanstructur
             return gradient'
     end
 end
-
-# hessian -----------------------------------------------------------------------------------------------------------------------------
 
 function hessian!(semml::SemML, par, model::AbstractSemSingle, has_meanstructure::Val{false}, imply::SemImplySymbolic)
 
@@ -124,12 +118,9 @@ function hessian!(semml::SemML, par, model::AbstractSemSingle, has_meanstructure
     end
 end
 
-# no hessian for models with meanstructures
 function hessian!(semml::SemML, par, model::AbstractSemSingle, has_meanstructure::Val{true}, imply::SemImplySymbolic)
     throw(DomainError(H, "hessian of ML + meanstructure is not available"))
 end
-
-# objective_gradient -----------------------------------------------------------------------------------------------------------------------------
 
 function objective_gradient!(semml::SemML, par, model::AbstractSemSingle, has_meanstructure::Val{T}, imply::SemImplySymbolic) where T
     
@@ -163,8 +154,6 @@ function objective_gradient!(semml::SemML, par, model::AbstractSemSingle, has_me
         return objective, gradient'
     end
 end
-
-# objective_hessian ------------------------------------------------------------------------------------------------------------------------------
 
 function objective_hessian!(semml::SemML, par, model::AbstractSemSingle, has_meanstructure::Val{T}, imply::SemImplySymbolic) where T
     
@@ -205,8 +194,6 @@ function objective_hessian!(semml::SemML, par, model::AbstractSemSingle, has_mea
     throw(DomainError(H, "hessian of ML + meanstructure is not available"))
 end
 
-# gradient_hessian -------------------------------------------------------------------------------------------------------------------------------
-
 function gradient_hessian!(semml::SemML, par, model::AbstractSemSingle, has_meanstructure::Val{T}, imply::RAM) where T
 
     let Σ = Σ(imply(model)), Σₒ = obs_cov(observed(model)), Σ⁻¹Σₒ =  Σ⁻¹Σₒ(semml), Σ⁻¹ = Σ⁻¹(semml), 
@@ -242,8 +229,6 @@ end
 function gradient_hessian!(semml::SemML, par, model::AbstractSemSingle, has_meanstructure::Val{true}, imply::SemImplySymbolic) where T
     throw(DomainError(H, "hessian of ML + meanstructure is not available"))
 end
-
-# objective_gradient_hessian ---------------------------------------------------------------------------------------------------------------------
 
 function objective_gradient_hessian!(semml::SemML, par, model::AbstractSemSingle, has_meanstructure::Val{false}, imply::SemImplySymbolic)
 
@@ -308,7 +293,7 @@ function objective_gradient_hessian!(semml::SemML, par, model::AbstractSemSingle
     throw(DomainError(H, "hessian of ML + non-symbolic imply type is not available"))
 end
 
-# objective ----------------------------------------------------------------------------------------------------------------------
+# objective, gradient ----------------------------------------------------------------------------------------------------------------------
 
 function objective!(semml::SemML, par, model::AbstractSemSingle, has_meanstructure::Val{T}, imply::RAM) where T
     let Σ = Σ(imply(model)), Σₒ = obs_cov(observed(model)), Σ⁻¹Σₒ =  Σ⁻¹Σₒ(semml), Σ⁻¹ = Σ⁻¹(semml),
@@ -331,8 +316,6 @@ function objective!(semml::SemML, par, model::AbstractSemSingle, has_meanstructu
         end
     end
 end
-
-# gradient -----------------------------------------------------------------------------------------------------------------------
 
 function gradient!(semml::SemML, par, model::AbstractSemSingle, has_meanstructure::Val{T}, imply::RAM) where T
 
@@ -363,8 +346,6 @@ function gradient!(semml::SemML, par, model::AbstractSemSingle, has_meanstructur
         return gradient'
     end
 end
-
-# objective_gradient -------------------------------------------------------------------------------------------------------------
 
 function objective_gradient!(semml::SemML, par, model::AbstractSemSingle, has_meanstructure::Val{T}, imply::RAM) where T
 
