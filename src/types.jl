@@ -5,7 +5,7 @@
 abstract type AbstractSem end
 
 "Supertype for all single SEMs, e.g. SEMs that have the fields `observed`, `imply`, loss, diff"
-abstract type AbstractSemSingle <: AbstractSem end
+abstract type AbstractSemSingle{O, I, L, D} <: AbstractSem end
 
 "Supertype for all collections of multiple SEMs"
 abstract type AbstractSemCollection <: AbstractSem end
@@ -99,7 +99,7 @@ Returns a struct of type Sem with fields
 - `loss::SemLoss`: Computes the objective and gradient of a sum of loss functions. See also [`SemLoss`](@ref).
 - `diff::SemDiff`: Connects the model to the optimizer. See also [`SemDiff`](@ref).
 """
-mutable struct Sem{O <: SemObs, I <: SemImply, L <: SemLoss, D <: SemDiff} <: AbstractSemSingle
+mutable struct Sem{O <: SemObs, I <: SemImply, L <: SemLoss, D <: SemDiff} <: AbstractSemSingle{O, I, L, D}
     observed::O
     imply::I
     loss::L
@@ -110,7 +110,7 @@ end
 # automatic differentiation
 #####################################################################################################
 
-struct SemFiniteDiff{O <: SemObs, I <: SemImply, L <: SemLoss, D <: SemDiff, G} <: AbstractSemSingle
+struct SemFiniteDiff{O <: SemObs, I <: SemImply, L <: SemLoss, D <: SemDiff, G} <: AbstractSemSingle{O, I, L, D}
     observed::O
     imply::I
     loss::L
@@ -118,7 +118,7 @@ struct SemFiniteDiff{O <: SemObs, I <: SemImply, L <: SemLoss, D <: SemDiff, G} 
     has_gradient::G
 end
 
-struct SemForwardDiff{O <: SemObs, I <: SemImply, L <: SemLoss, D <: SemDiff, G} <: AbstractSemSingle
+struct SemForwardDiff{O <: SemObs, I <: SemImply, L <: SemLoss, D <: SemDiff, G} <: AbstractSemSingle{O, I, L, D}
     observed::O
     imply::I 
     loss::L 

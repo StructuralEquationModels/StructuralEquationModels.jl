@@ -20,7 +20,7 @@ function gradient!(gradient, model::AbstractSemSingle, parameters)
 end
 
 function hessian!(hessian, model::AbstractSemSingle, parameters)
-    fill!(hessian, zero(eltype(gradient)))
+    fill!(hessian, zero(eltype(hessian)))
     hessian!(imply(model), parameters, model)
     hessian!(hessian, loss(model), parameters, model)
 end

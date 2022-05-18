@@ -16,8 +16,8 @@ end
 
 function test_hessian(model, parameters; rtol = 1e-4, atol = 0)
     true_hessian = FiniteDiff.finite_difference_hessian(x -> objective!(model, x)[1], parameters)
-    hessian = similar(true_hessian); hessian .= 1.0
-    grad = similar()
+    hessian = zeros(size(true_hessian)); hessian .= 1.0
+    gradient = similar(parameters)
 
     # H
     hessian!(hessian, model, parameters)
@@ -30,12 +30,12 @@ function test_hessian(model, parameters; rtol = 1e-4, atol = 0)
 
     # G and H
     hessian .= 1.0
-    gradient_hessian!(hessian, model, parameters)
+    gradient_hessian!(gradient, hessian, model, parameters)
     correct3 = isapprox(hessian, true_hessian; rtol = rtol, atol = atol)
 
     # F, G and H
     hessian .= 1.0
-    objective_gradient_hessian!(hessian, model, parameters)
+    objective_gradient_hessian!(gradient, hessian, model, parameters)
     correct4 = isapprox(hessian, true_hessian; rtol = rtol, atol = atol)
     
     return correct1 & correct2 & correct3 & correct4

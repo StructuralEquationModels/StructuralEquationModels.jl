@@ -17,12 +17,6 @@ model_ls_sym = Sem(
     diff = semdiff
 )
 
-true_grad = FiniteDiff.finite_difference_gradient(x -> objective!(model_ls_sym, x), start_test)
-
-grad = similar(start_test)
-
-gradient!(grad, model_ls_sym, start_test)
-
 model_ml_sym = Sem(
     specification = spec,
     data = dat,
@@ -99,7 +93,10 @@ end
 # test constant objective value
 @testset "constant_objective_and_gradient" begin
     @test (objective!(model_constant, start_test) - 3.465) ≈ objective!(model_ml, start_test)
-    @test gradient!(model_constant, start_test) ≈ gradient!(model_ml, start_test)
+    grad = similar(start_test); grad2 = similar(start_test)
+    gradient!(grad, model_constant, start_test)
+    gradient!(grad2, model_ml, start_test)
+    @test grad ≈ grad2
 end
 
 @testset "ml_solution_weighted" begin

@@ -50,18 +50,18 @@ end
 ### methods
 ############################################################################
 
-objective!(semwls::SemWLS, par, model) = objective!(semwls::SemWLS, par, model, semwls.has_meanstructure)
-gradient!(semwls::SemWLS, par, model) = objective!(semwls::SemWLS, par, model, semwls.has_meanstructure)
-hessian!(semwls::SemWLS, par, model) = objective!(semwls::SemWLS, par, model, semwls.has_meanstructure)
+objective!(semwls::SemWLS, par, model::AbstractSemSingle) = objective!(semwls::SemWLS, par, model, semwls.has_meanstructure)
+gradient!(semwls::SemWLS, par, model::AbstractSemSingle) = gradient!(semwls::SemWLS, par, model, semwls.has_meanstructure)
+hessian!(semwls::SemWLS, par, model::AbstractSemSingle) = hessian!(semwls::SemWLS, par, model, semwls.has_meanstructure)
 
-objective_gradient!(semwls::SemWLS, par, model) = objective_gradient!(semwls::SemWLS, par, semwls.has_meanstructure)
-objective_hessian!(semwls::SemWLS, par, model) = objective_hessian!(semwls::SemWLS, par, semwls.has_meanstructure)
-gradient_hessian!(semwls::SemWLS, par, model) = gradient_hessian!(semwls::SemWLS, par, semwls.has_meanstructure)
+objective_gradient!(semwls::SemWLS, par, model::AbstractSemSingle) = objective_gradient!(semwls::SemWLS, par, model, semwls.has_meanstructure)
+objective_hessian!(semwls::SemWLS, par, model::AbstractSemSingle) = objective_hessian!(semwls::SemWLS, par, model, semwls.has_meanstructure)
+gradient_hessian!(semwls::SemWLS, par, model::AbstractSemSingle) = gradient_hessian!(semwls::SemWLS, par, model, semwls.has_meanstructure)
 
-objective_gradient_hessian!(semwls::SemWLS, par, model) = objective_gradient_hessian!(semwls::SemWLS, par, semwls.has_meanstructure)
+objective_gradient_hessian!(semwls::SemWLS, par, model::AbstractSemSingle) = objective_gradient_hessian!(semwls::SemWLS, par, model, semwls.has_meanstructure)
 
 
-function objective!(semwls::SemWLS, par, model, has_meanstructure::Val{T}) where T
+function objective!(semwls::SemWLS, par, model::AbstractSemSingle, has_meanstructure::Val{T}) where T
     
     let σ = Σ(imply(model)), μ = μ(imply(model)), σₒ = semwls.σₒ, μₒ = obs_mean(observed(model)), V = semwls.V, V_μ = semwls.V_μ, 
         
@@ -69,14 +69,14 @@ function objective!(semwls::SemWLS, par, model, has_meanstructure::Val{T}) where
         
         if T
             μ₋ = μₒ - μ
-            return dot(σ₋, V, σ₋) + dot(μ₋', V_μ, μ₋)
+            return dot(σ₋, V, σ₋) + dot(μ₋, V_μ, μ₋)
         else
             return dot(σ₋, V, σ₋)  
         end
     end
 end
 
-function gradient!(semwls::SemWLS, par, model, has_meanstructure::Val{T}) where T
+function gradient!(semwls::SemWLS, par, model::AbstractSemSingle, has_meanstructure::Val{T}) where T
     
     let σ = Σ(imply(model)), μ = μ(imply(model)), σₒ = semwls.σₒ, μₒ = obs_mean(observed(model)), V = semwls.V, V_μ = semwls.V_μ,
         ∇σ = ∇Σ(imply(model)), ∇μ = ∇μ(imply(model))
@@ -92,7 +92,7 @@ function gradient!(semwls::SemWLS, par, model, has_meanstructure::Val{T}) where 
     end
 end
 
-function hessian!(semwls::SemWLS, par, model, has_meanstructure::Val{T}) where T
+function hessian!(semwls::SemWLS, par, model::AbstractSemSingle, has_meanstructure::Val{T}) where T
     
     let σ = Σ(imply(model)), σₒ = semwls.σₒ, V = semwls.V,
         ∇σ = ∇Σ(imply(model)),
@@ -114,7 +114,7 @@ function hessian!(semwls::SemWLS, par, model, has_meanstructure::Val{T}) where T
     end
 end
 
-function objective_gradient!(semwls::SemWLS, par, model, has_meanstructure::Val{T}) where T
+function objective_gradient!(semwls::SemWLS, par, model::AbstractSemSingle, has_meanstructure::Val{T}) where T
     
     let σ = Σ(imply(model)), μ = μ(imply(model)), σₒ = semwls.σₒ, μₒ = obs_mean(observed(model)), V = semwls.V, V_μ = semwls.V_μ,
         ∇σ = ∇Σ(imply(model)), ∇μ = ∇μ(imply(model))
@@ -134,7 +134,7 @@ function objective_gradient!(semwls::SemWLS, par, model, has_meanstructure::Val{
     end
 end
 
-function objective_hessian!(semwls::SemWLS, par, model, has_meanstructure::Val{T}) where T
+function objective_hessian!(semwls::SemWLS, par, model::AbstractSemSingle, has_meanstructure::Val{T}) where T
     
     let σ = Σ(imply(model)), σₒ = semwls.σₒ, V = semwls.V, 
         ∇σ = ∇Σ(imply(model)),
@@ -155,10 +155,10 @@ function objective_hessian!(semwls::SemWLS, par, model, has_meanstructure::Val{T
     end
 end
 
-objective_hessian!(semwls::SemWLS, par, model, has_meanstructure::Val{true}) =
+objective_hessian!(semwls::SemWLS, par, model::AbstractSemSingle, has_meanstructure::Val{true}) =
     throw(DomainError(H, "hessian of WLS with meanstructure is not available"))
 
-function gradient_hessian!(semwls::SemWLS, par, model, has_meanstructure::Val{T}) where T
+function gradient_hessian!(semwls::SemWLS, par, model::AbstractSemSingle, has_meanstructure::Val{false})
     
     let σ = Σ(imply(model)), σₒ = semwls.σₒ, V = semwls.V,
         ∇σ = ∇Σ(imply(model)),
@@ -179,10 +179,10 @@ function gradient_hessian!(semwls::SemWLS, par, model, has_meanstructure::Val{T}
     end
 end
 
-gradient_hessian!(semwls::SemWLS, par, model, has_meanstructure::Val{true}) =
+gradient_hessian!(semwls::SemWLS, par, model::AbstractSemSingle, has_meanstructure::Val{true}) =
     throw(DomainError(H, "hessian of WLS with meanstructure is not available"))
 
-function objective_gradient_hessian!(semwls::SemWLS, par, model, has_meanstructure::Val{false})
+function objective_gradient_hessian!(semwls::SemWLS, par, model::AbstractSemSingle, has_meanstructure::Val{false})
     
     let σ = Σ(imply(model)), σₒ = semwls.σₒ, V = semwls.V,
         ∇σ = ∇Σ(imply(model)),
@@ -206,7 +206,7 @@ function objective_gradient_hessian!(semwls::SemWLS, par, model, has_meanstructu
     end
 end
 
-objective_gradient_hessian!(semwls::SemWLS, par, model, has_meanstructure::Val{true}) =
+objective_gradient_hessian!(semwls::SemWLS, par, model::AbstractSemSingle, has_meanstructure::Val{true}) =
     throw(DomainError(H, "hessian of WLS with meanstructure is not available"))
 
 ############################################################################
