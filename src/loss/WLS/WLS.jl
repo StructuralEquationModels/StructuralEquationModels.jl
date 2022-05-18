@@ -16,7 +16,7 @@ end
 ### Constructors
 ############################################################################
 
-function SemWLS(;observed, wls_weight_matrix = nothing, V_μ = nothing, approx_H = false, kwargs...)
+function SemWLS(;observed, wls_weight_matrix = nothing, V_μ = nothing, approx_H = false, meanstructure = false, kwargs...)
     ind = CartesianIndices(obs_cov(observed))
     ind = filter(x -> (x[1] >= x[2]), ind)
     s = obs_cov(observed)[ind]
