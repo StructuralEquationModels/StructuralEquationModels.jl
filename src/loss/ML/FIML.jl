@@ -70,9 +70,9 @@ end
 ### methods
 ############################################################################
 
-function objective!(semfiml::SemFIML, par, model)
+function objective!(semfiml::SemFIML, parameters, model)
 
-    if !check_fiml(semfiml, model) return Inf end
+    if !check_fiml(semfiml, model) return non_posdef_return(parameters) end
 
     prepare_SemFIML!(semfiml, model)
 
@@ -80,9 +80,9 @@ function objective!(semfiml::SemFIML, par, model)
     return objective/n_obs(observed(model))
 end
 
-function gradient!(semfiml::SemFIML, par, model)
+function gradient!(semfiml::SemFIML, parameters, model)
 
-    if !check_fiml(semfiml, model) return one(par) end
+    if !check_fiml(semfiml, model) return ones(eltype(parameters), size(parameters)) end
 
     prepare_SemFIML!(semfiml, model)
 
@@ -90,9 +90,9 @@ function gradient!(semfiml::SemFIML, par, model)
     return gradient
 end
 
-function objective_gradient!(semfiml::SemFIML, par, model)
+function objective_gradient!(semfiml::SemFIML, parameters, model)
 
-    if !check_fiml(semfiml, model) return one(par) end
+    if !check_fiml(semfiml, model) return non_posdef_return(parameters), ones(eltype(parameters), size(parameters)) end
 
     prepare_SemFIML!(semfiml, model)
 
@@ -145,13 +145,13 @@ function ∇F_fiml_outer(JΣ, Jμ, imply, model, semfiml)
 
     Iₙ = sparse(1.0I, size(A(imply))...)
     P = kron(F⨉I_A⁻¹(imply), F⨉I_A⁻¹(imply))
-    Q = kron(S(imply)*I_A(imply)', Iₙ)
+    Q = kron(S(imply)*I_A⁻¹(imply)', Iₙ)
     #commutation_matrix_pre_square_add!(Q, Q)
     Q2 = commutation_matrix_pre_square(Q, semfiml.commutation_indices)
 
     ∇Σ = P*(∇S(imply) + (Q+Q2)*∇A(imply))
 
-    ∇μ = F⨉I_A⁻¹(imply)*∇M(imply) + kron((I_A(imply)*M(imply))', F⨉I_A⁻¹(imply))*∇A(imply)
+    ∇μ = F⨉I_A⁻¹(imply)*∇M(imply) + kron((I_A⁻¹(imply)*M(imply))', F⨉I_A⁻¹(imply))*∇A(imply)
 
     G = transpose(JΣ'*∇Σ-Jμ'*∇μ)
 

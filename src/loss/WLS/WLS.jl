@@ -190,19 +190,15 @@ function objective_gradient_hessian!(semwls::SemWLS, par, model::AbstractSemSing
         
         σ₋ = σₒ - σ
         
-        if T
-            
-        else
-            objective = dot(σ₋, V, σ₋) 
-            gradient = -2*(σ₋'*V*∇σ)'
-            hessian = 2*∇σ'*V*∇σ
-            if !semwls.approx_H
-                J = -2*(σ₋'*semwls.V)'
-                ∇²Σ_function!(∇²Σ, J, par)
-                hessian += ∇²Σ
-            end
-            return objective, gradient, hessian
+        objective = dot(σ₋, V, σ₋) 
+        gradient = -2*(σ₋'*V*∇σ)'
+        hessian = 2*∇σ'*V*∇σ
+        if !semwls.approx_H
+            J = -2*(σ₋'*semwls.V)'
+            ∇²Σ_function!(∇²Σ, J, par)
+            hessian += ∇²Σ
         end
+        return objective, gradient, hessian
     end
 end
 
