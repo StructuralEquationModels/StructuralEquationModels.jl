@@ -3,7 +3,7 @@
 ############################################################################
 
 # wrapper to define the objective
-function sem_wrap_nlopt(par, G, sem::AbstractSem)
+function sem_wrap_nlopt(par, G, model::AbstractSem)
     need_gradient = length(G) != 0
     if need_gradient
         return objective_gradient!(G, model, par)
