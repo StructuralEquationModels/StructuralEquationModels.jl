@@ -115,7 +115,7 @@ function gradient!(semml::SemML, par, model::Sem{O, I, L, D}, has_meanstructure:
         μ₋ = μₒ - μ
         μ₋ᵀΣ⁻¹ = μ₋'*Σ⁻¹
 
-        gradient = (vec(Σ⁻¹*(I - Σ⁻¹Σₒ - μ₋*μ₋ᵀΣ⁻¹))'*∇Σ - 2*μ₋ᵀΣ⁻¹*∇μ)'
+        gradient = (vec(Σ⁻¹*(I - Σₒ*Σ⁻¹ - μ₋*μ₋ᵀΣ⁻¹))'*∇Σ - 2*μ₋ᵀΣ⁻¹*∇μ)'
     
         return gradient
     end
@@ -197,11 +197,11 @@ function objective_gradient!(semml::SemML, par, model::Sem{O, I, L, D}, has_mean
             Σ⁻¹ .= LinearAlgebra.inv!(Σ_chol)
             mul!(Σ⁻¹Σₒ, Σ⁻¹, Σₒ)
             μ₋ = μₒ - μ
-            objective = ld + tr(Σ⁻¹Σₒ(semml)) + dot(μ₋, Σ⁻¹, μ₋)
+            objective = ld + tr(Σ⁻¹Σₒ) + dot(μ₋, Σ⁻¹, μ₋)
         end
         
         μ₋ᵀΣ⁻¹ = μ₋'*Σ⁻¹
-        gradient = (vec(Σ⁻¹*(I - Σ⁻¹Σₒ - μ₋*μ₋ᵀΣ⁻¹))'*∇Σ - 2*μ₋ᵀΣ⁻¹*∇μ)'
+        gradient = (vec(Σ⁻¹*(I - Σₒ*Σ⁻¹ - μ₋*μ₋ᵀΣ⁻¹))'*∇Σ - 2*μ₋ᵀΣ⁻¹*∇μ)'
 
         return objective, gradient
     end
@@ -398,9 +398,9 @@ function gradient!(semml::SemML, par, model::Sem{O, I, L, D}, has_meanstructure:
         Σ_chol = cholesky!(Symmetric(Σ⁻¹); check = false)
 
         Σ⁻¹ .= LinearAlgebra.inv!(Σ_chol)
-        mul!(Σ⁻¹Σₒ, Σ⁻¹, Σₒ)
+        #mul!(Σ⁻¹Σₒ, Σ⁻¹, Σₒ)
 
-        M = F⨉I_A⁻¹'*(I-Σ⁻¹Σₒ)'*Σ⁻¹*F⨉I_A⁻¹
+        M = F⨉I_A⁻¹'*(I-Σₒ*Σ⁻¹)'*Σ⁻¹*F⨉I_A⁻¹
         gradient = 2vec(M*S*I_A⁻¹')'∇A + vec(M)'∇S
         
         return gradient'
@@ -418,9 +418,9 @@ function gradient!(semml::SemML, par, model::Sem{O, I, L, D}, has_meanstructure:
         Σ_chol = cholesky!(Symmetric(Σ⁻¹); check = false)
 
         Σ⁻¹ .= LinearAlgebra.inv!(Σ_chol)
-        mul!(Σ⁻¹Σₒ, Σ⁻¹, Σₒ)
+        #mul!(Σ⁻¹Σₒ, Σ⁻¹, Σₒ)
 
-        M = F⨉I_A⁻¹'*(I-Σ⁻¹Σₒ)'Σ⁻¹*F⨉I_A⁻¹
+        M = F⨉I_A⁻¹'*(I-Σₒ*Σ⁻¹)'Σ⁻¹*F⨉I_A⁻¹
         gradient = 2vec(M*S*I_A⁻¹')'∇A + vec(M)'∇S
 
         μ₋ = μₒ - μ
@@ -439,13 +439,13 @@ function objective_gradient!(semml::SemML, par, model::Sem{O, I, L, D}, has_mean
 
     let Σ = Σ(imply(model)), Σₒ = obs_cov(observed(model)), Σ⁻¹Σₒ =  Σ⁻¹Σₒ(semml), Σ⁻¹ = Σ⁻¹(semml),
         S = S(imply(model)), F⨉I_A⁻¹ = F⨉I_A⁻¹(imply(model)), I_A⁻¹ = I_A⁻¹(imply(model)), 
-        ∇A = ∇A(imply(model)), ∇S = ∇S(imply(model))
+        ∇A = ∇A(imply(model)), ∇S = ∇S(imply(model)), I = LinearAlgebra.I
         
         copyto!(Σ⁻¹, Σ)
         Σ_chol = cholesky!(Symmetric(Σ⁻¹); check = false)
 
         if !isposdef(Σ_chol) 
-            objective = non_posdef_return(par) 
+            objective = non_posdef_return(par)
         else
             ld = logdet(Σ_chol)
             Σ⁻¹ .= LinearAlgebra.inv!(Σ_chol)
@@ -453,7 +453,7 @@ function objective_gradient!(semml::SemML, par, model::Sem{O, I, L, D}, has_mean
             objective = ld + tr(Σ⁻¹Σₒ)
         end
 
-        M = F⨉I_A⁻¹'*(I-Σ⁻¹Σₒ)'*Σ⁻¹*F⨉I_A⁻¹
+        M = F⨉I_A⁻¹'*(I-Σₒ*Σ⁻¹)'*Σ⁻¹*F⨉I_A⁻¹
         gradient = 2vec(M*S*I_A⁻¹')'∇A + vec(M)'∇S
         
         return objective, gradient'
@@ -480,7 +480,7 @@ function objective_gradient!(semml::SemML, par, model::Sem{O, I, L, D}, has_mean
             objective = ld + tr(Σ⁻¹Σₒ(semml)) + dot(μ₋, Σ⁻¹, μ₋)
         end
 
-        M = F⨉I_A⁻¹'*(I-Σ⁻¹Σₒ)'Σ⁻¹*F⨉I_A⁻¹
+        M = F⨉I_A⁻¹'*(I-Σₒ*Σ⁻¹)'Σ⁻¹*F⨉I_A⁻¹
         gradient = 2vec(M*S*I_A⁻¹')'∇A + vec(M)'∇S
 
         μ₋ᵀΣ⁻¹ = μ₋'*Σ⁻¹
@@ -491,6 +491,18 @@ function objective_gradient!(semml::SemML, par, model::Sem{O, I, L, D}, has_mean
         gradient = (gradient + gradient_mean)'
 
         return objective, gradient
+    end
+end
+
+############################################################################
+### additional functions
+############################################################################
+
+function non_posdef_return(par)
+    if eltype(par) <: AbstractFloat
+        return floatmax(eltype(par))
+    else
+        return typemax(eltype(par))
     end
 end
 

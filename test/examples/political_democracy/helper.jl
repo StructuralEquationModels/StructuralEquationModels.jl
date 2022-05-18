@@ -1,38 +1,44 @@
 function test_gradient(model, parameters; rtol = 1e-10, atol = 0)
     true_grad = FiniteDiff.finite_difference_gradient(x -> objective!(model, x)[1], parameters)
+    gradient = similar(parameters); gradient .= 1.0
 
     # F and G
-    gradient(model) .= 0
-    model(parameters, true, true, false)
-    correct1 = isapprox(gradient(model), true_grad; rtol = rtol, atol = atol)
+    gradient!(gradient, model, parameters)
+    correct1 = isapprox(gradient, true_grad; rtol = rtol, atol = atol)
 
     # only G
-    gradient(model) .= 0
-    model(parameters, false, true, false)
-    correct2 = isapprox(gradient(model), true_grad; rtol = rtol, atol = atol)
+    gradient .= 1.0
+    objective_gradient!(gradient, model, parameters)
+    correct2 = isapprox(gradient, true_grad; rtol = rtol, atol = atol)
 
     return correct1 & correct2
 end
 
 function test_hessian(model, parameters; rtol = 1e-4, atol = 0)
     true_hessian = FiniteDiff.finite_difference_hessian(x -> objective!(model, x)[1], parameters)
+    hessian = similar(true_hessian); hessian .= 1.0
+    grad = similar()
+
+    # H
+    hessian!(hessian, model, parameters)
+    correct1 = isapprox(hessian, true_hessian; rtol = rtol, atol = atol)
 
     # F and H
-    hessian(model) .= 0
-    model(parameters, true, false, true)
-    correct1 = isapprox(hessian(model), true_hessian; rtol = rtol, atol = atol)
+    hessian .= 1.0
+    objective_hessian!(hessian, model, parameters)
+    correct2 = isapprox(hessian, true_hessian; rtol = rtol, atol = atol)
 
     # G and H
-    hessian(model) .= 0
-    model(parameters, false, true, true)
-    correct2 = isapprox(hessian(model), true_hessian; rtol = rtol, atol = atol)
+    hessian .= 1.0
+    gradient_hessian!(hessian, model, parameters)
+    correct3 = isapprox(hessian, true_hessian; rtol = rtol, atol = atol)
 
-    # only H
-    hessian(model) .= 0
-    model(parameters, false, false, true)
-    correct3 = isapprox(hessian(model), true_hessian; rtol = rtol, atol = atol)
+    # F, G and H
+    hessian .= 1.0
+    objective_gradient_hessian!(hessian, model, parameters)
+    correct4 = isapprox(hessian, true_hessian; rtol = rtol, atol = atol)
     
-    return correct1 & correct2 & correct3
+    return correct1 & correct2 & correct3 & correct4
 end
 
 fitmeasure_names_ml = Dict(

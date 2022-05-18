@@ -149,7 +149,7 @@ gradient!(imply::RAM, par, model) =
 function objective!(imply::RAM, parameters, model, has_meanstructure::Val{T}) where T
     
     fill_A_S_M(
-        imply.A, 
+        imply.A,
         imply.S,
         imply.M,
         imply.A_indices, 

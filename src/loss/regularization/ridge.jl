@@ -39,7 +39,7 @@ end
 objective!(ridge::SemRidge, par, model) = @views ridge.α*sum(x -> x^2, par[ridge.which])
 
 function gradient!(ridge::SemRidge, par, model)
-    @views @. ridge.gradient[ridge.which] = 2*ridge.α*par[ridge.which]
+    @views ridge.gradient[ridge.which] .= 2*ridge.α*par[ridge.which]
     return ridge.gradient
 end
 
