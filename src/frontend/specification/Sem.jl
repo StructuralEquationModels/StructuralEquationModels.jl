@@ -178,10 +178,14 @@ function Base.show(io::IO, loss::SemLoss)
     print(io, "SemLoss \n")
     print(io, "- Loss Functions \n")
     print(io, lossfuntypes...)
-    print(io, "- Fields \n")
-    print(io, "   F:  $(typeof(loss.F))) \n")
-    print(io, "   G:  $(typeof(loss.G))) \n")
-    print(io, "   H:  $(typeof(loss.H))) \n") 
+    print(io, "- Weights \n")
+    for weight in loss.weights
+        if isnothing(weight.w)
+            print(io, "   one \n")
+        else
+            print(io, "$(round.(weight.w, digits = 2)) \n")
+        end
+    end
 end
 
 function Base.show(io::IO, models::SemEnsemble)
