@@ -210,6 +210,7 @@ function objective!(ensemble::SemEnsemble, par)
 end
 
 function gradient!(gradient, ensemble::SemEnsemble, par)
+    fill!(gradient, zero(eltype(gradient)))
     for (model, w) in zip(ensemble.sems, ensemble.weights)
         gradient_new = similar(gradient)
         gradient!(gradient_new, model, par)
@@ -218,14 +219,16 @@ function gradient!(gradient, ensemble::SemEnsemble, par)
 end
 
 function hessian!(hessian, ensemble::SemEnsemble, par)
+    fill!(hessian, zero(eltype(hessian)))
     for (model, w) in zip(ensemble.sems, ensemble.weights)
         hessian_new = similar(hessian)
         hessian!(hessian_new, model, par)
-        hessian += w*hessian_new
+        hessian .+= w*hessian_new
     end
 end
 
 function objective_gradient!(gradient, ensemble::SemEnsemble, par)
+    fill!(gradient, zero(eltype(gradient)))
     return mapreduce(
         model_weight -> objective_gradient_wrap_(gradient, model_weight[1], par, model_weight[2]),
         +, 
@@ -234,6 +237,7 @@ function objective_gradient!(gradient, ensemble::SemEnsemble, par)
 end
 
 function objective_hessian!(hessian, ensemble::SemEnsemble, par)
+    fill!(hessian, zero(eltype(hessian)))
     return mapreduce(
         model_weight -> objective_hessian_wrap_(hessian, model_weight[1], par, model_weight[2]),
         +,
@@ -242,6 +246,8 @@ function objective_hessian!(hessian, ensemble::SemEnsemble, par)
 end
 
 function gradient_hessian!(gradient, hessian, ensemble::SemEnsemble, par)
+    fill!(gradient, zero(eltype(gradient)))
+    fill!(hessian, zero(eltype(hessian)))
     for (model, w) in zip(ensemble.sems, ensemble.weights)
 
         new_gradient = similar(gradient)
@@ -256,6 +262,8 @@ function gradient_hessian!(gradient, hessian, ensemble::SemEnsemble, par)
 end
 
 function objective_gradient_hessian!(gradient, hessian, ensemble::SemEnsemble, par)
+    fill!(gradient, zero(eltype(gradient)))
+    fill!(hessian, zero(eltype(hessian)))
     return mapreduce(
         model_weight -> objective_gradient_hessian_wrap_(gradient, hessian, model_weight[1], par, model, model_weight[2]),
         +, 

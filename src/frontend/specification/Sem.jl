@@ -34,7 +34,7 @@ function SemFiniteDiff(;
     
     observed, imply, loss, diff = get_fields!(kwargs, observed, imply, loss, diff)
 
-    sem = SemFiniteDiff(observed, imply, loss, diff, has_gradient)
+    sem = SemFiniteDiff(observed, imply, loss, diff, Val(has_gradient))
 
     return sem
 end
@@ -53,7 +53,7 @@ function SemForwardDiff(;
     
     observed, imply, loss, diff = get_fields!(kwargs, observed, imply, loss, diff)
 
-    sem = SemForwardDiff(observed, imply, loss, diff, has_gradient)
+    sem = SemForwardDiff(observed, imply, loss, diff, Val(has_gradient))
     
     return sem
 end
@@ -121,6 +121,8 @@ function get_SemLoss(loss; kwargs...)
     else
         if !isa(loss, SemLossFunction)
             loss = SemLoss(loss(;kwargs...); kwargs...)
+        else
+            loss = SemLoss(loss; kwargs...)
         end
     end
     return loss

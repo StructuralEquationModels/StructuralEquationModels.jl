@@ -150,3 +150,74 @@ function compare_estimates(partable::ParameterTable, partable_lav;
     
     return all(correct)
 end
+
+function compare_estimates(ens_partable::EnsembleParameterTable, partable_lav;
+    rtol = 1e-10, atol = 0, col = :estimate, lav_col = :est,
+    lav_groups)
+
+    correct = []
+
+    for key in keys(ens_partable.tables)
+
+        group = lav_groups[key]
+        partable = ens_partable.tables[key]
+
+        for i in findall(partable.columns[:free])
+
+            from = partable.columns[:from][i]
+            to = partable.columns[:to][i]
+            type = partable.columns[:parameter_type][i]
+            estimate = partable.columns[col][i]
+
+            if from == Symbol("1")
+
+                lav_ind = findall(
+                    (partable_lav.lhs .== String(to)) .& 
+                    (partable_lav.op .== "~1") .&
+                    (partable_lav.group .== group))
+
+                if length(lav_ind) == 0
+                    throw(ErrorException("At least one parameter could not be found in the lavaan solution"))
+                elseif length(lav_ind) > 1
+                    throw(ErrorException("At least one parameter was found twice in the lavaan solution"))
+                else
+                    is_correct = isapprox(estimate, partable_lav[:, lav_col][lav_ind[1]]; rtol = rtol, atol = atol)
+                    push!(correct, is_correct)
+                end
+
+            else
+                
+                if type == :↔
+                    type = "~~"
+                elseif type == :→
+                    if (from ∈ partable.variables[:latent_vars]) & (to ∈ partable.variables[:observed_vars])
+                        type = "=~"
+                    else
+                        type = "~"
+                        from, to = to, from
+                    end
+                end
+
+                lav_ind = findall(
+                    (partable_lav.lhs .== String(from)) .& 
+                    (partable_lav.rhs .== String(to)) .&
+                    (partable_lav.op .== type).&
+                    (partable_lav.group .== group))
+
+                if length(lav_ind) == 0
+                    throw(ErrorException("At least one parameter could not be found in the lavaan solution"))
+                elseif length(lav_ind) > 1
+                    throw(ErrorException("At least one parameter was found twice in the lavaan solution"))
+                else
+                    is_correct = isapprox(estimate, partable_lav[:, lav_col][lav_ind[1]]; rtol = rtol, atol = atol)
+                    push!(correct, is_correct)
+                end
+
+            end
+
+        end
+
+    end
+
+    return all(correct)
+end
