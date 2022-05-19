@@ -163,7 +163,8 @@ model_g1 = Sem(
     loss = SemFIML,
     data = dat_miss_g1,
     imply = RAM,
-    diff = SemDiffEmpty()
+    diff = SemDiffEmpty(),
+    meanstructure = true
 )
 
 model_g2 = Sem(
@@ -172,7 +173,8 @@ model_g2 = Sem(
     loss = SemFIML,
     data = dat_miss_g2,
     imply = RAM,
-    diff = SemDiffEmpty()
+    diff = SemDiffEmpty(),
+    meanstructure = true
 )
 
 model_ml_multigroup = SemEnsemble(model_g1, model_g2; diff = semdiff)
