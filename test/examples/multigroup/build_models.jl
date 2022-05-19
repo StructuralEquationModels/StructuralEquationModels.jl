@@ -59,7 +59,7 @@ struct UserSemML <: SemLossFunction end
 ### functors
 ############################################################################
 
-import LinearAlgebra: Symmetric, cholesky, isposdef, logdet, tr, inv
+import LinearAlgebra: isposdef, logdet, tr, inv
 import StructuralEquationModels: Σ, obs_cov, objective!
 
 function objective!(semml::UserSemML, parameters, model::AbstractSem)

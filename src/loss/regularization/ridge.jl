@@ -52,10 +52,6 @@ end
 ### Recommended methods
 ############################################################################
 
-objective(lossfun::SemRidge) = lossfun.objective
-gradient(lossfun::SemRidge) = lossfun.gradient
-hessian(lossfun::SemRidge) = lossfun.hessian
-
 update_observed(loss::SemRidge, observed::SemObs; kwargs...) = loss
 
 ############################################################################
