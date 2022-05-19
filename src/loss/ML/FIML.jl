@@ -2,7 +2,7 @@
 ### Types
 ############################################################################
 
-mutable struct SemFIML{INV, C, L, O, M, IM, I, T, U, W, FT, GT, HT} <: SemLossFunction
+mutable struct SemFIML{INV, C, L, O, M, IM, I, T, U, W} <: SemLossFunction
     inverses::INV #preallocated inverses of imp_cov
     choleskys::C #preallocated choleskys
     logdets::L #logdets of implied covmats
