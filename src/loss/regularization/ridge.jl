@@ -4,12 +4,11 @@
 ### Types
 ############################################################################
 
-struct SemRidge{P, W1, W2, FT, GT, HT} <: SemLossFunction
+struct SemRidge{P, W1, W2, GT, HT} <: SemLossFunction
     α::P
     which::W1
     which_H::W2
 
-    objective::FT
     gradient::GT
     hessian::HT
 end
@@ -19,7 +18,7 @@ end
 ############################################################################
 
 function SemRidge(;α_ridge, which_ridge, n_par, parameter_type = Float64, imply = nothing, kwargs...)
-    if which_ridge isa Vector{Symbol}
+    if eltype(which_ridge) <: Symbol
         which_ridge = get_identifier_indices(which_ridge, imply)
     end
     which = [CartesianIndex(x) for x in which_ridge]
@@ -29,29 +28,24 @@ function SemRidge(;α_ridge, which_ridge, n_par, parameter_type = Float64, imply
         which,
         which_H,
 
-        zeros(parameter_type, 1),
         zeros(parameter_type, n_par),
         zeros(parameter_type, n_par, n_par))
 end
 
 ############################################################################
-### functors
+### methods
 ############################################################################
 
-function (ridge::SemRidge)(par, F, G, H, model)
+objective!(ridge::SemRidge, par, model) = @views ridge.α*sum(x -> x^2, par[ridge.which])
 
-    if G
-        ridge.gradient[ridge.which] .= 2*ridge.α*par[ridge.which]
-    end
+function gradient!(ridge::SemRidge, par, model)
+    @views ridge.gradient[ridge.which] .= 2*ridge.α*par[ridge.which]
+    return ridge.gradient
+end
 
-    if H
-        @views @. ridge.hessian[ridge.which_H] += ridge.α*2.0
-    end
-
-    if F
-        ridge.objective[1] = ridge.α*sum(par[ridge.which].^2)
-    end
-    
+function hessian!(ridge::SemRidge, par, model)
+    @views @. ridge.hessian[ridge.which_H] += ridge.α*2.0
+    return ridge.hessian
 end
 
 ############################################################################

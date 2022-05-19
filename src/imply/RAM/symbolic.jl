@@ -2,7 +2,7 @@
 ### Types
 ############################################################################
 
-struct RAMSymbolic{F1, F2, F3, A1, A2, A3, S1, S2, S3, V, V2, F4, A4, F5, A5, D1} <: SemImplySymbolic
+struct RAMSymbolic{F1, F2, F3, A1, A2, A3, S1, S2, S3, V, V2, F4, A4, F5, A5, D1, B} <: SemImplySymbolic
     Σ_function::F1
     ∇Σ_function::F2
     ∇²Σ_function::F3
@@ -19,6 +19,7 @@ struct RAMSymbolic{F1, F2, F3, A1, A2, A3, S1, S2, S3, V, V2, F4, A4, F5, A5, D1
     ∇μ_function::F5
     ∇μ::A5
     identifier::D1
+    has_meanstructure::B
 end
 
 ############################################################################
@@ -31,6 +32,7 @@ function RAMSymbolic(;
         vech = false,
         gradient = true,
         hessian = false,
+        meanstructure = false,
         kwargs...)
 
     if specification isa RAMMatrices
@@ -103,7 +105,8 @@ function RAMSymbolic(;
     end
 
     # μ
-    if !isnothing(M)
+    if meanstructure
+        has_meanstructure = Val(true)
         μ_symbolic = get_μ_symbolic_RAM(M, A, F)
         μ_function = Symbolics.build_function(μ_symbolic, par, expression=Val{false})[2]
         μ = zeros(size(μ_symbolic))
@@ -116,6 +119,7 @@ function RAMSymbolic(;
             ∇μ = nothing
         end
     else
+        has_meanstructure = Val(false)
         μ_function = nothing
         μ = nothing
         ∇μ_function = nothing
@@ -138,26 +142,40 @@ function RAMSymbolic(;
         μ,
         ∇μ_function,
         ∇μ,
-        identifier
+        identifier,
+        has_meanstructure
     )
 end
 
 ############################################################################
-### functors
+### objective, gradient, hessian
 ############################################################################
 
-function (imply::RAMSymbolic)(par, F, G, H, model)
+# dispatch on meanstructure
+objective!(imply::RAMSymbolic, par, model) = 
+    objective!(imply, par, model, imply.has_meanstructure)
+gradient!(imply::RAMSymbolic, par, model) = 
+    gradient!(imply, par, model, imply.has_meanstructure)
+
+# objective
+function objective!(imply::RAMSymbolic, par, model, has_meanstructure::Val{T}) where T
     imply.Σ_function(imply.Σ, par)
-    if G || H
-        imply.∇Σ_function(imply.∇Σ, par)
-    end
-    if !isnothing(imply.μ)
-        imply.μ_function(imply.μ, par)
-        if G || H
-            imply.∇μ_function(imply.∇μ, par)
-        end
-    end
+    T && imply.μ_function(imply.μ, par)
 end
+
+# gradient
+function gradient!(imply::RAMSymbolic, par, model, has_meanstructure::Val{T}) where T
+    objective!(imply, par, model, imply.has_meanstructure)
+    imply.∇Σ_function(imply.∇Σ, par)
+    T && imply.∇μ_function(imply.∇μ, par)
+end
+
+# other methods
+hessian!(imply::RAMSymbolic, par, model) = gradient!(imply, par, model)
+objective_gradient!(imply::RAMSymbolic, par, model) = gradient!(imply, par, model)
+objective_hessian!(imply::RAMSymbolic, par, model) = gradient!(imply, par, model)
+gradient_hessian!(imply::RAMSymbolic, par, model) = gradient!(imply, par, model)
+objective_gradient_hessian!(imply::RAMSymbolic, par, model) = gradient!(imply, par, model)
 
 ############################################################################
 ### Recommended methods
@@ -188,6 +206,8 @@ end
 Σ_function(imply::RAMSymbolic) = imply.Σ_function
 ∇Σ_function(imply::RAMSymbolic) = imply.∇Σ_function
 ∇²Σ_function(imply::RAMSymbolic) = imply.∇²Σ_function
+
+has_meanstructure(imply::RAMSymbolic) = imply.has_meanstructure
 
 ############################################################################
 ### additional functions

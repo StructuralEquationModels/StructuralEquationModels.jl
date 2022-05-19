@@ -1,9 +1,29 @@
 ## connect to Optim.jl as backend
-function sem_wrap_optim(par, F, G, H, sem::AbstractSem)
-    sem(par, !isnothing(F), !isnothing(G), !isnothing(H))
-    if !isnothing(G) G .= gradient(sem) end
-    if !isnothing(H) H .= hessian(sem) end
-    if !isnothing(F) return objective(sem)[1] end
+function sem_wrap_optim(par, F, G, H, model::AbstractSem)
+    if !isnothing(F)
+        if !isnothing(G)
+            if !isnothing(H)
+                return objective_gradient_hessian!(G, H, model, par)
+            else
+                return objective_gradient!(G, model, par)
+            end
+        else
+            if !isnothing(H)
+                return objective_hessian!(H, model, par)
+            else
+                return objective!(model, par)
+            end
+        end
+    else
+        if !isnothing(G)
+            if !isnothing(H)
+                gradient_hessian!(G, H, model, par)
+            else
+                gradient!(G, model, par)
+            end
+        end
+    end
+    return nothing
 end
 
 function SemFit(optimization_result::Optim.MultivariateOptimizationResults, model::AbstractSem, start_val)

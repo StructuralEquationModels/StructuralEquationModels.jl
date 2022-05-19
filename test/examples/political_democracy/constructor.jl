@@ -93,7 +93,10 @@ end
 # test constant objective value
 @testset "constant_objective_and_gradient" begin
     @test (objective!(model_constant, start_test) - 3.465) ≈ objective!(model_ml, start_test)
-    @test gradient!(model_constant, start_test) ≈ gradient!(model_ml, start_test)
+    grad = similar(start_test); grad2 = similar(start_test)
+    gradient!(grad, model_constant, start_test)
+    gradient!(grad2, model_ml, start_test)
+    @test grad ≈ grad2
 end
 
 @testset "ml_solution_weighted" begin
@@ -268,7 +271,8 @@ model_ml = Sem(
     data = dat_missing,
     observed = SemObsMissing,
     loss = SemFIML,
-    diff = semdiff
+    diff = semdiff,
+    meanstructure = true
 )
 
 model_ml_sym = Sem(
@@ -278,7 +282,8 @@ model_ml_sym = Sem(
     imply = RAMSymbolic,
     loss = SemFIML,
     start_val = start_test_mean,
-    diff = semdiff
+    diff = semdiff,
+    meanstructure = true
 )
 
 ############################################################################

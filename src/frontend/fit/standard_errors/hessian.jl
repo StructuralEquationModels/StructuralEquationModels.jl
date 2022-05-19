@@ -7,12 +7,12 @@ function se_hessian(sem_fit::SemFit; hessian = :finitediff)
     c = H_scaling(sem_fit.model)
 
     if hessian == :analytic
-        H = hessian!(sem_fit.model, sem_fit.solution)
-    elseif hessian == :analytic_last
-        H = hessian(sem_fit.model)
+        par = solution(sem_fit)
+        H = zeros(eltype(par), length(par), length(par))
+        hessian!(H, sem_fit.model, sem_fit.solution)
     elseif hessian == :finitediff
         H = FiniteDiff.finite_difference_hessian(
-                x -> objective!(sem_fit.model, x)[1], 
+                x -> objective!(sem_fit.model, x), 
                 sem_fit.solution
                 )
     elseif hessian == :optimizer

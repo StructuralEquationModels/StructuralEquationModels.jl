@@ -11,6 +11,7 @@ export *, ==, @StenoGraph, AbstractEdge, AbstractNode, DirectedEdge, Edge, EdgeM
 
 # type hierarchy
 include("types.jl")
+include("objective_gradient_hessian.jl")
 # fitted objects
 include("frontend/fit/SemFit.jl")
 # specification of models
@@ -76,21 +77,21 @@ include("frontend/fit/standard_errors/bootstrap.jl")
 export  AbstractSem, 
             AbstractSemSingle, AbstractSemCollection, Sem, SemFiniteDiff, SemForwardDiff, SemEnsemble,
         SemImply, 
-            RAMSymbolic, RAM, ImplyEmpty,
+            RAMSymbolic, RAM, ImplyEmpty, imply,
         start_val,
             start_fabin3, start_simple, start_parameter_table,
         SemLoss, 
             SemLossFunction, SemML, SemFIML, em_mvn, SemLasso, SemRidge,
-            SemConstant, SemWLS,
+            SemConstant, SemWLS, loss,
         SemDiff, 
-            SemDiffEmpty, SemDiffOptim, SemDiffNLopt, NLoptConstraint,
+            SemDiffEmpty, SemDiffOptim, SemDiffNLopt, NLoptConstraint, diff,
         SemObs, 
-            SemObsCommon, SemObsMissing,
+            SemObsCommon, SemObsMissing, observed,
         sem_fit, 
         SemFit,
             minimum, solution,
         sem_summary,
-        objective, objective!, gradient, gradient!, hessian, hessian!, objective_gradient!,
+        objective!, gradient!, hessian!, objective_gradient!, objective_hessian!, gradient_hessian!, objective_gradient_hessian!,
         ParameterTable, 
             EnsembleParameterTable, update_partable!, update_estimate!, update_start!,
             Fixed, fixed, Start, start, Label, label,
