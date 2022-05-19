@@ -57,8 +57,5 @@ function update_observed(loss::SemLoss, new_observed; kwargs...)
     new_functions = Tuple(update_observed(lossfun, new_observed; kwargs...) for lossfun in loss.functions)
     return SemLoss(
         new_functions,
-        loss.weights,
-        loss.objective,
-        loss.gradient,
-        loss.hessian)
+        loss.weights)
 end
