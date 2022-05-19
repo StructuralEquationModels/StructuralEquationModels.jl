@@ -419,7 +419,7 @@ update_observed(lossfun::SemML, observed::SemObsMissing; kwargs...) =
     throw(ArgumentError("ML estimation does not work with missing data - use FIML instead"))
 
 function update_observed(lossfun::SemML, observed::SemObs; kwargs...)
-    if (size(lossfun.inverses) == size(obs_cov(observed))) & (isnothing(lossfun.meandiff) == isnothing(obs_mean(observed)))
+    if size(lossfun.Σ⁻¹) == size(obs_cov(observed))
         return lossfun
     else
         return SemML(;observed = observed, kwargs...)
