@@ -21,7 +21,7 @@ Additionaly, we need to define a *method* to compute the objective:
 ```julia
 import StructuralEquationModels: objective!
 
-objective!(lossfun::Ridge, par, model::AbstractSemSingle) = ridge.α*sum(par[I].^2)
+objective!(ridge::Ridge, par, model::AbstractSemSingle) = ridge.α*sum(par[ridge.I].^2)
 ```
 
 That's all we need to make it work! For example, we can now fit [A first model](@ref) with ridge regularization:
@@ -73,42 +73,88 @@ model_fit = sem_fit(model)
 
 This is one way of specifying the model - we now have **one model** with **multiple loss functions**. Because we did not provide a gradient for `Ridge`, we have to specify a `SemFiniteDiff` model that computes numerical gradients with finite difference approximation.
 
-This way of specifying our model is not ideal, however, because now also the maximum likelihood loss function lives inside a `SemFiniteDiff` model, and this means even though we have defined analytical gradients for it, we do not make use of them.
+### Improve performance
 
-A more efficient way is therefore to specify our model as an ensemble model: 
+By far the biggest improvements in performance will result from specifying analytical gradients. We can do this for our example:
 
 ```julia
-model_ml = Sem(
-    specification = partable,
-    data = data,
-    loss = SemML
-)
+import StructuralEquationModels: gradient!
 
-model_ridge = SemFiniteDiff(
-    specification = partable,
-    data = data,
-    loss = myridge
-)
-
-
-model_ml_ridge = SemEnsemble(model_ml, model_ridge)
-
-model_ml_ridge_fit = sem_fit(model_ml_ridge)
+function gradient!(ridge::Ridge, par, model::AbstractSemSingle)
+    gradient = zero(par)
+    gradient[ridge.I] .= 2*ridge.α*par[ridge.I]
+    return gradient
+end
 ```
 
-The results of both methods will be the same, but we can verify that the computation costs differ (the package `BenchmarkTools` has to be installed for this):
+Now, instead of specifying a `SemFiniteDiff`, we can use the normal `Sem` constructor:
+
+```julia
+model_new = Sem(
+    specification = partable,
+    data = data,
+    loss = (SemML, myridge)
+)
+
+model_fit = sem_fit(model_new)
+```
+
+The results are thew same, but we can verify that the computational costs are way lower (for this, the julia package `BenchmarkTools` has to be installed):
 
 ```julia
 using BenchmarkTools
 
 @benchmark sem_fit(model)
 
-@benchmark sem_fit(model_ml_ridge)
+@benchmark sem_fit(model_new)
+```
+
+The exact results of those benchmarks are of course highly depended an your system (processor, RAM, etc.), but you should see that the median computation time with analytical gradients drops to about 5% of the computation without analytical gradients.
+
+Additionally, you may provide analytic hessians by writing a method of the form
+
+```julia
+function hessian!(ridge::Ridge, par, model::AbstractSemSingle)
+    ...
+    return hessian
+end
+```
+
+however, this will only matter if you use an optimization algorithm that makes use of the hessians. Our gefault algorithmn `LBFGS` from the package `Optim.jl` does not use hessians (for example, the `Newton` algorithmn from the same package does).
+
+Do improve performance even more, you can write a method of the form
+
+```julia
+function objective_gradient!(ridge::Ridge, par, model::AbstractSemSingle)
+    ...
+    return objective, gradient
+end
+```
+
+This is beneficial when the computation of the objective and gradient share common computations. For example, in maximum likelihood estimation, the model implied covariance matrix has to be inverted to both compute the objective and gradient. Whenever the optimization algorithmn asks for the objective value and gradient at the same point, we call `objective_gradient!` and only have to do the shared computations - in this case the matric inversion - once.
+
+If you want to do hessian-based optimization, there are also the following methods:
+
+```julia
+function objective_hessian!(ridge::Ridge, par, model::AbstractSemSingle)
+    ...
+    return objective, hessian
+end
+
+function gradient_hessian!(ridge::Ridge, par, model::AbstractSemSingle)
+    ...
+    return gradient, hessian
+end
+
+function objective_gradient_hessian!(ridge::Ridge, par, model::AbstractSemSingle)
+    ...
+    return objective, gradient, hessian
+end
 ```
 
 ## Convenient
 
-To be able to build model with the [Outer Constructor](@ref), you need to add a constructor for your loss function that only takes keyword arguments and allows for passing optional additional kewyword arguments. A constructor is just a function that creates a new instance of your type:
+To be able to build the model with the [Outer Constructor](@ref), you need to add a constructor for your loss function that only takes keyword arguments and allows for passing optional additional kewyword arguments. A constructor is just a function that creates a new instance of your type:
 
 ```julia
 function MyLoss(;arg1 = ..., arg2, kwargs...)
@@ -116,3 +162,18 @@ function MyLoss(;arg1 = ..., arg2, kwargs...)
     return MyLoss(...)
 end
 ```
+
+## Additional functionality
+
+### Update observed data
+
+If you are planing a simulation study where you have to fit the **same model** to many **different datasets**, it is computationally beneficial to not build the whole model completely new everytime you change your data.
+Therefore, we provide a function to update the data of your model, `swap_observed(model(semfit); data = new_data)`. However, we can not now beforehand in what way your loss function depends on the specific datasets. The solution is to provide a method for `update_observed`. Since `Ridge` does not depend on the data at all, this is quite easy:
+
+```julia
+import StructuralEquationModels: update_observed
+
+update_observed(ridge::Ridge, observed::SemObs; kwargs...) = ridge
+```
+
+### 
