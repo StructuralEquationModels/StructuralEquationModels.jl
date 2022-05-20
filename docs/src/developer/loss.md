@@ -176,4 +176,11 @@ import StructuralEquationModels: update_observed
 update_observed(ridge::Ridge, observed::SemObs; kwargs...) = ridge
 ```
 
-### 
+### Access additional information
+
+If you want to provide a way to query information about loss functions of your type, you can provide functions for that:
+
+```julia
+hyperparameter(ridge::Ridge) = ridge.α
+regularization_indices(ridge::Ridge) = ridge.I
+```
