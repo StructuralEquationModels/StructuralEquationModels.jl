@@ -73,6 +73,8 @@ model_fit = sem_fit(model)
 
 This is one way of specifying the model - we now have **one model** with **multiple loss functions**. Because we did not provide a gradient for `Ridge`, we have to specify a `SemFiniteDiff` model that computes numerical gradients with finite difference approximation.
 
+Note that the last argument to the `objective!` method is the whole model. Therefore, we can access everything that is stored inside our model everytime we compute the objective value for our loss function. Since ridge regularization is a very easy case, we do not need to do this. But maximum likelihood estimation for example depens on both the observed and the model implied covariance matrix. See [Second example - maximum likelihood](@ref) for information on how to do that.
+
 ### Improve performance
 
 By far the biggest improvements in performance will result from specifying analytical gradients. We can do this for our example:
@@ -184,3 +186,49 @@ If you want to provide a way to query information about loss functions of your t
 hyperparameter(ridge::Ridge) = ridge.α
 regularization_indices(ridge::Ridge) = ridge.I
 ```
+
+# Second example - maximum likelihood
+Let's make a sligtly more complicated example: we will reimplement maximum likelihood estimation.
+
+To keep it simple, we only cover models without a meanstructure. The maximum likelihood objective is defined as
+
+```math
+F_{ML} = \log \det \Sigma_i + \mathrm{tr}(\Sigma_i \Sigma_o)
+```
+
+where ``\Sigma_i`` is the model implied covariance matrix and ``\Sigma_o`` is the observed covariance matrix. We can query the model implied covariance matrix from the `imply` par of our model, and the observed covariance matrix from the `observed` path of our model.
+
+To get information on what we can access from a certain `imply` or `observed` type, we can look in it`s documentation an the pages XXX or via the help mode of the REPL:
+
+```julia
+julia>?
+
+help?> RAM
+
+help?> SemObsCommon
+```
+
+We see that the model implied covariance matrix can be assessed as `Σ(imply)` and the observed covariance matrix as `obs_cov(observed)`.
+
+With this information, we write can implement maximum likelihood optimization as
+
+```julia
+struct MaximumLikelihood <: SemLossFunction end
+
+using LinearAlgebra
+import StructuralEquationModels: Σ, obs_cov, objective!
+
+function objective!(semml::MaximumLikelihood, parameters, model::AbstractSem)
+    # access the model implied and observed covariance matrices
+    Σᵢ = Σ(imply(model))
+    Σₒ = obs_cov(observed(model))
+    # compute the objective
+    if isposdef(Σᵢ) # is the model implied covariance matrix positive definite?
+        return logdet(Σᵢ) + tr(inv(Σᵢ)*Σₒ)
+    else
+        return Inf
+    end
+end
+```
+
+to deal with eventual non-positive definiteness of the model implied covariance matrix, we chose the pragmatic way of returning Infinity whenever this is the case.
