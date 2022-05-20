@@ -432,12 +432,3 @@ end
 
 Σ⁻¹(semml::SemML) = semml.Σ⁻¹
 Σ⁻¹Σₒ(semml::SemML) = semml.Σ⁻¹Σₒ
-
-############################################################################
-### Pretty Printing
-############################################################################
-
-function Base.show(io::IO, struct_inst::SemML)
-    print_type_name(io, struct_inst)
-    print_field_types(io, struct_inst)
-end

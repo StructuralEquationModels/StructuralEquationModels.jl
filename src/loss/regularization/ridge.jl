@@ -53,12 +53,3 @@ end
 ############################################################################
 
 update_observed(loss::SemRidge, observed::SemObs; kwargs...) = loss
-
-############################################################################
-### Pretty Printing
-############################################################################
-
-function Base.show(io::IO, struct_inst::SemRidge)
-    print_type_name(io, struct_inst)
-    print_field_types(io, struct_inst)
-end

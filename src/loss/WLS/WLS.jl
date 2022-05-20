@@ -210,12 +210,3 @@ objective_gradient_hessian!(semwls::SemWLS, par, model::AbstractSemSingle, has_m
 ############################################################################
 
 update_observed(lossfun::SemWLS, observed::SemObs; kwargs...) = SemWLS(;observed = observed, kwargs...)
-
-############################################################################
-### Pretty Printing
-############################################################################
-
-function Base.show(io::IO, struct_inst::SemWLS)
-    print_type_name(io, struct_inst)
-    print_field_types(io, struct_inst)
-end

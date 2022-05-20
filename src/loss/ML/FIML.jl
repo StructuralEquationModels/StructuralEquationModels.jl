@@ -266,12 +266,3 @@ end
 
 get_n_nodes(specification::RAMMatrices) = specification.size_F[2]
 get_n_nodes(specification::ParameterTable) = length(specification.variables[:observed_vars]) + length(specification.variables[:latent_vars])
-
-############################################################################
-### Pretty Printing
-############################################################################
-
-function Base.show(io::IO, struct_inst::SemFIML)
-    print_type_name(io, struct_inst)
-    print_field_types(io, struct_inst)
-end

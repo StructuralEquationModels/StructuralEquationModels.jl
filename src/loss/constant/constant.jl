@@ -29,12 +29,3 @@ hessian!(constant::SemConstant, par, model) = zeros(eltype(par), length(par), le
 ############################################################################
 
 update_observed(loss::SemConstant, observed::SemObs; kwargs...) = loss
-
-############################################################################
-### Pretty Printing
-############################################################################
-
-function Base.show(io::IO, struct_inst::SemConstant)
-    print_type_name(io, struct_inst)
-    print_field_types(io, struct_inst)
-end
