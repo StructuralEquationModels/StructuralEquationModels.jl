@@ -35,16 +35,8 @@ function RAMSymbolic(;
         meanstructure = false,
         kwargs...)
 
-    if specification isa RAMMatrices
-        ram_matrices = specification
-        identifier = StructuralEquationModels.identifier(ram_matrices)
-    elseif specification isa ParameterTable
-        ram_matrices = RAMMatrices(specification)
-        identifier = StructuralEquationModels.identifier(ram_matrices)
-    else
-        throw(ErrorException("The RAMSymbolic constructor does not know how to handle your specification object. 
-        \n Please specify your model as either a ParameterTable or RAMMatrices."))
-    end
+    ram_matrices = RAMMatrices(specification)
+    identifier = StructuralEquationModels.identifier(ram_matrices)
 
     n_par = length(ram_matrices.parameters)
     n_var, n_nod = ram_matrices.size_F

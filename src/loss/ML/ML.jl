@@ -21,8 +21,8 @@ function SemML(;observed, meanstructure = false, approx_H = false, kwargs...)
         meandiff = nothing :
         meandiff = copy(obs_mean(observed))
     return SemML(
-        copy(obs_cov(observed)),
-        copy(obs_cov(observed)),
+        similar(obs_cov(observed)),
+        similar(obs_cov(observed)),
         meandiff,
         approx_H,
         Val(meanstructure)

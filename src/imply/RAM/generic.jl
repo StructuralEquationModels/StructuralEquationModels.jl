@@ -41,16 +41,9 @@ function RAM(;
         meanstructure = false,
         kwargs...)
 
-    if specification isa RAMMatrices
-        ram_matrices = specification
-        identifier = StructuralEquationModels.identifier(ram_matrices)
-    elseif specification isa ParameterTable
-        ram_matrices = RAMMatrices(specification)
-        identifier = StructuralEquationModels.identifier(ram_matrices)
-    else
-        throw(ErrorException("The RAM constructor does not know how to handle your specification object. 
-        \n Please specify your model as either a ParameterTable or RAMMatrices."))
-    end
+    ram_matrices = RAMMatrices(specification)
+    identifier = StructuralEquationModels.identifier(ram_matrices)
+
 
     # get dimensions of the model
     n_par = length(ram_matrices.parameters)
@@ -141,9 +134,9 @@ end
 ############################################################################
 
 # dispatch on meanstructure
-objective!(imply::RAM, par, model) = 
+objective!(imply::RAM, par, model::AbstractSemSingle) = 
     objective!(imply, par, model, imply.has_meanstructure)
-gradient!(imply::RAM, par, model) = 
+gradient!(imply::RAM, par, model::AbstractSemSingle) = 
     gradient!(imply, par, model, imply.has_meanstructure)
 
 # objective and gradient
@@ -175,7 +168,7 @@ function objective!(imply::RAM, parameters, model, has_meanstructure::Val{T}) wh
 
 end
 
-function gradient!(imply::RAM, parameters, model, has_meanstructure::Val{T}) where T
+function gradient!(imply::RAM, parameters, model::AbstractSemSingle, has_meanstructure::Val{T}) where T
     
     fill_A_S_M(
         imply.A, 
@@ -204,10 +197,10 @@ function gradient!(imply::RAM, parameters, model, has_meanstructure::Val{T}) whe
 
 end
 
-objective_gradient!(imply::RAM, par, model, has_meanstructure) = gradient!(imply, par, model, has_meanstructure)
-objective_hessian!(imply::RAM, par, model, has_meanstructure) = gradient!(imply, par, model, has_meanstructure)
-gradient_hessian!(imply::RAM, par, model, has_meanstructure) = gradient!(imply, par, model, has_meanstructure)
-objective_gradient_hessian!(imply::RAM, par, model, has_meanstructure) = gradient!(imply, par, model, has_meanstructure)
+objective_gradient!(imply::RAM, par, model::AbstractSemSingle, has_meanstructure) = gradient!(imply, par, model, has_meanstructure)
+objective_hessian!(imply::RAM, par, model::AbstractSemSingle, has_meanstructure) = gradient!(imply, par, model, has_meanstructure)
+gradient_hessian!(imply::RAM, par, model::AbstractSemSingle, has_meanstructure) = gradient!(imply, par, model, has_meanstructure)
+objective_gradient_hessian!(imply::RAM, par, model::AbstractSemSingle, has_meanstructure) = gradient!(imply, par, model, has_meanstructure)
 
 ############################################################################
 ### Recommended methods

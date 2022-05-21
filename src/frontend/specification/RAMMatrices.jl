@@ -26,6 +26,8 @@ function RAMMatrices(;A, S, F, M = nothing, parameters, colnames)
     return RAMMatrices(A_indices, S_indices, F_indices, M_indices, parameters, colnames, constants, size(F))
 end
 
+RAMMatrices(a::RAMMatrices) = a
+
 ############################################################################
 ### Constants
 ############################################################################
