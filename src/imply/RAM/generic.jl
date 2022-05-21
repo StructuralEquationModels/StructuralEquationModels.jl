@@ -281,12 +281,3 @@ function check_acyclic(A_pre, n_par, A_indices)
 
     return A_pre
 end
-
-############################################################################
-### Pretty Printing
-############################################################################
-
-function Base.show(io::IO, struct_inst::RAM)
-    print_type_name(io, struct_inst)
-    print_field_types(io, struct_inst)
-end

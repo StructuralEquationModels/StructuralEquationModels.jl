@@ -137,12 +137,3 @@ em_model(observed::SemObsMissing) = observed.em_model
 
 reorder_observed(data, spec_colnames::Nothing, data_colnames) = data, nothing
 reorder_observed(data, spec_colnames, data_colnames) = reorder_data(data, spec_colnames, data_colnames)
-
-############################################################################
-### Pretty Printing
-############################################################################
-
-function Base.show(io::IO, struct_inst::SemObsMissing)
-    print_type_name(io, struct_inst)
-    print_field_types(io, struct_inst)
-end

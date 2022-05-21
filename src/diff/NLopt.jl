@@ -50,12 +50,3 @@ local_options(diff::SemDiffNLopt) = diff.local_options
 equality_constraints(diff::SemDiffNLopt) = diff.equality_constraints
 inequality_constraints(diff::SemDiffNLopt) = diff.inequality_constraints
 
-############################################################################
-### Pretty Printing
-############################################################################
-
-function Base.show(io::IO, struct_inst::SemDiffNLopt)
-    print_type_name(io, struct_inst)
-    print_field_types(io, struct_inst)
-end
-

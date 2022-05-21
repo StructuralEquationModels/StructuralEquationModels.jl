@@ -1,3 +1,7 @@
+############################################################################
+### Types and Constructor
+############################################################################
+
 mutable struct SemDiffOptim{A, B} <: SemDiff
     algorithm::A
     options::B
@@ -17,12 +21,3 @@ update_observed(diff::SemDiffOptim, observed::SemObs; kwargs...) = diff
 
 algorithm(diff::SemDiffOptim) = diff.algorithm
 options(diff::SemDiffOptim) = diff.options
-
-############################################################################
-### Pretty Printing
-############################################################################
-
-function Base.show(io::IO, struct_inst::SemDiffOptim)
-    print_type_name(io, struct_inst)
-    print_field_types(io, struct_inst)
-end
