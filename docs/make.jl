@@ -27,6 +27,8 @@ makedocs(
             "Extending the package" => "developer/extending.md",
             "Custom loss functions" => "developer/loss.md",
             "Custom imply types" => "developer/imply.md",
+            "Custom diff types" => "developer/diff.md",
+            "Custom observed types" => "developer/observed.md",
             "Custom sem types" => "developer/sem.md"
         ],
         "Performance tips" => [
