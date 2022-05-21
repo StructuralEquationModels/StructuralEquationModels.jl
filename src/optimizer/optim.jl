@@ -40,23 +40,8 @@ optimizer(res::Optim.MultivariateOptimizationResults) = Optim.summary(res)
 n_iterations(res::Optim.MultivariateOptimizationResults) = Optim.iterations(res)
 convergence(res::Optim.MultivariateOptimizationResults) = Optim.converged(res)
 
-function sem_fit(model::Sem{O, I, L, D}; start_val = start_val, kwargs...) where {O, I, L, D <: SemDiffOptim}
+function sem_fit(model::AbstractSemSingle{O, I, L, D}; start_val = start_val, kwargs...) where {O, I, L, D <: SemDiffOptim}
     
-    if !isa(start_val, Vector)
-        start_val = start_val(model; kwargs...)
-    end
-
-    result = Optim.optimize(
-                Optim.only_fgh!((F, G, H, par) -> sem_wrap_optim(par, F, G, H, model)),
-                start_val,
-                model.diff.algorithm,
-                model.diff.options)
-    return SemFit(result, model, start_val)
-
-end
-
-function sem_fit(model::SemFiniteDiff{O, I, L, D}; start_val = start_val, kwargs...) where {O, I, L, D <: SemDiffOptim}
-
     if !isa(start_val, Vector)
         start_val = start_val(model; kwargs...)
     end
