@@ -165,6 +165,23 @@ function MyLoss(;arg1 = ..., arg2, kwargs...)
 end
 ```
 
+All keyword arguments that a user passes to the Sem constructor are passed to your loss function. In addition, all previously constructed parts of the model (imply and observed part) are passed as keyword arguments as well as the number of parameters `n_par = ...`, so your constructor may depend on those. For example, the constructor for `SemML` in our package depends on the additional argument `meanstructure` as well as the observed part of the model to pre-allocated arrays of the same size as the observed covariance matrix and the observed mean vector: 
+
+```julia
+function SemML(;observed, meanstructure = false, approx_H = false, kwargs...)
+    isnothing(obs_mean(observed)) ?
+        meandiff = nothing :
+        meandiff = copy(obs_mean(observed))
+    return SemML(
+        similar(obs_cov(observed)),
+        similar(obs_cov(observed)),
+        meandiff,
+        approx_H,
+        Val(meanstructure)
+        )
+end
+```
+
 ## Additional functionality
 
 ### Update observed data
