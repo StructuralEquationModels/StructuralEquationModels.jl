@@ -7,12 +7,6 @@ function objective!(model::AbstractSemSingle, parameters)
     return objective!(loss(model), parameters, model)
 end
 
-#####################################################################################################
-# methods for Sem
-#####################################################################################################
-
-# pre-allocated gradient and hessian
-
 function gradient!(gradient, model::AbstractSemSingle, parameters)
     fill!(gradient, zero(eltype(gradient)))
     gradient!(imply(model), parameters, model)
