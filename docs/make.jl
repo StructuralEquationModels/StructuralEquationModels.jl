@@ -29,11 +29,18 @@ makedocs(
             "Custom imply types" => "developer/imply.md",
             "Custom diff types" => "developer/diff.md",
             "Custom observed types" => "developer/observed.md",
-            "Custom sem types" => "developer/sem.md"
+            "Custom model types" => "developer/sem.md"
         ],
         "Performance tips" => [
+            "Model sorting" => "performance/sorting.md",
             "Symbolic precomputation" => "performance/symbolic.md",
-            "Starting values" => "performance/starting_values.md"
+            "Starting values" => "performance/starting_values.md",
+            "Parametric Types" => "performance/parametric.md"
+        ],
+        "Internals and design" => [
+            "Internals and design" => "internals/internals.md",
+            "files" => "internals/files.md",
+            "types" => "internals/types.md"
         ]
     ],
     format = Documenter.HTML(
