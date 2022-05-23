@@ -4,29 +4,30 @@
 "Most abstract supertype for all SEMs"
 abstract type AbstractSem end
 
-"Supertype for all single SEMs, e.g. SEMs that have the fields `observed`, `imply`, loss, diff"
+"Supertype for all single SEMs, e.g. SEMs that have at least the fields `observed`, `imply`, loss and diff"
 abstract type AbstractSemSingle{O, I, L, D} <: AbstractSem end
 
 "Supertype for all collections of multiple SEMs"
 abstract type AbstractSemCollection <: AbstractSem end
 
-"Supertype for all loss functions of SEMs. If you want to implement a custom loss function, it should be of this type."
+"Supertype for all loss functions of SEMs. If you want to implement a custom loss function, it should be a subtype of `SemLossFunction`."
 abstract type SemLossFunction end
 
 """
-    SemLoss(args...; ...)
+    SemLoss(args...; loss_weights = nothing, ...)
 
 Constructs the loss field of a SEM. Can contain multiple `SemLossFunction`s, the model is optimized over their sum.
 See also [`SemLossFunction`](@ref).
 
 # Arguments
 - `args...`: Multiple `SemLossFunction`s.
+- `loss_weights::Vector`: Weights for each loss function. Defaults to unweighted optimization.
 
 # Examples
 ```julia
 my_ml_loss = SemML(...)
 my_ridge_loss = SemRidge(...)
-my_loss = SemLoss(SemML, SemRidge)
+my_loss = SemLoss(SemML, SemRidge; loss_weights = [1.0, 2.0])
 ```
 """
 mutable struct SemLoss{F <: Tuple, T}
@@ -82,20 +83,20 @@ abstract type SemImply end
 abstract type SemImplySymbolic <: SemImply end
 
 """
-    Sem(;observed = SemObsCommon, imply = RAM, loss = (SemML,), diff = SemDiffOptim, kwargs...)
+    Sem(;observed = SemObsCommon, imply = RAM, loss = SemML, diff = SemDiffOptim, kwargs...)
 
 Constructor for the basic `Sem` type.
-All additional kwargs are passed down to the constructors for the fields.
+All additional kwargs are passed down to the constructors for the observed, imply, loss and diff fields.
 
 # Arguments
-- `observed`: isa `SemObs` or a constructor.
-- `imply`: isa `SemImply` or a constructor.
-- `loss`: Tuple of objects that are `SemLossFunction`s or constructors.
-- `observed`: isa `SemObs` or a constructor.
+- `observed`: object of subtype `SemObs` or a constructor.
+- `imply`: object of subtype `SemImply` or a constructor.
+- `loss`: object of subtype `SemLossFunction`s or constructor; or a tuple of such.
+- `diff`: object of subtype `SemDiff` or a constructor.
 
-Returns a struct of type Sem with fields
+Returns a Sem with fields
 - `observed::SemObs`: Stores observed data, sample statistics, etc. See also [`SemObs`](@ref).
-- `imply::SemImply`: Computes Σ, μ, etc. See also [`SemImply`](@ref).
+- `imply::SemImply`: Computes model implied statistics, like Σ, μ, etc. See also [`SemImply`](@ref).
 - `loss::SemLoss`: Computes the objective and gradient of a sum of loss functions. See also [`SemLoss`](@ref).
 - `diff::SemDiff`: Connects the model to the optimizer. See also [`SemDiff`](@ref).
 """
@@ -109,7 +110,26 @@ end
 #####################################################################################################
 # automatic differentiation
 #####################################################################################################
+"""
+    SemFiniteDiff(;observed = SemObsCommon, imply = RAM, loss = SemML, diff = SemDiffOptim, has_gradient = false, kwargs...)
 
+Constructor for `SemFiniteDiff`.
+All additional kwargs are passed down to the constructors for the observed, imply, loss and diff fields.
+
+# Arguments
+- `observed`: object of subtype `SemObs` or a constructor.
+- `imply`: object of subtype `SemImply` or a constructor.
+- `loss`: object of subtype `SemLossFunction`s or constructor; or a tuple of such.
+- `diff`: object of subtype `SemDiff` or a constructor.
+- `has_gradient::Bool`: are analytic gradients available for this model.
+
+Returns a Sem with fields
+- `observed::SemObs`: Stores observed data, sample statistics, etc. See also [`SemObs`](@ref).
+- `imply::SemImply`: Computes model implied statistics, like Σ, μ, etc. See also [`SemImply`](@ref).
+- `loss::SemLoss`: Computes the objective and gradient of a sum of loss functions. See also [`SemLoss`](@ref).
+- `diff::SemDiff`: Connects the model to the optimizer. See also [`SemDiff`](@ref).
+- `has_gradient::Val{Bool}`: signifies if analytic gradients are available for this model.
+"""
 struct SemFiniteDiff{O <: SemObs, I <: SemImply, L <: SemLoss, D <: SemDiff, G} <: AbstractSemSingle{O, I, L, D}
     observed::O
     imply::I
@@ -118,6 +138,26 @@ struct SemFiniteDiff{O <: SemObs, I <: SemImply, L <: SemLoss, D <: SemDiff, G} 
     has_gradient::G
 end
 
+"""
+    SemForwardDiff(;observed = SemObsCommon, imply = RAM, loss = SemML, diff = SemDiffOptim, has_gradient = false, kwargs...)
+
+Constructor for `SemForwardDiff`.
+All additional kwargs are passed down to the constructors for the observed, imply, loss and diff fields.
+
+# Arguments
+- `observed`: object of subtype `SemObs` or a constructor.
+- `imply`: object of subtype `SemImply` or a constructor.
+- `loss`: object of subtype `SemLossFunction`s or constructor; or a tuple of such.
+- `diff`: object of subtype `SemDiff` or a constructor.
+- `has_gradient::Bool`: are analytic gradients available for this model.
+
+Returns a Sem with fields
+- `observed::SemObs`: Stores observed data, sample statistics, etc. See also [`SemObs`](@ref).
+- `imply::SemImply`: Computes model implied statistics, like Σ, μ, etc. See also [`SemImply`](@ref).
+- `loss::SemLoss`: Computes the objective and gradient of a sum of loss functions. See also [`SemLoss`](@ref).
+- `diff::SemDiff`: Connects the model to the optimizer. See also [`SemDiff`](@ref).
+- `has_gradient::Val{Bool}`: signifies if analytic gradients are available for this model.
+"""
 struct SemForwardDiff{O <: SemObs, I <: SemImply, L <: SemLoss, D <: SemDiff, G} <: AbstractSemSingle{O, I, L, D}
     observed::O
     imply::I 
@@ -129,7 +169,24 @@ end
 #####################################################################################################
 # ensemble models
 #####################################################################################################
+"""
+    SemEnsemble(models..., diff = SemDiffOptim, weights = nothing, kwargs...)
 
+Constructor for `SemForwardDiff`.
+All additional kwargs are passed down to the constructor for the diff field.
+
+# Arguments
+- `models...`: `AbstractSem`s.
+- `diff`: object of subtype `SemDiff` or a constructor.
+- `weights::Vector`:  Weights for each model. Defaults to the number of observed data points.
+
+Returns a SemEnsemble with fields
+- `n::Int`: Number of models.
+- `sems::Tuple`: `AbstractSem`s.
+- `weights::Vector`: Weights for each model.
+- `diff::SemDiff`: Connects the model to the optimizer. See also [`SemDiff`](@ref).
+- `identifier::Dict`: Stores parameter labels and their position.
+"""
 struct SemEnsemble{N, T <: Tuple, V <: AbstractVector, D, I} <: AbstractSemCollection
     n::N
     sems::T
@@ -138,7 +195,7 @@ struct SemEnsemble{N, T <: Tuple, V <: AbstractVector, D, I} <: AbstractSemColle
     identifier::I
 end
 
-function SemEnsemble(models...; diff = SemDiffOptim, weights = nothing, parameter_type = Float64, kwargs...)
+function SemEnsemble(models...; diff = SemDiffOptim, weights = nothing, kwargs...)
     n = length(models)
     npar = n_par(models[1])
 
@@ -173,28 +230,66 @@ function SemEnsemble(models...; diff = SemDiffOptim, weights = nothing, paramete
         )
 end
 
+"""
+    n_models(ensemble::SemEnsemble) -> Integer
+
+Returns the number of models in an ensemble model.
+"""
 n_models(ensemble::SemEnsemble) = ensemble.n
+"""
+    models(ensemble::SemEnsemble) -> Tuple{AbstractSem}
+
+Returns the models in an ensemble model.
+"""
 models(ensemble::SemEnsemble) = ensemble.sems
+"""
+    weights(ensemble::SemEnsemble) -> Vector
+
+Returns the weights of an ensemble model.
+"""
 weights(ensemble::SemEnsemble) = ensemble.weights
+"""
+    diff(ensemble::SemEnsemble) -> SemDiff
+
+Returns the diff part of an ensemble model.
+"""
 diff(ensemble::SemEnsemble) = ensemble.diff
 
 #####################################################################################################
 # additional methods
 #####################################################################################################
+"""
+    observed(model::AbstractSemSingle) -> SemObs
 
-observed(model::Sem) = model.observed
-imply(model::Sem) = model.imply
-loss(model::Sem) = model.loss
-diff(model::Sem) = model.diff
+Returns the observed part of a model.
+"""
+observed(model::AbstractSemSingle) = model.observed
 
-observed(model::SemForwardDiff) = model.observed
-imply(model::SemForwardDiff) = model.imply
-loss(model::SemForwardDiff) = model.loss
-diff(model::SemForwardDiff) = model.diff
+"""
+    imply(model::AbstractSemSingle) -> SemImply
+
+Returns the imply part of a model.
+"""
+imply(model::AbstractSemSingle) = model.imply
+
+"""
+    loss(model::AbstractSemSingle) -> SemLoss
+
+Returns the loss part of a model.
+"""
+loss(model::AbstractSemSingle) = model.loss
+
+"""
+    diff(model::AbstractSemSingle) -> SemDiff
+
+Returns the diff part of a model.
+"""
+diff(model::AbstractSemSingle) = model.diff
+
+"""
+    diff(model::AbstractSemSingle) -> Val{bool}
+
+Returns whether the model has analytic gradients.
+"""
 has_gradient(model::SemForwardDiff) = model.has_gradient
-
-observed(model::SemFiniteDiff) = model.observed
-imply(model::SemFiniteDiff) = model.imply
-loss(model::SemFiniteDiff) = model.loss
-diff(model::SemFiniteDiff) = model.diff
 has_gradient(model::SemFiniteDiff) = model.has_gradient
