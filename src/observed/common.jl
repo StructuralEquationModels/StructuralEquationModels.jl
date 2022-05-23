@@ -1,5 +1,35 @@
 """
-    More here soon.
+    SemObsCommon(;
+        specification = nothing,
+        data = nothing,
+        obs_cov = nothing,
+        data_colnames = nothing,
+        meanstructure = false,
+        rowwise = false,
+        n_obs = nothing,
+        ...,
+        kwargs...)
+
+Constructor for `SemObsCommon` objects.
+
+# Arguments
+- `specification`: either a `RAMMatrices` or `ParameterTable` object
+- `data`: observed data
+- `obs_cov`: observed covariance matrix 
+- `data_colnames::Vector{Symbol}`: column names of the data (if the object passed as data does not have column names, i.e. is not a data frame) or covariance matrix
+- `meanstructure::Bool`: does the model have a meanstructure?
+- `rowwise::Bool`: should the data be stored also as vectors per observation
+- `n_obs::Number`: number of observed data points (necessary for fit statistics for covariance based optimization)
+
+
+# Interfaces
+- `n_obs(::SemObsCommon)` -> number of observed data points
+- `n_man(::SemObsCommon)` -> number of manifest variables
+
+- `get_data(::SemObsCommon)` -> observed data
+- `obs_cov(::SemObsCommon)` -> observed covariance matrix
+- `obs_mean(::SemObsCommon)` -> observed means
+- `data_rowwise(::SemObsCommon)` -> observed data, stored as vectors per observation
 """
 struct SemObsCommon{
         A <: Union{AbstractArray, Nothing},

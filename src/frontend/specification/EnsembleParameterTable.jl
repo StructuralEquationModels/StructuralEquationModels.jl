@@ -11,7 +11,7 @@ end
 ############################################################################
 
 # constuct an empty table
-function EnsembleParameterTable(disambig::Nothing)
+function EnsembleParameterTable(::Nothing)
     tables = Dict{Symbol, ParameterTable}()
     return EnsembleParameterTable(tables)
 end

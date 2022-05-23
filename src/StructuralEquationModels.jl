@@ -43,6 +43,7 @@ include("diff/optim.jl")
 include("diff/NLopt.jl")
 include("diff/Empty.jl")
 # optimizer
+include("optimizer/documentation.jl")
 include("optimizer/optim.jl")
 include("optimizer/NLopt.jl")
 # helper functions

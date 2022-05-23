@@ -3,12 +3,42 @@
 ############################################################################
 
 # Type to store Expectation Maximization result ----------------------------
-
 mutable struct EmMVNModel{A, b, B}
     Σ::A
     μ::b
     fitted::B
 end
+
+"""
+    SemObsMissing(;
+        data,
+        data_colnames = nothing,
+        specification = nothing,
+        kwargs...)
+
+Constructor for `SemObsMissing` objects.
+
+# Arguments
+- `data`: observed data
+- `data_colnames::Vector{Symbol}`: column names of the data (if the object passed as data does not have column names, i.e. is not a data frame) or covariance matrix
+- `specification`: either a `RAMMatrices` or `ParameterTable` object
+
+# Interfaces
+- `n_obs(::SemObsMissing)` -> number of observed data points
+- `n_man(::SemObsMissing)` -> number of manifest variables
+
+- `get_data(::SemObsMissing)` -> observed data
+- `data_rowwise(::SemObsMissing)` -> observed data as vector per observation, with missing values deleted
+
+- `patterns(::SemObsMissing)` -> indices of non-missing variables per missing patterns 
+- `patterns_not(::SemObsMissing)` -> indices of missing variables per missing pattern
+- `rows(::SemObsMissing)` -> row indices of observed data points that belong to each pattern
+- `pattern_n_obs(::SemObsMissing)` -> number of data points per pattern
+- `pattern_nvar_obs(::SemObsMissing)` -> number of non-missing observed variables per pattern
+- `obs_mean(::SemObsMissing)` -> observed mean per pattern
+- `obs_cov(::SemObsMissing)` -> observed covariance per pattern
+- `em_model(::SemObsMissing)` -> `EmMVNModel` that contains the covariance matrix and mean vector found via optimization maximization
+"""
 
 mutable struct SemObsMissing{
         A <: AbstractArray,

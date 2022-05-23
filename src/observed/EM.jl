@@ -11,7 +11,17 @@
 # what about random restarts?
 
 # outer function -----------------------------------------------------------------
+"""
+    em_mvn(;
+        observed::SemObsMissing,
+        start_em = start_em_observed,
+        max_iter_em = 100,
+        rtol_em = 1e-4,
+        kwargs...)
 
+Estimates the covariance matrix and mean vector of the normal distribution via expectation maximization for `observed`.
+Overwrites the statistics stored in `observed`.
+"""
 function em_mvn(
     observed::SemObsMissing;
     start_em = start_em_observed,
