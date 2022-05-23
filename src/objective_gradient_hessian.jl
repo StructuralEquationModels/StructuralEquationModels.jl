@@ -354,3 +354,49 @@ function objective_gradient_hessian!(semimp::SemImply, par, model)
     hessian!(semimp::SemImply, par, model)
     return nothing
 end
+
+#####################################################################################################
+# Documentation
+#####################################################################################################
+"""
+    objective!(model::AbstractSem, parameters)
+
+Returns the objective value at `parameters`.
+The model object can be modified.
+
+# Implementation
+To implement a new `SemImply` or `SemLossFunction` subtype, you need to add a method for
+    objective!(newtype::MyNewType, parameters, model::AbstractSemSingle)
+
+To implement a new `AbstractSem` subtype, you need to add a method for
+    objective!(model::MyNewType, parameters)
+"""
+function objective! end
+
+"""
+    gradient!(gradient, model::AbstractSem, parameters)
+
+Writes the gradient value at `parameters` to `gradient`.
+
+# Implementation
+To implement a new `SemImply` or `SemLossFunction` type, you can add a method for
+    gradient!(newtype::MyNewType, parameters, model::AbstractSemSingle)
+
+To implement a new `AbstractSem` subtype, you can add a method for
+    gradient!(gradient, model::MyNewType, parameters)
+"""
+function gradient! end
+
+"""
+    hessian!(hessian, model::AbstractSem, parameters)
+
+Writes the hessian value at `parameters` to `hessian`.
+
+# Implementation
+To implement a new `SemImply` or `SemLossFunction` type, you can add a method for
+    hessian!(newtype::MyNewType, parameters, model::AbstractSemSingle)
+
+To implement a new `AbstractSem` subtype, you can add a method for
+    hessian!(hessian, model::MyNewType, parameters)
+"""
+function hessian! end
