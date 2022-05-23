@@ -41,6 +41,9 @@ makedocs(
             "Internals and design" => "internals/internals.md",
             "files" => "internals/files.md",
             "types" => "internals/types.md"
+        ],
+        "Complementary material" => [
+            "Mathematical appendix" => "complementary/maths.md"
         ]
     ],
     format = Documenter.HTML(
