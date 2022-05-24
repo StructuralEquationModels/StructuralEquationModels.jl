@@ -3,7 +3,23 @@
 ############################################################################
 ### Types
 ############################################################################
+"""
+    SemRidge(;α_ridge, which_ridge, n_par, parameter_type = Float64, imply = nothing, kwargs...)
 
+Constructor for `SemRidge` objects.
+
+# Arguments
+- `α_ridge`: hyperparameter for penalty term
+- `which_ridge::Vector`: Vector of parameter labels (Symbols) or indices that indicate which parameters should be regularized.
+- `n_par::Int`: number of parameters of the model
+- `imply::SemImply`: imply part of the model
+- `parameter_type`: type of the parameters
+
+# Interfaces
+Has analytic gradient! and hessian! methods.
+
+# Examples
+"""
 struct SemRidge{P, W1, W2, GT, HT} <: SemLossFunction
     α::P
     which::W1

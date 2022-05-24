@@ -3,7 +3,22 @@
 ############################################################################
 ### Types
 ############################################################################
+"""
+    SemML(;observed, meanstructure = false, approx_H = false, kwargs...)
 
+Constructor for `SemML` objects.
+
+# Arguments
+- `observed`: the `SemObs` part of the model
+- `meanstructure::Bool`: does the model have a meanstructure?
+- `approx_H::Bool`: if hessian-based optimization is used, should the hessian be swapped for an approximation
+
+# Interfaces
+Has analytic gradient! and for models without meanstructure also hessian! methods.
+
+- `Σ⁻¹(::SemML)` -> inverse of the model implied covariance matrix
+- `Σ⁻¹Σₒ(::SemML)` -> product of the inverse of the model implied covariance matrix and the observed covariance matrix
+"""
 struct SemML{INV,M,M2,B, V} <: SemLossFunction
     Σ⁻¹::INV 
     Σ⁻¹Σₒ::M

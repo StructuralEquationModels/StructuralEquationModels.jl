@@ -1,7 +1,18 @@
 ############################################################################
 ### Types
 ############################################################################
+"""
+    SemFIML(;observed, specification, kwargs...)
 
+Constructor for `SemFIML` objects.
+
+# Arguments
+- `observed`: the `SemObs` part of the model
+- `specification`: either a `RAMMatrices` or `ParameterTable` object
+
+# Interfaces
+Has an analytic gradient! method.
+"""
 mutable struct SemFIML{INV, C, L, O, M, IM, I, T, U, W} <: SemLossFunction
     inverses::INV #preallocated inverses of imp_cov
     choleskys::C #preallocated choleskys

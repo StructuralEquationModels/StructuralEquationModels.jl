@@ -3,7 +3,24 @@
 ############################################################################
 ### Types
 ############################################################################
+"""
+    SemWLS(;observed, meanstructure = false, wls_weight_matrix = nothing, wls_weight_matrix_mean = nothing, approx_H = false, kwargs...)
 
+Constructor for `SemWLS` objects.
+
+# Arguments
+- `observed`: the `SemObs` part of the model
+- `meanstructure::Bool`: does the model have a meanstructure?
+- `approx_H::Bool`: should the hessian be swapped for an approximation
+- `wls_weight_matrix`: the weight matrix for weighted least squares. 
+    Defaults to GLS estimation (``0.5*(D^T*kron(S,S)*D)`` where D is the duplication matrix 
+    and S is the inverse ob the observed covariance matrix)
+- `wls_weight_matrix_mean`: the weight matrix for the mean part of weighted least squares. 
+    Defaults to GLS estimation (the inverse of the observed covariance matrix)
+
+# Interfaces
+Has analytic gradient! and for models without meanstructure also hessian! methods.
+"""
 struct SemWLS{Vt, St, B, C, B2} <: SemLossFunction
     V::Vt
     σₒ::St
@@ -16,7 +33,7 @@ end
 ### Constructors
 ############################################################################
 
-function SemWLS(;observed, wls_weight_matrix = nothing, V_μ = nothing, approx_H = false, meanstructure = false, kwargs...)
+function SemWLS(;observed, wls_weight_matrix = nothing, wls_weight_matrix_mean = nothing, approx_H = false, meanstructure = false, kwargs...)
     ind = CartesianIndices(obs_cov(observed))
     ind = filter(x -> (x[1] >= x[2]), ind)
     s = obs_cov(observed)[ind]
@@ -30,8 +47,8 @@ function SemWLS(;observed, wls_weight_matrix = nothing, V_μ = nothing, approx_H
     end
 
     if meanstructure
-        if isnothing(V_μ)
-            V_μ = inv(obs_cov(observed))
+        if isnothing(wls_weight_matrix_mean)
+            wls_weight_matrix_mean = inv(obs_cov(observed))
         end
     else
         V_μ = nothing
