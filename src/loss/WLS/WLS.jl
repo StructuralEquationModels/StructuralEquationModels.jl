@@ -4,14 +4,19 @@
 ### Types
 ############################################################################
 """
-    SemWLS(;observed, meanstructure = false, wls_weight_matrix = nothing, wls_weight_matrix_mean = nothing, approx_H = false, kwargs...)
+    SemWLS(;observed, 
+        meanstructure = false, 
+        wls_weight_matrix = nothing, 
+        wls_weight_matrix_mean = nothing, 
+        approximate_hessian = false, 
+        kwargs...)
 
 Constructor for `SemWLS` objects.
 
 # Arguments
 - `observed`: the `SemObs` part of the model
 - `meanstructure::Bool`: does the model have a meanstructure?
-- `approx_H::Bool`: should the hessian be swapped for an approximation
+- `approximate_hessian::Bool`: should the hessian be swapped for an approximation
 - `wls_weight_matrix`: the weight matrix for weighted least squares. 
     Defaults to GLS estimation (``0.5*(D^T*kron(S,S)*D)`` where D is the duplication matrix 
     and S is the inverse ob the observed covariance matrix)
@@ -24,7 +29,7 @@ Has analytic gradient! and for models without meanstructure also hessian! method
 struct SemWLS{Vt, St, B, C, B2} <: SemLossFunction
     V::Vt
     σₒ::St
-    approx_H::B
+    approximate_hessian::B
     V_μ::C
     has_meanstructure::B2
 end
@@ -33,7 +38,7 @@ end
 ### Constructors
 ############################################################################
 
-function SemWLS(;observed, wls_weight_matrix = nothing, wls_weight_matrix_mean = nothing, approx_H = false, meanstructure = false, kwargs...)
+function SemWLS(;observed, wls_weight_matrix = nothing, wls_weight_matrix_mean = nothing, approximate_hessian = false, meanstructure = false, kwargs...)
     ind = CartesianIndices(obs_cov(observed))
     ind = filter(x -> (x[1] >= x[2]), ind)
     s = obs_cov(observed)[ind]
@@ -57,7 +62,7 @@ function SemWLS(;observed, wls_weight_matrix = nothing, wls_weight_matrix_mean =
     return SemWLS(
         V, 
         s, 
-        approx_H, 
+        approximate_hessian, 
         V_μ,
         Val(meanstructure)
     )
@@ -121,7 +126,7 @@ function hessian!(semwls::SemWLS, par, model::AbstractSemSingle, has_meanstructu
             throw(DomainError(H, "hessian of WLS with meanstructure is not available"))
         else
             hessian = 2*∇σ'*V*∇σ
-            if !semwls.approx_H
+            if !semwls.approximate_hessian
                 J = -2*(σ₋'*semwls.V)'
                 ∇²Σ_function!(∇²Σ, J, par)
                 hessian += ∇²Σ
@@ -162,7 +167,7 @@ function objective_hessian!(semwls::SemWLS, par, model::AbstractSemSingle, has_m
         objective = dot(σ₋, V, σ₋)
 
         hessian = 2*∇σ'*V*∇σ
-        if !semwls.approx_H
+        if !semwls.approximate_hessian
             J = -2*(σ₋'*semwls.V)'
             ∇²Σ_function!(∇²Σ, J, par)
             hessian += ∇²Σ
@@ -186,7 +191,7 @@ function gradient_hessian!(semwls::SemWLS, par, model::AbstractSemSingle, has_me
         gradient = -2*(σ₋'*V*∇σ)'
 
         hessian = 2*∇σ'*V*∇σ
-        if !semwls.approx_H
+        if !semwls.approximate_hessian
             J = -2*(σ₋'*semwls.V)'
             ∇²Σ_function!(∇²Σ, J, par)
             hessian += ∇²Σ
@@ -210,7 +215,7 @@ function objective_gradient_hessian!(semwls::SemWLS, par, model::AbstractSemSing
         objective = dot(σ₋, V, σ₋) 
         gradient = -2*(σ₋'*V*∇σ)'
         hessian = 2*∇σ'*V*∇σ
-        if !semwls.approx_H
+        if !semwls.approximate_hessian
             J = -2*(σ₋'*semwls.V)'
             ∇²Σ_function!(∇²Σ, J, par)
             hessian += ∇²Σ

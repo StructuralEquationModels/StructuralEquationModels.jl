@@ -1,7 +1,63 @@
 ############################################################################
 ### Types
 ############################################################################
+@doc raw"""
+Subtype of `SemImply` that implements the RAM notation.
 
+# Constructor
+
+    RAM(;specification,
+        gradient = true,
+        meanstructure = false,
+        kwargs...)
+
+# Arguments
+- `specification`: either a `RAMMatrices` or `ParameterTable` object
+- `meanstructure::Bool`: does the model have a meanstructure?
+- `gradient::Bool`: is gradient-based optimization used
+
+# Interfaces
+- `identifier(::RAM) `-> Dict containing the parameter labels and their position
+- `n_par(::RAM)` -> Number of parameters
+
+- `Σ(::RAM)` -> model implied covariance matrix
+- `μ(::RAM)` -> model implied mean vector
+
+RAM matrices for the current parameter values:
+- `A(::RAM)`
+- `S(::RAM)`
+- `F(::RAM)`
+- `M(::RAM)`
+
+Jacobians of RAM matrices w.r.t to the parameter vector `θ`
+- `∇A(::RAM)` -> ``∂vec(A)/∂θᵀ``
+- `∇S(::RAM)` -> ``∂vec(S)/∂θᵀ``
+- `∇M(::RAM)` = ``∂M/∂θᵀ``
+
+Vector of indices of each parameter in the respective RAM matrix:
+- `A_indices(::RAM)`
+- `S_indices(::RAM)`
+- `M_indices(::RAM)`
+
+Additional interfaces
+- `F⨉I_A⁻¹(::RAM)` -> ``F(I-A)⁻¹``
+- `F⨉I_A⁻¹S(::RAM)` -> ``F(I-A)⁻¹S``
+- `I_A(::RAM)` -> ``I-A``
+- `has_meanstructure(::RAM)` -> `Val{Bool}` does the model have a meanstructure?
+
+Only available in iterations where a gradient is computed:
+- I_A⁻¹(::RAM) -> ``(I-A)⁻¹``
+
+# Implementation
+The model implied covariance matrix is computed as
+```math
+    \Sigma = F(I-A)^{-1}S(I-A)^{-T}F^T
+```
+and for models with a meanstructure, the model implied means are computed as
+```math
+    \mu = F(I-A)^{-1}M
+```
+"""
 mutable struct RAM{A1, A2, A3, A4, A5, A6, V, V2, I1, I2, I3, M1, M2, M3, M4, S1, S2, S3, B, D} <: SemImply
     Σ::A1
     A::A2
@@ -30,13 +86,15 @@ mutable struct RAM{A1, A2, A3, A4, A5, A6, V, V2, I1, I2, I3, M1, M2, M3, M4, S1
     identifier::D
 end
 
+using StructuralEquationModels
+
 ############################################################################
 ### Constructors
 ############################################################################
 
 function RAM(;
         specification,
-        vech = false,
+        #vech = false,
         gradient = true,
         meanstructure = false,
         kwargs...)
@@ -197,6 +255,7 @@ function gradient!(imply::RAM, parameters, model::AbstractSemSingle, has_meanstr
 
 end
 
+hessian!(imply::RAM, par, model::AbstractSemSingle, has_meanstructure) = gradient!(imply, par, model, has_meanstructure)
 objective_gradient!(imply::RAM, par, model::AbstractSemSingle, has_meanstructure) = gradient!(imply, par, model, has_meanstructure)
 objective_hessian!(imply::RAM, par, model::AbstractSemSingle, has_meanstructure) = gradient!(imply, par, model, has_meanstructure)
 gradient_hessian!(imply::RAM, par, model::AbstractSemSingle, has_meanstructure) = gradient!(imply, par, model, has_meanstructure)

@@ -1,4 +1,8 @@
 """
+Subtype of `SemObs`, can handle observed data without msissings or an observed covariance matrix
+
+# Constructor
+
     SemObsCommon(;
         specification = nothing,
         data = nothing,
@@ -9,8 +13,6 @@
         n_obs = nothing,
         ...,
         kwargs...)
-
-Constructor for `SemObsCommon` objects.
 
 # Arguments
 - `specification`: either a `RAMMatrices` or `ParameterTable` object

@@ -4,14 +4,14 @@
 ### Types
 ############################################################################
 """
-    SemML(;observed, meanstructure = false, approx_H = false, kwargs...)
+    SemML(;observed, meanstructure = false, approximate_hessian = false, kwargs...)
 
 Constructor for `SemML` objects.
 
 # Arguments
 - `observed`: the `SemObs` part of the model
 - `meanstructure::Bool`: does the model have a meanstructure?
-- `approx_H::Bool`: if hessian-based optimization is used, should the hessian be swapped for an approximation
+- `approximate_hessian::Bool`: if hessian-based optimization is used, should the hessian be swapped for an approximation
 
 # Interfaces
 Has analytic gradient! and for models without meanstructure also hessian! methods.
@@ -23,7 +23,7 @@ struct SemML{INV,M,M2,B, V} <: SemLossFunction
     Σ⁻¹::INV 
     Σ⁻¹Σₒ::M
     meandiff::M2
-    approx_H::B
+    approximate_hessian::B
     has_meanstructure::V
 end
 
@@ -31,7 +31,7 @@ end
 ### Constructors
 ############################################################################
 
-function SemML(;observed, meanstructure = false, approx_H = false, kwargs...)
+function SemML(;observed, meanstructure = false, approximate_hessian = false, kwargs...)
     isnothing(obs_mean(observed)) ?
         meandiff = nothing :
         meandiff = copy(obs_mean(observed))
@@ -39,7 +39,7 @@ function SemML(;observed, meanstructure = false, approx_H = false, kwargs...)
         similar(obs_cov(observed)),
         similar(obs_cov(observed)),
         meandiff,
-        approx_H,
+        approximate_hessian,
         Val(meanstructure)
         )
 end
@@ -124,7 +124,7 @@ function hessian!(semml::SemML, par, model::AbstractSemSingle, has_meanstructure
 
     Σ⁻¹ .= LinearAlgebra.inv!(Σ_chol)
 
-    if semml.approx_H
+    if semml.approximate_hessian
         hessian = 2*∇Σ'*kron(Σ⁻¹, Σ⁻¹)*∇Σ
     else
         mul!(Σ⁻¹Σₒ, Σ⁻¹, Σₒ)
@@ -195,7 +195,7 @@ function objective_hessian!(semml::SemML, par, model::AbstractSemSingle, has_mea
             mul!(Σ⁻¹Σₒ, Σ⁻¹, Σₒ)
             objective = ld + tr(Σ⁻¹Σₒ)
 
-            if semml.approx_H
+            if semml.approximate_hessian
                 hessian = 2*∇Σ'*kron(Σ⁻¹, Σ⁻¹)*∇Σ
             else
                 Σ⁻¹ΣₒΣ⁻¹ = Σ⁻¹Σₒ*Σ⁻¹
@@ -238,7 +238,7 @@ function gradient_hessian!(semml::SemML, par, model::AbstractSemSingle, has_mean
         J = vec(Σ⁻¹ - Σ⁻¹ΣₒΣ⁻¹)'
         gradient = J*∇Σ
 
-        if semml.approx_H
+        if semml.approximate_hessian
             hessian = 2*∇Σ'*kron(Σ⁻¹, Σ⁻¹)*∇Σ
         else
             # inner
@@ -282,7 +282,7 @@ function objective_gradient_hessian!(semml::SemML, par, model::AbstractSemSingle
         J = vec(Σ⁻¹ - Σ⁻¹ΣₒΣ⁻¹)'
         gradient = J*∇Σ
 
-        if semml.approx_H
+        if semml.approximate_hessian
             hessian = 2*∇Σ'*kron(Σ⁻¹, Σ⁻¹)*∇Σ
         else
             Σ⁻¹ΣₒΣ⁻¹ = Σ⁻¹Σₒ*Σ⁻¹

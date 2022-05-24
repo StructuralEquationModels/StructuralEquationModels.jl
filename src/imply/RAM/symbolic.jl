@@ -1,7 +1,57 @@
 ############################################################################
 ### Types
 ############################################################################
+@doc raw"""
+Subtype of `SemImply` that implements the RAM notation with symbolic precomputation.
 
+# Constructor
+
+    RAMSymbolic(;specification,
+        vech = false,
+        gradient = true,
+        hessian = false,
+        meanstructure = false,
+        kwargs...)
+
+# Arguments
+- `specification`: either a `RAMMatrices` or `ParameterTable` object
+- `meanstructure::Bool`: does the model have a meanstructure?
+- `gradient::Bool`: is gradient-based optimization used
+- `hessian::Bool`: is hessian-based optimization used
+- `vech::Bool`: should instead of Σ be the half-vectorization of Σ be computed
+    (automatically set to true if any of the loss functions is SemWLS)
+
+# Interfaces
+- `identifier(::RAMSymbolic) `-> Dict containing the parameter labels and their position
+- `n_par(::RAMSymbolic)` -> Number of parameters
+
+- `Σ(::RAMSymbolic)` -> model implied covariance matrix
+- `μ(::RAMSymbolic)` -> model implied mean vector
+
+Jacobians and hessians
+- `∇Σ(::RAMSymbolic)` -> ``∂vec(Σ)/∂θᵀ``
+- `∇²Σ(::RAMSymbolic)` -> ``∂vec(Σ)/∂θᵀ``
+
+- `∇μ(::RAMSymbolic)` -> ``∂μ/∂θᵀ``
+
+- ∇Σ_function(::RAMSymbolic) -> function to overwrite `∇Σ` in place,
+    i.e. `∇Σ_function(∇Σ, θ)`
+- ∇²Σ_function(::RAMSymbolic) -> function to overwrite `∇²Σ` in place,
+    i.e. `∇²Σ_function(∇²Σ, θ)`
+
+Additional interfaces
+- `has_meanstructure(::RAMSymbolic)` -> `Val{Bool}` does the model have a meanstructure?
+
+# Implementation
+The model implied covariance matrix is computed as
+```math
+    \Sigma = F(I-A)^{-1}S(I-A)^{-T}F^T
+```
+and for models with a meanstructure, the model implied means are computed as
+```math
+    \mu = F(I-A)^{-1}M
+```
+"""
 struct RAMSymbolic{F1, F2, F3, A1, A2, A3, S1, S2, S3, V, V2, F4, A4, F5, A5, D1, B} <: SemImplySymbolic
     Σ_function::F1
     ∇Σ_function::F2
@@ -33,6 +83,7 @@ function RAMSymbolic(;
         gradient = true,
         hessian = false,
         meanstructure = false,
+        approximate_hessian = false,
         kwargs...)
 
     ram_matrices = RAMMatrices(specification)
@@ -77,7 +128,7 @@ function RAMSymbolic(;
         ∇Σ = nothing
     end
 
-    if hessian
+    if hessian & !approximate_hessian
         n_sig = length(Σ_symbolic)
         n_par = size(par, 1)
         ∇²Σ_symbolic_vec = [Symbolics.sparsehessian(σᵢ, [par...]) for σᵢ in vec(Σ_symbolic)]
