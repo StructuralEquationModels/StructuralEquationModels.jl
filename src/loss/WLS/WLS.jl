@@ -48,7 +48,7 @@ function SemWLS(;observed, wls_weight_matrix = nothing, wls_weight_matrix_mean =
         D = duplication_matrix(n_man(observed))
         S = inv(obs_cov(observed))
         S = kron(S, S)
-        V = 0.5*(D'*S*D)
+        wls_weight_matrix = 0.5*(D'*S*D)
     end
 
     if meanstructure
@@ -56,14 +56,14 @@ function SemWLS(;observed, wls_weight_matrix = nothing, wls_weight_matrix_mean =
             wls_weight_matrix_mean = inv(obs_cov(observed))
         end
     else
-        V_μ = nothing
+        wls_weight_matrix_mean = nothing
     end
 
     return SemWLS(
-        V, 
+        wls_weight_matrix, 
         s, 
         approximate_hessian, 
-        V_μ,
+        wls_weight_matrix_mean,
         Val(meanstructure)
     )
 end
