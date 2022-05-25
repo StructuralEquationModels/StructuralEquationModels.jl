@@ -214,3 +214,25 @@ function sort_partially(sorted, to_sort)
     append!(out, sort(collect(remaining)))
     return out
 end
+
+"""
+    sem_summary(
+        sem_fit::SemFit; 
+        show_fitmeasures = false, 
+        color = :light_cyan, 
+        digits = 2)
+
+    sem_summary(
+        partable::AbstractParameterTable; 
+        color = :light_cyan, 
+        secondary_color = :light_yellow, 
+        digits = 2, 
+        show_variables = true)
+
+Print information about a fitted SEM or a parameter table to stdout.
+
+# Arguments
+- `color`: color of some parts of the printed output. Can be adjusted for readability.
+- `digits`: controls precision of printed estimates, standard errors, etc.
+"""
+function sem_summary end

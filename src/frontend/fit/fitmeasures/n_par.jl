@@ -33,3 +33,4 @@ n_par(model::AbstractSemSingle) = n_par(model.imply) =#
 
 Return the number of parameters.
 """
+function n_par end

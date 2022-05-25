@@ -1,7 +1,16 @@
 ############################################################################
 ### hessian based standard errors
 ############################################################################
+"""
+    se_bootstrap(semfit::SemFit; hessian = :finitediff)
 
+Return hessian based standard errors.
+
+# Arguments
+- `hessian`: how to compute the hessian. Options are 
+    - `:analytic`: (only if an analytic hessian for the model can be computed)
+    - `:finitediff`: for finite difference approximation 
+"""
 function se_hessian(sem_fit::SemFit; hessian = :finitediff)
 
     c = H_scaling(sem_fit.model)
