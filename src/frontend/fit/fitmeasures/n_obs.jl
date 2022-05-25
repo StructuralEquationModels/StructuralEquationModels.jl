@@ -1,4 +1,4 @@
-n_obs(sem_fit) = n_obs(sem_fit.model)
+n_obs(sem_fit::SemFit) = n_obs(sem_fit.model)
 
 n_obs(model::AbstractSemSingle) = n_obs(model.observed)
 
@@ -18,3 +18,14 @@ n_obs(sem_fit::SemFit, obs::Union{SemObsCommon, SemObsMissing}, imp, diff, loss_
     n_obs(sem_fit.model)
 
 n_obs(model::AbstractSemSingle) = n_obs(model.observed) =#
+
+"""
+    n_obs(sem_fit::SemFit)
+    n_obs(model::AbstractSemSingle)
+    n_obs(model::SemEnsemble)
+
+Return the number of observed data points.
+
+For ensemble models, return the sum over all submodels.
+"""
+function n_obs end

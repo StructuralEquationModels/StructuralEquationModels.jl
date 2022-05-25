@@ -8,6 +8,13 @@ function RMSEA(df, chi2, n_obs)
     return sqrt(rmsea)
 end
 
+"""
+    RMSEA(sem_fit::SemFit)
+
+Return the RMSEA.
+"""
+function RMSEA end
+
 #= # SemFit splices loss functions ---------------------------------------------------------------------
 RMSEA(sem_fit::SemFit{Mi, So, St, Mo, O} where {Mi, So, St, Mo <: AbstractSemSingle, O}) = 
     RMSEA(

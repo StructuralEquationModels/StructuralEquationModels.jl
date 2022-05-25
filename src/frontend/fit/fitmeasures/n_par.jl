@@ -24,3 +24,12 @@ n_par(identifier::Dict) = length(identifier)
 #= n_par(sem_fit::SemFit, obs, imply::Union{RAM, RAMSymbolic}, diff, loss) = n_par(imply)
 
 n_par(model::AbstractSemSingle) = n_par(model.imply) =#
+
+"""
+    n_par(sem_fit::SemFit)
+    n_par(model::AbstractSemSingle)
+    n_par(model::SemEnsemble)
+    n_par(identifier::Dict)
+
+Return the number of parameters.
+"""

@@ -103,3 +103,10 @@ function minus2ll(sem_fit::SemFit{Mi, So, St, Mo, O} where {Mi, So, St, Mo <: Se
     end
     return m2ll
 end
+
+"""
+    minus2ll(sem_fit::SemFit)
+
+Return the negative 2* log likelihood.
+"""
+function minus2ll end

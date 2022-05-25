@@ -82,3 +82,10 @@ function check_lossfun_types(model, type)
         end
     end
 end
+
+"""
+    χ²(sem_fit::SemFit)
+
+Return the χ² value.
+"""
+function χ² end
