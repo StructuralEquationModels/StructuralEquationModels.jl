@@ -1,14 +1,16 @@
 # convenience functions for simulation studies
 
-#####################################################################################################
+############################################################################################
 # change observed (data) without reconstructing the whole model
-#####################################################################################################
+############################################################################################
 
 # use the same observed type as before
-swap_observed(model::AbstractSemSingle; kwargs...) = swap_observed(model, typeof(observed(model)).name.wrapper; kwargs...)
+swap_observed(model::AbstractSemSingle; kwargs...) = 
+    swap_observed(model, typeof(observed(model)).name.wrapper; kwargs...)
 
 # construct a new observed type
-swap_observed(model::AbstractSemSingle, observed_type; kwargs...) = swap_observed(model, observed_type(;kwargs...); kwargs...)
+swap_observed(model::AbstractSemSingle, observed_type; kwargs...) = 
+    swap_observed(model, observed_type(;kwargs...); kwargs...)
 
 swap_observed(model::AbstractSemSingle, new_observed::SemObs; kwargs...) =
     swap_observed(model, observed(model), imply(model), loss(model), diff(model), new_observed; kwargs...)
@@ -59,3 +61,38 @@ function update_observed(loss::SemLoss, new_observed; kwargs...)
         new_functions,
         loss.weights)
 end
+
+############################################################################################
+# documentation
+############################################################################################
+
+"""
+    swap_observed(model::AbstractSemSingle; kwargs...)
+
+Update observed part of the model. Returns a new model.
+
+# Arguments
+- `model::AbstractSemSingle`: optimization algorithm.
+- `kwargs`: additionbal keyword arguments to construct new
+
+    swap_observed(model::AbstractSemSingle, observed; kwargs...)
+
+# Arguments
+- `model::AbstractSemSingle`: optimization algorithm.
+- `observed`: Either an object of subtype of `SemObs` or a subtype of `SemObs`
+- `kwargs`: additional keyword arguments; typically includes `data = ...`
+
+# Examples
+"""
+function swap_observed end
+
+"""
+    update_observed(to_update, observed::SemObs; kwargs...)
+
+Update a `SemImply`, `SemLossFunction` or `SemDiff` object to use a new `SemObs` object
+with your model.
+
+You can provide a method for this function when defining a new type, for more information
+on this see the online developer documentation.
+"""
+function update_observed end
