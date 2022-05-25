@@ -45,7 +45,7 @@ Additional interfaces
 - `I_A(::RAM)` -> ``I-A``
 - `has_meanstructure(::RAM)` -> `Val{Bool}` does the model have a meanstructure?
 
-Only available in iterations where a gradient is computed:
+Only available in gradient! calls:
 - I_A⁻¹(::RAM) -> ``(I-A)⁻¹``
 
 # Implementation

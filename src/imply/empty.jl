@@ -1,7 +1,22 @@
 ############################################################################
 ### Types
 ############################################################################
+"""
+Subtype of `SemImply` that implements an empty placeholder for models that don't need
+an imply part.
 
+# Constructor
+
+    ImplyEmpty(;specification,
+        kwargs...)
+
+# Arguments
+- `specification`: either a `RAMMatrices` or `ParameterTable` object
+
+# Interfaces
+- `identifier(::RAMSymbolic) `-> Dict containing the parameter labels and their position
+- `n_par(::RAMSymbolic)` -> Number of parameters
+"""
 struct ImplyEmpty{V, V2} <: SemImply
     identifier::V2
     n_par::V

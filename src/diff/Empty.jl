@@ -1,7 +1,14 @@
 ############################################################################
 ### Types
 ############################################################################
+"""
+Subtype of `SemDIff` that implements an empty placeholder for models that don't need
+a diff part.
 
+# Constructor
+
+    SemDiffEmpty()
+"""
 struct SemDiffEmpty <: SemDiff end
 
 ############################################################################

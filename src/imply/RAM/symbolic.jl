@@ -10,6 +10,7 @@ Subtype of `SemImply` that implements the RAM notation with symbolic precomputat
         vech = false,
         gradient = true,
         hessian = false,
+        approximate_hessian = false,
         meanstructure = false,
         kwargs...)
 
@@ -18,7 +19,8 @@ Subtype of `SemImply` that implements the RAM notation with symbolic precomputat
 - `meanstructure::Bool`: does the model have a meanstructure?
 - `gradient::Bool`: is gradient-based optimization used
 - `hessian::Bool`: is hessian-based optimization used
-- `vech::Bool`: should instead of Σ be the half-vectorization of Σ be computed
+- `approximate_hessian::Bool`: for hessian based optimization: should the hessian be approximated
+- `vech::Bool`: should the half-vectorization of Σ be computed (instead of the full matrix)
     (automatically set to true if any of the loss functions is SemWLS)
 
 # Interfaces
@@ -28,16 +30,19 @@ Subtype of `SemImply` that implements the RAM notation with symbolic precomputat
 - `Σ(::RAMSymbolic)` -> model implied covariance matrix
 - `μ(::RAMSymbolic)` -> model implied mean vector
 
-Jacobians and hessians
+Jacobians (only available in gradient! calls)
 - `∇Σ(::RAMSymbolic)` -> ``∂vec(Σ)/∂θᵀ``
-- `∇²Σ(::RAMSymbolic)` -> ``∂vec(Σ)/∂θᵀ``
-
 - `∇μ(::RAMSymbolic)` -> ``∂μ/∂θᵀ``
 
-- ∇Σ_function(::RAMSymbolic) -> function to overwrite `∇Σ` in place,
-    i.e. `∇Σ_function(∇Σ, θ)`
-- ∇²Σ_function(::RAMSymbolic) -> function to overwrite `∇²Σ` in place,
-    i.e. `∇²Σ_function(∇²Σ, θ)`
+- `∇Σ_function(::RAMSymbolic)` -> function to overwrite `∇Σ` in place,
+    i.e. `∇Σ_function(∇Σ, θ)`. Normally, you do not want to use this but simply
+    query `∇Σ(::RAMSymbolic)`.
+
+Hessians
+The computation of hessians is more involved, and uses the "chain rule for
+hessian matrices".
+Therefore, we desribe it at length in the mathematical appendix of the online documentation,
+and the relevant interfaces are omitted here.
 
 Additional interfaces
 - `has_meanstructure(::RAMSymbolic)` -> `Val{Bool}` does the model have a meanstructure?
