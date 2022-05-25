@@ -16,9 +16,9 @@ function identifier(partable::ParameterTable)
     return identifier
 end
 
-#####################################################################################################
+############################################################################################
 # get indices of a Vector of parameter labels
-#####################################################################################################
+############################################################################################
 
 get_identifier_indices(parameters, identifier::Dict{Symbol, Int}) = [identifier[par] for par in parameters]
 
@@ -32,3 +32,19 @@ function get_identifier_indices(parameters, obj::Union{ParameterTable, RAMMatric
            the constructed model (`get_identifier_indices(parameters, model)`)." maxlog=1
     return get_identifier_indices(parameters, identifier(obj))
 end
+
+############################################################################################
+# documentation
+############################################################################################
+"""
+    get_identifier_indices(parameters, model)
+
+Returns the indices of `parameters`.
+
+# Arguments
+- `parameters::Vector{Symbol}`: parameter labels
+- `model`: either a SEM or a fitted SEM
+
+# Examples
+"""
+function get_identifier_indices end

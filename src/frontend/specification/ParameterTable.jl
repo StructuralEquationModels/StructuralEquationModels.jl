@@ -14,7 +14,7 @@ end
 ############################################################################
 
 # constuct an empty table
-function ParameterTable(disambig::Nothing)
+function ParameterTable(::Nothing)
 
     columns = Dict{Symbol, Any}(
         :from => Vector{Symbol}(),
@@ -198,29 +198,65 @@ function update_partable!(partable::ParameterTable, model_identifier::AbstractDi
     return partable
 end
 
+"""
+    update_partable!(partable::AbstractParameterTable, sem_fit::SemFit, vec, column)
+    
+Write `vec` to `column` of `partable`.
+
+# Arguments
+- `vec::Vector`: has to be in the same order as the `model` parameters
+"""
 update_partable!(partable::AbstractParameterTable, sem_fit::SemFit, vec, column) =
     update_partable!(partable, identifier(sem_fit), vec, column)
 
-
 # update estimates ---------------------------------------------------------
-
+"""
+    update_estimate!(
+        partable::AbstractParameterTable, 
+        sem_fit::SemFit)
+    
+Write parameter estimates from `sem_fit` to the `:estimate` column of `partable`
+"""
 update_estimate!(partable::AbstractParameterTable, sem_fit::SemFit) =
     update_partable!(partable, sem_fit, sem_fit.solution, :estimate)
 
 # update starting values -----------------------------------------------------
+"""
+    update_start!(partable::AbstractParameterTable, sem_fit::SemFit)
+    update_start!(partable::AbstractParameterTable, model::AbstractSem, start_val; kwargs...)
+    
+Write starting values from `sem_fit` or `start_val` to the `:estimate` column of `partable`.
 
+# Arguments
+- `start_val`: either a vector of starting values or a function to compute starting values
+    from `model`
+- `kwargs...`: are passed to `start_val`
+"""
 update_start!(partable::AbstractParameterTable, sem_fit::SemFit) =
     update_partable!(partable, sem_fit, sem_fit.start_val, :start)
 
-function update_start!(partable::AbstractParameterTable, model::AbstractSem, start_val)
+function update_start!(partable::AbstractParameterTable, model::AbstractSem, start_val; kwargs...)
     if !(start_val isa Vector)
-        start_val = start_val(model)
+        start_val = start_val(model; kwargs...)
     end
     return update_partable!(partable, identifier(model), start_val, :start)
 end
 
 # update partable standard errors ---------------------------------------------
+"""
+    update_se_hessian!(
+        partable::AbstractParameterTable, 
+        sem_fit::SemFit; 
+        hessian = :finitediff)
+    
+Write hessian standard errors computed for `sem_fit` to the `:se` column of `partable`
 
+# Arguments
+- `hessian::Symbol`: how to compute the hessian, see [se_hessian](@ref) for more information.
+
+# Examples
+
+"""
 function update_se_hessian!(partable::AbstractParameterTable, sem_fit::SemFit; hessian = :finitediff)
     se = se_hessian(sem_fit; hessian = hessian)
     return update_partable!(partable, sem_fit, se, :se)

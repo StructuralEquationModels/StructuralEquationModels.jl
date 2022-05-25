@@ -10,3 +10,15 @@ start_val(model, observed::Union{SemObsCommon, SemObsMissing}, imply::Union{RAM,
 
 # Ensemble Models --------------------------------------------------------------------------------
 start_val(model::SemEnsemble; kwargs...) = start_simple(model; kwargs...)
+
+############################################################################################
+# docs
+############################################################################################
+"""
+    start_val(model)
+    
+Returns a vector of starting values.
+Default to FABIN 3 starting values for single models and simple starting values for
+ensemble models.
+"""
+function start_val end

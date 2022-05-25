@@ -28,6 +28,7 @@ include("observed/missing.jl")
 include("observed/EM.jl")
 # constructor
 include("frontend/specification/Sem.jl")
+include("frontend/specification/documentation.jl")
 # imply
 include("imply/RAM/symbolic.jl")
 include("imply/RAM/generic.jl")

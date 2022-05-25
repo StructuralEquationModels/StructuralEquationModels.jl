@@ -199,3 +199,14 @@ function is_in_Λ(ind_vec, F_ind)
     res = [!(ind[2] ∈ F_ind) & (ind[1] ∈ F_ind) for ind in ind_vec]
     return any(res)
 end
+
+############################################################################################
+# docs
+############################################################################################
+"""
+    start_fabin3(model)
+    
+Return a vector of FABIN 3 starting values (see Hägglund 1982).
+Not available for ensemble models.
+"""
+function start_fabin3 end

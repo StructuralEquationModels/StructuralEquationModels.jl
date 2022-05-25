@@ -1,4 +1,11 @@
-# load an example data set
+"""
+    example_data(name)
+
+Downloads and returns the `name` example dataset.
+Available datasets are `"political_democracy"` and `"holzinger_swineford"` as well as
+versions with missign values, `"political_democracy_missing"` and 
+`"holzinger_swineford_missing"`.
+"""
 function example_data(name)
     basepath = @artifact_str name
     paths = readdir(basepath)
