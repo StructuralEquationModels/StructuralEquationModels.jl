@@ -72,13 +72,13 @@ function objective!(semml::SemML, par, model::AbstractSemSingle, has_meanstructu
 
         ld = logdet(Σ_chol)
         Σ⁻¹ .= LinearAlgebra.inv!(Σ_chol)
-        mul!(Σ⁻¹Σₒ, Σ⁻¹, Σₒ)
+        #mul!(Σ⁻¹Σₒ, Σ⁻¹, Σₒ)
 
         if T
             μ₋ = μₒ - μ
-            return ld + tr(Σ⁻¹Σₒ) + dot(μ₋, Σ⁻¹, μ₋)
+            return ld + dot(Σ⁻¹, Σₒ) + dot(μ₋, Σ⁻¹, μ₋)
         else
-            return ld + tr(Σ⁻¹Σₒ)
+            return ld + dot(Σ⁻¹, Σₒ)
         end
     end
 end
@@ -270,12 +270,12 @@ function objective_gradient_hessian!(semml::SemML, par, model::AbstractSemSingle
             gradient = ones(eltype(par), size(par))
             hessian = diagm(fill(one(eltype(par)), length(par)))
             return objective, gradient, hessian
-        else
-            ld = logdet(Σ_chol)
-            Σ⁻¹ .= LinearAlgebra.inv!(Σ_chol)
-            mul!(Σ⁻¹Σₒ, Σ⁻¹, Σₒ)
-            objective = ld + tr(Σ⁻¹Σₒ)
         end
+
+        ld = logdet(Σ_chol)
+        Σ⁻¹ .= LinearAlgebra.inv!(Σ_chol)
+        mul!(Σ⁻¹Σₒ, Σ⁻¹, Σₒ)
+        objective = ld + tr(Σ⁻¹Σₒ)
 
         Σ⁻¹ΣₒΣ⁻¹ = Σ⁻¹Σₒ*Σ⁻¹
 
