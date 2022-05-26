@@ -1,5 +1,5 @@
 """
-Subtype of `SemObs`, can handle observed data without msissings or an observed covariance matrix
+Subtype of `SemObs`, can handle observed data without missings or an observed covariance matrix
 
 # Constructor
 
