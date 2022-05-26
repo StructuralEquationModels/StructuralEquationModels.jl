@@ -136,4 +136,4 @@ Congratulations, you fitted and inspected your very first model! To learn more a
 you may visit the sections on [Model specification](@ref), [Model construction](@ref), [Model fitting](@ref) and
 [Model inspection](@ref).
 
-If you want to learn how to extend the package (e.g., add a new loss function), you may visit the developer documentation (XXX).
+If you want to learn how to extend the package (e.g., add a new loss function), you may visit [Extending the package](@ref).

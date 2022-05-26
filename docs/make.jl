@@ -6,18 +6,19 @@ makedocs(
         "index.md",
         "Tutorials" => [
             "A first model" => "tutorials/first_model.md",
-            "Model specification" => [
+            "Model Specification" => [
                 "tutorials/specification/specification.md",
                 "tutorials/specification/graph_interface.md",
                 "tutorials/specification/ram_matrices.md"],
-            "Model construction" => [
+            "Model Construction" => [
                 "tutorials/construction/construction.md",
                 "tutorials/construction/outer_constructor.md",
                 "tutorials/construction/build_by_parts.md"],
-            "Model fitting" => "tutorials/fitting/fitting.md",
-            "Model inspection" => [
+            "Model Fitting" => "tutorials/fitting/fitting.md",
+            "Model Inspection" => [
                 "tutorials/inspection/inspection.md"
             ],
+            "Mean Structures" => "tutorials/meanstructure.md",
             "Collections" => [
                 "tutorials/collection/collection.md",
                 "tutorials/collection/multigroup.md"
@@ -33,6 +34,7 @@ makedocs(
         ],
         "Performance tips" => [
             "Model sorting" => "performance/sorting.md",
+            "MKL" => "performance/mkl.md",
             "Symbolic precomputation" => "performance/symbolic.md",
             "Starting values" => "performance/starting_values.md",
             "Parametric Types" => "performance/parametric.md"
