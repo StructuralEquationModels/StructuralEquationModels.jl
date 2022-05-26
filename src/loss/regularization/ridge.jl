@@ -1,8 +1,8 @@
 # (Ridge) regularization
 
-############################################################################
+############################################################################################
 ### Types
-############################################################################
+############################################################################################
 """
     SemRidge(;α_ridge, which_ridge, n_par, parameter_type = Float64, imply = nothing, kwargs...)
 
@@ -33,7 +33,14 @@ end
 ### Constructors
 ############################################################################
 
-function SemRidge(;α_ridge, which_ridge, n_par, parameter_type = Float64, imply = nothing, kwargs...)
+function SemRidge(;
+        α_ridge, 
+        which_ridge, 
+        n_par, 
+        parameter_type = Float64, 
+        imply = nothing, 
+        kwargs...)
+
     if eltype(which_ridge) <: Symbol
         which_ridge = get_identifier_indices(which_ridge, imply)
     end
@@ -48,9 +55,9 @@ function SemRidge(;α_ridge, which_ridge, n_par, parameter_type = Float64, imply
         zeros(parameter_type, n_par, n_par))
 end
 
-############################################################################
+############################################################################################
 ### methods
-############################################################################
+############################################################################################
 
 objective!(ridge::SemRidge, par, model) = @views ridge.α*sum(x -> x^2, par[ridge.which])
 
@@ -64,8 +71,8 @@ function hessian!(ridge::SemRidge, par, model)
     return ridge.hessian
 end
 
-############################################################################
+############################################################################################
 ### Recommended methods
-############################################################################
+############################################################################################
 
 update_observed(loss::SemRidge, observed::SemObs; kwargs...) = loss

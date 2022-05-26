@@ -1,6 +1,6 @@
-############################################################################
+############################################################################################
 ### Types
-############################################################################
+############################################################################################
 """
 Subtype of `SemDiff` that connects to `NLopt.jl` as the optimization backend.
 
@@ -51,9 +51,9 @@ Base.@kwdef mutable struct NLoptConstraint
     tol = 0.0
 end
 
-############################################################################
+############################################################################################
 ### Constructor
-############################################################################
+############################################################################################
 
 function SemDiffNLopt(;
         algorithm = :LD_LBFGS,
@@ -63,20 +63,28 @@ function SemDiffNLopt(;
         equality_constraints = Vector{NLoptConstraint}(), 
         inequality_constraints = Vector{NLoptConstraint}(), 
         kwargs...)
-    applicable(iterate, equality_constraints) || (equality_constraints = [equality_constraints])
-    applicable(iterate, inequality_constraints) || (inequality_constraints = [inequality_constraints])
-    return SemDiffNLopt(algorithm, local_algorithm, options, local_options, equality_constraints, inequality_constraints)
+    applicable(iterate, equality_constraints) || 
+        (equality_constraints = [equality_constraints])
+    applicable(iterate, inequality_constraints) || 
+        (inequality_constraints = [inequality_constraints])
+    return SemDiffNLopt(
+        algorithm, 
+        local_algorithm, 
+        options, 
+        local_options, 
+        equality_constraints, 
+        inequality_constraints)
 end
 
-############################################################################
+############################################################################################
 ### Recommended methods
-############################################################################
+############################################################################################
 
 update_observed(diff::SemDiffNLopt, observed::SemObs; kwargs...) = diff
 
-############################################################################
+############################################################################################
 ### additional methods
-############################################################################
+############################################################################################
 
 algorithm(diff::SemDiffNLopt) = diff.algorithm
 local_algorithm(diff::SemDiffNLopt) = diff.local_algorithm

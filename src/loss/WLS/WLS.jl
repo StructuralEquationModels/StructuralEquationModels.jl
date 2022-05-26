@@ -1,8 +1,8 @@
 ##### weighted least squares
 
-############################################################################
+############################################################################################
 ### Types
-############################################################################
+############################################################################################
 """
     SemWLS(;observed, 
         meanstructure = false, 
@@ -34,11 +34,12 @@ struct SemWLS{Vt, St, B, C, B2} <: SemLossFunction
     has_meanstructure::B2
 end
 
-############################################################################
+############################################################################################
 ### Constructors
-############################################################################
+############################################################################################
 
-function SemWLS(;observed, wls_weight_matrix = nothing, wls_weight_matrix_mean = nothing, approximate_hessian = false, meanstructure = false, kwargs...)
+function SemWLS(;observed, wls_weight_matrix = nothing, wls_weight_matrix_mean = nothing, 
+        approximate_hessian = false, meanstructure = false, kwargs...)
     ind = CartesianIndices(obs_cov(observed))
     ind = filter(x -> (x[1] >= x[2]), ind)
     s = obs_cov(observed)[ind]
@@ -72,15 +73,22 @@ end
 ### methods
 ############################################################################
 
-objective!(semwls::SemWLS, par, model::AbstractSemSingle) = objective!(semwls::SemWLS, par, model, semwls.has_meanstructure)
-gradient!(semwls::SemWLS, par, model::AbstractSemSingle) = gradient!(semwls::SemWLS, par, model, semwls.has_meanstructure)
-hessian!(semwls::SemWLS, par, model::AbstractSemSingle) = hessian!(semwls::SemWLS, par, model, semwls.has_meanstructure)
+objective!(semwls::SemWLS, par, model::AbstractSemSingle) = 
+    objective!(semwls::SemWLS, par, model, semwls.has_meanstructure)
+gradient!(semwls::SemWLS, par, model::AbstractSemSingle) = 
+    gradient!(semwls::SemWLS, par, model, semwls.has_meanstructure)
+hessian!(semwls::SemWLS, par, model::AbstractSemSingle) = 
+    hessian!(semwls::SemWLS, par, model, semwls.has_meanstructure)
 
-objective_gradient!(semwls::SemWLS, par, model::AbstractSemSingle) = objective_gradient!(semwls::SemWLS, par, model, semwls.has_meanstructure)
-objective_hessian!(semwls::SemWLS, par, model::AbstractSemSingle) = objective_hessian!(semwls::SemWLS, par, model, semwls.has_meanstructure)
-gradient_hessian!(semwls::SemWLS, par, model::AbstractSemSingle) = gradient_hessian!(semwls::SemWLS, par, model, semwls.has_meanstructure)
+objective_gradient!(semwls::SemWLS, par, model::AbstractSemSingle) = 
+    objective_gradient!(semwls::SemWLS, par, model, semwls.has_meanstructure)
+objective_hessian!(semwls::SemWLS, par, model::AbstractSemSingle) = 
+    objective_hessian!(semwls::SemWLS, par, model, semwls.has_meanstructure)
+gradient_hessian!(semwls::SemWLS, par, model::AbstractSemSingle) = 
+    gradient_hessian!(semwls::SemWLS, par, model, semwls.has_meanstructure)
 
-objective_gradient_hessian!(semwls::SemWLS, par, model::AbstractSemSingle) = objective_gradient_hessian!(semwls::SemWLS, par, model, semwls.has_meanstructure)
+objective_gradient_hessian!(semwls::SemWLS, par, model::AbstractSemSingle) = 
+    objective_gradient_hessian!(semwls::SemWLS, par, model, semwls.has_meanstructure)
 
 
 function objective!(semwls::SemWLS, par, model::AbstractSemSingle, has_meanstructure::Val{T}) where T
@@ -100,7 +108,8 @@ end
 
 function gradient!(semwls::SemWLS, par, model::AbstractSemSingle, has_meanstructure::Val{T}) where T
     
-    let σ = Σ(imply(model)), μ = μ(imply(model)), σₒ = semwls.σₒ, μₒ = obs_mean(observed(model)), V = semwls.V, V_μ = semwls.V_μ,
+    let σ = Σ(imply(model)), μ = μ(imply(model)), σₒ = semwls.σₒ, 
+        μₒ = obs_mean(observed(model)), V = semwls.V, V_μ = semwls.V_μ,
         ∇σ = ∇Σ(imply(model)), ∇μ = ∇μ(imply(model))
         
         σ₋ = σₒ - σ
@@ -138,7 +147,8 @@ end
 
 function objective_gradient!(semwls::SemWLS, par, model::AbstractSemSingle, has_meanstructure::Val{T}) where T
     
-    let σ = Σ(imply(model)), μ = μ(imply(model)), σₒ = semwls.σₒ, μₒ = obs_mean(observed(model)), V = semwls.V, V_μ = semwls.V_μ,
+    let σ = Σ(imply(model)), μ = μ(imply(model)), σₒ = semwls.σₒ, 
+        μₒ = obs_mean(observed(model)), V = semwls.V, V_μ = semwls.V_μ,
         ∇σ = ∇Σ(imply(model)), ∇μ = ∇μ(imply(model))
         
         σ₋ = σₒ - σ
@@ -227,8 +237,8 @@ end
 objective_gradient_hessian!(semwls::SemWLS, par, model::AbstractSemSingle, has_meanstructure::Val{true}) =
     throw(DomainError(H, "hessian of WLS with meanstructure is not available"))
 
-############################################################################
+############################################################################################
 ### Recommended methods
-############################################################################
+############################################################################################
 
 update_observed(lossfun::SemWLS, observed::SemObs; kwargs...) = SemWLS(;observed = observed, kwargs...)

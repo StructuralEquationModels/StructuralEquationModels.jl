@@ -1,6 +1,6 @@
-#####################################################################################################
+############################################################################################
 # methods for AbstractSem
-#####################################################################################################
+############################################################################################
 
 function objective!(model::AbstractSemSingle, parameters)
     objective!(imply(model), parameters, model)
@@ -45,9 +45,9 @@ function objective_gradient_hessian!(gradient, hessian, model::AbstractSemSingle
     return objective_gradient_hessian!(gradient, hessian, loss(model), parameters, model)
 end
 
-#####################################################################################################
+############################################################################################
 # methods for SemFiniteDiff and SemForwardDiff
-#####################################################################################################
+############################################################################################
 
 # gradient methods call themselves with the additional model.has_gradient argument
 
@@ -57,7 +57,8 @@ gradient!(gradient, model::Union{SemFiniteDiff, SemForwardDiff}, par) =
 objective_gradient!(gradient, model::Union{SemFiniteDiff, SemForwardDiff}, par) = 
     objective_gradient!(gradient, model, par, model.has_gradient)
 
-# methods where autodiff takes place - these are specific to the method of automatic differentiation
+# methods where autodiff takes place 
+# - these are specific to the method of automatic differentiation
 
 # FiniteDiff
 gradient!(gradient, model::SemFiniteDiff, par, has_gradient::Val{false}) =
@@ -74,27 +75,43 @@ hessian!(hessian, model::SemForwardDiff, par) =
     ForwardDiff.hessian!(hessian, x -> objective!(model, x), par)
 
 # gradient!
-function gradient!(gradient, model::Union{SemFiniteDiff, SemForwardDiff}, par, has_gradient::Val{true})
+function gradient!(
+        gradient, 
+        model::Union{SemFiniteDiff, SemForwardDiff}, 
+        par, 
+        has_gradient::Val{true})
     fill!(gradient, zero(eltype(gradient)))
     gradient!(imply(model), parameters, model)
     gradient!(gradient, loss(model), parameters, model)
 end
 
 # objective_gradient!
-function objective_gradient!(gradient, model::Union{SemFiniteDiff, SemForwardDiff}, par, has_gradient::Val{true})
+function objective_gradient!(
+        gradient, 
+        model::Union{SemFiniteDiff, SemForwardDiff}, 
+        par, 
+        has_gradient::Val{true})
     fill!(gradient, zero(eltype(gradient)))
     objective_gradient!(imply(model), parameters, model)
     return objective_gradient!(gradient, loss(model), parameters, model)
 end
 
-function objective_gradient!(gradient, model::Union{SemFiniteDiff, SemForwardDiff}, par, has_gradient::Val{false})
+function objective_gradient!(
+        gradient, 
+        model::Union{SemFiniteDiff, SemForwardDiff}, 
+        par, 
+        has_gradient::Val{false})
     fill!(gradient, zero(eltype(gradient)))
     gradient!(gradient, model, par)
     return objective!(model, par)
 end
 
 # other methods
-function gradient_hessian!(gradient, hessian, model::Union{SemFiniteDiff, SemForwardDiff}, parameters)
+function gradient_hessian!(
+        gradient, 
+        hessian, 
+        model::Union{SemFiniteDiff, SemForwardDiff}, 
+        parameters)
     fill!(gradient, zero(eltype(gradient)))
     fill!(hessian, zero(eltype(hessian)))
     gradient!(gradient, model, parameters)
@@ -107,16 +124,20 @@ function objective_hessian!(hessian, model::Union{SemFiniteDiff, SemForwardDiff}
     return objective!(model, par)
 end
 
-function objective_gradient_hessian!(gradient, hessian, model::Union{SemFiniteDiff, SemForwardDiff}, par)
+function objective_gradient_hessian!(
+        gradient, 
+        hessian, 
+        model::Union{SemFiniteDiff, SemForwardDiff}, 
+        par)
     fill!(gradient, zero(eltype(gradient)))
     fill!(hessian, zero(eltype(hessian)))
     hessian!(hessian, model, par)
     return objective_gradient!(gradient, model, par)
 end
 
-#####################################################################################################
+############################################################################################
 # methods for SemLoss
-#####################################################################################################
+############################################################################################
 
 function objective!(loss::SemLoss, par, model)
     return mapreduce(
@@ -191,9 +212,9 @@ function objective_gradient_hessian_wrap_(gradient, hessian, lossfun, par, model
     return w*new_objective
 end
 
-#####################################################################################################
+############################################################################################
 # methods for SemEnsemble
-#####################################################################################################
+############################################################################################
 
 function objective!(ensemble::SemEnsemble, par)
     return mapreduce(
@@ -289,9 +310,9 @@ function objective_gradient_hessian_wrap_(gradient, hessian, model::AbstractSemS
     return w*new_objective
 end
 
-#####################################################################################################
+############################################################################################
 # generic methods for loss functions
-#####################################################################################################
+############################################################################################
 
 function objective_gradient!(lossfun::SemLossFunction, par, model)
     objective = objective!(lossfun::SemLossFunction, par, model)
@@ -326,9 +347,9 @@ end
 hessian!(lossfun::SemLossFunction, par, model) =
     throw(ArgumentError("hessian for $(typeof(lossfun).name.wrapper) is not available")) =#
 
-#####################################################################################################
+############################################################################################
 # generic methods for imply
-#####################################################################################################
+############################################################################################
 
 function objective_gradient!(semimp::SemImply, par, model)
     objective!(semimp::SemImply, par, model)
@@ -355,9 +376,9 @@ function objective_gradient_hessian!(semimp::SemImply, par, model)
     return nothing
 end
 
-#####################################################################################################
+############################################################################################
 # Documentation
-#####################################################################################################
+############################################################################################
 """
     objective!(model::AbstractSem, parameters)
 

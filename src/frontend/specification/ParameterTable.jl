@@ -1,17 +1,17 @@
 abstract type AbstractParameterTable end
 
-############################################################################
+############################################################################################
 ### Types
-############################################################################
+############################################################################################
 
 mutable struct ParameterTable{C, V} <: AbstractParameterTable
     columns::C
     variables::V
 end
 
-############################################################################
+############################################################################################
 ### Constructors
-############################################################################
+############################################################################################
 
 # constuct an empty table
 function ParameterTable(::Nothing)
@@ -37,9 +37,9 @@ function ParameterTable(::Nothing)
     return ParameterTable(columns, variables)
 end
 
-############################################################################
+############################################################################################
 ### Convert to other types
-############################################################################
+############################################################################################
 
 import Base.Dict
 
@@ -55,9 +55,9 @@ function DataFrame(
     return DataFrame(out)
 end
 
-############################################################################
+############################################################################################
 ### Pretty Printing
-############################################################################
+############################################################################################
 
 function Base.show(io::IO, partable::ParameterTable)
     relevant_columns = [
@@ -90,11 +90,11 @@ function Base.show(io::IO, partable::ParameterTable)
     end
 end
 
-############################################################################
+############################################################################################
 ### Additional Methods
-############################################################################
+############################################################################################
 
-# Iteration ----------------------------------------------------------------
+# Iteration --------------------------------------------------------------------------------
 
 Base.getindex(partable::ParameterTable, i::Int) =
     (partable.columns[:from][i], 
@@ -113,7 +113,7 @@ function Base.length(partable::ParameterTable)
     return len
 end
 
-# Sorting -------------------------------------------------------------------
+# Sorting ----------------------------------------------------------------------------------
 
 struct CyclicModelError <: Exception
     msg::AbstractString
@@ -167,7 +167,7 @@ function sort(partable::ParameterTable)
     return new_partable
 end
 
-# add a row -------------------------------------------------------------------
+# add a row --------------------------------------------------------------------------------
 
 import Base.push!
 
@@ -179,11 +179,11 @@ end
 
 push!(partable::ParameterTable, d::Nothing) = nothing
 
-############################################################################
+############################################################################################
 ### Update Partable from Fitted Model
-############################################################################
+############################################################################################
 
-# update generic ---------------------------------------------------------------
+# update generic ---------------------------------------------------------------------------
 
 function update_partable!(partable::ParameterTable, model_identifier::AbstractDict, vec, column)
     new_col = Vector{eltype(vec)}(undef, length(partable))
@@ -209,7 +209,7 @@ Write `vec` to `column` of `partable`.
 update_partable!(partable::AbstractParameterTable, sem_fit::SemFit, vec, column) =
     update_partable!(partable, identifier(sem_fit), vec, column)
 
-# update estimates ---------------------------------------------------------
+# update estimates -------------------------------------------------------------------------
 """
     update_estimate!(
         partable::AbstractParameterTable, 
@@ -220,7 +220,7 @@ Write parameter estimates from `sem_fit` to the `:estimate` column of `partable`
 update_estimate!(partable::AbstractParameterTable, sem_fit::SemFit) =
     update_partable!(partable, sem_fit, sem_fit.solution, :estimate)
 
-# update starting values -----------------------------------------------------
+# update starting values -------------------------------------------------------------------
 """
     update_start!(partable::AbstractParameterTable, sem_fit::SemFit)
     update_start!(partable::AbstractParameterTable, model::AbstractSem, start_val; kwargs...)
@@ -235,14 +235,18 @@ Write starting values from `sem_fit` or `start_val` to the `:estimate` column of
 update_start!(partable::AbstractParameterTable, sem_fit::SemFit) =
     update_partable!(partable, sem_fit, sem_fit.start_val, :start)
 
-function update_start!(partable::AbstractParameterTable, model::AbstractSem, start_val; kwargs...)
+function update_start!(
+        partable::AbstractParameterTable, 
+        model::AbstractSem, 
+        start_val; 
+        kwargs...)
     if !(start_val isa Vector)
         start_val = start_val(model; kwargs...)
     end
     return update_partable!(partable, identifier(model), start_val, :start)
 end
 
-# update partable standard errors ---------------------------------------------
+# update partable standard errors ----------------------------------------------------------
 """
     update_se_hessian!(
         partable::AbstractParameterTable, 
@@ -257,7 +261,10 @@ Write hessian standard errors computed for `sem_fit` to the `:se` column of `par
 # Examples
 
 """
-function update_se_hessian!(partable::AbstractParameterTable, sem_fit::SemFit; hessian = :finitediff)
+function update_se_hessian!(
+        partable::AbstractParameterTable, 
+        sem_fit::SemFit; 
+        hessian = :finitediff)
     se = se_hessian(sem_fit; hessian = hessian)
     return update_partable!(partable, sem_fit, se, :se)
 end

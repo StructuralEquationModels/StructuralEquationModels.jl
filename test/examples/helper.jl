@@ -59,7 +59,12 @@ fitmeasure_names_ls = Dict(
     :RMSEA => "rmsea",
 )
 
-function test_fitmeasures(measures, measures_lav; rtol = 1e-4, atol = 0, fitmeasure_names = fitmeasure_names_ml)
+function test_fitmeasures(
+        measures, 
+        measures_lav; 
+        rtol = 1e-4, 
+        atol = 0, 
+        fitmeasure_names = fitmeasure_names_ml)
     correct = []
     for key in keys(fitmeasure_names)
         measure = measures[key]
@@ -92,7 +97,11 @@ function compare_estimates(partable::ParameterTable, partable_lav;
             elseif length(lav_ind) > 1
                 throw(ErrorException("At least one parameter was found twice in the lavaan solution"))
             else
-                is_correct = isapprox(estimate, partable_lav[:, lav_col][lav_ind[1]]; rtol = rtol, atol = atol)
+                is_correct = isapprox(
+                    estimate, 
+                    partable_lav[:, lav_col][lav_ind[1]]; 
+                    rtol = rtol, 
+                    atol = atol)
                 push!(correct, is_correct)
             end
 
@@ -124,7 +133,11 @@ function compare_estimates(partable::ParameterTable, partable_lav;
                 elseif length(lav_ind) > 1
                     throw(ErrorException("At least one parameter was found twice in the lavaan solution"))
                 else
-                    is_correct = isapprox(estimate, partable_lav[:, lav_col][lav_ind[1]]; rtol = rtol, atol = atol)
+                    is_correct = isapprox(
+                        estimate, 
+                        partable_lav[:, lav_col][lav_ind[1]]; 
+                        rtol = rtol, 
+                        atol = atol)
                     push!(correct, is_correct)
                 end
 
@@ -181,7 +194,11 @@ function compare_estimates(ens_partable::EnsembleParameterTable, partable_lav;
                 elseif length(lav_ind) > 1
                     throw(ErrorException("At least one parameter was found twice in the lavaan solution"))
                 else
-                    is_correct = isapprox(estimate, partable_lav[:, lav_col][lav_ind[1]]; rtol = rtol, atol = atol)
+                    is_correct = isapprox(
+                        estimate, 
+                        partable_lav[:, lav_col][lav_ind[1]]; 
+                        rtol = rtol, 
+                        atol = atol)
                     push!(correct, is_correct)
                 end
 
@@ -209,7 +226,11 @@ function compare_estimates(ens_partable::EnsembleParameterTable, partable_lav;
                 elseif length(lav_ind) > 1
                     throw(ErrorException("At least one parameter was found twice in the lavaan solution"))
                 else
-                    is_correct = isapprox(estimate, partable_lav[:, lav_col][lav_ind[1]]; rtol = rtol, atol = atol)
+                    is_correct = isapprox(
+                        estimate, 
+                        partable_lav[:, lav_col][lav_ind[1]]; 
+                        rtol = rtol, 
+                        atol = atol)
                     push!(correct, is_correct)
                 end
 

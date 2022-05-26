@@ -1,8 +1,8 @@
-############################################################################
+############################################################################################
 ### Types
-############################################################################
+############################################################################################
 
-# Type to store Expectation Maximization result ----------------------------
+# Type to store Expectation Maximization result --------------------------------------------
 mutable struct EmMVNModel{A, b, B}
     Σ::A
     μ::b
@@ -68,11 +68,16 @@ mutable struct SemObsMissing{
     em_model::S
 end
 
-############################################################################
+############################################################################################
 ### Constructors
-############################################################################
+############################################################################################
 
-function SemObsMissing(;data, specification = nothing, spec_colnames = nothing, data_colnames = nothing, kwargs...)
+function SemObsMissing(;
+        data, 
+        specification = nothing, 
+        spec_colnames = nothing, 
+        data_colnames = nothing, 
+        kwargs...)
 
     if isnothing(spec_colnames) spec_colnames = get_colnames(specification) end
     data, _ = reorder_observed(data, spec_colnames, data_colnames)
@@ -139,16 +144,16 @@ function SemObsMissing(;data, specification = nothing, spec_colnames = nothing, 
     obs_mean, obs_cov, em_model)
 end
 
-############################################################################
+############################################################################################
 ### Recommended methods
-############################################################################
+############################################################################################
 
 n_obs(observed::SemObsMissing) = observed.n_obs
 n_man(observed::SemObsMissing) = observed.n_man
 
-############################################################################
+############################################################################################
 ### Additional methods
-############################################################################
+############################################################################################
 
 get_data(observed::SemObsMissing) = observed.data
 patterns(observed::SemObsMissing) = observed.patterns
@@ -161,9 +166,10 @@ obs_mean(observed::SemObsMissing) = observed.obs_mean
 obs_cov(observed::SemObsMissing) = observed.obs_cov
 em_model(observed::SemObsMissing) = observed.em_model
 
-############################################################################
+############################################################################################
 ### Additional functions
-############################################################################
+############################################################################################
 
 reorder_observed(data, spec_colnames::Nothing, data_colnames) = data, nothing
-reorder_observed(data, spec_colnames, data_colnames) = reorder_data(data, spec_colnames, data_colnames)
+reorder_observed(data, spec_colnames, data_colnames) = 
+    reorder_data(data, spec_colnames, data_colnames)

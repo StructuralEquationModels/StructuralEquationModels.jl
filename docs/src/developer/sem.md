@@ -3,7 +3,12 @@
 The abstract supertype for all models is `AbstractSem`, which has two subtypes, `AbstractSemSingle{O, I, L, D}` and `AbstractSemCollection`. Currently, there are three subtypes of `AbstractSemSingle`: `Sem`, `SemFiniteDiff` and `SemForwardDiff`. All subtypes of `AbstractSemSingle` should have at least observed, imply, loss and diff fields, and share their types (`{O, I, L, D}`) with the parametric abstract supertype. For example, the `SemFiniteDiff` type is implemented as
 
 ```julia
-struct SemFiniteDiff{O <: SemObs, I <: SemImply, L <: SemLoss, D <: SemDiff, G} <: AbstractSemSingle{O, I, L, D}
+struct SemFiniteDiff{
+        O <: SemObs, 
+        I <: SemImply, 
+        L <: SemLoss, 
+        D <: SemDiff, 
+        G} <: AbstractSemSingle{O, I, L, D}
     observed::O
     imply::I
     loss::L

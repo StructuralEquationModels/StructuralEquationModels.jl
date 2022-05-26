@@ -1,6 +1,6 @@
-############################################################################
+############################################################################################
 ### connect to NLopt.jl as backend
-############################################################################
+############################################################################################
 
 # wrapper to define the objective
 function sem_wrap_nlopt(par, G, model::AbstractSem)
@@ -41,7 +41,10 @@ function sem_fit(model::Sem{O, I, L, D}; start_val = start_val, kwargs...) where
     end
 
     # construct the NLopt problem
-    opt = construct_NLopt_problem(model.diff.algorithm, model.diff.options, length(start_val))
+    opt = construct_NLopt_problem(
+        model.diff.algorithm, 
+        model.diff.options, 
+        length(start_val))
     set_NLopt_constraints!(opt, model.diff)   
     opt.min_objective = (par, G) -> sem_wrap_nlopt(par, G, model)
 
@@ -67,7 +70,10 @@ function sem_fit(model::SemEnsemble{N, T , V, D, S}; start_val = start_val, kwar
     end
 
     # construct the NLopt problem
-    opt = construct_NLopt_problem(model.diff.algorithm, model.diff.options, length(start_val))
+    opt = construct_NLopt_problem(
+        model.diff.algorithm, 
+        model.diff.options, 
+        length(start_val))
     set_NLopt_constraints!(opt, model.diff)   
     opt.min_objective = (par, G) -> sem_wrap_nlopt(par, G, model)
 
@@ -85,9 +91,9 @@ function sem_fit(model::SemEnsemble{N, T , V, D, S}; start_val = start_val, kwar
     return SemFit_NLopt(result, model, start_val, opt)
 end
 
-############################################################################
+############################################################################################
 ### additional functions
-############################################################################
+############################################################################################
 
 function construct_NLopt_problem(algorithm, options, npar)
     opt = Opt(algorithm, npar)
@@ -109,9 +115,9 @@ function set_NLopt_constraints!(opt, diff::SemDiffNLopt)
     end
 end
 
-##############################################################
+############################################################################################
 # pretty printing
-##############################################################
+############################################################################################
 
 function Base.show(io::IO, result::NLoptResult)
     print(io, "Optimizer status: $(result.result[3]) \n")

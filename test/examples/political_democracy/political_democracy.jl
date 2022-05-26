@@ -1,20 +1,23 @@
 using StructuralEquationModels, Test, FiniteDiff
 # import StructuralEquationModels as SEM
-include(joinpath(chop(dirname(pathof(StructuralEquationModels)), tail = 3), "test/examples/helper.jl"))
+include(
+    joinpath(chop(dirname(pathof(StructuralEquationModels)), tail = 3), 
+    "test/examples/helper.jl")
+    )
 
-############################################################################
+############################################################################################
 ### data
-############################################################################
+############################################################################################
 
 dat = example_data("political_democracy")
 dat_missing = example_data("political_democracy_missing")
 solution_lav = example_data("political_democracy_solution")
 
-############################################################################
+############################################################################################
 ### specification - RAMMatrices
-############################################################################
+############################################################################################
 
-# w.o. meanstructure -------------------------------------------------------
+# w.o. meanstructure -----------------------------------------------------------------------
 
 x = Symbol.("x".*string.(1:31))
 
@@ -70,7 +73,7 @@ spec = RAMMatrices(;
 
 partable = ParameterTable(spec)
 
-# w. meanstructure ----------------------------------------------------------------------------
+# w. meanstructure -------------------------------------------------------------------------
 
 x = Symbol.("x".*string.(1:38))
 
@@ -96,9 +99,9 @@ semdiff = SemDiffNLopt
 
 @testset "constraints | NLopt" begin include("constraints.jl") end
 
-############################################################################
+############################################################################################
 ### specification - RAMMatrices → ParameterTable
-############################################################################
+############################################################################################
 
 spec = ParameterTable(spec)
 spec_mean = ParameterTable(spec_mean)
@@ -111,9 +114,9 @@ semdiff = SemDiffOptim
 semdiff = SemDiffNLopt
 @testset "RAMMatrices → ParameterTable | constructor | NLopt" begin include("constructor.jl") end
 
-############################################################################
+############################################################################################
 ### specification - Graph
-############################################################################
+############################################################################################
 using StenoGraphs
 
 observed_vars = [:x1, :x2, :x3, :y1, :y2, :y3, :y4, :y5, :y6, :y7, :y8]

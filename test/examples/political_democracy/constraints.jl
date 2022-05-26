@@ -1,4 +1,4 @@
-# NLopt constraints -----------------------------------------------
+# NLopt constraints ------------------------------------------------------------------------
 
 # 1.5*x1 == x2 (aka 1.5*x1 - x2 == 0)
 #= function eq_constraint(x, grad)
@@ -8,15 +8,6 @@
         grad[2] = -1.0
     end
     1.5*x[1] - x[2]
-end =#
-
-# x30 ≥ 1.0 (aka 1.0 - x30 ≤ 0)
-#= function ineq_constraint(x, grad)
-    if length(grad) > 0
-        grad .= 0.0
-        grad[30] = -1.0
-    end
-    1.0 - x[30]
 end =#
 
 # x30*x31 ≥ 0.6 (aka 0.6 - x30*x31 ≤ 0)
@@ -47,7 +38,7 @@ model_ml_constrained = Sem(
 
 solution_constrained = sem_fit(model_ml_constrained)
 
-# NLopt option setting --------------------------------------------
+# NLopt option setting ---------------------------------------------------------------------
 
 model_ml_maxeval = Sem(
     specification = spec,
@@ -56,9 +47,9 @@ model_ml_maxeval = Sem(
     options = Dict(:maxeval => 10)
 )
 
-############################################################################
+############################################################################################
 ### test solution
-############################################################################
+############################################################################################
 
 @testset "ml_solution_maxeval" begin
     solution_maxeval = sem_fit(model_ml_maxeval)

@@ -1,16 +1,17 @@
-#####################################################################################################
+############################################################################################
 # get parameter identifier
-#####################################################################################################
+############################################################################################
 
 identifier(sem_fit::SemFit) = identifier(sem_fit.model)
 identifier(model::AbstractSemSingle) = identifier(model.imply)
 identifier(model::SemEnsemble) = model.identifier
 
-#####################################################################################################
+############################################################################################
 # construct identifier
-#####################################################################################################
+############################################################################################
 
-identifier(ram_matrices::RAMMatrices) = Dict{Symbol, Int64}(ram_matrices.parameters .=> 1:length(ram_matrices.parameters))
+identifier(ram_matrices::RAMMatrices) = 
+    Dict{Symbol, Int64}(ram_matrices.parameters .=> 1:length(ram_matrices.parameters))
 function identifier(partable::ParameterTable)
     _, _, identifier = get_par_npar_identifier(partable)
     return identifier
@@ -20,7 +21,8 @@ end
 # get indices of a Vector of parameter labels
 ############################################################################################
 
-get_identifier_indices(parameters, identifier::Dict{Symbol, Int}) = [identifier[par] for par in parameters]
+get_identifier_indices(parameters, identifier::Dict{Symbol, Int}) = 
+    [identifier[par] for par in parameters]
 
 get_identifier_indices(parameters, obj::Union{SemFit, AbstractSemSingle, SemEnsemble, SemImply}) = 
     get_identifier_indices(parameters, identifier(obj))

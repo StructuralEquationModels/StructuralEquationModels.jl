@@ -7,7 +7,10 @@ using LinearAlgebra, Optim,
     DataFrames
 
 import DataFrames: DataFrame
-export *, ==, @StenoGraph, AbstractEdge, AbstractNode, DirectedEdge, Edge, EdgeModifier, MetaEdge, MetaNode, ModifiedEdge, ModifiedNode, Modifier, ModifyingNode, Node, NodeModifier, NodeOrEdgeModifier, SimpleNode, StenoGraphs, UndirectedEdge, convert, promote_rule, show, unarrow, unmeta, ←, →, ↔, ⇐, ⇒, ⇔
+export *, ==, @StenoGraph, AbstractEdge, AbstractNode, DirectedEdge, Edge, EdgeModifier, 
+    MetaEdge, MetaNode, ModifiedEdge, ModifiedNode, Modifier, ModifyingNode, Node, 
+    NodeModifier, NodeOrEdgeModifier, SimpleNode, StenoGraphs, UndirectedEdge, convert, 
+    promote_rule, show, unarrow, unmeta, ←, →, ↔, ⇐, ⇒, ⇔
 
 # type hierarchy
 include("types.jl")
@@ -77,7 +80,8 @@ include("frontend/fit/standard_errors/bootstrap.jl")
 
 
 export  AbstractSem, 
-            AbstractSemSingle, AbstractSemCollection, Sem, SemFiniteDiff, SemForwardDiff, SemEnsemble,
+            AbstractSemSingle, AbstractSemCollection, Sem, SemFiniteDiff, SemForwardDiff, 
+            SemEnsemble,
         SemImply, 
             RAMSymbolic, RAM, ImplyEmpty, imply,
         start_val,
@@ -93,7 +97,8 @@ export  AbstractSem,
         SemFit,
             minimum, solution,
         sem_summary,
-        objective!, gradient!, hessian!, objective_gradient!, objective_hessian!, gradient_hessian!, objective_gradient_hessian!,
+        objective!, gradient!, hessian!, objective_gradient!, objective_hessian!, 
+            gradient_hessian!, objective_gradient_hessian!,
         ParameterTable, 
             EnsembleParameterTable, update_partable!, update_estimate!, update_start!,
             Fixed, fixed, Start, start, Label, label,

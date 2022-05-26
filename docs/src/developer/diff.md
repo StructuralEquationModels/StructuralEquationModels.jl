@@ -1,6 +1,7 @@
 # Custom diff types
 
-The diff part of a model connects it to the optimization backend. The first part of the implementation is very similar to loss functions, so we just show the implementation of `SemDiffOptim` here:
+The diff part of a model connects it to the optimization backend. 
+The first part of the implementation is very similar to loss functions, so we just show the implementation of `SemDiffOptim` here:
 
 ```julia
 ############################################################################
@@ -12,7 +13,12 @@ mutable struct SemDiffOptim{A, B} <: SemDiff
     options::B
 end
 
-SemDiffOptim(;algorithm = LBFGS(), options = Optim.Options(;f_tol = 1e-10, x_tol = 1.5e-8), kwargs...) = SemDiffOptim(algorithm, options)
+function SemDiffOptim(;
+        algorithm = LBFGS(), 
+        options = Optim.Options(;f_tol = 1e-10, x_tol = 1.5e-8), 
+        kwargs...)
+    return SemDiffOptim(algorithm, options)
+end
 
 ############################################################################
 ### Recommended methods
@@ -31,7 +37,10 @@ options(diff::SemDiffOptim) = diff.options
 Now comes a part that is a little bit more complicated: We need to write methods for `sem_fit`:
 
 ```julia
-function sem_fit(model::AbstractSemSingle{O, I, L, D}; start_val = start_val, kwargs...) where {O, I, L, D <: SemDiffOptim}
+function sem_fit(
+        model::AbstractSemSingle{O, I, L, D}; 
+        start_val = start_val, 
+        kwargs...) where {O, I, L, D <: SemDiffOptim}
     
     if !isa(start_val, Vector)
         start_val = start_val(model; kwargs...)
@@ -50,7 +59,10 @@ The method has to return a `SemFit` object that consists of the minimum of the o
 If we want our type to also work with `SemEnsemble` models, we also have to provide a method for that:
 
 ```julia
-function sem_fit(model::SemEnsemble{N, T , V, D, S}; start_val = start_val, kwargs...) where {N, T, V, D <: SemDiffOptim, S}
+function sem_fit(
+        model::SemEnsemble{N, T , V, D, S}; 
+        start_val = start_val, 
+        kwargs...) where {N, T, V, D <: SemDiffOptim, S}
 
     if !isa(start_val, Vector)
         start_val = start_val(model; kwargs...)

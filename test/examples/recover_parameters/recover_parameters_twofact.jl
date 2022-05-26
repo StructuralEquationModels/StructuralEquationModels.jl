@@ -1,6 +1,9 @@
 using StructuralEquationModels, Distributions, Random, Optim, LineSearches
 import StructuralEquationModels as SEM
-include(joinpath(chop(dirname(pathof(StructuralEquationModels)), tail = 3), "test/examples/helper.jl"))
+include(
+     joinpath(chop(dirname(pathof(StructuralEquationModels)), tail = 3), 
+     "test/examples/helper.jl")
+     )
 
 x = Symbol.("x", 1:13)
 

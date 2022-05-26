@@ -1,8 +1,5 @@
-############################################################################
-### hessian based standard errors
-############################################################################
 """
-    se_bootstrap(semfit::SemFit; hessian = :finitediff)
+    se_hessian(semfit::SemFit; hessian = :finitediff)
 
 Return hessian based standard errors.
 

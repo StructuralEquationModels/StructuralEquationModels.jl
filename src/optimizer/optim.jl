@@ -26,7 +26,10 @@ function sem_wrap_optim(par, F, G, H, model::AbstractSem)
     return nothing
 end
 
-function SemFit(optimization_result::Optim.MultivariateOptimizationResults, model::AbstractSem, start_val)
+function SemFit(
+        optimization_result::Optim.MultivariateOptimizationResults, 
+        model::AbstractSem, 
+        start_val)
     return SemFit(
         optimization_result.minimum,
         optimization_result.minimizer,
@@ -40,7 +43,10 @@ optimizer(res::Optim.MultivariateOptimizationResults) = Optim.summary(res)
 n_iterations(res::Optim.MultivariateOptimizationResults) = Optim.iterations(res)
 convergence(res::Optim.MultivariateOptimizationResults) = Optim.converged(res)
 
-function sem_fit(model::AbstractSemSingle{O, I, L, D}; start_val = start_val, kwargs...) where {O, I, L, D <: SemDiffOptim}
+function sem_fit(
+        model::AbstractSemSingle{O, I, L, D}; 
+        start_val = start_val, 
+        kwargs...) where {O, I, L, D <: SemDiffOptim}
     
     if !isa(start_val, Vector)
         start_val = start_val(model; kwargs...)
@@ -55,7 +61,10 @@ function sem_fit(model::AbstractSemSingle{O, I, L, D}; start_val = start_val, kw
 
 end
 
-function sem_fit(model::SemEnsemble{N, T , V, D, S}; start_val = start_val, kwargs...) where {N, T, V, D <: SemDiffOptim, S}
+function sem_fit(
+        model::SemEnsemble{N, T , V, D, S}; 
+        start_val = start_val, 
+        kwargs...) where {N, T, V, D <: SemDiffOptim, S}
 
     if !isa(start_val, Vector)
         start_val = start_val(model; kwargs...)

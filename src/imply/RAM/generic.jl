@@ -1,6 +1,6 @@
-############################################################################
+############################################################################################
 ### Types
-############################################################################
+############################################################################################
 @doc raw"""
 Subtype of `SemImply` that implements the RAM notation.
 
@@ -88,9 +88,9 @@ end
 
 using StructuralEquationModels
 
-############################################################################
+############################################################################################
 ### Constructors
-############################################################################
+############################################################################################
 
 function RAM(;
         specification,
@@ -187,9 +187,9 @@ function RAM(;
     )
 end
 
-############################################################################
+############################################################################################
 ### methods
-############################################################################
+############################################################################################
 
 # dispatch on meanstructure
 objective!(imply::RAM, par, model::AbstractSemSingle) = 
@@ -255,15 +255,20 @@ function gradient!(imply::RAM, parameters, model::AbstractSemSingle, has_meanstr
 
 end
 
-hessian!(imply::RAM, par, model::AbstractSemSingle, has_meanstructure) = gradient!(imply, par, model, has_meanstructure)
-objective_gradient!(imply::RAM, par, model::AbstractSemSingle, has_meanstructure) = gradient!(imply, par, model, has_meanstructure)
-objective_hessian!(imply::RAM, par, model::AbstractSemSingle, has_meanstructure) = gradient!(imply, par, model, has_meanstructure)
-gradient_hessian!(imply::RAM, par, model::AbstractSemSingle, has_meanstructure) = gradient!(imply, par, model, has_meanstructure)
-objective_gradient_hessian!(imply::RAM, par, model::AbstractSemSingle, has_meanstructure) = gradient!(imply, par, model, has_meanstructure)
+hessian!(imply::RAM, par, model::AbstractSemSingle, has_meanstructure) = 
+    gradient!(imply, par, model, has_meanstructure)
+objective_gradient!(imply::RAM, par, model::AbstractSemSingle, has_meanstructure) = 
+    gradient!(imply, par, model, has_meanstructure)
+objective_hessian!(imply::RAM, par, model::AbstractSemSingle, has_meanstructure) = 
+    gradient!(imply, par, model, has_meanstructure)
+gradient_hessian!(imply::RAM, par, model::AbstractSemSingle, has_meanstructure) = 
+    gradient!(imply, par, model, has_meanstructure)
+objective_gradient_hessian!(imply::RAM, par, model::AbstractSemSingle, has_meanstructure) = 
+    gradient!(imply, par, model, has_meanstructure)
 
-############################################################################
+############################################################################################
 ### Recommended methods
-############################################################################
+############################################################################################
 
 identifier(imply::RAM) = imply.identifier
 n_par(imply::RAM) = imply.n_par
@@ -276,9 +281,9 @@ function update_observed(imply::RAM, observed::SemObs; kwargs...)
     end
 end
 
-############################################################################
+############################################################################################
 ### additional methods
-############################################################################
+############################################################################################
 
 Σ(imply::RAM) = imply.Σ
 μ(imply::RAM) = imply.μ
@@ -303,9 +308,9 @@ I_A⁻¹(imply::RAM) = imply.I_A⁻¹ # only for gradient available!
 
 has_meanstructure(imply::RAM) = imply.has_meanstructure
 
-############################################################################
+############################################################################################
 ### additional functions
-############################################################################
+############################################################################################
 
 function Σ_RAM!(Σ, F⨉I_A⁻¹, S, pre2)
     mul!(pre2, F⨉I_A⁻¹, S)

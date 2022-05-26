@@ -1,6 +1,6 @@
-############################################################################
+############################################################################################
 ### Expectation Maximization Algorithm
-############################################################################
+############################################################################################
 
 # An EM Algorithm for MVN-distributed Data with missing values
 # Adapted from supplementary Material to the book Machine Learning: A Probabilistic Perspective
@@ -10,7 +10,7 @@
 
 # what about random restarts?
 
-# outer function -----------------------------------------------------------------
+# outer function ---------------------------------------------------------------------------
 """
     em_mvn(;
         observed::SemObsMissing,
@@ -84,7 +84,7 @@ function em_mvn(
     
 end
 
-# E and M step ------------------------------------------------------------------------------
+# E and M step -----------------------------------------------------------------------------
 
 function em_mvn_Estep!(𝔼x, 𝔼xxᵀ, em_model, observed, 𝔼x_pre, 𝔼xxᵀ_pre)
 
@@ -153,7 +153,7 @@ function em_mvn_Mstep!(em_model, n_obs, 𝔼x, 𝔼xxᵀ)
     return nothing
 end
 
-# generate starting values --------------------------------------------------------------
+# generate starting values -----------------------------------------------------------------
 
 # use μ and Σ of full cases
 function start_em_observed(observed::SemObsMissing; kwargs...)

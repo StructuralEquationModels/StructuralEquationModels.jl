@@ -1,6 +1,6 @@
-############################################################################
+############################################################################################
 ### Types
-############################################################################
+############################################################################################
 """
     SemFIML(;observed, specification, kwargs...)
 
@@ -31,9 +31,9 @@ mutable struct SemFIML{INV, C, L, O, M, IM, I, T, U, W} <: SemLossFunction
     interaction::W
 end
 
-############################################################################
+############################################################################################
 ### Constructors
-############################################################################
+############################################################################################
 
 function SemFIML(;observed, specification, kwargs...)
 
@@ -69,9 +69,9 @@ function SemFIML(;observed, specification, kwargs...)
     )
 end
 
-############################################################################
+############################################################################################
 ### methods
-############################################################################
+############################################################################################
 
 function objective!(semfiml::SemFIML, parameters, model)
 
@@ -95,7 +95,9 @@ end
 
 function objective_gradient!(semfiml::SemFIML, parameters, model)
 
-    if !check_fiml(semfiml, model) return non_posdef_return(parameters), ones(eltype(parameters), size(parameters)) end
+    if !check_fiml(semfiml, model) 
+        return non_posdef_return(parameters), ones(eltype(parameters), size(parameters)) 
+    end
 
     prepare_SemFIML!(semfiml, model)
 
@@ -105,15 +107,16 @@ function objective_gradient!(semfiml::SemFIML, parameters, model)
     return objective, gradient
 end
 
-############################################################################
+############################################################################################
 ### Recommended methods
-############################################################################
+############################################################################################
 
-update_observed(lossfun::SemFIML, observed::SemObs; kwargs...) = SemFIML(;observed = observed, kwargs...)
+update_observed(lossfun::SemFIML, observed::SemObs; kwargs...) = 
+    SemFIML(;observed = observed, kwargs...)
 
-############################################################################
+############################################################################################
 ### additional functions
-############################################################################
+############################################################################################
 
 function F_one_pattern(meandiff, inverse, obs_cov, logdet, N)
     F = logdet
@@ -217,20 +220,6 @@ function copy_per_pattern!(inverses, source_inverses, means, source_means, patte
     end
 end
 
-#= function copy_per_pattern!(inverses, source_inverses, means, source_means, patterns, which_source_pattern)
-    @views for i = 1:size(patterns, 1)
-        inverses[i] .=
-            source_inverses[which_source_pattern[i]][
-                patterns[i],
-                patterns[i]]
-    end
-
-    @views for i = 1:size(patterns, 1)
-        means[i] .=
-            source_means[which_source_pattern[i]][patterns[i]]
-    end
-end =#
-
 copy_per_pattern!(
     semfiml, 
     model::M where {M <: AbstractSem}) = 
@@ -241,17 +230,6 @@ copy_per_pattern!(
         μ(imply(model)), 
         patterns(observed(model)))
 
-#= copy_per_pattern!(semfiml, model::Sem{O, I, L, D}) where
-    {O <: SemObsMissing, L , I <: ImplyDefinition, D} = 
-    copy_per_pattern!(
-        semfiml.inverses, 
-        imply(model).imp_cov, 
-        semfiml.imp_mean, 
-        imply(model).imp_mean, 
-        semfiml.interaction.missing_patterns,
-        semfiml.interaction.gradientroup_imp_per_comb) =#
-
-
 function batch_cholesky!(semfiml, model)
     for i = 1:size(semfiml.inverses, 1)
         semfiml.choleskys[i] = cholesky!(Symmetric(semfiml.inverses[i]))
@@ -260,15 +238,6 @@ function batch_cholesky!(semfiml, model)
     return true
 end
 
-#= function batch_cholesky!(semfiml, model::Sem{O, I, L, D}) where
-    {O <: SemObsMissing, L, I <: ImplyDefinition, D}
-    for i = 1:size(semfiml.inverses, 1)
-        semfiml.choleskys[i] = cholesky!(Symmetric(semfiml.inverses[i]); check = false)
-        if !isposdef(semfiml.choleskys[i]) return false end
-    end
-    return true
-end =#
-
 function check_fiml(semfiml, model)
     copyto!(semfiml.imp_inv, Σ(imply(model)))
     a = cholesky!(Symmetric(semfiml.imp_inv); check = false)
@@ -276,4 +245,6 @@ function check_fiml(semfiml, model)
 end
 
 get_n_nodes(specification::RAMMatrices) = specification.size_F[2]
-get_n_nodes(specification::ParameterTable) = length(specification.variables[:observed_vars]) + length(specification.variables[:latent_vars])
+get_n_nodes(specification::ParameterTable) = 
+    length(specification.variables[:observed_vars]) + 
+    length(specification.variables[:latent_vars])
