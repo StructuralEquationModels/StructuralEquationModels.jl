@@ -46,7 +46,6 @@ partable = ParameterTable(
     latent_vars = latent_vars, 
     observed_vars = observed_vars, 
     graph = graph)
-
 ```
 
 ```@example swap_observed
