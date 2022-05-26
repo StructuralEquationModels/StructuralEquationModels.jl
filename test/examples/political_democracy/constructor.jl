@@ -13,7 +13,6 @@ model_ls_sym = Sem(
     data = dat,
     imply = RAMSymbolic,
     loss = SemWLS,
-    start_val = start_simple,
     diff = semdiff
 )
 
