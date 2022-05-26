@@ -35,6 +35,7 @@ makedocs(
         "Performance tips" => [
             "Model sorting" => "performance/sorting.md",
             "MKL" => "performance/mkl.md",
+            "Simulation studies" => "performance/simulation.md",
             "Symbolic precomputation" => "performance/symbolic.md",
             "Starting values" => "performance/starting_values.md",
             "Parametric Types" => "performance/parametric.md"

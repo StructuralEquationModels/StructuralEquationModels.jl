@@ -111,5 +111,6 @@ export  AbstractSem,
             EmMVNModel,
         se_hessian, se_bootstrap,
         example_data,
+        swap_observed, update_observed,
         @StenoGraph, →, ←, ↔, ⇔
 end
