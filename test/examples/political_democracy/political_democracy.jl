@@ -97,6 +97,13 @@ semdiff = SemDiffOptim
 semdiff = SemDiffNLopt
 @testset "RAMMatrices | constructor | NLopt" begin include("constructor.jl") end
 
+if ENV["JULIA_EXTENDED_TESTS"] == "true"
+    semdiff = SemDiffOptim
+    @testset "RAMMatrices | parts | Optim" begin include("by_parts.jl") end
+    semdiff = SemDiffNLopt
+    @testset "RAMMatrices | parts | NLopt" begin include("by_parts.jl") end
+end
+
 @testset "constraints | NLopt" begin include("constraints.jl") end
 
 ############################################################################################
@@ -113,6 +120,13 @@ semdiff = SemDiffOptim
 @testset "RAMMatrices → ParameterTable | constructor | Optim" begin include("constructor.jl") end
 semdiff = SemDiffNLopt
 @testset "RAMMatrices → ParameterTable | constructor | NLopt" begin include("constructor.jl") end
+
+if ENV["JULIA_EXTENDED_TESTS"] == "true"
+    semdiff = SemDiffOptim
+    @testset "RAMMatrices → ParameterTable | parts | Optim" begin include("by_parts.jl") end
+    semdiff = SemDiffNLopt
+    @testset "RAMMatrices → ParameterTable | parts | NLopt" begin include("by_parts.jl") end
+end
 
 ############################################################################################
 ### specification - Graph
@@ -190,3 +204,10 @@ semdiff = SemDiffOptim
 @testset "Graph → ParameterTable | constructor | Optim" begin include("constructor.jl") end
 semdiff = SemDiffNLopt
 @testset "Graph → ParameterTable | constructor | NLopt" begin include("constructor.jl") end
+
+if ENV["JULIA_EXTENDED_TESTS"] == "true"
+    semdiff = SemDiffOptim
+    @testset "Graph → ParameterTable | parts | Optim" begin include("by_parts.jl") end
+    semdiff = SemDiffNLopt
+    @testset "Graph → ParameterTable | parts | NLopt" begin include("by_parts.jl") end
+end

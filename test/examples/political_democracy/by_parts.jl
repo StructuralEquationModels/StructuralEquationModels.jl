@@ -2,7 +2,7 @@
 ### models w.o. meanstructure
 ############################################################################################
 
-# observed
+# observed ---------------------------------------------------------------------------------
 observed = SemObsCommon(specification = spec, data = dat)
 
 # imply
@@ -10,7 +10,7 @@ imply_ram = RAM(specification = spec)
 
 imply_ram_sym = RAMSymbolic(specification = spec)
 
-# loss functions
+# loss functions ---------------------------------------------------------------------------
 ml = SemML(observed = observed)
 
 wls = SemWLS(observed = observed)
@@ -19,27 +19,27 @@ ridge = SemRidge(α_ridge = .001, which_ridge = 16:20, n_par = 31)
 
 constant = SemConstant(constant_loss = 3.465)
 
-# loss
+# loss -------------------------------------------------------------------------------------
 loss_ml = SemLoss(ml)
 
 loss_wls = SemLoss(wls)
 
-# diff
-semdiff = semdiff()
+# diff -------------------------------------------------------------------------------------
+diff_obj = semdiff()
 
 # models -----------------------------------------------------------------------------------
 
-model_ml = Sem(observed, imply_ram, loss_ml, semdiff)
+model_ml = Sem(observed, imply_ram, loss_ml, diff_obj)
 
-model_ls_sym = Sem(observed, RAMSymbolic(specification = spec, vech = true), loss_wls, semdiff)
+model_ls_sym = Sem(observed, RAMSymbolic(specification = spec, vech = true), loss_wls, diff_obj)
 
-model_ml_sym = Sem(observed, imply_ram_sym, loss_ml, semdiff)
+model_ml_sym = Sem(observed, imply_ram_sym, loss_ml, diff_obj)
 
-model_ridge = Sem(observed, imply_ram, SemLoss(ml, ridge), semdiff)
+model_ridge = Sem(observed, imply_ram, SemLoss(ml, ridge), diff_obj)
 
-model_constant = Sem(observed, imply_ram, SemLoss(ml, constant), semdiff)
+model_constant = Sem(observed, imply_ram, SemLoss(ml, constant), diff_obj)
 
-model_ml_weighted = Sem(observed, imply_ram, SemLoss(ml; loss_weights = [n_obs(model_ml)]), semdiff)
+model_ml_weighted = Sem(observed, imply_ram, SemLoss(ml; loss_weights = [n_obs(model_ml)]), diff_obj)
 
 ############################################################################################
 ### test gradients
@@ -133,24 +133,22 @@ end
 if semdiff == SemDiffOptim
     using Optim, LineSearches
 
-    model_ls = Sem(
-        specification = spec,
-        data = dat,
-        imply = RAMSymbolic,
-        loss = SemWLS,
-        hessian = true,
+    diff_obj = SemDiffOptim(
         algorithm = Newton(
             ;linesearch = BackTracking(order=3), 
-            alphaguess = InitialHagerZhang())
+            alphaguess = InitialHagerZhang()
+        )
     )
 
-    model_ml = Sem(
-        specification = spec,
-        data = dat,
-        imply = RAMSymbolic,
-        hessian = true,
-        algorithm = Newton()
-    )
+    imply_sym_hessian_vech = RAMSymbolic(specification = spec, vech = true, hessian = true)
+    
+    imply_sym_hessian = RAMSymbolic(specification = spec, hessian = true)
+
+
+    model_ls = Sem(observed, imply_sym_hessian_vech, loss_wls, diff_obj)
+
+    model_ml = Sem(observed, imply_sym_hessian, loss_ml, SemDiffOptim(algorithm = Newton()))
+
 
     @testset "ml_hessians" begin
         @test test_hessian(model_ml, start_test; atol = 1e-4)
@@ -178,31 +176,37 @@ end
 ### meanstructure
 ############################################################################################
 
-# models
+# observed ---------------------------------------------------------------------------------
+observed = SemObsCommon(specification = spec_mean, data = dat, meanstructure = true)
+
+# imply
+imply_ram = RAM(specification = spec_mean, meanstructure = true)
+
+imply_ram_sym = RAMSymbolic(specification = spec_mean, meanstructure = true)
+
+# loss functions ---------------------------------------------------------------------------
+ml = SemML(observed = observed, meanstructure = true)
+
+wls = SemWLS(observed = observed, meanstructure = true)
+
+# loss -------------------------------------------------------------------------------------
+loss_ml = SemLoss(ml)
+
+loss_wls = SemLoss(wls)
+
+# diff -------------------------------------------------------------------------------------
+diff_obj = semdiff()
+
+# models -----------------------------------------------------------------------------------
+model_ml = Sem(observed, imply_ram, loss_ml, diff_obj)
+
 model_ls = Sem(
-    specification = spec_mean,
-    data = dat,
-    imply = RAMSymbolic,
-    loss = SemWLS,
-    meanstructure = true,
-    diff = semdiff
-)
+    observed, 
+    RAMSymbolic(specification = spec_mean, meanstructure = true, vech = true), 
+    loss_wls, 
+    diff_obj)
 
-model_ml = Sem(
-    specification = spec_mean,
-    data = dat,
-    meanstructure = true,
-    diff = semdiff
-)
-
-model_ml_sym = Sem(
-    specification = spec_mean,
-    data = dat,
-    imply = RAMSymbolic,
-    meanstructure = true,
-    start_val = start_test_mean,
-    diff = semdiff
-)
+model_ml_sym = Sem(observed, imply_ram_sym, loss_ml, diff_obj)
 
 ############################################################################################
 ### test gradients
@@ -268,26 +272,15 @@ end
 ### fiml
 ############################################################################################
 
-# models
-model_ml = Sem(
-    specification = spec_mean,
-    data = dat_missing,
-    observed = SemObsMissing,
-    loss = SemFIML,
-    diff = semdiff,
-    meanstructure = true
-)
+observed = SemObsMissing(specification = spec_mean, data = dat_missing)
 
-model_ml_sym = Sem(
-    specification = spec_mean,
-    data = dat_missing,
-    observed = SemObsMissing,
-    imply = RAMSymbolic,
-    loss = SemFIML,
-    start_val = start_test_mean,
-    diff = semdiff,
-    meanstructure = true
-)
+fiml = SemFIML(observed = observed, specification = spec_mean)
+
+loss_fiml = SemLoss(fiml)
+
+model_ml = Sem(observed, imply_ram, loss_fiml, diff_obj)
+
+model_ml_sym = Sem(observed, imply_ram_sym, loss_fiml, diff_obj)
 
 ############################################################################################
 ### test gradients

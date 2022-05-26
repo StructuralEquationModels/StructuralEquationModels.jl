@@ -39,7 +39,6 @@ Constructor for `SemObsMissing` objects.
 - `obs_cov(::SemObsMissing)` -> observed covariance per pattern
 - `em_model(::SemObsMissing)` -> `EmMVNModel` that contains the covariance matrix and mean vector found via optimization maximization
 """
-
 mutable struct SemObsMissing{
         A <: AbstractArray,
         D <: AbstractFloat,
