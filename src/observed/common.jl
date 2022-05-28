@@ -4,7 +4,7 @@ Subtype of `SemObs`, can handle observed data without missings or an observed co
 # Constructor
 
     SemObsCommon(;
-        specification = nothing,
+        specification,
         data = nothing,
         obs_cov = nothing,
         data_colnames = nothing,
@@ -15,7 +15,7 @@ Subtype of `SemObs`, can handle observed data without missings or an observed co
         kwargs...)
 
 # Arguments
-- `specification`: either a `RAMMatrices` or `ParameterTable` object
+- `specification`: either a `RAMMatrices` or `ParameterTable` object (1)
 - `data`: observed data
 - `obs_cov`: observed covariance matrix 
 - `data_colnames::Vector{Symbol}`: column names of the data (if the object passed as data does not have column names, i.e. is not a data frame) or covariance matrix
@@ -32,6 +32,11 @@ Subtype of `SemObs`, can handle observed data without missings or an observed co
 - `obs_cov(::SemObsCommon)` -> observed covariance matrix
 - `obs_mean(::SemObsCommon)` -> observed means
 - `data_rowwise(::SemObsCommon)` -> observed data, stored as vectors per observation
+
+# Extended help
+(1) the `specification` argument can also be `nothing`, but this turns of checking whether
+the observed data/covariance columns are in the correct order! As a result, you should only
+use this if you make shure your observed data is in the right format.
 """
 struct SemObsCommon{
         A <: Union{AbstractArray, Nothing},
@@ -49,7 +54,7 @@ struct SemObsCommon{
 end
 
 function SemObsCommon(;
-        specification = nothing,
+        specification,
         data = nothing,
         spec_colnames = nothing,
         obs_cov = nothing,
@@ -145,6 +150,9 @@ reorder_data(data::AbstractArray, spec_colnames, data_colnames::Nothing) =
     throw(ArgumentError("please provide column names via the `data_colnames = ...` argument."))
 
 function reorder_data(data::AbstractArray, spec_colnames, data_colnames)
+    if !(eltype(data_colnames) <: Symbol)
+        throw(ArgumentError("please specify `data_colnames` as a vector of Symbols"))
+    end
     if spec_colnames == data_colnames
         return data, nothing
     else
@@ -160,7 +168,7 @@ reorder_data(data::DataFrame, spec_colnames, data_colnames) =
 
 # reorder covariance matrices --------------------------------------------------------------
 reorder_obs_cov(obs_cov::AbstractArray, spec_colnames, data_colnames::Nothing) =
-    throw(ArgumentError("If an observed covariance is given, `data_colnames = ...` has to be specified."))
+    throw(ArgumentError("if an observed covariance is given, `data_colnames = ...` has to be specified."))
 
 function reorder_obs_cov(obs_cov::AbstractArray, spec_colnames, data_colnames)
     new_position = [findall(x .== data_colnames)[1] for x in spec_colnames]
