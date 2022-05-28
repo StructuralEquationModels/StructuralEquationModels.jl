@@ -11,9 +11,9 @@ end
 
 """
     SemObsMissing(;
+        specification,
         data,
         data_colnames = nothing,
-        specification = nothing,
         kwargs...)
 
 Constructor for `SemObsMissing` objects.
@@ -73,7 +73,7 @@ end
 
 function SemObsMissing(;
         data, 
-        specification = nothing, 
+        specification, 
         spec_colnames = nothing, 
         data_colnames = nothing, 
         kwargs...)
@@ -169,6 +169,6 @@ em_model(observed::SemObsMissing) = observed.em_model
 ### Additional functions
 ############################################################################################
 
-reorder_observed(data, spec_colnames::Nothing, data_colnames) = data, nothing
+reorder_observed(data, spec_colnames::Nothing, data_colnames) = Matrix(data), nothing
 reorder_observed(data, spec_colnames, data_colnames) = 
     reorder_data(data, spec_colnames, data_colnames)

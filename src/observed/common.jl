@@ -38,13 +38,7 @@ Subtype of `SemObs`, can handle observed data without missings or an observed co
 the observed data/covariance columns are in the correct order! As a result, you should only
 use this if you make shure your observed data is in the right format.
 """
-struct SemObsCommon{
-        A <: Union{AbstractArray, Nothing},
-        B <: AbstractArray,
-        C <: Union{AbstractArray, Nothing},
-        D <: AbstractFloat,
-        O <: Union{AbstractFloat, Nothing},
-        R <: Union{AbstractArray, Nothing}} <: SemObs
+struct SemObsCommon{A, B, C, D, O, R} <: SemObs
     data::A
     obs_cov::B
     obs_mean::C
@@ -135,9 +129,9 @@ reorder_observed(data::Nothing, obs_cov, spec_colnames, data_colnames) =
 reorder_observed(data, obs_cov::Nothing, spec_colnames, data_colnames) = 
     reorder_data(data, spec_colnames, data_colnames)
 reorder_observed(data::Nothing, obs_cov, spec_colnames::Nothing, data_colnames) = 
-    nothing, obs_cov
+    nothing, Matrix(obs_cov)
 reorder_observed(data, obs_cov::Nothing, spec_colnames::Nothing, data_colnames) = 
-    data, nothing
+    Matrix(data), nothing
 
 # too much or not enough data specified
 reorder_observed(data, obs_cov, spec_colnames, data_colnames) = 
@@ -154,7 +148,7 @@ function reorder_data(data::AbstractArray, spec_colnames, data_colnames)
         throw(ArgumentError("please specify `data_colnames` as a vector of Symbols"))
     end
     if spec_colnames == data_colnames
-        return data, nothing
+        return Matrix(data), nothing
     else
         new_position = [findall(x .== data_colnames)[1] for x in spec_colnames]
         data = Matrix(data[:, new_position])

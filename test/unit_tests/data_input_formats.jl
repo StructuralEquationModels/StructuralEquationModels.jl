@@ -1,5 +1,5 @@
 using StructuralEquationModels, Test, Statistics
-import StructuralEquationModels: obs_cov
+import StructuralEquationModels: obs_cov, get_data
 
 include(
     joinpath(chop(dirname(pathof(StructuralEquationModels)), tail = 3), 
@@ -42,14 +42,14 @@ spec = ParameterTable(
 ### data -----------------------------------------------------------------------------------
 
 dat = example_data("political_democracy")
-dat_missing = example_data("political_democracy_missing")
+dat_missing = example_data("political_democracy_missing")[:, names(dat)]
 
 dat_matrix = Matrix(dat)
 dat_missing_matrix = Matrix(dat_missing)
 
 dat_cov = Statistics.cov(dat_matrix)
 
-### models ---------------------------------------------------------------------------------
+### tests - SemObsCommon -------------------------------------------------------------------
 
 # test errors
 
@@ -97,19 +97,26 @@ observed_matrix = SemObsCommon(
 observed_cov = SemObsCommon(
     specification = spec,
     obs_cov = dat_cov,
-    data_colnames = Symbol.(names(dat))
+    data_colnames = Symbol.(names(dat)),
+    n_obs = 75.0
 )
 
-all_equal = (obs_cov(observed) == obs_cov(observed_nospec)) &
+all_equal_cov = (obs_cov(observed) == obs_cov(observed_nospec)) &
             (obs_cov(observed) == obs_cov(observed_matrix)) &
             (obs_cov(observed) == obs_cov(observed_cov))
 
-@testset "unit tests | observed | input formats" begin
-    @test all_equal
+all_equal_data = (get_data(observed) == get_data(observed_nospec)) &
+            (get_data(observed) == get_data(observed_matrix)) &
+            (get_data(observed) !== get_data(observed_cov))
+
+@testset "unit tests | SemObsCommon | input formats" begin
+    @test all_equal_cov
+    @test all_equal_data
+    @test n_obs(observed) == n_obs(observed_cov)
 end
 
-# shuffle variables
 
+# shuffle variables
 new_order = [3,2,7,8,5,6,9,11,1,10,4]
 
 shuffle_names = Symbol.(names(dat))[new_order]
@@ -137,32 +144,87 @@ observed_cov_shuffle = SemObsCommon(
     data_colnames = shuffle_names
 )
 
-all_equal = (obs_cov(observed) == obs_cov(observed_shuffle)) &
+all_equal_cov_suffled = (obs_cov(observed) == obs_cov(observed_shuffle)) &
             (obs_cov(observed) == obs_cov(observed_matrix_shuffle)) &
-            (obs_cov(observed) == obs_cov(observed_cov_shuffle))
+            (obs_cov(observed) ≈ obs_cov(observed_cov_shuffle))
 
+all_equal_data_suffled = (get_data(observed) == get_data(observed_shuffle)) &
+            (get_data(observed) == get_data(observed_matrix_shuffle)) &
+            (get_data(observed) !== get_data(observed_cov_shuffle))
 
+@testset "unit tests | SemObsCommon | input formats shuffled " begin
+    @test all_equal_cov_suffled
+    @test all_equal_data_suffled
+end
 
-# models
+### tests - SemObsMissing ------------------------------------------------------------------
 
-model_ml = Sem(
+# test errors
+
+@test_throws ArgumentError("please provide column names via the `data_colnames = ...` argument.") begin
+    SemObsMissing(specification = spec, data = dat_missing_matrix)
+end
+
+@test_throws ArgumentError("please specify `data_colnames` as a vector of Symbols") begin
+    SemObsMissing(specification = spec, data = dat_missing_matrix, data_colnames = names(dat))
+end
+
+@test_throws UndefKeywordError(:data) begin
+    SemObsMissing(specification = spec)
+end
+
+@test_throws UndefKeywordError SemObsMissing(data = dat_matrix)
+
+# should work
+observed = SemObsMissing(
     specification = spec,
-    data = dat
+    data = dat_missing
 )
 
-model_ml_nospec = Sem(
-    specification = spec,
-    observed = SemObsCommon(data = dat_matrix, specification = nothing)
+observed_nospec = SemObsMissing(
+    specification = nothing,
+    data = dat_missing
 )
 
-model_ml_matrix = Sem(
+observed_matrix = SemObsMissing(
     specification = spec, 
-    data = dat_matrix, 
+    data = dat_missing_matrix, 
     data_colnames = Symbol.(names(dat))
 )
 
-model_ml_cov = Sem(
+all_equal_missing = 
+    isequal(get_data(observed), get_data(observed_nospec)) &
+    isequal(get_data(observed), get_data(observed_matrix))
+
+@testset "unit tests | SemObsMissing | input formats" begin
+    @test all_equal_missing
+end
+
+# shuffle variables
+
+new_order = [3,2,7,8,5,6,9,11,1,10,4]
+
+shuffle_names = Symbol.(names(dat))[new_order]
+
+shuffle_dat = dat_missing[:, new_order]
+
+shuffle_dat_matrix = dat_missing_matrix[:, new_order]
+
+observed_shuffle = SemObsMissing(
     specification = spec,
-    obs_cov = dat_cov,
-    data_colnames = Symbol.(names(dat))
+    data = shuffle_dat
 )
+
+observed_matrix_shuffle = SemObsMissing(
+    specification = spec, 
+    data = shuffle_dat_matrix, 
+    data_colnames = shuffle_names
+)
+
+all_equal_suffled = 
+    isequal(get_data(observed), get_data(observed_shuffle)) &
+    isequal(get_data(observed), get_data(observed_matrix_shuffle))
+
+@testset "unit tests | SemObsMissing | input formats shuffled " begin
+    @test all_equal_suffled
+end
