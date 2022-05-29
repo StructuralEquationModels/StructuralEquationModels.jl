@@ -26,7 +26,9 @@ include("frontend/fit/summary.jl")
 # pretty printing
 include("frontend/pretty_printing.jl")
 # observed
-include("observed/common.jl")
+include("observed/get_colnames.jl")
+include("observed/covariance.jl")
+include("observed/data.jl")
 include("observed/missing.jl")
 include("observed/EM.jl")
 # constructor
@@ -92,7 +94,7 @@ export  AbstractSem,
         SemDiff, 
             SemDiffEmpty, SemDiffOptim, SemDiffNLopt, NLoptConstraint, diff,
         SemObs, 
-            SemObsCommon, SemObsMissing, observed,
+            SemObsData, SemObsCovariance, SemObsMissing, observed,
         sem_fit, 
         SemFit,
             minimum, solution,

@@ -13,7 +13,7 @@ start_val(model::Union{Sem, SemFiniteDiff, SemForwardDiff}; kwargs...) =
 # Fabin 3 starting values for RAM(Symbolic)
 start_val(
         model, 
-        observed::Union{SemObsCommon, SemObsMissing}, 
+        observed, 
         imply::Union{RAM, RAMSymbolic}, 
         diff, 
         args...; 

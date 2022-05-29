@@ -10,17 +10,16 @@ function start_fabin3(
         kwargs...)
 end
 
-# SemObsCommon
 function start_fabin3(
-        observed::SemObsCommon, 
+        observed, 
         imply::Union{RAM, RAMSymbolic}, 
         diff, 
         args...;
         kwargs...)
     return start_fabin3(
         imply.ram_matrices,
-        observed.obs_cov,
-        observed.obs_mean)
+        obs_cov(observed),
+        obs_mean(observed))
 end
 
 # SemObsMissing

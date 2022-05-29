@@ -83,7 +83,7 @@ abstract type SemImply end
 abstract type SemImplySymbolic <: SemImply end
 
 """
-    Sem(;observed = SemObsCommon, imply = RAM, loss = SemML, diff = SemDiffOptim, kwargs...)
+    Sem(;observed = SemObsData, imply = RAM, loss = SemML, diff = SemDiffOptim, kwargs...)
 
 Constructor for the basic `Sem` type.
 All additional kwargs are passed down to the constructors for the observed, imply, loss and diff fields.
@@ -111,7 +111,7 @@ end
 # automatic differentiation
 ############################################################################################
 """
-    SemFiniteDiff(;observed = SemObsCommon, imply = RAM, loss = SemML, diff = SemDiffOptim, has_gradient = false, kwargs...)
+    SemFiniteDiff(;observed = SemObsData, imply = RAM, loss = SemML, diff = SemDiffOptim, has_gradient = false, kwargs...)
 
 Constructor for `SemFiniteDiff`.
 All additional kwargs are passed down to the constructors for the observed, imply, loss and diff fields.
@@ -139,7 +139,7 @@ struct SemFiniteDiff{O <: SemObs, I <: SemImply, L <: SemLoss, D <: SemDiff, G} 
 end
 
 """
-    SemForwardDiff(;observed = SemObsCommon, imply = RAM, loss = SemML, diff = SemDiffOptim, has_gradient = false, kwargs...)
+    SemForwardDiff(;observed = SemObsData, imply = RAM, loss = SemML, diff = SemDiffOptim, has_gradient = false, kwargs...)
 
 Constructor for `SemForwardDiff`.
 All additional kwargs are passed down to the constructors for the observed, imply, loss and diff fields.

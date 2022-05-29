@@ -3,7 +3,7 @@
 ############################################################################################
 
 function Sem(;
-        observed::O = SemObsCommon,
+        observed::O = SemObsData,
         imply::I = RAM,
         loss::L = SemML,
         diff::D = SemDiffOptim,
@@ -21,7 +21,7 @@ function Sem(;
 end
 
 function SemFiniteDiff(;
-        observed::O = SemObsCommon,
+        observed::O = SemObsData,
         imply::I = RAM,
         loss::L = SemML,
         diff::D = SemDiffOptim,
@@ -40,7 +40,7 @@ function SemFiniteDiff(;
 end
 
 function SemForwardDiff(;
-        observed::O = SemObsCommon,
+        observed::O = SemObsData,
         imply::I = RAM,
         loss::L = SemML,
         diff::D = SemDiffOptim,
