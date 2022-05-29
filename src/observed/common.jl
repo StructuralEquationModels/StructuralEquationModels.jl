@@ -7,6 +7,7 @@ Subtype of `SemObs`, can handle observed data without missings or an observed co
         specification,
         data = nothing,
         obs_cov = nothing,
+        obs_mean = nothing,
         data_colnames = nothing,
         meanstructure = false,
         rowwise = false,
@@ -17,7 +18,8 @@ Subtype of `SemObs`, can handle observed data without missings or an observed co
 # Arguments
 - `specification`: either a `RAMMatrices` or `ParameterTable` object (1)
 - `data`: observed data
-- `obs_cov`: observed covariance matrix 
+- `obs_cov`: observed covariance matrix
+- `obs_mean`: observed mean vector
 - `data_colnames::Vector{Symbol}`: column names of the data (if the object passed as data does not have column names, i.e. is not a data frame) or covariance matrix
 - `meanstructure::Bool`: does the model have a meanstructure?
 - `rowwise::Bool`: should the data be stored also as vectors per observation
@@ -52,6 +54,7 @@ function SemObsCommon(;
         data = nothing,
         spec_colnames = nothing,
         obs_cov = nothing,
+        obs_mean = nothing,
         data_colnames = nothing,
         meanstructure = false,
         rowwise = false,
@@ -65,15 +68,26 @@ function SemObsCommon(;
 
     # if no cov. matrix was given, compute one
     if isnothing(obs_cov) obs_cov = Statistics.cov(data) end
-    isnothing(data) ? nothing : n_obs = convert(Float64, size(data, 1))
+
+    if !isnothing(data) n_obs = convert(Float64, size(data, 1)) end
+
     n_man = Float64(size(obs_cov, 1))
+
     # if a meanstructure is needed, compute observed means
-    meanstructure ? 
-        obs_mean = vcat(Statistics.mean(data, dims = 1)...) :
-        obs_mean = nothing
+    if meanstructure
+        if isnothing(obs_mean) & isnothing(data)
+            throw(ArgumentError("`meanstructure = true`, but no observed means were passed"))
+        elseif isnothing(obs_mean)
+            obs_mean = vcat(Statistics.mean(data, dims = 1)...)
+        else
+            obs_mean = reorder_mean(obs_mean, spec_colnames, data_colnames)
+        end
+    end
+
     rowwise ? 
         data_rowwise = [data[i, :] for i = 1:convert(Int64, n_obs)] :
         data_rowwise = nothing
+
     return SemObsCommon(data, obs_cov, obs_mean, n_man, n_obs, data_rowwise)
 end
 
@@ -170,3 +184,6 @@ function reorder_obs_cov(obs_cov::AbstractArray, spec_colnames, data_colnames)
     obs_cov = obs_cov[indices]
     return nothing, obs_cov
 end
+
+# reorder means ----------------------------------------------------------------------------
+reorder_mean(obs_mean, spec_colnames::Nothing, data_colnames)

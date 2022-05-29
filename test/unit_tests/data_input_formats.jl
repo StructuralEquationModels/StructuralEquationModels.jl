@@ -1,43 +1,16 @@
 using StructuralEquationModels, Test, Statistics
-import StructuralEquationModels: obs_cov, get_data
+import StructuralEquationModels: obs_cov, obs_mean, get_data
 
 include(
     joinpath(chop(dirname(pathof(StructuralEquationModels)), tail = 3), 
     "test/examples/helper.jl")
     )
 
-############################################################################################
-### without meanstructure
-############################################################################################
-
 ### model specification --------------------------------------------------------------------
 
-observed_vars = [:x1, :x2, :x3, :y1, :y2, :y3, :y4, :y5, :y6, :y7, :y8]
-latent_vars = [:ind60, :dem60, :dem65]
-
-graph = @StenoGraph begin
-    # loadings
-    ind60 → fixed(1)*x1 + x2 + x3
-    dem60 → fixed(1)*y1 + y2 + y3 + y4
-    dem65 → fixed(1)*y5 + y6 + y7 + y8
-    # latent regressions
-    label(:a)*dem60 ← ind60
-    dem65 ← dem60
-    dem65 ← ind60
-    # variances
-    _(observed_vars) ↔ _(observed_vars)
-    _(latent_vars) ↔ _(latent_vars)
-    # covariances
-    y1 ↔ y5
-    y2 ↔ y4 + y6
-    y3 ↔ y7
-    y8 ↔ y4 + y6
-end
-
-spec = ParameterTable(
-    latent_vars = latent_vars,
-    observed_vars = observed_vars,
-    graph = graph)
+spec = ParameterTable(nothing)
+spec.variables[:observed_vars] = [:x1, :x2, :x3, :y1, :y2, :y3, :y4, :y5, :y6, :y7, :y8]
+spec.variables[:latent_vars] = [:ind60, :dem60, :dem65]
 
 ### data -----------------------------------------------------------------------------------
 
@@ -48,10 +21,15 @@ dat_matrix = Matrix(dat)
 dat_missing_matrix = Matrix(dat_missing)
 
 dat_cov = Statistics.cov(dat_matrix)
+dat_mean = vcat(Statistics.mean(dat_matrix, dims = 1)...)
 
-### tests - SemObsCommon -------------------------------------------------------------------
+############################################################################################
+### tests - SemObsCommon
+############################################################################################
 
-# test errors
+# w.o. means -------------------------------------------------------------------------------
+
+# errors
 
 @test_throws ArgumentError("please provide column names via the `data_colnames = ...` argument.") begin
     SemObsCommon(specification = spec, data = dat_matrix)
@@ -157,7 +135,127 @@ all_equal_data_suffled = (get_data(observed) == get_data(observed_shuffle)) &
     @test all_equal_data_suffled
 end
 
-### tests - SemObsMissing ------------------------------------------------------------------
+# with means -------------------------------------------------------------------------------
+
+# errors
+
+@test_throws ArgumentError("please provide column names via the `data_colnames = ...` argument.") begin
+    SemObsCommon(specification = spec, data = dat_matrix, meanstructure = true)
+end
+
+@test_throws ArgumentError("if an observed covariance is given, `data_colnames = ...` has to be specified.") begin
+    SemObsCommon(specification = spec, obs_cov = dat_cov, meanstructure = true)
+end
+
+@test_throws ArgumentError("please specify `data_colnames` as a vector of Symbols") begin
+    SemObsCommon(specification = spec, data = dat_matrix, data_colnames = names(dat), meanstructure = true)
+end
+
+@test_throws ArgumentError("you specified neither an observed dataset nor an observed covariance matrix") begin
+    SemObsCommon(specification = spec, meanstructure = true)
+end
+
+@test_throws ArgumentError("you specified both an observed dataset and an observed covariance matrix") begin
+    SemObsCommon(specification = spec, data = dat_matrix, obs_cov = dat_cov, meanstructure = true)
+end
+
+@test_throws UndefKeywordError SemObsCommon(data = dat_matrix, meanstructure = true)
+
+@test_throws UndefKeywordError SemObsCommon(obs_cov = dat_cov, meanstructure = true)
+
+@test_throws ArgumentError("`meanstructure = true`, but no observed means were passed") begin
+    SemObsCommon(
+        specification = spec,
+        obs_cov = dat_cov,
+        data_colnames = Symbol.(names(dat)),
+        meanstructure = true
+    )
+end
+
+# should work
+observed = SemObsCommon(
+    specification = spec,
+    data = dat,
+    meanstructure = true
+)
+
+observed_nospec = SemObsCommon(
+    specification = nothing,
+    data = dat_matrix,
+    meanstructure = true
+)
+
+observed_matrix = SemObsCommon(
+    specification = spec, 
+    data = dat_matrix, 
+    data_colnames = Symbol.(names(dat)),
+    meanstructure = true
+)
+
+observed_cov = SemObsCommon(
+    specification = spec,
+    obs_cov = dat_cov,
+    obs_mean = dat_mean,
+    data_colnames = Symbol.(names(dat)),
+    n_obs = 75.0,
+    meanstructure = true
+)
+
+all_equal_mean = (obs_mean(observed) == obs_mean(observed_nospec)) &
+            (obs_mean(observed) == obs_mean(observed_matrix)) &
+            (obs_mean(observed) == obs_mean(observed_cov))
+
+
+@testset "unit tests | SemObsCommon | input formats - means" begin
+    @test all_equal_mean
+end
+
+# shuffle variables
+new_order = [3,2,7,8,5,6,9,11,1,10,4]
+
+shuffle_names = Symbol.(names(dat))[new_order]
+
+shuffle_dat = dat[:, new_order]
+
+shuffle_dat_matrix = dat_matrix[:, new_order]
+
+shuffle_dat_cov = Statistics.cov(shuffle_dat_matrix)
+shuffle_dat_mean = vcat(Statistics.mean(shuffle_dat_matrix, dims = 1)...)
+
+observed_shuffle = SemObsCommon(
+    specification = spec,
+    data = shuffle_dat,
+    meanstructure = true
+)
+
+observed_matrix_shuffle = SemObsCommon(
+    specification = spec, 
+    data = shuffle_dat_matrix, 
+    data_colnames = shuffle_names,
+    meanstructure = true
+)
+
+observed_cov_shuffle = SemObsCommon(
+    specification = spec,
+    obs_cov = shuffle_dat_cov,
+    obs_mean = shuffle_dat_mean,
+    data_colnames = shuffle_names,
+    meanstructure = true
+)
+
+all_equal_mean_suffled = (obs_mean(observed) == obs_mean(observed_shuffle)) &
+            (obs_mean(observed) == obs_mean(observed_matrix_shuffle)) &
+            (obs_mean(observed) == obs_mean(observed_cov_shuffle))
+
+
+@testset "unit tests | SemObsCommon | input formats shuffled - mean" begin
+    @test all_equal_cov_suffled
+    @test all_equal_data_suffled
+end
+
+############################################################################################
+### tests - SemObsMissing
+############################################################################################
 
 # test errors
 
