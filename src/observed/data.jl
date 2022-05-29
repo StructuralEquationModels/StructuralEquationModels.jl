@@ -17,7 +17,7 @@ For observed data without missings
 - `specification`: either a `RAMMatrices` or `ParameterTable` object (1)
 - `data`: observed data
 
-- `obs_colnames::Vector{Symbol}`: column names of the data (if the object passed as data does not have column names, i.e. is not a data frame) or covariance matrix
+- `obs_colnames::Vector{Symbol}`: column names of the data (if the object passed as data does not have column names, i.e. is not a data frame)
 - `spec_colnames::Vector{Symbol}`: overwrites column names of the specification object
 
 - `meanstructure::Bool`: does the model have a meanstructure?
@@ -141,11 +141,11 @@ data_rowwise(observed::SemObsData) = observed.data_rowwise
 ############################################################################################
 
 # reorder data -----------------------------------------------------------------------------
-function reorder_data(data::AbstractArray, spec_colnames, data_colnames)
-    if spec_colnames == data_colnames
+function reorder_data(data::AbstractArray, spec_colnames, obs_colnames)
+    if spec_colnames == obs_colnames
         return data
     else
-        new_position = [findall(x .== data_colnames)[1] for x in spec_colnames]
+        new_position = [findall(x .== obs_colnames)[1] for x in spec_colnames]
         data = data[:, new_position]
         return data
     end
