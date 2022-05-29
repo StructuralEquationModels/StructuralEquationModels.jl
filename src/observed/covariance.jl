@@ -49,27 +49,102 @@ struct SemObsCommon{A, B, C, D, O, R} <: SemObs
     data_rowwise::R
 end
 
+# error checks
+message_dataframe_and_colnames = 
+    
+
+function check_arguments_SemObsCommon(kwargs...)
+    # data is a data frame, 
+    if !isnothing(obs_colnames) & (data isa DataFrame)
+
+        throw(ArgumentError(
+            "You passed your data as a `DataFrame`, but also specified `obs_colnames`.
+            Please make shure the column names of your data frame indicate the correct variables
+            or pass your data in a different format.")
+            )
+
+    elseif !meanstructure & !isnothing(obs_mean)
+
+        throw(ArgumentError("observed means were passed, but `meanstructure = false`"))
+
+    elseif !isnothing(data) & !isnothing(obs_cov)
+
+        throw(ArgumentError(
+            "you specified both an observed dataset and an observed covariance matrix")
+        )
+
+    elseif isnothing(data) & isnothing(obs_cov)
+
+        throw(ArgumentError(
+            "you specified neither an observed dataset nor an observed covariance matrix")
+        )
+
+    elseif !isnothing(obs_cov) & isnothing(obs_colnames)
+
+        throw(ArgumentError(
+            "if an observed covariance is given, `obs_colnames = ...` has to be specified.")
+        )
+
+    elseif meanstructure
+        
+        if isnothing(obs_mean) & isnothing(data)
+
+            throw(ArgumentError("`meanstructure = true`, but no observed means were passed"))
+
+        elseif !isnothing(obs_mean) & isnothing(data)
+
+            throw(ArgumentError("both `obs_mean` and `data` were specified"))
+
+        end
+    end
+end
+
+
 function SemObsCommon(;
         specification,
         data = nothing,
         spec_colnames = nothing,
         obs_cov = nothing,
         obs_mean = nothing,
-        data_colnames = nothing,
+        obs_colnames = nothing,
         meanstructure = false,
         rowwise = false,
         n_obs = nothing,
         kwargs...)
 
-    # sort columns/rows
     if isnothing(spec_colnames) spec_colnames = get_colnames(specification) end
+
+    if !meanstructure
+
+        # data or covariance based?
+        if !isnothing(data) #data based
+            # if n_obs is not passed, compute it
+            if isnothing(n_obs) n_obs = convert(Float64, size(data, 1)) end
+
+            if isnothing(spec_colnames)
+                if data isa DataFrame
+                    data = Matrix(data)
+                end
+            else
+                if isnothing(obs_colnames)
+                    data = data[:, spec_colnames]
+                else
+                    # reorder data by obs_colnames
+                end
+            end
+
+        elseif !isnothing(obs_cov)
+            # reorder observed covariance matrix
+        end
+    else
+
+    end
 
     data, obs_cov = reorder_observed(data, obs_cov, spec_colnames, data_colnames)
 
     # if no cov. matrix was given, compute one
     if isnothing(obs_cov) obs_cov = Statistics.cov(data) end
 
-    if !isnothing(data) n_obs = convert(Float64, size(data, 1)) end
 
     n_man = Float64(size(obs_cov, 1))
 
