@@ -49,7 +49,7 @@ true_dist = MultivariateNormal(imply_ml.Σ)
 
 Random.seed!(1234)
 x = transpose(rand(true_dist, 100000))
-semobserved = SemObsCommon(data = x)
+semobserved = SemObsData(data = x, specification = nothing)
 
 loss_ml = SemLoss(SEM.SemML(;observed = semobserved, n_par = length(start)))
 
