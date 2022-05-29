@@ -78,18 +78,25 @@ function SemObsData(;
 
     if !isnothing(spec_colnames)
         if isnothing(obs_colnames)
-            data = data[:, spec_colnames]
+            try
+                data = data[:, spec_colnames]
+            catch
+                throw(ArgumentError(
+                    "Your `data` can not be indexed by symbols. "*
+                    "Maybe you forgot to provide column names via the `obs_colnames = ...` argument.")
+                    )
+            end
         else
             if data isa DataFrame
                 throw(ArgumentError(
-                    "You passed your data as a `DataFrame`, but also specified `obs_colnames`.
-                    Please make shure the column names of your data frame indicate the correct variables
-                    or pass your data in a different format.")
+                    "You passed your data as a `DataFrame`, but also specified `obs_colnames`. "*
+                    "Please make shure the column names of your data frame indicate the correct variables "*
+                    "or pass your data in a different format.")
                     )
             end
 
-            if !(eltype(data_colnames) <: Symbol)
-                throw(ArgumentError("please specify `data_colnames` as a vector of Symbols"))
+            if !(eltype(obs_colnames) <: Symbol)
+                throw(ArgumentError("please specify `obs_colnames` as a vector of Symbols"))
             end
 
             data = reorder_data(data, spec_colnames, obs_colnames)
@@ -109,6 +116,8 @@ function SemObsData(;
     # if a meanstructure is needed, compute observed means
     if meanstructure
         obs_mean = vcat(Statistics.mean(data, dims = 1)...)
+    else
+        obs_mean = nothing
     end
 
     if rowwise
