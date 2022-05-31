@@ -18,8 +18,7 @@ The rest of this page is about which 'Legos' are available for each part. The sp
 
 ## observed
 
-The `observed` part contains all necessary information about the observed data; for example the observed covariance matrix. Currently, we have two options: [`SemObsCommon`](@ref) and `SemObsMissing`. 
-As the names suggest, you want to use `SemObsMissing` if your data contains missing values, and `SemObsCommon` otherwise.
+The `observed` part contains all necessary information about the observed data. Currently, we have three options: [`SemObsData`](@ref) for fully observed datasets, [`SemObsCovariance`](@ref) for observed covariances (and means) and [`SemObsMissing`](@ref) for data that contains missing values.
 
 ## imply
 The imply part is what your model implies about the data, for example, the model-implied covariance matrix. 
@@ -39,5 +38,7 @@ The diff part of a model connects to the numerical optimization backend used to 
 
 ## API
 ```@docs
-SemObsCommon
+SemObsData
+SemObsCovariance
+SemObsMissing
 ```

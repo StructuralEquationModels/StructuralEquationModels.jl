@@ -6,7 +6,7 @@ As an example on how this works, we will build [A first model](@ref) in parts.
 
 First, we define the model just as usual:
 
-```@example swap_observed
+```@example build
 using StructuralEquationModels
 
 data = example_data("political_democracy")
@@ -46,9 +46,9 @@ partable = ParameterTable(
 
 Now, we construct the different parts:
 
-```@example swap_observed
+```@example build
 # observed ---------------------------------------------------------------------------------
-observed = SemObsCommon(specification = partable, data = data)
+observed = SemObsData(specification = partable, data = data)
 
 # imply ------------------------------------------------------------------------------------
 imply_ram = RAM(specification = partable)
@@ -68,6 +68,6 @@ model_ml = Sem(observed, imply_ram, loss_ml, diff_obj)
 
 Different models may need additional arguments:
 
-```@example swap_observed
+```@example build
 model_ml_fd = SemFiniteDiff(observed, imply_ram, loss_ml, diff_obj, Val(false))
 ```

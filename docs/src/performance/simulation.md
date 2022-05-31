@@ -77,7 +77,7 @@ For example,
 
 ```@example swap_observed
 
-new_observed = SemObsCommon(;data = data_2, specification = partable)
+new_observed = SemObsData(;data = data_2, specification = partable)
 
 my_diff = SemDiffOptim()
 
