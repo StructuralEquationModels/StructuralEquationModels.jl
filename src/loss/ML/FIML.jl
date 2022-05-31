@@ -2,16 +2,27 @@
 ### Types
 ############################################################################################
 """
+Full information maximum likelihood estimation. Can handle observed data with missings.
+
+# Constructor
+
     SemFIML(;observed, specification, kwargs...)
 
-Constructor for `SemFIML` objects.
-
 # Arguments
-- `observed`: the `SemObs` part of the model
+- `observed::SemObsMissing`: the observed part of the model
 - `specification`: either a `RAMMatrices` or `ParameterTable` object
 
+# Examples
+```julia
+my_fiml = SemFIML(observed = my_observed, specification = my_parameter_table)
+```
+
 # Interfaces
-Has an analytic gradient! method.
+Analytic gradients are available.
+
+# Extended help
+## Implementation
+Subtype of `SemLossFunction`.
 """
 mutable struct SemFIML{INV, C, L, O, M, IM, I, T, U, W} <: SemLossFunction
     inverses::INV #preallocated inverses of imp_cov

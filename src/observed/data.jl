@@ -1,31 +1,23 @@
 """
-For observed data without missings
+For observed data without missings.
 
 # Constructor
 
     SemObsData(;
         specification,
         data,
-        obs_colnames = nothing,
-        spec_colnames = nothing,
         meanstructure = false,
-        compute_covariance = true,
-        rowwise = false,
+        obs_colnames = nothing,
         kwargs...)
 
 # Arguments
 - `specification`: either a `RAMMatrices` or `ParameterTable` object (1)
 - `data`: observed data
-
-- `obs_colnames::Vector{Symbol}`: column names of the data (if the object passed as data does not have column names, i.e. is not a data frame)
-- `spec_colnames::Vector{Symbol}`: overwrites column names of the specification object
-
 - `meanstructure::Bool`: does the model have a meanstructure?
-- `compute_covariance::Bool`: should the covariance of `data` be computed and stored?
+- `obs_colnames::Vector{Symbol}`: column names of the data (if the object passed as data does not have column names, i.e. is not a data frame)
 
-- `rowwise::Bool`: should the data be stored also as vectors per observation
-
-# Interfaces
+# Extended help
+## Interfaces
 - `n_obs(::SemObsData)` -> number of observed data points
 - `n_man(::SemObsData)` -> number of manifest variables
 
@@ -34,13 +26,18 @@ For observed data without missings
 - `obs_mean(::SemObsData)` -> observed.obs_mean
 - `data_rowwise(::SemObsData)` -> observed data, stored as vectors per observation
 
-# Implementation
+## Implementation
 Subtype of `SemObs`
 
-# Extended help
+## Remarks
 (1) the `specification` argument can also be `nothing`, but this turns of checking whether
 the observed data/covariance columns are in the correct order! As a result, you should only
 use this if you are shure your observed data is in the right format.
+
+## Additional keyword arguments:
+- `spec_colnames::Vector{Symbol} = nothing`: overwrites column names of the specification object
+- `compute_covariance::Bool ) = true`: should the covariance of `data` be computed and stored?
+- `rowwise::Bool = false`: should the data be stored also as vectors per observation
 """
 struct SemObsData{A, B, C, D, O, R} <: SemObs
     data::A

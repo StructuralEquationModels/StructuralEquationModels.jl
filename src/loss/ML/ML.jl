@@ -4,20 +4,28 @@
 ### Types
 ############################################################################################
 """
+Maximum likelihood estimation.
+
+# Constructor
+
     SemML(;observed, meanstructure = false, approximate_hessian = false, kwargs...)
 
-Constructor for `SemML` objects.
-
 # Arguments
-- `observed`: the `SemObs` part of the model
+- `observed::SemObs`: the observed part of the model
 - `meanstructure::Bool`: does the model have a meanstructure?
 - `approximate_hessian::Bool`: if hessian-based optimization is used, should the hessian be swapped for an approximation
 
-# Interfaces
-Has analytic gradient! and for models without meanstructure also hessian! methods.
+# Examples
+```julia
+my_ml = SemML(observed = my_observed)
+```
 
-- `Σ⁻¹(::SemML)` -> inverse of the model implied covariance matrix
-- `Σ⁻¹Σₒ(::SemML)` -> product of the inverse of the model implied covariance matrix and the observed covariance matrix
+# Interfaces
+Analytic gradients are available, and for models without a meanstructure, also analytic hessians.
+
+# Extended help
+## Implementation
+Subtype of `SemLossFunction`.
 """
 struct SemML{INV,M,M2,B, V} <: SemLossFunction
     Σ⁻¹::INV 

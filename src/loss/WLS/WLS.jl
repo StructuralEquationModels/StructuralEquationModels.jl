@@ -4,14 +4,17 @@
 ### Types
 ############################################################################################
 """
-    SemWLS(;observed, 
+Weighted least squares estimation.
+
+# Constructor
+
+    SemWLS(;
+        observed,
         meanstructure = false, 
         wls_weight_matrix = nothing, 
         wls_weight_matrix_mean = nothing, 
         approximate_hessian = false, 
         kwargs...)
-
-Constructor for `SemWLS` objects.
 
 # Arguments
 - `observed`: the `SemObs` part of the model
@@ -23,8 +26,17 @@ Constructor for `SemWLS` objects.
 - `wls_weight_matrix_mean`: the weight matrix for the mean part of weighted least squares. 
     Defaults to GLS estimation (the inverse of the observed covariance matrix)
 
+# Examples
+```julia
+my_wls = SemWLS(observed = my_observed)
+```
+
 # Interfaces
-Has analytic gradient! and for models without meanstructure also hessian! methods.
+Analytic gradients are available, and for models without a meanstructure, also analytic hessians.
+
+# Extended help
+## Implementation
+Subtype of `SemLossFunction`.
 """
 struct SemWLS{Vt, St, B, C, B2} <: SemLossFunction
     V::Vt

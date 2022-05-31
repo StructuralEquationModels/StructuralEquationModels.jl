@@ -23,7 +23,12 @@ Subtype of `SemImply` that implements the RAM notation with symbolic precomputat
 - `vech::Bool`: should the half-vectorization of Σ be computed (instead of the full matrix)
     (automatically set to true if any of the loss functions is SemWLS)
 
-# Interfaces
+# Extended help
+
+## Implementation
+Subtype of `SemImply`.
+
+## Interfaces
 - `identifier(::RAMSymbolic) `-> Dict containing the parameter labels and their position
 - `n_par(::RAMSymbolic)` -> Number of parameters
 
@@ -47,7 +52,7 @@ and the relevant interfaces are omitted here.
 Additional interfaces
 - `has_meanstructure(::RAMSymbolic)` -> `Val{Bool}` does the model have a meanstructure?
 
-# Implementation
+## RAM notation
 The model implied covariance matrix is computed as
 ```math
     \Sigma = F(I-A)^{-1}S(I-A)^{-T}F^T

@@ -2,13 +2,14 @@
 ### Types
 ############################################################################################
 @doc raw"""
-Subtype of `SemImply` that implements the RAM notation.
+Model implied covariance and means via RAM notation.
 
 # Constructor
 
-    RAM(;specification,
-        gradient = true,
+    RAM(;
+        specification,
         meanstructure = false,
+        gradient = true,
         kwargs...)
 
 # Arguments
@@ -16,7 +17,23 @@ Subtype of `SemImply` that implements the RAM notation.
 - `meanstructure::Bool`: does the model have a meanstructure?
 - `gradient::Bool`: is gradient-based optimization used
 
-# Interfaces
+# Extended help
+
+## Implementation
+Subtype of `SemImply`.
+
+## RAM notation
+
+The model implied covariance matrix is computed as
+```math
+    \Sigma = F(I-A)^{-1}S(I-A)^{-T}F^T
+```
+and for models with a meanstructure, the model implied means are computed as
+```math
+    \mu = F(I-A)^{-1}M
+```
+
+## Interfaces
 - `identifier(::RAM) `-> Dict containing the parameter labels and their position
 - `n_par(::RAM)` -> Number of parameters
 
@@ -40,23 +57,13 @@ Vector of indices of each parameter in the respective RAM matrix:
 - `M_indices(::RAM)`
 
 Additional interfaces
-- `F⨉I_A⁻¹(::RAM)` -> ``F(I-A)⁻¹``
-- `F⨉I_A⁻¹S(::RAM)` -> ``F(I-A)⁻¹S``
+- `F⨉I_A⁻¹(::RAM)` -> ``F(I-A)^{-1}``
+- `F⨉I_A⁻¹S(::RAM)` -> ``F(I-A)^{-1}S``
 - `I_A(::RAM)` -> ``I-A``
 - `has_meanstructure(::RAM)` -> `Val{Bool}` does the model have a meanstructure?
 
 Only available in gradient! calls:
-- I_A⁻¹(::RAM) -> ``(I-A)⁻¹``
-
-# Implementation
-The model implied covariance matrix is computed as
-```math
-    \Sigma = F(I-A)^{-1}S(I-A)^{-T}F^T
-```
-and for models with a meanstructure, the model implied means are computed as
-```math
-    \mu = F(I-A)^{-1}M
-```
+- `I_A⁻¹(::RAM)` -> ``(I-A)^{-1}``
 """
 mutable struct RAM{A1, A2, A3, A4, A5, A6, V, V2, I1, I2, I3, M1, M2, M3, M4, S1, S2, S3, B, D} <: SemImply
     Σ::A1

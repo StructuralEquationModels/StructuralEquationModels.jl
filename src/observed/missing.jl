@@ -10,23 +10,23 @@ mutable struct EmMVNModel{A, b, B}
 end
 
 """
+For observed data with missing values.
+
+# Constructor
+
     SemObsMissing(;
         specification,
         data,
         obs_colnames = nothing,
-        spec_colnames = nothing,
         kwargs...)
-
-Constructor for `SemObsMissing` objects.
 
 # Arguments
 - `specification`: either a `RAMMatrices` or `ParameterTable` object (1)
 - `data`: observed data
-
 - `obs_colnames::Vector{Symbol}`: column names of the data (if the object passed as data does not have column names, i.e. is not a data frame)
-- `spec_colnames::Vector{Symbol}`: overwrites column names of the specification object
 
-# Interfaces
+# Extended help
+## Interfaces
 - `n_obs(::SemObsMissing)` -> number of observed data points
 - `n_man(::SemObsMissing)` -> number of manifest variables
 
@@ -42,13 +42,16 @@ Constructor for `SemObsMissing` objects.
 - `obs_cov(::SemObsMissing)` -> observed covariance per pattern
 - `em_model(::SemObsMissing)` -> `EmMVNModel` that contains the covariance matrix and mean vector found via optimization maximization
 
-# Implementation
+## Implementation
 Subtype of `SemObs`
 
-# Extended help
+## Remarks
 (1) the `specification` argument can also be `nothing`, but this turns of checking whether
 the observed data/covariance columns are in the correct order! As a result, you should only
 use this if you are shure your observed data is in the right format.
+
+## Additional keyword arguments:
+- `spec_colnames::Vector{Symbol} = nothing`: overwrites column names of the specification object
 """
 mutable struct SemObsMissing{
         A <: AbstractArray,

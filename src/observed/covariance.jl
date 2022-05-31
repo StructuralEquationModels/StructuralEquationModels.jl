@@ -20,24 +20,24 @@ For observed covariance matrices and means.
 - `obs_mean`: observed mean vector
 - `n_obs::Number`: number of observed data points (necessary for fit statistics)
 
-
-# Interfaces
+# Extended help
+## Interfaces
 - `n_obs(::SemObsCovariance)` -> number of observed data points
 - `n_man(::SemObsCovariance)` -> number of manifest variables
 
 - `obs_cov(::SemObsCovariance)` -> observed covariance matrix
 - `obs_mean(::SemObsCovariance)` -> observed means
 
-# Implementation
+## Implementation
 Subtype of `SemObs`
 
-# Extended help
+## Remarks
 (1) the `specification` argument can also be `nothing`, but this turns of checking whether
 the observed data/covariance columns are in the correct order! As a result, you should only
 use this if you are shure your covariance matrix is in the right format.
 
-Additional keyword arguments:
-- `spec_colnames::Vector{Symbol}`: overwrites column names of the specification object
+## Additional keyword arguments:
+- `spec_colnames::Vector{Symbol} = nothing`: overwrites column names of the specification object
 """
 struct SemObsCovariance{B, C, D, O} <: SemObs
     obs_cov::B

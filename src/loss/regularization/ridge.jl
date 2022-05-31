@@ -4,9 +4,11 @@
 ### Types
 ############################################################################################
 """
-    SemRidge(;α_ridge, which_ridge, n_par, parameter_type = Float64, imply = nothing, kwargs...)
+Ridge regularization.
 
-Constructor for `SemRidge` objects.
+# Constructor
+
+    SemRidge(;α_ridge, which_ridge, n_par, parameter_type = Float64, imply = nothing, kwargs...)
 
 # Arguments
 - `α_ridge`: hyperparameter for penalty term
@@ -15,10 +17,17 @@ Constructor for `SemRidge` objects.
 - `imply::SemImply`: imply part of the model
 - `parameter_type`: type of the parameters
 
-# Interfaces
-Has analytic gradient! and hessian! methods.
-
 # Examples
+```julia
+my_ridge = SemRidge(;α_ridge = 0.02, which_ridge = [:λ₁, :λ₂, :ω₂₃], n_par = 30, imply = my_imply)
+```
+
+# Interfaces
+Analytic gradients and hessians are available.
+
+# Extended help
+## Implementation
+Subtype of `SemLossFunction`.
 """
 struct SemRidge{P, W1, W2, GT, HT} <: SemLossFunction
     α::P
@@ -42,7 +51,11 @@ function SemRidge(;
         kwargs...)
 
     if eltype(which_ridge) <: Symbol
-        which_ridge = get_identifier_indices(which_ridge, imply)
+        if isnothing(imply)
+            throw(ArgumentError("When referring to parameters by label, `imply = ...` has to be specified"))
+        else
+            which_ridge = get_identifier_indices(which_ridge, imply)
+        end
     end
     which = [CartesianIndex(x) for x in which_ridge]
     which_H = [CartesianIndex(x, x) for x in which_ridge]

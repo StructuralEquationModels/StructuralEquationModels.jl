@@ -41,4 +41,8 @@ The diff part of a model connects to the numerical optimization backend used to 
 SemObsData
 SemObsCovariance
 SemObsMissing
+SemML
+SemFIML
+SemRidge
+RAM
 ```

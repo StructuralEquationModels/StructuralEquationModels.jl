@@ -4,17 +4,26 @@
 ### Types
 ############################################################################################
 """
-    SemConstant(;constant_loss, kwargs...)
+Constant loss term. Can be used for comparability to other packages.
 
-Constructor for `SemConstant` objects.
-Adds the constant `constant_loss` to the objective.
-Can be used for comparability to other packages for example.
+# Constructor
+
+    SemConstant(;constant_loss, kwargs...)
 
 # Arguments
 - `constant_loss::Number`: constant to add to the objective
 
+# Examples
+```julia
+    my_constant = SemConstant(constant_loss = 42.0)
+```
+
 # Interfaces
-Has analytic gradient! and hessian! methods.
+Analytic gradients and hessians are available.
+
+# Extended help
+## Implementation
+Subtype of `SemLossFunction`.
 """
 struct SemConstant{C} <: SemLossFunction 
     c::C
