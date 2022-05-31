@@ -1,4 +1,4 @@
-import Statistics: cov
+import Statistics: cov, mean
 
 ############################################################################################
 ### models w.o. meanstructure
@@ -13,7 +13,7 @@ model_ml = Sem(
 model_ml_cov = Sem(
     specification = spec,
     observed = SemObsCovariance,
-    obs_cov = Statistics.cov(Matrix(dat)),
+    obs_cov = cov(Matrix(dat)),
     obs_colnames = Symbol.(names(dat)),
     diff = semdiff
 )
@@ -214,8 +214,8 @@ model_ml = Sem(
 model_ml_cov = Sem(
     specification = spec,
     observed = SemObsCovariance,
-    obs_cov = Statistics.cov(Matrix(dat)),
-    obs_mean = vcat(Statistics.mean(Matrix(dat), dims = 1)...),
+    obs_cov = cov(Matrix(dat)),
+    obs_mean = vcat(mean(Matrix(dat), dims = 1)...),
     obs_colnames = Symbol.(names(dat)),
     meanstructure = true,
     diff = semdiff
