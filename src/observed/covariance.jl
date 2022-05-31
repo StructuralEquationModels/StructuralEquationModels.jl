@@ -30,10 +30,13 @@ Subtype of `SemObs`, can handle observed data without missings or an observed co
 - `obs_cov(::SemObsCovariance)` -> observed covariance matrix
 - `obs_mean(::SemObsCovariance)` -> observed means
 
+# Implementation
+Subtype of `SemObs`
+
 # Extended help
 (1) the `specification` argument can also be `nothing`, but this turns of checking whether
 the observed data/covariance columns are in the correct order! As a result, you should only
-use this if you make shure your covariance matrix is in the right format.
+use this if you are shure your covariance matrix is in the right format.
 """
 struct SemObsCovariance{B, C, D, O} <: SemObs
     obs_cov::B
@@ -73,13 +76,17 @@ function SemObsCovariance(;
 
         throw(ArgumentError("no `obs_colnames` were specified"))
 
+    elseif !isnothing(spec_colnames) & !(eltype(obs_colnames) <: Symbol)
+
+        throw(ArgumentError("please specify `obs_colnames` as a vector of Symbols"))
+
     end
 
     n_man = Float64(size(obs_cov, 1))
 
     if !isnothing(spec_colnames)
         obs_cov = reorder_obs_cov(obs_cov, spec_colnames, obs_colnames)
-        obs_mean = reorder_obs_mean(obs_cov, spec_colnames, obs_colnames)
+        obs_mean = reorder_obs_mean(obs_mean, spec_colnames, obs_colnames)
     end
 
     return SemObsCovariance(obs_cov, obs_mean, n_man, n_obs)

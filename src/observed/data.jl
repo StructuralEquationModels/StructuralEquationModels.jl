@@ -40,7 +40,7 @@ Subtype of `SemObs`
 # Extended help
 (1) the `specification` argument can also be `nothing`, but this turns of checking whether
 the observed data/covariance columns are in the correct order! As a result, you should only
-use this if you make shure your observed data is in the right format.
+use this if you are shure your observed data is in the right format.
 """
 struct SemObsData{A, B, C, D, O, R} <: SemObs
     data::A

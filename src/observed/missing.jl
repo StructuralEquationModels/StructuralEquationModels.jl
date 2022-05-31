@@ -13,15 +13,18 @@ end
     SemObsMissing(;
         specification,
         data,
-        data_colnames = nothing,
+        obs_colnames = nothing,
+        spec_colnames = nothing,
         kwargs...)
 
 Constructor for `SemObsMissing` objects.
 
 # Arguments
+- `specification`: either a `RAMMatrices` or `ParameterTable` object (1)
 - `data`: observed data
-- `data_colnames::Vector{Symbol}`: column names of the data (if the object passed as data does not have column names, i.e. is not a data frame) or covariance matrix
-- `specification`: either a `RAMMatrices` or `ParameterTable` object
+
+- `obs_colnames::Vector{Symbol}`: column names of the data (if the object passed as data does not have column names, i.e. is not a data frame)
+- `spec_colnames::Vector{Symbol}`: overwrites column names of the specification object
 
 # Interfaces
 - `n_obs(::SemObsMissing)` -> number of observed data points
@@ -38,6 +41,14 @@ Constructor for `SemObsMissing` objects.
 - `obs_mean(::SemObsMissing)` -> observed mean per pattern
 - `obs_cov(::SemObsMissing)` -> observed covariance per pattern
 - `em_model(::SemObsMissing)` -> `EmMVNModel` that contains the covariance matrix and mean vector found via optimization maximization
+
+# Implementation
+Subtype of `SemObs`
+
+# Extended help
+(1) the `specification` argument can also be `nothing`, but this turns of checking whether
+the observed data/covariance columns are in the correct order! As a result, you should only
+use this if you are shure your observed data is in the right format.
 """
 mutable struct SemObsMissing{
         A <: AbstractArray,
@@ -72,14 +83,46 @@ end
 ############################################################################################
 
 function SemObsMissing(;
-        data, 
-        specification, 
-        spec_colnames = nothing, 
-        data_colnames = nothing, 
+        specification,
+        data,
+
+        obs_colnames = nothing,
+        spec_colnames = nothing,
+
         kwargs...)
 
     if isnothing(spec_colnames) spec_colnames = get_colnames(specification) end
-    data, _ = reorder_observed(data, spec_colnames, data_colnames)
+
+    if !isnothing(spec_colnames)
+        if isnothing(obs_colnames)
+            try
+                data = data[:, spec_colnames]
+            catch
+                throw(ArgumentError(
+                    "Your `data` can not be indexed by symbols. "*
+                    "Maybe you forgot to provide column names via the `obs_colnames = ...` argument.")
+                    )
+            end
+        else
+            if data isa DataFrame
+                throw(ArgumentError(
+                    "You passed your data as a `DataFrame`, but also specified `obs_colnames`. "*
+                    "Please make shure the column names of your data frame indicate the correct variables "*
+                    "or pass your data in a different format.")
+                    )
+            end
+
+            if !(eltype(obs_colnames) <: Symbol)
+                throw(ArgumentError("please specify `obs_colnames` as a vector of Symbols"))
+            end
+
+            data = reorder_data(data, spec_colnames, obs_colnames)
+        end
+    end
+
+    if data isa DataFrame
+        data = Matrix(data)
+    end
 
     # remove persons with only missings
     keep = Vector{Int64}()
@@ -164,11 +207,3 @@ pattern_nvar_obs(observed::SemObsMissing) = observed.pattern_nvar_obs
 obs_mean(observed::SemObsMissing) = observed.obs_mean
 obs_cov(observed::SemObsMissing) = observed.obs_cov
 em_model(observed::SemObsMissing) = observed.em_model
-
-############################################################################################
-### Additional functions
-############################################################################################
-
-reorder_observed(data, spec_colnames::Nothing, data_colnames) = Matrix(data), nothing
-reorder_observed(data, spec_colnames, data_colnames) = 
-    reorder_data(data, spec_colnames, data_colnames)
