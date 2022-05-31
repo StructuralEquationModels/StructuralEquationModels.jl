@@ -1,3 +1,5 @@
+import Statistics: cov
+
 ############################################################################################
 ### models w.o. meanstructure
 ############################################################################################
@@ -5,6 +7,14 @@
 model_ml = Sem(
     specification = spec,
     data = dat,
+    diff = semdiff
+)
+
+model_ml_cov = Sem(
+    specification = spec,
+    observed = SemObsCovariance,
+    obs_cov = Statistics.cov(Matrix(dat)),
+    obs_colnames = Symbol.(names(dat)),
     diff = semdiff
 )
 
@@ -51,8 +61,8 @@ model_ml_weighted = Sem(
 ### test gradients
 ############################################################################################
 
-models = [model_ml, model_ls_sym, model_ridge, model_constant, model_ml_sym, model_ml_weighted]
-names = ["ml", "ls_sym", "ridge", "constant", "ml_sym", "ml_weighted"]
+models = [model_ml, model_ml_cov, model_ls_sym, model_ridge, model_constant, model_ml_sym, model_ml_weighted]
+names = ["ml", "ml_cov", "ls_sym", "ridge", "constant", "ml_sym", "ml_weighted"]
 
 for (model, name) in zip(models, names)
     try
@@ -67,8 +77,8 @@ end
 ### test solution
 ############################################################################################
 
-models = [model_ml, model_ls_sym, model_ml_sym, model_constant]
-names = ["ml", "ls_sym", "ml_sym", "constant"]
+models = [model_ml, model_ml_cov, model_ls_sym, model_ml_sym, model_constant]
+names = ["ml", "ml_cov", "ls_sym", "ml_sym", "constant"]
 solution_names = Symbol.("parameter_estimates_".*["ml", "ls", "ml", "ml"])
 
 for (model, name, solution_name) in zip(models, names, solution_names)
@@ -201,6 +211,16 @@ model_ml = Sem(
     diff = semdiff
 )
 
+model_ml_cov = Sem(
+    specification = spec,
+    observed = SemObsCovariance,
+    obs_cov = Statistics.cov(Matrix(dat)),
+    obs_mean = vcat(Statistics.mean(Matrix(dat), dims = 1)...),
+    obs_colnames = Symbol.(names(dat)),
+    meanstructure = true,
+    diff = semdiff
+)
+
 model_ml_sym = Sem(
     specification = spec_mean,
     data = dat,
@@ -214,8 +234,8 @@ model_ml_sym = Sem(
 ### test gradients
 ############################################################################################
 
-models = [model_ml, model_ls, model_ml_sym]
-names = ["ml", "ls_sym", "ml_sym"]
+models = [model_ml, model_ml_cov, model_ls, model_ml_sym]
+names = ["ml", "ml_cov", "ls_sym", "ml_sym"]
 
 for (model, name) in zip(models, names)
     try
