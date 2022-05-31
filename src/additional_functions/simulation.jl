@@ -1,8 +1,9 @@
 """
-    swap_observed(model::AbstractSemSingle; kwargs...)
-    swap_observed(model::AbstractSemSingle, observed; kwargs...)
+    (1) swap_observed(model::AbstractSemSingle; kwargs...)
 
-Update observed part of the model. Returns a new model.
+    (2) swap_observed(model::AbstractSemSingle, observed; kwargs...)
+
+Return a new model with swaped observed part.
 
 # Arguments
 - `model::AbstractSemSingle`: optimization algorithm.
@@ -10,17 +11,21 @@ Update observed part of the model. Returns a new model.
 - `observed`: Either an object of subtype of `SemObs` or a subtype of `SemObs`
 
 # Examples
+See the online documentation on [Update observed data](@ref).
 """
 function swap_observed end
 
 """
     update_observed(to_update, observed::SemObs; kwargs...)
 
-Update a `SemImply`, `SemLossFunction` or `SemDiff` object to use a new `SemObs` object
-with your model.
+Update a `SemImply`, `SemLossFunction` or `SemDiff` object to use a `SemObs` object.
 
+# Examples
+See the online documentation on [Update observed data](@ref).
+
+# Implementation
 You can provide a method for this function when defining a new type, for more information
-on this see the online developer documentation.
+on this see the online [Developer documentation](@ref).
 """
 function update_observed end
 

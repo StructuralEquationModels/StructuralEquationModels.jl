@@ -1,3 +1,10 @@
+"""
+    start_parameter_table(model; parameter_table)
+    
+Return a vector of starting values taken from `parameter_table`.
+"""
+function start_parameter_table end
+
 # splice model and loss functions
 function start_parameter_table(model::Union{Sem, SemForwardDiff, SemFiniteDiff}; kwargs...)
     return start_parameter_table(
@@ -34,13 +41,3 @@ function start_parameter_table(ram_matrices::RAMMatrices; parameter_table::Param
     return start_val
 
 end
-
-############################################################################################
-# docs
-############################################################################################
-"""
-    start_parameter_table(model; parameter_table)
-    
-Returns a vector of starting values taken from `parameter_table`.
-"""
-function start_partable end

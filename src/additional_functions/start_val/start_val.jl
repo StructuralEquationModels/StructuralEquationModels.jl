@@ -1,3 +1,11 @@
+"""
+    start_val(model)
+    
+Return a vector of starting values.
+Defaults are FABIN 3 starting values for single models and simple starting values for
+ensemble models.
+"""
+function start_val end
 # Single Models ----------------------------------------------------------------------------
 
 # splice model and loss functions
@@ -22,15 +30,3 @@ start_val(
 
 # Ensemble Models --------------------------------------------------------------------------
 start_val(model::SemEnsemble; kwargs...) = start_simple(model; kwargs...)
-
-############################################################################################
-# docs
-############################################################################################
-"""
-    start_val(model)
-    
-Returns a vector of starting values.
-Default to FABIN 3 starting values for single models and simple starting values for
-ensemble models.
-"""
-function start_val end

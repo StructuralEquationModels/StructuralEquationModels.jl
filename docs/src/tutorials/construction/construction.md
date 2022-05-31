@@ -45,4 +45,6 @@ SemML
 SemFIML
 SemRidge
 RAM
+ParameterTable
+EnsembleParameterTable
 ```

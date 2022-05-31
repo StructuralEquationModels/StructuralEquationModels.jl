@@ -48,5 +48,10 @@ Returns the indices of `parameters`.
 - `model`: either a SEM or a fitted SEM
 
 # Examples
+```julia
+parameter_indices = get_identifier_indices([:λ₁, λ₂], my_fitted_sem)
+
+values = solution(my_fitted_sem)[parameter_indices]
+```
 """
 function get_identifier_indices end

@@ -216,23 +216,17 @@ function sort_partially(sorted, to_sort)
 end
 
 """
-    sem_summary(
-        sem_fit::SemFit; 
-        show_fitmeasures = false, 
-        color = :light_cyan, 
-        digits = 2)
+    (1) sem_summary(sem_fit::SemFit; show_fitmeasures = false)
 
-    sem_summary(
-        partable::AbstractParameterTable; 
-        color = :light_cyan, 
-        secondary_color = :light_yellow, 
-        digits = 2, 
-        show_variables = true)
+    (2) sem_summary(partable::AbstractParameterTable)
 
-Print information about a fitted SEM or a parameter table to stdout.
+Print information about (1) a fitted SEM or (2) a parameter table to stdout.
 
-# Arguments
-- `color`: color of some parts of the printed output. Can be adjusted for readability.
-- `digits`: controls precision of printed estimates, standard errors, etc.
+# Extended help
+## Addition keyword arguments
+- `digits = 2`: controls precision of printed estimates, standard errors, etc.
+- `color = :light_cyan`: color of some parts of the printed output. Can be adjusted for readability.
+- `secondary_color = :light_yellow`
+- `show_variables = true`
 """
 function sem_summary end

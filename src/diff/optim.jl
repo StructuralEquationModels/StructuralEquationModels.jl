@@ -2,7 +2,7 @@
 ### Types and Constructor
 ############################################################################################
 """
-Subtype of `SemDiff` that connects to `Optim.jl` as the optimization backend.
+Connects to `Optim.jl` as the optimization backend.
 
 # Constructor
 
@@ -19,11 +19,30 @@ Subtype of `SemDiff` that connects to `Optim.jl` as the optimization backend.
 All algorithms and options from the Optim.jl library are available, for more information see 
 the Optim.jl online documentation.
 
-# Interfaces
-- `algorithm(diff::SemDiffOptim)`
-- `options(diff::SemDiffOptim)`
-
 # Examples
+```julia
+my_diff = SemDiffOptim()
+
+# hessian based optimization with backtracking linesearch and modified initial step size
+using Optim, LineSearches
+
+my_newton_diff = SemDiffOptim(
+    algorithm = Newton(
+        ;linesearch = BackTracking(order=3), 
+        alphaguess = InitialHagerZhang()
+    )
+)
+```
+
+# Extended help
+
+## Interfaces
+- `algorithm(::SemDiffOptim)`
+- `options(::SemDiffOptim)`
+
+## Implementation
+
+Subtype of `SemDiff`.
 """
 mutable struct SemDiffOptim{A, B} <: SemDiff
     algorithm::A

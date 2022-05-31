@@ -9,7 +9,8 @@ makedocs(
             "Model Specification" => [
                 "tutorials/specification/specification.md",
                 "tutorials/specification/graph_interface.md",
-                "tutorials/specification/ram_matrices.md"],
+                "tutorials/specification/ram_matrices.md",
+                "tutorials/specification/parameter_table.md"],
             "Model Construction" => [
                 "tutorials/construction/construction.md",
                 "tutorials/construction/outer_constructor.md",
