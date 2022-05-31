@@ -15,7 +15,8 @@ model_ml_cov = Sem(
     observed = SemObsCovariance,
     obs_cov = cov(Matrix(dat)),
     obs_colnames = Symbol.(names(dat)),
-    diff = semdiff
+    diff = semdiff,
+    n_obs = 75.0
 )
 
 model_ls_sym = Sem(
@@ -218,7 +219,8 @@ model_ml_cov = Sem(
     obs_mean = vcat(mean(Matrix(dat), dims = 1)...),
     obs_colnames = Symbol.(names(dat)),
     meanstructure = true,
-    diff = semdiff
+    diff = semdiff,
+    n_obs = 75.0
 )
 
 model_ml_sym = Sem(
