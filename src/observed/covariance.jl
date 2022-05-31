@@ -1,5 +1,5 @@
 """
-Subtype of `SemObs`, can handle observed data without missings or an observed covariance matrix
+For observed covariance matrices and means.
 
 # Constructor
 
@@ -9,7 +9,6 @@ Subtype of `SemObs`, can handle observed data without missings or an observed co
         obs_colnames = nothing,
         meanstructure = false,
         obs_mean = nothing,
-        spec_colnames = nothing,
         n_obs = nothing,
         kwargs...)
 
@@ -19,7 +18,6 @@ Subtype of `SemObs`, can handle observed data without missings or an observed co
 - `obs_colnames::Vector{Symbol}`: column names of the covariance matrix
 - `meanstructure::Bool`: does the model have a meanstructure?
 - `obs_mean`: observed mean vector
-- `spec_colnames::Vector{Symbol}`: overwrites column names of the specification object
 - `n_obs::Number`: number of observed data points (necessary for fit statistics)
 
 
@@ -37,6 +35,9 @@ Subtype of `SemObs`
 (1) the `specification` argument can also be `nothing`, but this turns of checking whether
 the observed data/covariance columns are in the correct order! As a result, you should only
 use this if you are shure your covariance matrix is in the right format.
+
+Additional keyword arguments:
+- `spec_colnames::Vector{Symbol}`: overwrites column names of the specification object
 """
 struct SemObsCovariance{B, C, D, O} <: SemObs
     obs_cov::B
@@ -44,7 +45,7 @@ struct SemObsCovariance{B, C, D, O} <: SemObs
     n_man::D
     n_obs::O
 end
-
+using StructuralEquationModels
 function SemObsCovariance(;
         specification,
         obs_cov,
