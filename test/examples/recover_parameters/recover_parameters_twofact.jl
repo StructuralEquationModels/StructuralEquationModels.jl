@@ -49,12 +49,12 @@ true_dist = MultivariateNormal(imply_ml.Σ)
 
 Random.seed!(1234)
 x = transpose(rand(true_dist, 100000))
-semobserved = SemObsData(data = x, specification = nothing)
+semobserved = SemObservedData(data = x, specification = nothing)
 
 loss_ml = SemLoss(SEM.SemML(;observed = semobserved, n_par = length(start)))
 
 diff = 
-    SemDiffOptim(
+    SemOptimizerOptim(
         BFGS(;linesearch = BackTracking(order=3), alphaguess = InitialHagerZhang()),# m = 100), 
         Optim.Options(
             ;f_tol = 1e-10, 

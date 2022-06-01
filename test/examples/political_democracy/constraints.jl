@@ -20,7 +20,7 @@ function ineq_constraint(x, grad)
     0.6 - x[30]*x[31]
 end
 
-constrained_diff = SemDiffNLopt(;
+constrained_diff = SemOptimizerNLopt(;
     algorithm = :AUGLAG,
     local_algorithm = :LD_LBFGS,
     local_options = Dict(
@@ -43,7 +43,7 @@ solution_constrained = sem_fit(model_ml_constrained)
 model_ml_maxeval = Sem(
     specification = spec,
     data = dat,
-    diff = SemDiffNLopt,
+    diff = SemOptimizerNLopt,
     options = Dict(:maxeval => 10)
 )
 

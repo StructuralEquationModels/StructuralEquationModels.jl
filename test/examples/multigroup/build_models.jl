@@ -159,21 +159,21 @@ if !isnothing(specification_miss_g1)
 
 model_g1 = Sem(
     specification = specification_miss_g1,
-    observed = SemObsMissing,
+    observed = SemObservedMissing,
     loss = SemFIML,
     data = dat_miss_g1,
     imply = RAM,
-    diff = SemDiffEmpty(),
+    diff = SemOptimizerEmpty(),
     meanstructure = true
 )
 
 model_g2 = Sem(
     specification = specification_miss_g2,
-    observed = SemObsMissing,
+    observed = SemObservedMissing,
     loss = SemFIML,
     data = dat_miss_g2,
     imply = RAM,
-    diff = SemDiffEmpty(),
+    diff = SemOptimizerEmpty(),
     meanstructure = true
 )
 

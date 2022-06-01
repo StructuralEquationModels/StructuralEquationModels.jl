@@ -12,7 +12,7 @@ model_ml = Sem(
 
 model_ml_cov = Sem(
     specification = spec,
-    observed = SemObsCovariance,
+    observed = SemObservedCovariance,
     obs_cov = cov(Matrix(dat)),
     obs_colnames = Symbol.(names(dat)),
     diff = semdiff,
@@ -147,7 +147,7 @@ end
 ### test hessians
 ############################################################################################
 
-if semdiff == SemDiffOptim
+if semdiff == SemOptimizerOptim
     using Optim, LineSearches
 
     model_ls = Sem(
@@ -214,7 +214,7 @@ model_ml = Sem(
 
 model_ml_cov = Sem(
     specification = spec_mean,
-    observed = SemObsCovariance,
+    observed = SemObservedCovariance,
     obs_cov = cov(Matrix(dat)),
     obs_mean = vcat(mean(Matrix(dat), dims = 1)...),
     obs_colnames = Symbol.(names(dat)),
@@ -300,7 +300,7 @@ end
 model_ml = Sem(
     specification = spec_mean,
     data = dat_missing,
-    observed = SemObsMissing,
+    observed = SemObservedMissing,
     loss = SemFIML,
     diff = semdiff,
     meanstructure = true
@@ -309,7 +309,7 @@ model_ml = Sem(
 model_ml_sym = Sem(
     specification = spec_mean,
     data = dat_missing,
-    observed = SemObsMissing,
+    observed = SemObservedMissing,
     imply = RAMSymbolic,
     loss = SemFIML,
     start_val = start_test_mean,

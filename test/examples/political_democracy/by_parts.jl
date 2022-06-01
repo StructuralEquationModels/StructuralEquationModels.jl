@@ -3,7 +3,7 @@
 ############################################################################################
 
 # observed ---------------------------------------------------------------------------------
-observed = SemObsCommon(specification = spec, data = dat)
+observed = SemObservedData(specification = spec, data = dat)
 
 # imply
 imply_ram = RAM(specification = spec)
@@ -130,10 +130,10 @@ end
 ### test hessians
 ############################################################################################
 
-if semdiff == SemDiffOptim
+if semdiff == SemOptimizerOptim
     using Optim, LineSearches
 
-    diff_obj = SemDiffOptim(
+    diff_obj = SemOptimizerOptim(
         algorithm = Newton(
             ;linesearch = BackTracking(order=3), 
             alphaguess = InitialHagerZhang()
@@ -147,7 +147,7 @@ if semdiff == SemDiffOptim
 
     model_ls = Sem(observed, imply_sym_hessian_vech, loss_wls, diff_obj)
 
-    model_ml = Sem(observed, imply_sym_hessian, loss_ml, SemDiffOptim(algorithm = Newton()))
+    model_ml = Sem(observed, imply_sym_hessian, loss_ml, SemOptimizerOptim(algorithm = Newton()))
 
 
     @testset "ml_hessians" begin
@@ -177,7 +177,7 @@ end
 ############################################################################################
 
 # observed ---------------------------------------------------------------------------------
-observed = SemObsCommon(specification = spec_mean, data = dat, meanstructure = true)
+observed = SemObservedData(specification = spec_mean, data = dat, meanstructure = true)
 
 # imply
 imply_ram = RAM(specification = spec_mean, meanstructure = true)
@@ -272,7 +272,7 @@ end
 ### fiml
 ############################################################################################
 
-observed = SemObsMissing(specification = spec_mean, data = dat_missing)
+observed = SemObservedMissing(specification = spec_mean, data = dat_missing)
 
 fiml = SemFIML(observed = observed, specification = spec_mean)
 
