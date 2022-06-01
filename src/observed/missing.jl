@@ -138,8 +138,7 @@ function SemObsMissing(;
 
 
 
-    n_obs = size(data, 1)
-    n_man = size(data, 2)
+    n_obs, n_man = size(data)
 
     # compute and store the different missing patterns with their rowindices
     missings = ismissing.(data)

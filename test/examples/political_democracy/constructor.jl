@@ -213,7 +213,7 @@ model_ml = Sem(
 )
 
 model_ml_cov = Sem(
-    specification = spec,
+    specification = spec_mean,
     observed = SemObsCovariance,
     obs_cov = cov(Matrix(dat)),
     obs_mean = vcat(mean(Matrix(dat), dims = 1)...),

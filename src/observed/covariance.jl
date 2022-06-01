@@ -83,12 +83,12 @@ function SemObsCovariance(;
 
     end
 
-    n_man = Float64(size(obs_cov, 1))
-
     if !isnothing(spec_colnames)
         obs_cov = reorder_obs_cov(obs_cov, spec_colnames, obs_colnames)
         obs_mean = reorder_obs_mean(obs_mean, spec_colnames, obs_colnames)
     end
+
+    n_man = Float64(size(obs_cov, 1))
 
     return SemObsCovariance(obs_cov, obs_mean, n_man, n_obs)
 end
