@@ -46,9 +46,9 @@ model_ml_weighted = Sem(observed, imply_ram, SemLoss(ml; loss_weights = [n_obs(m
 ############################################################################################
 
 models = [model_ml, model_ls_sym, model_ridge, model_constant, model_ml_sym, model_ml_weighted]
-names = ["ml", "ls_sym", "ridge", "constant", "ml_sym", "ml_weighted"]
+model_names = ["ml", "ls_sym", "ridge", "constant", "ml_sym", "ml_weighted"]
 
-for (model, name) in zip(models, names)
+for (model, name) in zip(models, model_names)
     try
         @testset "$(name)_gradient" begin
             @test test_gradient(model, start_test; rtol = 1e-9)
@@ -62,10 +62,10 @@ end
 ############################################################################################
 
 models = [model_ml, model_ls_sym, model_ml_sym, model_constant]
-names = ["ml", "ls_sym", "ml_sym", "constant"]
+model_names = ["ml", "ls_sym", "ml_sym", "constant"]
 solution_names = Symbol.("parameter_estimates_".*["ml", "ls", "ml", "ml"])
 
-for (model, name, solution_name) in zip(models, names, solution_names)
+for (model, name, solution_name) in zip(models, model_names, solution_names)
     try
         @testset "$(name)_solution" begin
             solution = sem_fit(model)
@@ -213,9 +213,9 @@ model_ml_sym = Sem(observed, imply_ram_sym, loss_ml, diff_obj)
 ############################################################################################
 
 models = [model_ml, model_ls, model_ml_sym]
-names = ["ml", "ls_sym", "ml_sym"]
+model_names = ["ml", "ls_sym", "ml_sym"]
 
-for (model, name) in zip(models, names)
+for (model, name) in zip(models, model_names)
     try
         @testset "$(name)_gradient_mean" begin
             @test test_gradient(model, start_test_mean; rtol = 1e-9)
@@ -230,7 +230,7 @@ end
 
 solution_names = Symbol.("parameter_estimates_".*["ml", "ls", "ml"].*"_mean")
 
-for (model, name, solution_name) in zip(models, names, solution_names)
+for (model, name, solution_name) in zip(models, model_names, solution_names)
     try
         @testset "$(name)_solution_mean" begin
             solution = sem_fit(model)
