@@ -10,7 +10,7 @@ import DataFrames: DataFrame
 export *, ==, @StenoGraph, AbstractEdge, AbstractNode, DirectedEdge, Edge, EdgeModifier, 
     MetaEdge, MetaNode, ModifiedEdge, ModifiedNode, Modifier, ModifyingNode, Node, 
     NodeModifier, NodeOrEdgeModifier, SimpleNode, StenoGraphs, UndirectedEdge, convert, 
-    promote_rule, show, unarrow, unmeta, ←, →, ↔, ⇐, ⇒, ⇔
+    promote_rule, show, unarrow, unmeta, ←, →, ↔, ⇐, ⇒, ⇔, meld
 
 # type hierarchy
 include("types.jl")
