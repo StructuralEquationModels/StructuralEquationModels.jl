@@ -16,7 +16,7 @@ Structural Equation Model
 - Fields
    observed:  SemObservedCommon
    imply:     RAM
-   diff:      SemDiffOptim
+   diff:      SemOptimizerOptim
 ```
 
 The output of this call tells you exactly what model you just constructed (i.e. what the loss functions, observed, imply and diff parts are).
@@ -43,7 +43,7 @@ model = Sem(
     data = data,
     imply = RAMSymbolic,
     loss = SemWLS,
-    diff = SemDiffNLopt
+    diff = SemOptimizerNLopt
 )
 ```
 

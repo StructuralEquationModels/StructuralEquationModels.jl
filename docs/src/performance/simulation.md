@@ -79,7 +79,7 @@ For example,
 
 new_observed = SemObservedData(;data = data_2, specification = partable)
 
-my_diff = SemDiffOptim()
+my_diff = SemOptimizerOptim()
 
 new_diff = update_observed(my_diff, new_observed)
 ```

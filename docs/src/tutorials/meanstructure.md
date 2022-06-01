@@ -110,7 +110,7 @@ imply_ram = RAM(specification = partable, meanstructure = true)
 
 ml = SemML(observed = observed, meanstructure = true)
 
-model = Sem(observed, imply_ram, SemLoss(ml), SemDiffOptim())
+model = Sem(observed, imply_ram, SemLoss(ml), SemOptimizerOptim())
 
 sem_fit(model)
 ```

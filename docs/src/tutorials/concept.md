@@ -6,7 +6,7 @@ In our package, every Structural Equation Model (`Sem`) consists of four parts:
 
 Those parts are interchangable building blocks (like 'Legos'), i.e. there are different pieces available you can choose in the `SemObserved` slot of the model, and stick them together with other pieces that can serve in the `SemImply` part.
 
-For example, to build a model for maximum likelihood estimation with the NLopt optimization suite as a backend you would choose `SemML` as a `SemLossFunction` and `SemDiffNLopt` as the `SemDiff` part.
+For example, to build a model for maximum likelihood estimation with the NLopt optimization suite as a backend you would choose `SemML` as a `SemLossFunction` and `SemOptimizerNLopt` as the `SemOptimizer` part.
 
 The rest of this page is about which 'Legos' are available for each part.
 The section [Model construction](@ref) is about how to stick them together to a final model.
@@ -29,7 +29,7 @@ Available loss functions are
 - SemRidge: ridge regularization
 
 ## diff
-The diff part of a model connects to the numerical optimization backend used to fit the model. It can be used to control options like the optimization algorithm, linesearch, stopping criteria, etc. There are currently two available backends, `SemDiffOptim` connecting to the [Optim.jl](https://github.com/JuliaNLSolvers/Optim.jl) backend, and `SemDiffNLopt` connecting to the [NLopt.jl](https://github.com/JuliaOpt/NLopt.jl) backend.
+The diff part of a model connects to the numerical optimization backend used to fit the model. It can be used to control options like the optimization algorithm, linesearch, stopping criteria, etc. There are currently two available backends, `SemOptimizerOptim` connecting to the [Optim.jl](https://github.com/JuliaNLSolvers/Optim.jl) backend, and `SemOptimizerNLopt` connecting to the [NLopt.jl](https://github.com/JuliaOpt/NLopt.jl) backend.
 
 ## API
 ```@docs

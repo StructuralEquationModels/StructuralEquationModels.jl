@@ -59,7 +59,7 @@ ml = SemML(observed = observed)
 loss_ml = SemLoss(ml)
 
 # diff -------------------------------------------------------------------------------------
-diff_obj = SemDiffOptim()
+diff_obj = SemOptimizerOptim()
 
 # model ------------------------------------------------------------------------------------
 

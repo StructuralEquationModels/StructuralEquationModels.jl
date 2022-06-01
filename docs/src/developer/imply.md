@@ -81,7 +81,7 @@ hessian!(imply::ImplyEmpty, par, model) = nothing
 identifier(imply::ImplyEmpty) = imply.identifier
 n_par(imply::ImplyEmpty) = imply.n_par
 
-update_observed(imply::ImplyEmpty, observed::SemObs; kwargs...) = imply
+update_observed(imply::ImplyEmpty, observed::SemObserved; kwargs...) = imply
 ```
 
 As you see, similar to [Custom loss functions](@ref) we implement a method for `update_observed`. Additionally, you should store the `identifier` from the specification object and write a method for `identifier`, as this will make it possible to access parameter indices by label.

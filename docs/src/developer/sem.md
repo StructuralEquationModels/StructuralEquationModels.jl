@@ -7,7 +7,7 @@ struct SemFiniteDiff{
         O <: SemObserved, 
         I <: SemImply, 
         L <: SemLoss, 
-        D <: SemDiff, 
+        D <: SemOptimizer, 
         G} <: AbstractSemSingle{O, I, L, D}
     observed::O
     imply::I
