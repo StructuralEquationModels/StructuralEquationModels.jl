@@ -280,7 +280,7 @@ objective_gradient_hessian!(imply::RAM, par, model::AbstractSemSingle, has_means
 identifier(imply::RAM) = imply.identifier
 n_par(imply::RAM) = imply.n_par
 
-function update_observed(imply::RAM, observed::SemObs; kwargs...) 
+function update_observed(imply::RAM, observed::SemObserved; kwargs...) 
     if n_man(observed) == size(imply.Σ, 1)
         return imply
     else

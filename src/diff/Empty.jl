@@ -7,32 +7,32 @@ a diff part.
 
 # Constructor
 
-    SemDiffEmpty()
+    SemOptimizerEmpty()
 
 # Extended help
 
 ## Implementation
 
-Subtype of `SemDiff`.
+Subtype of `SemOptimizer`.
 """
-struct SemDiffEmpty <: SemDiff end
+struct SemOptimizerEmpty <: SemOptimizer end
 
 ############################################################################################
 ### Constructor
 ############################################################################################
 
-# SemDiffEmpty(;kwargs...) = SemDiffEmpty()
+# SemOptimizerEmpty(;kwargs...) = SemOptimizerEmpty()
 
 ############################################################################################
 ### Recommended methods
 ############################################################################################
 
-update_observed(diff::SemDiffEmpty, observed::SemObs; kwargs...) = diff
+update_observed(diff::SemOptimizerEmpty, observed::SemObserved; kwargs...) = diff
 
 ############################################################################################
 ### Pretty Printing
 ############################################################################################
 
-function Base.show(io::IO, struct_inst::SemDiffEmpty)
+function Base.show(io::IO, struct_inst::SemOptimizerEmpty)
     StructuralEquationModels.print_type_name(io, struct_inst)
 end

@@ -8,7 +8,7 @@ Return a new model with swaped observed part.
 # Arguments
 - `model::AbstractSemSingle`: optimization algorithm.
 - `kwargs`: additional keyword arguments; typically includes `data = ...`
-- `observed`: Either an object of subtype of `SemObs` or a subtype of `SemObs`
+- `observed`: Either an object of subtype of `SemObserved` or a subtype of `SemObserved`
 
 # Examples
 See the online documentation on [Swap observed data](@ref).
@@ -16,9 +16,9 @@ See the online documentation on [Swap observed data](@ref).
 function swap_observed end
 
 """
-    update_observed(to_update, observed::SemObs; kwargs...)
+    update_observed(to_update, observed::SemObserved; kwargs...)
 
-Update a `SemImply`, `SemLossFunction` or `SemDiff` object to use a `SemObs` object.
+Update a `SemImply`, `SemLossFunction` or `SemOptimizer` object to use a `SemObserved` object.
 
 # Examples
 See the online documentation on [Swap observed data](@ref).
@@ -41,7 +41,7 @@ swap_observed(model::AbstractSemSingle; kwargs...) =
 swap_observed(model::AbstractSemSingle, observed_type; kwargs...) = 
     swap_observed(model, observed_type(;kwargs...); kwargs...)
 
-swap_observed(model::AbstractSemSingle, new_observed::SemObs; kwargs...) =
+swap_observed(model::AbstractSemSingle, new_observed::SemObserved; kwargs...) =
     swap_observed(model, observed(model), imply(model), loss(model), diff(model), new_observed; kwargs...)
 
 function swap_observed(
@@ -50,7 +50,7 @@ function swap_observed(
         imply,
         loss,
         diff,
-        new_observed::SemObs; 
+        new_observed::SemObserved; 
         kwargs...)
 
     kwargs = Dict{Symbol, Any}(kwargs...)

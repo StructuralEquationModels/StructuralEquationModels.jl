@@ -56,4 +56,4 @@ hessian!(imply::ImplyEmpty, par, model) = nothing
 identifier(imply::ImplyEmpty) = imply.identifier
 n_par(imply::ImplyEmpty) = imply.n_par
 
-update_observed(imply::ImplyEmpty, observed::SemObs; kwargs...) = imply
+update_observed(imply::ImplyEmpty, observed::SemObserved; kwargs...) = imply

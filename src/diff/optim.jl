@@ -6,7 +6,7 @@ Connects to `Optim.jl` as the optimization backend.
 
 # Constructor
 
-    SemDiffOptim(;
+    SemOptimizerOptim(;
         algorithm = LBFGS(), 
         options = Optim.Options(;f_tol = 1e-10, x_tol = 1.5e-8), 
         kwargs...)
@@ -21,12 +21,12 @@ the Optim.jl online documentation.
 
 # Examples
 ```julia
-my_diff = SemDiffOptim()
+my_diff = SemOptimizerOptim()
 
 # hessian based optimization with backtracking linesearch and modified initial step size
 using Optim, LineSearches
 
-my_newton_diff = SemDiffOptim(
+my_newton_diff = SemOptimizerOptim(
     algorithm = Newton(
         ;linesearch = BackTracking(order=3), 
         alphaguess = InitialHagerZhang()
@@ -37,33 +37,33 @@ my_newton_diff = SemDiffOptim(
 # Extended help
 
 ## Interfaces
-- `algorithm(::SemDiffOptim)`
-- `options(::SemDiffOptim)`
+- `algorithm(::SemOptimizerOptim)`
+- `options(::SemOptimizerOptim)`
 
 ## Implementation
 
-Subtype of `SemDiff`.
+Subtype of `SemOptimizer`.
 """
-mutable struct SemDiffOptim{A, B} <: SemDiff
+mutable struct SemOptimizerOptim{A, B} <: SemOptimizer
     algorithm::A
     options::B
 end
 
-SemDiffOptim(;
+SemOptimizerOptim(;
     algorithm = LBFGS(), 
     options = Optim.Options(;f_tol = 1e-10, x_tol = 1.5e-8), 
     kwargs...) = 
-    SemDiffOptim(algorithm, options)
+    SemOptimizerOptim(algorithm, options)
 
 ############################################################################################
 ### Recommended methods
 ############################################################################################
 
-update_observed(diff::SemDiffOptim, observed::SemObs; kwargs...) = diff
+update_observed(diff::SemOptimizerOptim, observed::SemObserved; kwargs...) = diff
 
 ############################################################################################
 ### additional methods
 ############################################################################################
 
-algorithm(diff::SemDiffOptim) = diff.algorithm
-options(diff::SemDiffOptim) = diff.options
+algorithm(diff::SemOptimizerOptim) = diff.algorithm
+options(diff::SemOptimizerOptim) = diff.options

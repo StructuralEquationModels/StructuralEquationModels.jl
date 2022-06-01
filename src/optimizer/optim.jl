@@ -46,7 +46,7 @@ convergence(res::Optim.MultivariateOptimizationResults) = Optim.converged(res)
 function sem_fit(
         model::AbstractSemSingle{O, I, L, D}; 
         start_val = start_val, 
-        kwargs...) where {O, I, L, D <: SemDiffOptim}
+        kwargs...) where {O, I, L, D <: SemOptimizerOptim}
     
     if !isa(start_val, Vector)
         start_val = start_val(model; kwargs...)
@@ -64,7 +64,7 @@ end
 function sem_fit(
         model::SemEnsemble{N, T , V, D, S}; 
         start_val = start_val, 
-        kwargs...) where {N, T, V, D <: SemDiffOptim, S}
+        kwargs...) where {N, T, V, D <: SemOptimizerOptim, S}
 
     if !isa(start_val, Vector)
         start_val = start_val(model; kwargs...)

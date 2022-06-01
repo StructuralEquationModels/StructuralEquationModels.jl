@@ -14,7 +14,7 @@ For observed data with missing values.
 
 # Constructor
 
-    SemObsMissing(;
+    SemObservedMissing(;
         specification,
         data,
         obs_colnames = nothing,
@@ -27,23 +27,23 @@ For observed data with missing values.
 
 # Extended help
 ## Interfaces
-- `n_obs(::SemObsMissing)` -> number of observed data points
-- `n_man(::SemObsMissing)` -> number of manifest variables
+- `n_obs(::SemObservedMissing)` -> number of observed data points
+- `n_man(::SemObservedMissing)` -> number of manifest variables
 
-- `get_data(::SemObsMissing)` -> observed data
-- `data_rowwise(::SemObsMissing)` -> observed data as vector per observation, with missing values deleted
+- `get_data(::SemObservedMissing)` -> observed data
+- `data_rowwise(::SemObservedMissing)` -> observed data as vector per observation, with missing values deleted
 
-- `patterns(::SemObsMissing)` -> indices of non-missing variables per missing patterns 
-- `patterns_not(::SemObsMissing)` -> indices of missing variables per missing pattern
-- `rows(::SemObsMissing)` -> row indices of observed data points that belong to each pattern
-- `pattern_n_obs(::SemObsMissing)` -> number of data points per pattern
-- `pattern_nvar_obs(::SemObsMissing)` -> number of non-missing observed variables per pattern
-- `obs_mean(::SemObsMissing)` -> observed mean per pattern
-- `obs_cov(::SemObsMissing)` -> observed covariance per pattern
-- `em_model(::SemObsMissing)` -> `EmMVNModel` that contains the covariance matrix and mean vector found via optimization maximization
+- `patterns(::SemObservedMissing)` -> indices of non-missing variables per missing patterns 
+- `patterns_not(::SemObservedMissing)` -> indices of missing variables per missing pattern
+- `rows(::SemObservedMissing)` -> row indices of observed data points that belong to each pattern
+- `pattern_n_obs(::SemObservedMissing)` -> number of data points per pattern
+- `pattern_nvar_obs(::SemObservedMissing)` -> number of non-missing observed variables per pattern
+- `obs_mean(::SemObservedMissing)` -> observed mean per pattern
+- `obs_cov(::SemObservedMissing)` -> observed covariance per pattern
+- `em_model(::SemObservedMissing)` -> `EmMVNModel` that contains the covariance matrix and mean vector found via optimization maximization
 
 ## Implementation
-Subtype of `SemObs`
+Subtype of `SemObserved`
 
 ## Remarks
 (1) the `specification` argument can also be `nothing`, but this turns of checking whether
@@ -53,7 +53,7 @@ use this if you are shure your observed data is in the right format.
 ## Additional keyword arguments:
 - `spec_colnames::Vector{Symbol} = nothing`: overwrites column names of the specification object
 """
-mutable struct SemObsMissing{
+mutable struct SemObservedMissing{
         A <: AbstractArray,
         D <: AbstractFloat,
         O <: AbstractFloat,
@@ -66,7 +66,7 @@ mutable struct SemObsMissing{
         A2 <: AbstractArray,
         A3 <: AbstractArray,
         S <: EmMVNModel
-        } <: SemObs
+        } <: SemObserved
     data::A
     n_man::D
     n_obs::O
@@ -85,7 +85,7 @@ end
 ### Constructors
 ############################################################################################
 
-function SemObsMissing(;
+function SemObservedMissing(;
         specification,
         data,
 
@@ -182,7 +182,7 @@ function SemObsMissing(;
 
     em_model = EmMVNModel(zeros(n_man, n_man), zeros(n_man), false)
 
-    return SemObsMissing(data, Float64(n_man), Float64(n_obs), remember_cart,
+    return SemObservedMissing(data, Float64(n_man), Float64(n_obs), remember_cart,
     remember_cart_not, 
     rows, data_rowwise, Float64.(pattern_n_obs), Float64.(pattern_nvar_obs),
     obs_mean, obs_cov, em_model)
@@ -192,20 +192,20 @@ end
 ### Recommended methods
 ############################################################################################
 
-n_obs(observed::SemObsMissing) = observed.n_obs
-n_man(observed::SemObsMissing) = observed.n_man
+n_obs(observed::SemObservedMissing) = observed.n_obs
+n_man(observed::SemObservedMissing) = observed.n_man
 
 ############################################################################################
 ### Additional methods
 ############################################################################################
 
-get_data(observed::SemObsMissing) = observed.data
-patterns(observed::SemObsMissing) = observed.patterns
-patterns_not(observed::SemObsMissing) = observed.patterns_not
-rows(observed::SemObsMissing) = observed.rows
-data_rowwise(observed::SemObsMissing) = observed.data_rowwise
-pattern_n_obs(observed::SemObsMissing) = observed.pattern_n_obs
-pattern_nvar_obs(observed::SemObsMissing) = observed.pattern_nvar_obs
-obs_mean(observed::SemObsMissing) = observed.obs_mean
-obs_cov(observed::SemObsMissing) = observed.obs_cov
-em_model(observed::SemObsMissing) = observed.em_model
+get_data(observed::SemObservedMissing) = observed.data
+patterns(observed::SemObservedMissing) = observed.patterns
+patterns_not(observed::SemObservedMissing) = observed.patterns_not
+rows(observed::SemObservedMissing) = observed.rows
+data_rowwise(observed::SemObservedMissing) = observed.data_rowwise
+pattern_n_obs(observed::SemObservedMissing) = observed.pattern_n_obs
+pattern_nvar_obs(observed::SemObservedMissing) = observed.pattern_nvar_obs
+obs_mean(observed::SemObservedMissing) = observed.obs_mean
+obs_cov(observed::SemObservedMissing) = observed.obs_cov
+em_model(observed::SemObservedMissing) = observed.em_model

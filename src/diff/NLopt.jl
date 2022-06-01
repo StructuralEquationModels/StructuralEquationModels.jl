@@ -6,7 +6,7 @@ Connects to `NLopt.jl` as the optimization backend.
 
 # Constructor
 
-    SemDiffNLopt(;
+    SemOptimizerNLopt(;
         algorithm = :LD_LBFGS,
         options = Dict{Symbol, Any}(),
         local_algorithm = nothing, 
@@ -25,10 +25,10 @@ Connects to `NLopt.jl` as the optimization backend.
 
 # Example
 ```julia
-my_diff = SemDiffNLopt()
+my_diff = SemOptimizerNLopt()
 
 # constrained optimization with augmented lagrangian
-my_constrained_diff = SemDiffNLopt(;
+my_constrained_diff = SemOptimizerNLopt(;
     algorithm = :AUGLAG,
     local_algorithm = :LD_LBFGS,
     local_options = Dict(:ftol_rel => 1e-6),
@@ -44,18 +44,18 @@ For information on how to use inequality and equality constraints, see XXX in ou
 # Extended help
 
 ## Interfaces
-- `algorithm(diff::SemDiffNLopt)`
-- `local_algorithm(diff::SemDiffNLopt)`
-- `options(diff::SemDiffNLopt)`
-- `local_options(diff::SemDiffNLopt)`
-- `equality_constraints(diff::SemDiffNLopt)`
-- `inequality_constraints(diff::SemDiffNLopt)`
+- `algorithm(diff::SemOptimizerNLopt)`
+- `local_algorithm(diff::SemOptimizerNLopt)`
+- `options(diff::SemOptimizerNLopt)`
+- `local_options(diff::SemOptimizerNLopt)`
+- `equality_constraints(diff::SemOptimizerNLopt)`
+- `inequality_constraints(diff::SemOptimizerNLopt)`
 
 ## Implementation
 
-Subtype of `SemDiff`.
+Subtype of `SemOptimizer`.
 """
-struct SemDiffNLopt{A, A2, B, B2, C} <: SemDiff
+struct SemOptimizerNLopt{A, A2, B, B2, C} <: SemOptimizer
     algorithm::A
     local_algorithm::A2
     options::B
@@ -73,7 +73,7 @@ end
 ### Constructor
 ############################################################################################
 
-function SemDiffNLopt(;
+function SemOptimizerNLopt(;
         algorithm = :LD_LBFGS,
         local_algorithm = nothing, 
         options = Dict{Symbol, Any}(),
@@ -85,7 +85,7 @@ function SemDiffNLopt(;
         (equality_constraints = [equality_constraints])
     applicable(iterate, inequality_constraints) || 
         (inequality_constraints = [inequality_constraints])
-    return SemDiffNLopt(
+    return SemOptimizerNLopt(
         algorithm, 
         local_algorithm, 
         options, 
@@ -98,16 +98,16 @@ end
 ### Recommended methods
 ############################################################################################
 
-update_observed(diff::SemDiffNLopt, observed::SemObs; kwargs...) = diff
+update_observed(diff::SemOptimizerNLopt, observed::SemObserved; kwargs...) = diff
 
 ############################################################################################
 ### additional methods
 ############################################################################################
 
-algorithm(diff::SemDiffNLopt) = diff.algorithm
-local_algorithm(diff::SemDiffNLopt) = diff.local_algorithm
-options(diff::SemDiffNLopt) = diff.options
-local_options(diff::SemDiffNLopt) = diff.local_options
-equality_constraints(diff::SemDiffNLopt) = diff.equality_constraints
-inequality_constraints(diff::SemDiffNLopt) = diff.inequality_constraints
+algorithm(diff::SemOptimizerNLopt) = diff.algorithm
+local_algorithm(diff::SemOptimizerNLopt) = diff.local_algorithm
+options(diff::SemOptimizerNLopt) = diff.options
+local_options(diff::SemOptimizerNLopt) = diff.local_options
+equality_constraints(diff::SemOptimizerNLopt) = diff.equality_constraints
+inequality_constraints(diff::SemOptimizerNLopt) = diff.inequality_constraints
 

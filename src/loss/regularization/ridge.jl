@@ -88,4 +88,4 @@ end
 ### Recommended methods
 ############################################################################################
 
-update_observed(loss::SemRidge, observed::SemObs; kwargs...) = loss
+update_observed(loss::SemRidge, observed::SemObserved; kwargs...) = loss

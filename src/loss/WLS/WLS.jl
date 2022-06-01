@@ -17,7 +17,7 @@ Weighted least squares estimation.
         kwargs...)
 
 # Arguments
-- `observed`: the `SemObs` part of the model
+- `observed`: the `SemObserved` part of the model
 - `meanstructure::Bool`: does the model have a meanstructure?
 - `approximate_hessian::Bool`: should the hessian be swapped for an approximation
 - `wls_weight_matrix`: the weight matrix for weighted least squares. 
@@ -253,4 +253,4 @@ objective_gradient_hessian!(semwls::SemWLS, par, model::AbstractSemSingle, has_m
 ### Recommended methods
 ############################################################################################
 
-update_observed(lossfun::SemWLS, observed::SemObs; kwargs...) = SemWLS(;observed = observed, kwargs...)
+update_observed(lossfun::SemWLS, observed::SemObserved; kwargs...) = SemWLS(;observed = observed, kwargs...)

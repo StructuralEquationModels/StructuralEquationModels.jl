@@ -13,7 +13,7 @@
 # outer function ---------------------------------------------------------------------------
 """
     em_mvn(;
-        observed::SemObsMissing,
+        observed::SemObservedMissing,
         start_em = start_em_observed,
         max_iter_em = 100,
         rtol_em = 1e-4,
@@ -23,7 +23,7 @@ Estimates the covariance matrix and mean vector of the normal distribution via e
 Overwrites the statistics stored in `observed`.
 """
 function em_mvn(
-    observed::SemObsMissing;
+    observed::SemObservedMissing;
     start_em = start_em_observed,
     max_iter_em = 100,
     rtol_em = 1e-4,
@@ -156,7 +156,7 @@ end
 # generate starting values -----------------------------------------------------------------
 
 # use μ and Σ of full cases
-function start_em_observed(observed::SemObsMissing; kwargs...)
+function start_em_observed(observed::SemObservedMissing; kwargs...)
 
     if (length(observed.patterns[1]) == observed.n_man) & (observed.pattern_n_obs[1] > 1)
         μ = copy(observed.obs_mean[1])
@@ -172,7 +172,7 @@ function start_em_observed(observed::SemObsMissing; kwargs...)
 end
 
 # use μ = O and Σ = I
-function start_em_simple(observed::SemObsMissing; kwargs...)
+function start_em_simple(observed::SemObservedMissing; kwargs...)
     n_man = Int(observed.n_man)
     μ = zeros(n_man)
     Σ = rand(n_man, n_man); Σ = Σ*Σ'
@@ -181,6 +181,6 @@ function start_em_simple(observed::SemObsMissing; kwargs...)
 end
 
 # set to passed values
-function start_em_set(observed::SemObsMissing; model_em, kwargs...)
+function start_em_set(observed::SemObservedMissing; model_em, kwargs...)
     return em_model
 end

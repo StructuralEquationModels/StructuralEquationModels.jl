@@ -3,7 +3,7 @@ For observed data without missings.
 
 # Constructor
 
-    SemObsData(;
+    SemObservedData(;
         specification,
         data,
         meanstructure = false,
@@ -18,16 +18,16 @@ For observed data without missings.
 
 # Extended help
 ## Interfaces
-- `n_obs(::SemObsData)` -> number of observed data points
-- `n_man(::SemObsData)` -> number of manifest variables
+- `n_obs(::SemObservedData)` -> number of observed data points
+- `n_man(::SemObservedData)` -> number of manifest variables
 
-- `get_data(::SemObsData)` -> observed data
-- `obs_cov(::SemObsData)` -> observed.obs_cov
-- `obs_mean(::SemObsData)` -> observed.obs_mean
-- `data_rowwise(::SemObsData)` -> observed data, stored as vectors per observation
+- `get_data(::SemObservedData)` -> observed data
+- `obs_cov(::SemObservedData)` -> observed.obs_cov
+- `obs_mean(::SemObservedData)` -> observed.obs_mean
+- `data_rowwise(::SemObservedData)` -> observed data, stored as vectors per observation
 
 ## Implementation
-Subtype of `SemObs`
+Subtype of `SemObserved`
 
 ## Remarks
 (1) the `specification` argument can also be `nothing`, but this turns of checking whether
@@ -39,7 +39,7 @@ use this if you are shure your observed data is in the right format.
 - `compute_covariance::Bool ) = true`: should the covariance of `data` be computed and stored?
 - `rowwise::Bool = false`: should the data be stored also as vectors per observation
 """
-struct SemObsData{A, B, C, D, O, R} <: SemObs
+struct SemObservedData{A, B, C, D, O, R} <: SemObserved
     data::A
     obs_cov::B
     obs_mean::C
@@ -49,13 +49,13 @@ struct SemObsData{A, B, C, D, O, R} <: SemObs
 end
 
 # error checks
-function check_arguments_SemObsData(kwargs...)
+function check_arguments_SemObservedData(kwargs...)
     # data is a data frame, 
 
 end
 
 
-function SemObsData(;
+function SemObservedData(;
         specification,
         data,
 
@@ -123,24 +123,24 @@ function SemObsData(;
         data_rowwise = nothing
     end
 
-    return SemObsData(data, obs_cov, obs_mean, n_man, n_obs, data_rowwise)
+    return SemObservedData(data, obs_cov, obs_mean, n_man, n_obs, data_rowwise)
 end
 
 ############################################################################################
 ### Recommended methods
 ############################################################################################
 
-n_obs(observed::SemObsData) = observed.n_obs
-n_man(observed::SemObsData) = observed.n_man
+n_obs(observed::SemObservedData) = observed.n_obs
+n_man(observed::SemObservedData) = observed.n_man
 
 ############################################################################################
 ### additional methods
 ############################################################################################
 
-get_data(observed::SemObsData) = observed.data
-obs_cov(observed::SemObsData) = observed.obs_cov
-obs_mean(observed::SemObsData) = observed.obs_mean
-data_rowwise(observed::SemObsData) = observed.data_rowwise
+get_data(observed::SemObservedData) = observed.data
+obs_cov(observed::SemObservedData) = observed.obs_cov
+obs_mean(observed::SemObservedData) = observed.obs_mean
+data_rowwise(observed::SemObservedData) = observed.data_rowwise
 
 ############################################################################################
 ### Additional functions

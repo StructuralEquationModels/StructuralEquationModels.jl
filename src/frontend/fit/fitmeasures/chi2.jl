@@ -28,7 +28,7 @@ function χ² end
     (n_obs(sem_fit)-1)*sem_fit.minimum
 
 # FIML
-function χ²(sem_fit::SemFit, observed::SemObsMissing, imp, diff, loss_ml::SemFIML)
+function χ²(sem_fit::SemFit, observed::SemObservedMissing, imp, diff, loss_ml::SemFIML)
     ll_H0 = minus2ll(sem_fit)
     ll_H1 = minus2ll(observed)
     chi2 = ll_H0 - ll_H1

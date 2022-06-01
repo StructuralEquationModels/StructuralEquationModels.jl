@@ -30,9 +30,9 @@ function start_fabin3(
         obs_mean(observed))
 end
 
-# SemObsMissing
+# SemObservedMissing
 function start_fabin3(
-        observed::SemObsMissing, 
+        observed::SemObservedMissing, 
         imply::Union{RAM, RAMSymbolic}, 
         diff, 
         args...; 

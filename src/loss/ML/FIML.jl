@@ -9,7 +9,7 @@ Full information maximum likelihood estimation. Can handle observed data with mi
     SemFIML(;observed, specification, kwargs...)
 
 # Arguments
-- `observed::SemObsMissing`: the observed part of the model
+- `observed::SemObservedMissing`: the observed part of the model
 - `specification`: either a `RAMMatrices` or `ParameterTable` object
 
 # Examples
@@ -122,7 +122,7 @@ end
 ### Recommended methods
 ############################################################################################
 
-update_observed(lossfun::SemFIML, observed::SemObs; kwargs...) = 
+update_observed(lossfun::SemFIML, observed::SemObserved; kwargs...) = 
     SemFIML(;observed = observed, kwargs...)
 
 ############################################################################################

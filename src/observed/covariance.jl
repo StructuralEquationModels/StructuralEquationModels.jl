@@ -3,7 +3,7 @@ For observed covariance matrices and means.
 
 # Constructor
 
-    SemObsCovariance(;
+    SemObservedCovariance(;
         specification,
         obs_cov,
         obs_colnames = nothing,
@@ -22,14 +22,14 @@ For observed covariance matrices and means.
 
 # Extended help
 ## Interfaces
-- `n_obs(::SemObsCovariance)` -> number of observed data points
-- `n_man(::SemObsCovariance)` -> number of manifest variables
+- `n_obs(::SemObservedCovariance)` -> number of observed data points
+- `n_man(::SemObservedCovariance)` -> number of manifest variables
 
-- `obs_cov(::SemObsCovariance)` -> observed covariance matrix
-- `obs_mean(::SemObsCovariance)` -> observed means
+- `obs_cov(::SemObservedCovariance)` -> observed covariance matrix
+- `obs_mean(::SemObservedCovariance)` -> observed means
 
 ## Implementation
-Subtype of `SemObs`
+Subtype of `SemObserved`
 
 ## Remarks
 (1) the `specification` argument can also be `nothing`, but this turns of checking whether
@@ -39,14 +39,14 @@ use this if you are shure your covariance matrix is in the right format.
 ## Additional keyword arguments:
 - `spec_colnames::Vector{Symbol} = nothing`: overwrites column names of the specification object
 """
-struct SemObsCovariance{B, C, D, O} <: SemObs
+struct SemObservedCovariance{B, C, D, O} <: SemObserved
     obs_cov::B
     obs_mean::C
     n_man::D
     n_obs::O
 end
 using StructuralEquationModels
-function SemObsCovariance(;
+function SemObservedCovariance(;
         specification,
         obs_cov,
 
@@ -90,22 +90,22 @@ function SemObsCovariance(;
 
     n_man = Float64(size(obs_cov, 1))
 
-    return SemObsCovariance(obs_cov, obs_mean, n_man, n_obs)
+    return SemObservedCovariance(obs_cov, obs_mean, n_man, n_obs)
 end
 
 ############################################################################################
 ### Recommended methods
 ############################################################################################
 
-n_obs(observed::SemObsCovariance) = observed.n_obs
-n_man(observed::SemObsCovariance) = observed.n_man
+n_obs(observed::SemObservedCovariance) = observed.n_obs
+n_man(observed::SemObservedCovariance) = observed.n_man
 
 ############################################################################################
 ### additional methods
 ############################################################################################
 
-obs_cov(observed::SemObsCovariance) = observed.obs_cov
-obs_mean(observed::SemObsCovariance) = observed.obs_mean
+obs_cov(observed::SemObservedCovariance) = observed.obs_cov
+obs_mean(observed::SemObservedCovariance) = observed.obs_mean
 
 ############################################################################################
 ### Additional functions

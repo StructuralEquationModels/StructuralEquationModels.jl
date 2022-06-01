@@ -3,10 +3,10 @@
 ############################################################################################
 
 function Sem(;
-        observed::O = SemObsData,
+        observed::O = SemObservedData,
         imply::I = RAM,
         loss::L = SemML,
-        diff::D = SemDiffOptim,
+        diff::D = SemOptimizerOptim,
         kwargs...) where {O, I, L, D}
 
     kwargs = Dict{Symbol, Any}(kwargs...)
@@ -21,10 +21,10 @@ function Sem(;
 end
 
 function SemFiniteDiff(;
-        observed::O = SemObsData,
+        observed::O = SemObservedData,
         imply::I = RAM,
         loss::L = SemML,
-        diff::D = SemDiffOptim,
+        diff::D = SemOptimizerOptim,
         has_gradient = false,
         kwargs...) where {O, I, L, D}
 
@@ -40,10 +40,10 @@ function SemFiniteDiff(;
 end
 
 function SemForwardDiff(;
-        observed::O = SemObsData,
+        observed::O = SemObservedData,
         imply::I = RAM,
         loss::L = SemML,
-        diff::D = SemDiffOptim,
+        diff::D = SemOptimizerOptim,
         has_gradient = false,
         kwargs...) where {O, I, L, D}
 
@@ -78,7 +78,7 @@ end
 # construct Sem fields
 function get_fields!(kwargs, observed, imply, loss, diff)
     # observed
-    if !isa(observed, SemObs)
+    if !isa(observed, SemObserved)
         observed = observed(;kwargs...)
     end
     kwargs[:observed] = observed
@@ -96,7 +96,7 @@ function get_fields!(kwargs, observed, imply, loss, diff)
     kwargs[:loss] = loss
 
     # diff
-    if !isa(diff, SemDiff)
+    if !isa(diff, SemOptimizer)
         diff = diff(;kwargs...)
     end
 

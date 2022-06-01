@@ -33,7 +33,7 @@ function SemFit_NLopt(optimization_result, model::AbstractSem, start_val, opt)
 end
 
 # sem_fit method
-function sem_fit(model::Sem{O, I, L, D}; start_val = start_val, kwargs...) where {O, I, L, D <: SemDiffNLopt}
+function sem_fit(model::Sem{O, I, L, D}; start_val = start_val, kwargs...) where {O, I, L, D <: SemOptimizerNLopt}
 
     # starting values
     if !isa(start_val, Vector)
@@ -62,7 +62,7 @@ function sem_fit(model::Sem{O, I, L, D}; start_val = start_val, kwargs...) where
     return SemFit_NLopt(result, model, start_val, opt)
 end
 
-function sem_fit(model::SemEnsemble{N, T , V, D, S}; start_val = start_val, kwargs...) where {N, T, V, D <: SemDiffNLopt, S}
+function sem_fit(model::SemEnsemble{N, T , V, D, S}; start_val = start_val, kwargs...) where {N, T, V, D <: SemOptimizerNLopt, S}
 
     # starting values
     if !isa(start_val, Vector)
@@ -106,7 +106,7 @@ function construct_NLopt_problem(algorithm, options, npar)
 
 end
 
-function set_NLopt_constraints!(opt, diff::SemDiffNLopt)
+function set_NLopt_constraints!(opt, diff::SemOptimizerNLopt)
     for con in diff.inequality_constraints
         inequality_constraint!(opt::Opt, con.f, con.tol)
     end

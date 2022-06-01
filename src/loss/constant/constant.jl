@@ -49,4 +49,4 @@ hessian!(constant::SemConstant, par, model) = zeros(eltype(par), length(par), le
 ### Recommended methods
 ############################################################################################
 
-update_observed(loss_function::SemConstant, observed::SemObs; kwargs...) = loss_function
+update_observed(loss_function::SemConstant, observed::SemObserved; kwargs...) = loss_function
