@@ -1,7 +1,13 @@
 # StructuralEquationModels.jl: a fast and flexible SEM framework
 
-This is a package for Structural Equation Modeling.
-It is still *in development*.
+This is a package for Structural Equation Modeling *in development*.
+It is written for extensibility, that is, you can easily define your own objective functions and other parts of the model.
+At the same time, it is (very) fast.
+
+To get started right away, we recommend reading [A first model](@ref) and [Our Concept of a Structural Equation Model](@ref).
+
+After that, if you are interested in specifying your own loss functions or other parts, you can proceed with [Extending the package](@ref).
+
 Models you can fit include
 - Linear SEM that can be specified in RAM notation
 - ML, GLS and FIML estimation

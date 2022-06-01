@@ -6,6 +6,7 @@ makedocs(
         "index.md",
         "Tutorials" => [
             "A first model" => "tutorials/first_model.md",
+            "Our Concept of a Structural Equation Model" => "tutorials/concept.md",
             "Model Specification" => [
                 "tutorials/specification/specification.md",
                 "tutorials/specification/graph_interface.md",

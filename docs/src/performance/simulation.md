@@ -4,7 +4,7 @@
     We are currently working on an interface for simulation studies.
     Until we are finished with this, this page is just a collection of tips.
 
-## Update observed data
+## Swap observed data
 In simulation studies, a common task is fitting the same model to many different datasets.
 It would be a waste of resources to reconstruct the complete model for each dataset.
 We therefore provide the function `swap_observed` to change the `observed` part of a model,
