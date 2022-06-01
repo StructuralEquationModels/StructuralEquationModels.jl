@@ -190,7 +190,7 @@ function compare_estimates(ens_partable::EnsembleParameterTable, partable_lav;
                     (partable_lav.group .== group))
 
                 if length(lav_ind) == 0
-                    throw(ErrorException("At least one parameter could not be found in the lavaan solution"))
+                    throw(ErrorException("Mean parameter of variable $to could not be found in the lavaan solution"))
                 elseif length(lav_ind) > 1
                     throw(ErrorException("At least one parameter was found twice in the lavaan solution"))
                 else
@@ -215,23 +215,50 @@ function compare_estimates(ens_partable::EnsembleParameterTable, partable_lav;
                     end
                 end
 
-                lav_ind = findall(
-                    (partable_lav.lhs .== String(from)) .& 
-                    (partable_lav.rhs .== String(to)) .&
-                    (partable_lav.op .== type).&
-                    (partable_lav.group .== group))
+                if type == "~~"
 
-                if length(lav_ind) == 0
-                    throw(ErrorException("At least one parameter could not be found in the lavaan solution"))
-                elseif length(lav_ind) > 1
-                    throw(ErrorException("At least one parameter was found twice in the lavaan solution"))
+                    lav_ind = findall(
+                        (
+                            ((partable_lav.lhs .== String(from)) .& (partable_lav.rhs .== String(to))) .|
+                            ((partable_lav.lhs .== String(to)) .& (partable_lav.rhs .== String(from)))
+                        ) .&
+                        (partable_lav.op .== type) .&
+                        (partable_lav.group .== group)
+                    )
+    
+                    if length(lav_ind) == 0
+                        throw(ErrorException("Parameter from: $from, to: $to, type: $type, could not be found in the lavaan solution"))
+                    elseif length(lav_ind) > 1
+                        throw(ErrorException("At least one parameter was found twice in the lavaan solution"))
+                    else
+                        is_correct = isapprox(
+                            estimate, 
+                            partable_lav[:, lav_col][lav_ind[1]]; 
+                            rtol = rtol, 
+                            atol = atol)
+                        push!(correct, is_correct)
+                    end
+    
                 else
-                    is_correct = isapprox(
-                        estimate, 
-                        partable_lav[:, lav_col][lav_ind[1]]; 
-                        rtol = rtol, 
-                        atol = atol)
-                    push!(correct, is_correct)
+
+                    lav_ind = findall(
+                        (partable_lav.lhs .== String(from)) .& 
+                        (partable_lav.rhs .== String(to)) .&
+                        (partable_lav.op .== type).&
+                        (partable_lav.group .== group))
+
+                    if length(lav_ind) == 0
+                        throw(ErrorException("Parameter $from $type $to could not be found in the lavaan solution"))
+                    elseif length(lav_ind) > 1
+                        throw(ErrorException("At least one parameter was found twice in the lavaan solution"))
+                    else
+                        is_correct = isapprox(
+                            estimate, 
+                            partable_lav[:, lav_col][lav_ind[1]]; 
+                            rtol = rtol, 
+                            atol = atol)
+                        push!(correct, is_correct)
+                    end
                 end
 
             end

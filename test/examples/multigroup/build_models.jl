@@ -151,11 +151,11 @@ end
         lav_groups = Dict(:Pasteur => 1, :Grant_White => 2))
 end
 
-if !isnothing(specification_miss_g1)
-
 ############################################################################################
 # FIML estimation
 ############################################################################################
+
+if !isnothing(specification_miss_g1)
 
 model_g1 = Sem(
     specification = specification_miss_g1,

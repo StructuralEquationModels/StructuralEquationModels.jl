@@ -77,8 +77,6 @@ semdiff = SemDiffOptim
 ### specification - Graph
 ############################################################################################
 
-using StenoGraphs
-
 # w.o. meanstructure -----------------------------------------------------------------------
 
 latent_vars = [:visual, :textual, :speed]
@@ -138,6 +136,7 @@ start_test = [
     fill(1.0, 9); 0.05; 0.01; 0.01; 0.05; 0.01; 0.05; 
     fill(1.0, 9); 0.05; 0.01; 0.01; 0.05; 0.01; 0.05]
 semdiff = SemDiffOptim
+
 @testset "Graph → Partable → RAMMatrices | constructor | Optim" begin 
     include("build_models.jl") 
 end
