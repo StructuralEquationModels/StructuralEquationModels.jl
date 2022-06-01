@@ -16,6 +16,10 @@ makedocs(
                 "tutorials/construction/construction.md",
                 "tutorials/construction/outer_constructor.md",
                 "tutorials/construction/build_by_parts.md"],
+            "Optimization Backends" => [
+                "tutorials/backends/optim.md",
+                "tutorials/backends/nlopt.md"
+            ],
             "Model Fitting" => "tutorials/fitting/fitting.md",
             "Model Inspection" => [
                 "tutorials/inspection/inspection.md"
