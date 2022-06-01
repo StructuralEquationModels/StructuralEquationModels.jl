@@ -80,7 +80,7 @@ end
 
 models = [model_ml, model_ml_cov, model_ls_sym, model_ml_sym, model_constant]
 model_names = ["ml", "ml_cov", "ls_sym", "ml_sym", "constant"]
-solution_names = Symbol.("parameter_estimates_".*["ml", "ls", "ml", "ml"])
+solution_names = Symbol.("parameter_estimates_".*["ml", "ml", "ls", "ml", "ml"])
 
 for (model, name, solution_name) in zip(models, model_names, solution_names)
     try
@@ -252,7 +252,7 @@ end
 ### test solution
 ############################################################################################
 
-solution_names = Symbol.("parameter_estimates_".*["ml", "ls", "ml"].*"_mean")
+solution_names = Symbol.("parameter_estimates_".*["ml", "ml", "ls", "ml"].*"_mean")
 
 for (model, name, solution_name) in zip(models, model_names, solution_names)
     try
