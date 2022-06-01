@@ -24,7 +24,7 @@ end
 ### Recommended methods
 ############################################################################
 
-update_observed(diff::SemDiffOptim, observed::SemObs; kwargs...) = diff
+update_observed(diff::SemDiffOptim, observed::SemObserved; kwargs...) = diff
 
 ############################################################################
 ### additional methods

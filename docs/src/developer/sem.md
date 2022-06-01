@@ -4,7 +4,7 @@ The abstract supertype for all models is `AbstractSem`, which has two subtypes, 
 
 ```julia
 struct SemFiniteDiff{
-        O <: SemObs, 
+        O <: SemObserved, 
         I <: SemImply, 
         L <: SemLoss, 
         D <: SemDiff, 

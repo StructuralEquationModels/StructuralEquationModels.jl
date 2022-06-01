@@ -14,7 +14,7 @@ Structural Equation Model
 - Loss Functions
    SemML
 - Fields
-   observed:  SemObsCommon
+   observed:  SemObservedCommon
    imply:     RAM
    diff:      SemDiffOptim
 

@@ -2,10 +2,10 @@
 
 The implementation of new observed types is very similar to loss functions, so we will just go over it briefly (for additional information, revisit [Custom loss functions](@ref)).
 
-First, we need to define a new struct that is a subtype of `SemObs`:
+First, we need to define a new struct that is a subtype of `SemObserved`:
 
 ```julia
-struct MyObserved <: SemObs
+struct MyObserved <: SemObserved
     ...
 end
 ```
@@ -28,8 +28,8 @@ n_obs(observed::MyObserved) = ...
 n_man(observed::MyObserved) = ...
 ```
 
-As always, you can add additional methods for properties that imply types and loss function want to access, for example (from the `SemObsCommon` implementation):
+As always, you can add additional methods for properties that imply types and loss function want to access, for example (from the `SemObservedCommon` implementation):
 
 ```julia
-obs_cov(observed::SemObsCommon) = observed.obs_cov
+obs_cov(observed::SemObservedCommon) = observed.obs_cov
 ```

@@ -14,7 +14,7 @@ Structural Equation Model
 - Loss Functions
    SemML
 - Fields
-   observed:  SemObsCommon
+   observed:  SemObservedCommon
    imply:     RAM
    diff:      SemDiffOptim
 ```
@@ -55,7 +55,7 @@ model = Sem(
     specification = partable,
     data = data,
     loss = SemFIML,
-    observed = SemObsMissing
+    observed = SemObservedMissing
 )
 ```
 

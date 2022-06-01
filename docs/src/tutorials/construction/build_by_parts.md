@@ -48,7 +48,7 @@ Now, we construct the different parts:
 
 ```@example build
 # observed ---------------------------------------------------------------------------------
-observed = SemObsData(specification = partable, data = data)
+observed = SemObservedData(specification = partable, data = data)
 
 # imply ------------------------------------------------------------------------------------
 imply_ram = RAM(specification = partable)

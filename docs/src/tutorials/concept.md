@@ -4,7 +4,7 @@ In our package, every Structural Equation Model (`Sem`) consists of four parts:
 
 ![SEM concept](../assets/concept.svg)
 
-Those parts are interchangable building blocks (like 'Legos'), i.e. there are different pieces available you can choose in the `SemObs` slot of the model, and stick them together with other pieces that can serve in the `SemImply` part.
+Those parts are interchangable building blocks (like 'Legos'), i.e. there are different pieces available you can choose in the `SemObserved` slot of the model, and stick them together with other pieces that can serve in the `SemImply` part.
 
 For example, to build a model for maximum likelihood estimation with the NLopt optimization suite as a backend you would choose `SemML` as a `SemLossFunction` and `SemDiffNLopt` as the `SemDiff` part.
 
@@ -13,7 +13,7 @@ The section [Model construction](@ref) is about how to stick them together to a 
 
 ## observed
 
-The `observed` part contains all necessary information about the observed data. Currently, we have three options: [`SemObsData`](@ref) for fully observed datasets, [`SemObsCovariance`](@ref) for observed covariances (and means) and [`SemObsMissing`](@ref) for data that contains missing values.
+The `observed` part contains all necessary information about the observed data. Currently, we have three options: [`SemObservedData`](@ref) for fully observed datasets, [`SemObservedCovariance`](@ref) for observed covariances (and means) and [`SemObservedMissing`](@ref) for data that contains missing values.
 
 ## imply
 The imply part is what your model implies about the data, for example, the model-implied covariance matrix. 
@@ -33,9 +33,9 @@ The diff part of a model connects to the numerical optimization backend used to 
 
 ## API
 ```@docs
-SemObsData
-SemObsCovariance
-SemObsMissing
+SemObservedData
+SemObservedCovariance
+SemObservedMissing
 SemML
 SemFIML
 SemRidge

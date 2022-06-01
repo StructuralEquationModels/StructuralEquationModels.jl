@@ -192,7 +192,7 @@ Therefore, we provide a function to update the data of your model, `swap_observe
 ```julia
 import StructuralEquationModels: update_observed
 
-update_observed(ridge::Ridge, observed::SemObs; kwargs...) = ridge
+update_observed(ridge::Ridge, observed::SemObserved; kwargs...) = ridge
 ```
 
 ### Access additional information
@@ -222,7 +222,7 @@ julia>?
 
 help?> RAM
 
-help?> SemObsCommon
+help?> SemObservedCommon
 ```
 
 We see that the model implied covariance matrix can be assessed as `Σ(imply)` and the observed covariance matrix as `obs_cov(observed)`.

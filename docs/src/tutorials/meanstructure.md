@@ -104,7 +104,7 @@ If we build the model by parts, we have to pass the `meanstructure = true` argum
 For our example,
 
 ```@example meanstructure
-observed = SemObsData(specification = partable, data = data, meanstructure = true)
+observed = SemObservedData(specification = partable, data = data, meanstructure = true)
 
 imply_ram = RAM(specification = partable, meanstructure = true)
 
