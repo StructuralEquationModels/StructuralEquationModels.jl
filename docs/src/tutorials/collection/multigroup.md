@@ -56,7 +56,7 @@ end
 
 You can pass multiple arguments to `fix()` and `label()` for each group. Parameters with the same label (within and across groups) are constrained to be equal. To fix a parameter in one group, but estimate it freely in the other, you may write `fix(NaN, 4.3)`.
 
-You can then use the resulting graph to specify an EnsembleParameterTable
+You can then use the resulting graph to specify an `EnsembleParameterTable`
 
 ```@example mg; ansicolor = true
 groups = [:Pasteur, :Grant_White]

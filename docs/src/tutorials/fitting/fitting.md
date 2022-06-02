@@ -42,3 +42,9 @@ Structural Equation Model
 ```
 
 You may optionally specify [Starting values](@ref).
+
+# API - model fitting
+
+```@docs
+sem_fit
+```

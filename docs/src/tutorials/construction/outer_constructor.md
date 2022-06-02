@@ -47,8 +47,8 @@ model = Sem(
 )
 ```
 
-In the section on [Model construction](@ref), we go over the different options you have for each part of the model.
-Let's make another example: to use full information maximum likelihood information (FIML), write
+In the section on [Our Concept of a Structural Equation Model](@ref), we go over the different options you have for each part of the model, and in [API - model parts](@ref) we explain each option in detail.
+Let's make another example: to use full information maximum likelihood information (FIML), we use
 
 ```julia
 model = Sem(
@@ -64,7 +64,7 @@ You may also provide addition arguments for specific parts of the model. For exa
 ```math
 W = \frac{1}{2} D^T(S^{-1}\otimes S^{-1})D
 ```
-as the weight matrix, where D is the so-called duplication matrix and S is the observed covariance matrix. However, you can pass any other weight matrix you want (to achieve UWL, DWLS, ADF estimation, for example) as a keyword argument:
+as the weight matrix, where D is the so-called duplication matrix and S is the observed covariance matrix. However, you can pass any other weight matrix you want (e.g., UWL, DWLS, ADF estimation) as a keyword argument:
 
 ```julia
 W = ...
@@ -79,15 +79,37 @@ model = Sem(
 
 ```
 
-To see what additional keyword arguments are supported, you can consult the documentation of the specific part of the model (by either using `help(...)`, or typing `?` in the REPL to enter the help mode and then typing the name of the thing you want to know something about):
+To see what additional keyword arguments are supported, you can consult the documentation of the specific part of the model (either in the REPL by typing `?` to enter the help mode and then typing the name of the thing you want to know something about, or in the online section [API - model parts](@ref)):
 
 ```julia
-help(SemWLS)
+julia>?
+
+help>SemObservedMissing
 
 # output
 
-OUTPUT MISSING!
+  For observed data with missing values.
 
+  Constructor
+  ≡≡≡≡≡≡≡≡≡≡≡≡≡
+
+  SemObservedMissing(;
+      specification,
+      data,
+      obs_colnames = nothing,
+      kwargs...)
+
+  Arguments
+  ≡≡≡≡≡≡≡≡≡≡≡
+
+    •  specification: either a RAMMatrices or ParameterTable object (1)
+
+    •  data: observed data
+
+    •  obs_colnames::Vector{Symbol}: column names of the data (if the object passed as data does not have column names, i.e. is not a data frame)
+
+  ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+Extended help is available with `??`
 ```
 
 ## Optimize loss functions without implemented analytic gradient
@@ -119,4 +141,4 @@ model = SemFiniteDiff(
 )
 ```
 
-will construct a model that, when fitted, will use [Newton's Method](https://julianlsolvers.github.io/Optim.jl/stable/#algo/newton/) from the `Optim.jl` package with analytic gradients and hessians computed via finite difference approximation.
+will construct a model that, when fitted, will use [Newton's Method](https://julianlsolvers.github.io/Optim.jl/stable/#algo/newton/) from the `Optim.jl` package with gradients computed analytically and hessians computed via finite difference approximation.

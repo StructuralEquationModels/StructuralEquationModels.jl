@@ -26,7 +26,7 @@ objective!(ridge::Ridge, par, model::AbstractSemSingle) = ridge.α*sum(par[ridge
 
 That's all we need to make it work! For example, we can now fit [A first model](@ref) with ridge regularization:
 
-We first give som eparameters labels to be able to identify as targets for the regularization:
+We first give some parameters labels to be able to identify them as targets for the regularization:
 ```julia
 graph = @StenoGraph begin
 
@@ -73,7 +73,7 @@ model_fit = sem_fit(model)
 
 This is one way of specifying the model - we now have **one model** with **multiple loss functions**. Because we did not provide a gradient for `Ridge`, we have to specify a `SemFiniteDiff` model that computes numerical gradients with finite difference approximation.
 
-Note that the last argument to the `objective!` method is the whole model. Therefore, we can access everything that is stored inside our model everytime we compute the objective value for our loss function. Since ridge regularization is a very easy case, we do not need to do this. But maximum likelihood estimation for example depens on both the observed and the model implied covariance matrix. See [Second example - maximum likelihood](@ref) for information on how to do that.
+Note that the last argument to the `objective!` method is the whole model. Therefore, we can access everything that is stored inside our model everytime we compute the objective value for our loss function. Since ridge regularization is a very easy case, we do not need to do this. But maximum likelihood estimation for example depends on both the observed and the model implied covariance matrix. See [Second example - maximum likelihood](@ref) for information on how to do that.
 
 ### Improve performance
 
@@ -124,7 +124,7 @@ end
 
 however, this will only matter if you use an optimization algorithm that makes use of the hessians. Our gefault algorithmn `LBFGS` from the package `Optim.jl` does not use hessians (for example, the `Newton` algorithmn from the same package does).
 
-Do improve performance even more, you can write a method of the form
+To improve performance even more, you can write a method of the form
 
 ```julia
 function objective_gradient!(ridge::Ridge, par, model::AbstractSemSingle)
@@ -133,7 +133,7 @@ function objective_gradient!(ridge::Ridge, par, model::AbstractSemSingle)
 end
 ```
 
-This is beneficial when the computation of the objective and gradient share common computations. For example, in maximum likelihood estimation, the model implied covariance matrix has to be inverted to both compute the objective and gradient. Whenever the optimization algorithmn asks for the objective value and gradient at the same point, we call `objective_gradient!` and only have to do the shared computations - in this case the matric inversion - once.
+This is beneficial when the computation of the objective and gradient share common computations. For example, in maximum likelihood estimation, the model implied covariance matrix has to be inverted to both compute the objective and gradient. Whenever the optimization algorithmn asks for the objective value and gradient at the same point, we call `objective_gradient!` and only have to do the shared computations - in this case the matrix inversion - once.
 
 If you want to do hessian-based optimization, there are also the following methods:
 

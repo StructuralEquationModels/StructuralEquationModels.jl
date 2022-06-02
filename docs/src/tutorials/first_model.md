@@ -4,9 +4,7 @@ In this tutorial, we will fit our very first Structural Equation Model with our 
 The example we are using is from [the `lavaan` tutorial](https://lavaan.ugent.be/tutorial/sem.html), so it may be familiar.
 It looks like this:
 
-![Visualization of Political Democracy model](https://lavaan.ugent.be/tutorial/figure/sem-1.png)
-
-[2022 © Yves Roseel](https://lavaan.ugent.be)
+![Visualization of the Political Democracy model](../assets/political_democracy.png)
 
 We assume the `StructuralEquationModels` package is already installed. To use it in the current session, we run
 
@@ -132,8 +130,5 @@ and investigate the solution with
 sem_summary(partable)
 ```
 
-Congratulations, you fitted and inspected your very first model! To learn more about the different parts, 
-you may visit the sections on [Model specification](@ref), [Model construction](@ref), [Model fitting](@ref) and
-[Model inspection](@ref).
-
-If you want to learn how to extend the package (e.g., add a new loss function), you may visit [Extending the package](@ref).
+Congratulations, you fitted and inspected your very first model! 
+We recommend continuing with [Our Concept of a Structural Equation Model](@ref).

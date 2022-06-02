@@ -14,7 +14,7 @@ As you can see, a model can have as many loss functions as you want it to have. 
 
 In julia, everything has a type. To make more precise which objects can be used as the different building blocks, we require them to have a certain type:
 
-![SEM concept](../assets/concept_typed.svg)
+![SEM concept typed](../assets/concept_typed.svg)
 
 So everything that can be used as the 'observed' part has to be of type `SemObserved`.
 
@@ -43,6 +43,14 @@ The diff part of a model connects to the numerical optimization backend used to 
 It can be used to control options like the optimization algorithm, linesearch, stopping criteria, etc. 
 There are currently two available backends, [`SemOptimizerOptim`](@ref) connecting to the [Optim.jl](https://github.com/JuliaNLSolvers/Optim.jl) backend, and [`SemOptimizerNLopt`](@ref) connecting to the [NLopt.jl](https://github.com/JuliaOpt/NLopt.jl) backend.
 For more information about the available options see also the tutorials about [Using Optim.jl](@ref) and [Using NLopt.jl](@ref), as well as [Constrained optimization](@ref).
+
+# What to do next
+
+You now have an understanding about our representation of structural equation models.
+
+To learn more about how to use the package, you may visit the remaining tutorials.
+
+If you want to learn how to extend the package (e.g., add a new loss function), you may visit [Extending the package](@ref).
 
 # API - model parts
 

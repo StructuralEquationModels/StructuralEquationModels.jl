@@ -51,7 +51,7 @@ After you fitted a model,
 model_fit = sem_fit(model)
 ```
 
-you end up with an object of type `SemFit`.
+you end up with an object of type [`SemFit`](@ref).
 
 You can get some more information about it by using the `sem_summary` function:
 
@@ -65,6 +65,14 @@ To compute fit measures, we use
 fit_measures(model_fit)
 ```
 
+or compute them individually:
+
+```@example colored; ansicolor = true
+AIC(model_fit)
+```
+
+A list of available [Fit measures](@ref) is at the end of this page.
+
 To inspect the parameter estimates, we can update a `ParameterTable` object and call `sem_summary` on it:
 
 ```@example colored; ansicolor = true; output = false
@@ -73,7 +81,7 @@ update_estimate!(partable, model_fit)
 sem_summary(partable)
 ```
 
-We can also update the `ParameterTable` object with other information via `update_partable!`. For example, if we want to compare hessian-based and bootstrap-based standard errors, we may write
+We can also update the `ParameterTable` object with other information via [`update_partable!`](@ref). For example, if we want to compare hessian-based and bootstrap-based standard errors, we may write
 
 ```@example colored; ansicolor = true
 se_bs = se_bootstrap(model_fit; n_boot = 20)
@@ -87,7 +95,7 @@ sem_summary(partable)
 
 ## Export results
 
-You may convert a `ParameterTable` to a `DataFrame` and use the [`DataFrames`](https://github.com/JuliaData/DataFrames.jl) package for further analysis (or write to disk).
+You may convert a `ParameterTable` to a `DataFrame` and use the [`DataFrames`](https://github.com/JuliaData/DataFrames.jl) package for further analysis (or to save it to your hard drive).
 
 ```@example colored; ansicolor = true
 using DataFrames
@@ -95,7 +103,34 @@ using DataFrames
 parameters_df = DataFrame(partable)
 ```
 
+# API - model inspection
+
+```@docs
+sem_summary
+update_estimate!
+update_partable!
+```
+
 ## Additional functions
+
 Additional functions that can be used to extract information from a `SemFit` object:
 
--- MISSING DOCSTRINGS --
+```@docs
+SemFit
+```
+
+## Fit measures
+
+```@docs
+fit_measures
+AIC
+BIC
+χ²
+df
+minus2ll
+n_man
+n_obs
+n_par
+p_value
+RMSEA
+```

@@ -21,9 +21,7 @@ makedocs(
                 "tutorials/backends/nlopt.md"
             ],
             "Model Fitting" => "tutorials/fitting/fitting.md",
-            "Model Inspection" => [
-                "tutorials/inspection/inspection.md"
-            ],
+            "Model Inspection" => "tutorials/inspection/inspection.md",
             "Mean Structures" => "tutorials/meanstructure.md",
             "Collections" => [
                 "tutorials/collection/collection.md",
@@ -58,7 +56,8 @@ makedocs(
     format = Documenter.HTML(
         prettyurls = get(ENV, "CI", nothing) == "true",
         assets = ["assets/favicon_zeta.ico"],
-        ansicolor = true
+        ansicolor = true,
+        collapselevel = 1
     ),
     doctest = false
 )

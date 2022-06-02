@@ -1,10 +1,10 @@
-# StructuralEquationModels.jl: a fast and flexible SEM framework
+# A fast and flexible SEM framework
 
 This is a package for Structural Equation Modeling *in development*.
 It is written for extensibility, that is, you can easily define your own objective functions and other parts of the model.
 At the same time, it is (very) fast.
 
-To get started right away, we recommend reading [A first model](@ref) and [Our Concept of a Structural Equation Model](@ref).
+To get started right away, we recommend installing our package ([Installation](@ref)) and then reading [A first model](@ref) and [Our Concept of a Structural Equation Model](@ref).
 
 After that, if you are interested in specifying your own loss functions or other parts, you can proceed with [Extending the package](@ref).
 
@@ -22,7 +22,7 @@ You can choose to mix loss functions natively found in this package and those yo
 In such cases, you optimize over a sum of different objectives (e.g. ML + Ridge).
 This strategy also applies to gradients, where you may supply analytic gradients or opt for automatic differentiation or mixed analytical and automatic differentiation.
 
-You may consider using this package if:
+You may consider using this package if you need **extensibility** and/or **speed**, e.g.
 - you want to extend SEM (e.g. add a new objective function)
 - you want to extend SEM, and your implementation needs to be fast
 - you want to fit the same model(s) to many datasets (bootstrapping, simulation studies)

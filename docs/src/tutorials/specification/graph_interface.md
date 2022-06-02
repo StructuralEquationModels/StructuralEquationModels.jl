@@ -58,7 +58,7 @@ end
 ```
 would 
 - fix the directed effects from `ξ₁` to `x1` and from `ξ₂` to `x2` to `1`
-- leave the directed effect from `ξ₃` to `x3` free but instead restrict the variance of `ξ₃` to `1`
+- leave the directed effect from `ξ₃` to `x7` free but instead restrict the variance of `ξ₃` to `1`
 - give the effect from `ξ₁` to `x3` the label `:a` (which can be convenient later if you want to retrieve information from your model about that specific parameter)
 - constrain the effect from `ξ₂` to `x6` and `ξ₃` to `x9` to be equal as they are both labeled the same.
 

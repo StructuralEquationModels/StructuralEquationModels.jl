@@ -11,7 +11,6 @@ For [A first model](@ref), the corresponding specification looks like this:
 
 ```julia
 
-
 S =[:θ1   0    0     0     0      0     0     0     0     0     0     0     0     0
     0     :θ2  0     0     0      0     0     0     0     0     0     0     0     0
     0     0     :θ3  0     0      0     0     0     0     0     0     0     0     0
@@ -70,20 +69,40 @@ model = Sem(
 )
 ```
 
-Let's have a look at what to do step by step:
+Let's look at this step by step:
 
 First, we specify the `A`, `S` and `F`-Matrices. 
-For a free parameter, we write a `Symbol` like `:θ1` (or any other symbol we like) to the corresponding place in the respective matrix, the constrain parameters to be equal we just use the same `Symbol` in the respective entries. 
+For a free parameter, we write a `Symbol` like `:θ1` (or any other symbol we like) to the corresponding place in the respective matrix, to constrain parameters to be equal we just use the same `Symbol` in the respective entries. 
 To fix a parameter (as in the `A`-Matrix above), we just write down the number we want to fix it to. 
 All other entries are 0.
 
-Second, we specify a vector of symbols containing our parameters.
+Second, we specify a vector of symbols containing our parameters:
 
-Third, we construct an object of type `RAMMatrices`, and pass our matrices and parameters, as well as the column names of our matrices to it. 
+```julia
+θ = Symbol.(:θ, 1:31)
+```
+
+Third, we construct an object of type `RAMMatrices`, passing our matrices and parameters, as well as the column names of our matrices. 
 Those are quite important, as they will be used to rearrange your data to match it to your `RAMMatrices` specification.
+
+```julia
+spec = RAMMatrices(;
+    A = A, 
+    S = S, 
+    F = F, 
+    parameters = θ,
+    colnames = [:x1, :x2, :x3, :y1, :y2, :y3, :y4, :y5, :y6, :y7, :y8, :ind60, :dem60, :dem65]
+)
+```
 
 Finally, we construct a model, passing our `RAMMatrices` as the `specification = ... ` argument.
 
+```julia
+model = Sem(
+    specification = spec,
+    ...
+)
+```
 ## Meanstructure
 
 According to the RAM, model implied mean values of the observed variables are computed as
@@ -109,5 +128,5 @@ spec = RAMMatrices(;
 
 ## Convert from and to ParameterTables
 
-To convert a RAMMatrices object (let's keep the name `spec` from above) to a ParameterTable, simply use `partable = ParameterTable(spec)`. 
+To convert a RAMMatrices object to a ParameterTable, simply use `partable = ParameterTable(ram_matrices)`. 
 To convert an object of type `ParameterTable` to RAMMatrices, you can use `ram_matrices = RAMMatrices(partable)`.

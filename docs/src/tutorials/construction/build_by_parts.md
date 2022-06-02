@@ -1,10 +1,10 @@
 # Build by parts
 
-You can always build a model by parts - that is, you construct the observed, imply, loss and diff part seperately first.
+You can always build a model by parts - that is, you construct the observed, imply, loss and optimizer part seperately.
 
 As an example on how this works, we will build [A first model](@ref) in parts.
 
-First, we define the model just as usual:
+First, we specify the model just as usual:
 
 ```@example build
 using StructuralEquationModels
@@ -58,16 +58,16 @@ ml = SemML(observed = observed)
 
 loss_ml = SemLoss(ml)
 
-# diff -------------------------------------------------------------------------------------
-diff_obj = SemOptimizerOptim()
+# optimizer -------------------------------------------------------------------------------------
+optimizer = SemOptimizerOptim()
 
 # model ------------------------------------------------------------------------------------
 
-model_ml = Sem(observed, imply_ram, loss_ml, diff_obj)
+model_ml = Sem(observed, imply_ram, loss_ml, optimizer)
 ```
 
-Different models may need additional arguments:
+Different models may need additional arguments (just check the help of the specific model types):
 
 ```@example build
-model_ml_fd = SemFiniteDiff(observed, imply_ram, loss_ml, diff_obj, Val(false))
+model_ml_fd = SemFiniteDiff(observed, imply_ram, loss_ml, optimizer, Val(false))
 ```
