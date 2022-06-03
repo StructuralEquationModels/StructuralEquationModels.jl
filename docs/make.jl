@@ -26,7 +26,8 @@ makedocs(
             "Collections" => [
                 "tutorials/collection/collection.md",
                 "tutorials/collection/multigroup.md"
-            ]
+            ],
+            "Constraints" => "tutorials/constraints/constraints.md"
         ],
         "Developer documentation" => [
             "Extending the package" => "developer/extending.md",

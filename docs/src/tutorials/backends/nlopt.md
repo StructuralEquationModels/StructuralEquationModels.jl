@@ -34,7 +34,7 @@ This uses an augmented lagrangian method with LBFGS as the local optimization al
 
 In the NLopt docs, you can find explanations about the different [algorithms](https://nlopt.readthedocs.io/en/latest/NLopt_Algorithms/) and a [tutorial](https://nlopt.readthedocs.io/en/latest/NLopt_Introduction/) that also explains the different options.
 
-To choose an algorithm, just pass its name without the 'NLOPT_' prefix (for example, 'NLOPT_LD_SLSQP' can be used by passing `algorithm = :LD_SLSQP`).
+To choose an algorithm, just pass its name without the 'NLOPT\_' prefix (for example, 'NLOPT\_LD\_SLSQP' can be used by passing `algorithm = :LD_SLSQP`).
 
 The README of the [julia package](https://github.com/JuliaOpt/NLopt.jl) may also be helpful, and provides a list of options:
 
@@ -51,5 +51,3 @@ The README of the [julia package](https://github.com/JuliaOpt/NLopt.jl) may also
  - `population`
  - `seed`
  - `vector_storage`
-
- # Constrained optimization
