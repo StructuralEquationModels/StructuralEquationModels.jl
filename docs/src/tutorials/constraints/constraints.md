@@ -2,9 +2,6 @@
 
 ## Using the NLopt backend
 
-!!! warning "Experimental feature"
-    Altough we found that constrained optimization via the NLopt backend seems to work well, the convergence flags do not work properly - that is, we often get convergence flags indicating non-convergence even if the model converged. We are currently trying to find a solution for this.
-
 ### Define an example model
 
 Let's revisit our model from [A first model](@ref):
@@ -91,8 +88,8 @@ Now they can be defined as functions of the parameter vector:
 function eq_constraint(θ, gradient)
     if length(gradient) > 0
         gradient .= 0.0
-        gradient[1] = 1.0
-        gradient[2] = 1.0
+        gradient[29] = 1.0
+        gradient[30] = 1.0
     end
     return θ[29] + θ[30] - 1
 end
@@ -108,24 +105,39 @@ function ineq_constraint(θ, gradient)
 end
 ```
 
-Here, gradient is a pre-allocated vector for the gradients of the constraint w.r.t. the parameters.
+If the algorithm needs gradients at an iteration, it will pass the vector `gradient` that is of the same size as the parameters.
+With `if length(gradient) > 0` we check if the algorithm needs gradients, and if it does, we fill the `gradient` vector with the gradients 
+of the constraint w.r.t. the parameters.
+
+In NLopt, vector-valued constraints are also possible, but we refer to the documentation fot that.
 
 ### Fit the model
 
-We now have everything toether to specify and fit our model. First, we specify our optimizer backend as
+We now have everything together to specify and fit our model. First, we specify our optimizer backend as
 
 ```@example constraints
 constrained_optimizer = SemOptimizerNLopt(
     algorithm = :AUGLAG,
-    options = Dict(:upper_bounds => upper_bounds),
+    options = Dict(:upper_bounds => upper_bounds, :xtol_abs => 1e-4),
     local_algorithm = :LD_LBFGS,
-    local_options = Dict(:ftol_rel => 1e-6),
-    equality_constraints = NLoptConstraint(;f = eq_constraint, tol = 0.0),
-    inequality_constraints = NLoptConstraint(;f = ineq_constraint, tol = 0.0),
+    equality_constraints = NLoptConstraint(;f = eq_constraint, tol = 1e-8),
+    inequality_constraints = NLoptConstraint(;f = ineq_constraint, tol = 1e-8),
 )
 ```
 
-As you see, the equality constraints and inequality constraints are passed as keword arguments, and the bound are passed as options for the (outer) optimization algorithm.
+As you see, the equality constraints and inequality constraints are passed as keyword arguments, and the bounds are passed as options for the (outer) optimization algorithm.
+Additionally, for equality and inequality constraints, a feasibility tolerance can be specified that controls if a solution can be accepted, even if it violates the constraints by a small amount. 
+Especially for equality constraints, it is recommended to allow for a small positive tolerance.
+In this example, we set both tolerances to `1e-8`.
+
+!!! warning "Convergence criteria"
+    We have often observed that the default convergence criteria in NLopt lead to non-convergence flags.
+    Indeed, this example does not convergence with default criteria.
+    As you see above, we used a realively liberal absolute tolerance in the optimization parameters of 1e-4.
+    This should not be a problem in most cases, as the sampling variance in (almost all) structural equation models 
+    should lead to uncertainty in the parameter estimates that are orders of magnitude larger.
+    We nontheless recommend choosing a convergence criterion with care (i.e. w.r.t. the scale of your parameters),
+    inspecting the solutions for plausibility, and comparing them to unconstrained solutions.
 
 ```@example constraints
 model_constrained = Sem(
@@ -137,13 +149,20 @@ model_constrained = Sem(
 model_fit_constrained = sem_fit(model_constrained)
 ```
 
-As you can see, the convergence flag is `:FAILURE`, but investigating the solution yields
+As you can see, the optimizer converged (`:XTOL_REACHED`) and investigating the solution yields
 
 ```@example constraints
-update_partable!(partable, model_fit_constrained, solution(model_fit_constrained), :estimate_constr)
+update_partable!(
+    partable, 
+    model_fit_constrained, 
+    solution(model_fit_constrained), 
+    :estimate_constr)
 
 sem_summary(partable)
 ```
+
+As we can see, the constrained solution is very close to the original solution (compare the columns estimate and estimate_constr), with the difference that the constrained parameters fulfill their constraints. 
+As all parameters are estimated simultaneously, it is expexted that some unconstrained parameters are also affected (e.g., the constraint on `dem60 → y2` leads to a higher estimate of the residual variance `y2 ↔ y2`).
 
 ## Using the Optim.jl backend
 
