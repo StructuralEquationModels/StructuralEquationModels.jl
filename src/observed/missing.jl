@@ -1,16 +1,59 @@
-############################################################################
+############################################################################################
 ### Types
-############################################################################
+############################################################################################
 
-# Type to store Expectation Maximization result ----------------------------
-
+# Type to store Expectation Maximization result --------------------------------------------
 mutable struct EmMVNModel{A, b, B}
     Σ::A
     μ::b
     fitted::B
 end
 
-mutable struct SemObsMissing{
+"""
+For observed data with missing values.
+
+# Constructor
+
+    SemObservedMissing(;
+        specification,
+        data,
+        obs_colnames = nothing,
+        kwargs...)
+
+# Arguments
+- `specification`: either a `RAMMatrices` or `ParameterTable` object (1)
+- `data`: observed data
+- `obs_colnames::Vector{Symbol}`: column names of the data (if the object passed as data does not have column names, i.e. is not a data frame)
+
+# Extended help
+## Interfaces
+- `n_obs(::SemObservedMissing)` -> number of observed data points
+- `n_man(::SemObservedMissing)` -> number of manifest variables
+
+- `get_data(::SemObservedMissing)` -> observed data
+- `data_rowwise(::SemObservedMissing)` -> observed data as vector per observation, with missing values deleted
+
+- `patterns(::SemObservedMissing)` -> indices of non-missing variables per missing patterns 
+- `patterns_not(::SemObservedMissing)` -> indices of missing variables per missing pattern
+- `rows(::SemObservedMissing)` -> row indices of observed data points that belong to each pattern
+- `pattern_n_obs(::SemObservedMissing)` -> number of data points per pattern
+- `pattern_nvar_obs(::SemObservedMissing)` -> number of non-missing observed variables per pattern
+- `obs_mean(::SemObservedMissing)` -> observed mean per pattern
+- `obs_cov(::SemObservedMissing)` -> observed covariance per pattern
+- `em_model(::SemObservedMissing)` -> `EmMVNModel` that contains the covariance matrix and mean vector found via optimization maximization
+
+## Implementation
+Subtype of `SemObserved`
+
+## Remarks
+(1) the `specification` argument can also be `nothing`, but this turns of checking whether
+the observed data/covariance columns are in the correct order! As a result, you should only
+use this if you are shure your observed data is in the right format.
+
+## Additional keyword arguments:
+- `spec_colnames::Vector{Symbol} = nothing`: overwrites column names of the specification object
+"""
+mutable struct SemObservedMissing{
         A <: AbstractArray,
         D <: AbstractFloat,
         O <: AbstractFloat,
@@ -23,7 +66,7 @@ mutable struct SemObsMissing{
         A2 <: AbstractArray,
         A3 <: AbstractArray,
         S <: EmMVNModel
-        } <: SemObs
+        } <: SemObserved
     data::A
     n_man::D
     n_obs::O
@@ -38,14 +81,51 @@ mutable struct SemObsMissing{
     em_model::S
 end
 
-############################################################################
+############################################################################################
 ### Constructors
-############################################################################
+############################################################################################
 
-function SemObsMissing(;data, specification = nothing, spec_colnames = nothing, data_colnames = nothing, kwargs...)
+function SemObservedMissing(;
+        specification,
+        data,
+
+        obs_colnames = nothing,
+        spec_colnames = nothing,
+
+        kwargs...)
 
     if isnothing(spec_colnames) spec_colnames = get_colnames(specification) end
-    data, _ = reorder_observed(data, spec_colnames, data_colnames)
+
+    if !isnothing(spec_colnames)
+        if isnothing(obs_colnames)
+            try
+                data = data[:, spec_colnames]
+            catch
+                throw(ArgumentError(
+                    "Your `data` can not be indexed by symbols. "*
+                    "Maybe you forgot to provide column names via the `obs_colnames = ...` argument.")
+                    )
+            end
+        else
+            if data isa DataFrame
+                throw(ArgumentError(
+                    "You passed your data as a `DataFrame`, but also specified `obs_colnames`. "*
+                    "Please make shure the column names of your data frame indicate the correct variables "*
+                    "or pass your data in a different format.")
+                    )
+            end
+
+            if !(eltype(obs_colnames) <: Symbol)
+                throw(ArgumentError("please specify `obs_colnames` as a vector of Symbols"))
+            end
+
+            data = reorder_data(data, spec_colnames, obs_colnames)
+        end
+    end
+
+    if data isa DataFrame
+        data = Matrix(data)
+    end
 
     # remove persons with only missings
     keep = Vector{Int64}()
@@ -58,8 +138,7 @@ function SemObsMissing(;data, specification = nothing, spec_colnames = nothing, 
 
 
 
-    n_obs = size(data, 1)
-    n_man = size(data, 2)
+    n_obs, n_man = size(data)
 
     # compute and store the different missing patterns with their rowindices
     missings = ismissing.(data)
@@ -103,46 +182,30 @@ function SemObsMissing(;data, specification = nothing, spec_colnames = nothing, 
 
     em_model = EmMVNModel(zeros(n_man, n_man), zeros(n_man), false)
 
-    return SemObsMissing(data, Float64(n_man), Float64(n_obs), remember_cart,
+    return SemObservedMissing(data, Float64(n_man), Float64(n_obs), remember_cart,
     remember_cart_not, 
     rows, data_rowwise, Float64.(pattern_n_obs), Float64.(pattern_nvar_obs),
     obs_mean, obs_cov, em_model)
 end
 
-############################################################################
+############################################################################################
 ### Recommended methods
-############################################################################
+############################################################################################
 
-n_obs(observed::SemObsMissing) = observed.n_obs
-n_man(observed::SemObsMissing) = observed.n_man
+n_obs(observed::SemObservedMissing) = observed.n_obs
+n_man(observed::SemObservedMissing) = observed.n_man
 
-############################################################################
+############################################################################################
 ### Additional methods
-############################################################################
+############################################################################################
 
-get_data(observed::SemObsMissing) = observed.data
-patterns(observed::SemObsMissing) = observed.patterns
-patterns_not(observed::SemObsMissing) = observed.patterns_not
-rows(observed::SemObsMissing) = observed.rows
-data_rowwise(observed::SemObsMissing) = observed.data_rowwise
-pattern_n_obs(observed::SemObsMissing) = observed.pattern_n_obs
-pattern_nvar_obs(observed::SemObsMissing) = observed.pattern_nvar_obs
-obs_mean(observed::SemObsMissing) = observed.obs_mean
-obs_cov(observed::SemObsMissing) = observed.obs_cov
-em_model(observed::SemObsMissing) = observed.em_model
-
-############################################################################
-### Additional functions
-############################################################################
-
-reorder_observed(data, spec_colnames::Nothing, data_colnames) = data, nothing
-reorder_observed(data, spec_colnames, data_colnames) = reorder_data(data, spec_colnames, data_colnames)
-
-############################################################################
-### Pretty Printing
-############################################################################
-
-function Base.show(io::IO, struct_inst::SemObsMissing)
-    print_type_name(io, struct_inst)
-    print_field_types(io, struct_inst)
-end
+get_data(observed::SemObservedMissing) = observed.data
+patterns(observed::SemObservedMissing) = observed.patterns
+patterns_not(observed::SemObservedMissing) = observed.patterns_not
+rows(observed::SemObservedMissing) = observed.rows
+data_rowwise(observed::SemObservedMissing) = observed.data_rowwise
+pattern_n_obs(observed::SemObservedMissing) = observed.pattern_n_obs
+pattern_nvar_obs(observed::SemObservedMissing) = observed.pattern_nvar_obs
+obs_mean(observed::SemObservedMissing) = observed.obs_mean
+obs_cov(observed::SemObservedMissing) = observed.obs_cov
+em_model(observed::SemObservedMissing) = observed.em_model

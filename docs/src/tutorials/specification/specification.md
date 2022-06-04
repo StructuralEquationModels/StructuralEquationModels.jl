@@ -1,11 +1,13 @@
 # Model specification
 
-We provide different interfaces for specifying a model: the [Graph interface](@ref), the [ParameterTable interface](@ref),
-and the [RAMMatrices interface](@ref). These different specification objects can be (and are internally) converted to each other; but not every conversion is possible - see this picture:
+Two things can be used to specify a model: a parameter table or ram matrices.
+You can convert them to each other, and to make your life easier, we also provide a way to get parameter tables from graphs.
 
-- imagine flowchart here -
+This leads to the following chart:
 
-In general (and especially if you come from `lavaan`), it is the easiest to follow the steps from the page [A first model](@ref), that is specify a graph object, convert it to a prameter table, and use this parameter table to construct your models:
+![Specification flowchart](../../assets/specification.png)
+
+You can enter model specification at each point, but in general (and especially if you come from `lavaan`), it is the easiest to follow the red arrows: specify a graph object, convert it to a prameter table, and use this parameter table to construct your models ( just like we did in [A first model](@ref)):
 
 ```julia
 observed_vars = ...
@@ -26,5 +28,5 @@ model = Sem(
 )
 ```
 
-If you have an `OpenMx` background, and are familiar with their way of specifying structural equation models via RAM matrices,
-the [RAMMatrices interface](@ref) may be of interest for you.
+On the following pages, we explain how to enter the specification process at each step, i.e. how to specify models via the [Graph interface](@ref), the [ParameterTable interface](@ref), and the [RAMMatrices interface](@ref). 
+If you have an `OpenMx` background, and are familiar with their way of specifying structural equation models via RAM matrices, the [RAMMatrices interface](@ref) may be of interest for you.

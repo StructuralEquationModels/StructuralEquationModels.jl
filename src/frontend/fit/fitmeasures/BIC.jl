@@ -1,5 +1,6 @@
-############################################################################
-### based on -2ll
-############################################################################
+"""
+    BIC(sem_fit::SemFit)
 
-BIC(sem_fit) = minus2ll(sem_fit) + log(n_obs(sem_fit))*n_par(sem_fit)
+Return the bayesian information criterion.
+"""
+BIC(sem_fit::SemFit) = minus2ll(sem_fit) + log(n_obs(sem_fit))*n_par(sem_fit)

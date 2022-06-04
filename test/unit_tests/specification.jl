@@ -11,6 +11,10 @@ end
     @test get_identifier_indices(pars, model_ml) == get_identifier_indices(pars, RAMMatrices(partable))
 end
 
+# from docstrings:
+parameter_indices = get_identifier_indices([:λ₁, λ₂], my_fitted_sem)
+values = solution(my_fitted_sem)[parameter_indices]
+
 graph = @StenoGraph begin
     # measurement model
     visual  → fixed(1.0, 1.0)*x1 + fixed(0.5,     0.5)*x2 + fixed(0.6, 0.8)*x3

@@ -1,21 +1,42 @@
+"""
+    start_fabin3(model)
+    
+Return a vector of FABIN 3 starting values (see Hägglund 1982).
+Not available for ensemble models.
+"""
+function start_fabin3 end
+
 # splice model and loss functions
-start_fabin3(model::Union{Sem, SemForwardDiff, SemFiniteDiff}; kwargs...) = 
-    start_fabin3(
+function start_fabin3(
+        model::Union{Sem, SemForwardDiff, SemFiniteDiff}; 
+        kwargs...)
+    return start_fabin3(
         model.observed, 
         model.imply,
         model.diff, 
         model.loss.functions...,
         kwargs...)
+end
 
-# SemObsCommon
-start_fabin3(observed::SemObsCommon, imply::Union{RAM, RAMSymbolic}, diff, args...; kwargs...) = 
-    start_fabin3(
+function start_fabin3(
+        observed, 
+        imply::Union{RAM, RAMSymbolic}, 
+        diff, 
+        args...;
+        kwargs...)
+    return start_fabin3(
         imply.ram_matrices,
-        observed.obs_cov,
-        observed.obs_mean)
+        obs_cov(observed),
+        obs_mean(observed))
+end
 
-# SemObsMissing
-function start_fabin3(observed::SemObsMissing, imply::Union{RAM, RAMSymbolic}, diff, args...; kwargs...)
+# SemObservedMissing
+function start_fabin3(
+        observed::SemObservedMissing, 
+        imply::Union{RAM, RAMSymbolic}, 
+        diff, 
+        args...; 
+        kwargs...)
 
     if !observed.em_model.fitted
         em_mvn(observed; kwargs...)
@@ -31,7 +52,11 @@ end
 function start_fabin3(ram_matrices::RAMMatrices, Σ, μ)
 
     A_ind, S_ind, F_ind, M_ind, parameters = 
-        ram_matrices.A_ind, ram_matrices.S_ind, ram_matrices.F_ind, ram_matrices.M_ind, ram_matrices.parameters
+        ram_matrices.A_ind, 
+        ram_matrices.S_ind, 
+        ram_matrices.F_ind, 
+        ram_matrices.M_ind, 
+        ram_matrices.parameters
 
     n_par = length(parameters)
     start_val = zeros(n_par)

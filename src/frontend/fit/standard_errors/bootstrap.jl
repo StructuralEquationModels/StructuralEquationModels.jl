@@ -1,8 +1,15 @@
-############################################################################
-### bootstrap based standard errors
-############################################################################
+"""
+    se_bootstrap(semfit::SemFit; n_boot = 3000, data = nothing, kwargs...)
 
-function se_bootstrap(semfit::SemFit; n_boot = 3000, data = nothing, kwargs...)
+Return boorstrap standard errors.
+Only works for single models.
+
+# Arguments
+- `n_boot`: number of boostrap samples
+- `data`: data to sample from. Only needed if different than the data from `sem_fit`
+- `kwargs...`: passed down to `swap_observed`
+"""
+function se_bootstrap(semfit::SemFit; n_boot = 3000, data = nothing, specification = nothing, kwargs...)
 
     if isnothing(data)
         data = get_data(observed(model(semfit)))
@@ -23,12 +30,17 @@ function se_bootstrap(semfit::SemFit; n_boot = 3000, data = nothing, kwargs...)
     for _ = 1:n_boot
 
         sample_data = bootstrap_sample(data)
-        new_model = swap_observed(model(semfit); data = sample_data, kwargs...)
+        new_model = swap_observed(
+            model(semfit); 
+            data = sample_data,
+            specification = specification,
+            kwargs...
+        )
 
         new_solution .= 0.0
 
         try
-            new_solution = get_solution(sem_fit(new_model; start_val = start))
+            new_solution = solution(sem_fit(new_model; start_val = start))
         catch
             n_failed += 1
         end
@@ -41,7 +53,7 @@ function se_bootstrap(semfit::SemFit; n_boot = 3000, data = nothing, kwargs...)
 
     n_conv = n_boot - n_failed
     sd = sqrt.(squared_sum/n_conv - (sum/n_conv).^2)
-    print(n_failed, "\n")
+    print("Number of nonconverged models: ", n_failed, "\n")
     return sd
 
 end

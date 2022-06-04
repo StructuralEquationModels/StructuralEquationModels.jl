@@ -21,3 +21,10 @@ function fit_measures(sem_fit, args...)
 
     return measures
 end
+
+"""
+    fit_measures(sem_fit, args...)
+
+Return a default set of fit measures or the fit measures passed as `arg...`.
+"""
+function fit_measures end

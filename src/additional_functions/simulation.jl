@@ -1,16 +1,47 @@
-# convenience functions for simulation studies
+"""
+    (1) swap_observed(model::AbstractSemSingle; kwargs...)
 
-#####################################################################################################
+    (2) swap_observed(model::AbstractSemSingle, observed; kwargs...)
+
+Return a new model with swaped observed part.
+
+# Arguments
+- `model::AbstractSemSingle`: optimization algorithm.
+- `kwargs`: additional keyword arguments; typically includes `data = ...`
+- `observed`: Either an object of subtype of `SemObserved` or a subtype of `SemObserved`
+
+# Examples
+See the online documentation on [Swap observed data](@ref).
+"""
+function swap_observed end
+
+"""
+    update_observed(to_update, observed::SemObserved; kwargs...)
+
+Update a `SemImply`, `SemLossFunction` or `SemOptimizer` object to use a `SemObserved` object.
+
+# Examples
+See the online documentation on [Swap observed data](@ref).
+
+# Implementation
+You can provide a method for this function when defining a new type, for more information
+on this see the online developer documentation on [Update observed data](@ref).
+"""
+function update_observed end
+
+############################################################################################
 # change observed (data) without reconstructing the whole model
-#####################################################################################################
+############################################################################################
 
 # use the same observed type as before
-swap_observed(model::AbstractSemSingle; kwargs...) = swap_observed(model, typeof(observed(model)).name.wrapper; kwargs...)
+swap_observed(model::AbstractSemSingle; kwargs...) = 
+    swap_observed(model, typeof(observed(model)).name.wrapper; kwargs...)
 
 # construct a new observed type
-swap_observed(model::AbstractSemSingle, observed_type; kwargs...) = swap_observed(model, observed_type(;kwargs...); kwargs...)
+swap_observed(model::AbstractSemSingle, observed_type; kwargs...) = 
+    swap_observed(model, observed_type(;kwargs...); kwargs...)
 
-swap_observed(model::AbstractSemSingle, new_observed::SemObs; kwargs...) =
+swap_observed(model::AbstractSemSingle, new_observed::SemObserved; kwargs...) =
     swap_observed(model, observed(model), imply(model), loss(model), diff(model), new_observed; kwargs...)
 
 function swap_observed(
@@ -19,7 +50,7 @@ function swap_observed(
         imply,
         loss,
         diff,
-        new_observed::SemObs; 
+        new_observed::SemObserved; 
         kwargs...)
 
     kwargs = Dict{Symbol, Any}(kwargs...)
@@ -57,8 +88,5 @@ function update_observed(loss::SemLoss, new_observed; kwargs...)
     new_functions = Tuple(update_observed(lossfun, new_observed; kwargs...) for lossfun in loss.functions)
     return SemLoss(
         new_functions,
-        loss.weights,
-        loss.objective,
-        loss.gradient,
-        loss.hessian)
+        loss.weights)
 end

@@ -1,1 +1,0 @@
-# How to fit a multigroup model

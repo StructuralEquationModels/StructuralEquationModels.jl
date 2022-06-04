@@ -1,12 +1,12 @@
-##############################################################
+############################################################################################
 # constructor for Sem types
-##############################################################
+############################################################################################
 
 function Sem(;
-        observed::O = SemObsCommon,
+        observed::O = SemObservedData,
         imply::I = RAM,
         loss::L = SemML,
-        diff::D = SemDiffOptim,
+        diff::D = SemOptimizerOptim,
         kwargs...) where {O, I, L, D}
 
     kwargs = Dict{Symbol, Any}(kwargs...)
@@ -21,10 +21,10 @@ function Sem(;
 end
 
 function SemFiniteDiff(;
-        observed::O = SemObsCommon,
+        observed::O = SemObservedData,
         imply::I = RAM,
         loss::L = SemML,
-        diff::D = SemDiffOptim,
+        diff::D = SemOptimizerOptim,
         has_gradient = false,
         kwargs...) where {O, I, L, D}
 
@@ -34,16 +34,16 @@ function SemFiniteDiff(;
     
     observed, imply, loss, diff = get_fields!(kwargs, observed, imply, loss, diff)
 
-    sem = SemFiniteDiff(observed, imply, loss, diff, has_gradient)
+    sem = SemFiniteDiff(observed, imply, loss, diff, Val(has_gradient))
 
     return sem
 end
 
 function SemForwardDiff(;
-        observed::O = SemObsCommon,
+        observed::O = SemObservedData,
         imply::I = RAM,
         loss::L = SemML,
-        diff::D = SemDiffOptim,
+        diff::D = SemOptimizerOptim,
         has_gradient = false,
         kwargs...) where {O, I, L, D}
 
@@ -53,14 +53,14 @@ function SemForwardDiff(;
     
     observed, imply, loss, diff = get_fields!(kwargs, observed, imply, loss, diff)
 
-    sem = SemForwardDiff(observed, imply, loss, diff, has_gradient)
+    sem = SemForwardDiff(observed, imply, loss, diff, Val(has_gradient))
     
     return sem
 end
 
-##############################################################
+############################################################################################
 # functions
-##############################################################
+############################################################################################
 
 function set_field_type_kwargs!(kwargs, observed, imply, loss, diff, O, I, D)
     kwargs[:observed_type] = O <: Type ? observed : typeof(observed)
@@ -78,7 +78,7 @@ end
 # construct Sem fields
 function get_fields!(kwargs, observed, imply, loss, diff)
     # observed
-    if !isa(observed, SemObs)
+    if !isa(observed, SemObserved)
         observed = observed(;kwargs...)
     end
     kwargs[:observed] = observed
@@ -96,7 +96,7 @@ function get_fields!(kwargs, observed, imply, loss, diff)
     kwargs[:loss] = loss
 
     # diff
-    if !isa(diff, SemDiff)
+    if !isa(diff, SemOptimizer)
         diff = diff(;kwargs...)
     end
 
@@ -121,6 +121,8 @@ function get_SemLoss(loss; kwargs...)
     else
         if !isa(loss, SemLossFunction)
             loss = SemLoss(loss(;kwargs...); kwargs...)
+        else
+            loss = SemLoss(loss; kwargs...)
         end
     end
     return loss
@@ -178,10 +180,14 @@ function Base.show(io::IO, loss::SemLoss)
     print(io, "SemLoss \n")
     print(io, "- Loss Functions \n")
     print(io, lossfuntypes...)
-    print(io, "- Fields \n")
-    print(io, "   F:  $(typeof(loss.F))) \n")
-    print(io, "   G:  $(typeof(loss.G))) \n")
-    print(io, "   H:  $(typeof(loss.H))) \n") 
+    print(io, "- Weights \n")
+    for weight in loss.weights
+        if isnothing(weight.w)
+            print(io, "   one \n")
+        else
+            print(io, "$(round.(weight.w, digits = 2)) \n")
+        end
+    end
 end
 
 function Base.show(io::IO, models::SemEnsemble)

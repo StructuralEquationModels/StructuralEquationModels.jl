@@ -7,10 +7,14 @@ using LinearAlgebra, Optim,
     DataFrames
 
 import DataFrames: DataFrame
-export *, ==, @StenoGraph, AbstractEdge, AbstractNode, DirectedEdge, Edge, EdgeModifier, MetaEdge, MetaNode, ModifiedEdge, ModifiedNode, Modifier, ModifyingNode, Node, NodeModifier, NodeOrEdgeModifier, SimpleNode, StenoGraphs, UndirectedEdge, convert, promote_rule, show, unarrow, unmeta, ←, →, ↔, ⇐, ⇒, ⇔
+export *, ==, @StenoGraph, AbstractEdge, AbstractNode, DirectedEdge, Edge, EdgeModifier, 
+    MetaEdge, MetaNode, ModifiedEdge, ModifiedNode, Modifier, ModifyingNode, Node, 
+    NodeModifier, NodeOrEdgeModifier, SimpleNode, StenoGraphs, UndirectedEdge, convert, 
+    promote_rule, show, unarrow, unmeta, ←, →, ↔, ⇐, ⇒, ⇔, meld
 
 # type hierarchy
 include("types.jl")
+include("objective_gradient_hessian.jl")
 # fitted objects
 include("frontend/fit/SemFit.jl")
 # specification of models
@@ -22,11 +26,14 @@ include("frontend/fit/summary.jl")
 # pretty printing
 include("frontend/pretty_printing.jl")
 # observed
-include("observed/common.jl")
+include("observed/get_colnames.jl")
+include("observed/covariance.jl")
+include("observed/data.jl")
 include("observed/missing.jl")
 include("observed/EM.jl")
 # constructor
 include("frontend/specification/Sem.jl")
+include("frontend/specification/documentation.jl")
 # imply
 include("imply/RAM/symbolic.jl")
 include("imply/RAM/generic.jl")
@@ -42,6 +49,7 @@ include("diff/optim.jl")
 include("diff/NLopt.jl")
 include("diff/Empty.jl")
 # optimizer
+include("optimizer/documentation.jl")
 include("optimizer/optim.jl")
 include("optimizer/NLopt.jl")
 # helper functions
@@ -74,23 +82,25 @@ include("frontend/fit/standard_errors/bootstrap.jl")
 
 
 export  AbstractSem, 
-            AbstractSemSingle, AbstractSemCollection, Sem, SemFiniteDiff, SemForwardDiff, SemEnsemble,
+            AbstractSemSingle, AbstractSemCollection, Sem, SemFiniteDiff, SemForwardDiff, 
+            SemEnsemble,
         SemImply, 
-            RAMSymbolic, RAM, ImplyEmpty,
+            RAMSymbolic, RAM, ImplyEmpty, imply,
         start_val,
             start_fabin3, start_simple, start_parameter_table,
         SemLoss, 
             SemLossFunction, SemML, SemFIML, em_mvn, SemLasso, SemRidge,
-            SemConstant, SemWLS,
-        SemDiff, 
-            SemDiffEmpty, SemDiffOptim, SemDiffNLopt, NLoptConstraint,
-        SemObs, 
-            SemObsCommon, SemObsMissing,
+            SemConstant, SemWLS, loss,
+        SemOptimizer, 
+            SemOptimizerEmpty, SemOptimizerOptim, SemOptimizerNLopt, NLoptConstraint, diff,
+        SemObserved, 
+            SemObservedData, SemObservedCovariance, SemObservedMissing, observed,
         sem_fit, 
         SemFit,
             minimum, solution,
         sem_summary,
-        objective, objective!, gradient, gradient!, hessian, hessian!, objective_gradient!,
+        objective!, gradient!, hessian!, objective_gradient!, objective_hessian!, 
+            gradient_hessian!, objective_gradient_hessian!,
         ParameterTable, 
             EnsembleParameterTable, update_partable!, update_estimate!, update_start!,
             Fixed, fixed, Start, start, Label, label,
@@ -103,5 +113,6 @@ export  AbstractSem,
             EmMVNModel,
         se_hessian, se_bootstrap,
         example_data,
+        swap_observed, update_observed,
         @StenoGraph, →, ←, ↔, ⇔
 end

@@ -1,8 +1,11 @@
 using StructuralEquationModels, Distributions, Random, Optim, LineSearches
 import StructuralEquationModels as SEM
-include("helper.jl")
+include(
+     joinpath(chop(dirname(pathof(StructuralEquationModels)), tail = 3), 
+     "test/examples/helper.jl")
+     )
 
-x = Symbol.("x".*string.(1:13))
+x = Symbol.("x", 1:13)
 
 S = [:x1 0 0 0 0 0 0 0
      0 :x2 0 0 0 0 0 0
@@ -35,10 +38,10 @@ true_val = [repeat([1], 8)
             0.4
             repeat([0.8], 4)]
 
-start_val = [repeat([1], 9)
+start = [repeat([1], 9)
              repeat([0.5], 4)]
 
-imply_ml = RAMSymbolic(;specification = ram_matrices, start_val = start_val)
+imply_ml = RAMSymbolic(;specification = ram_matrices, start_val = start)
 
 imply_ml.Σ_function(imply_ml.Σ, true_val)
 
@@ -46,19 +49,19 @@ true_dist = MultivariateNormal(imply_ml.Σ)
 
 Random.seed!(1234)
 x = transpose(rand(true_dist, 100000))
-semobserved = SemObsCommon(data = x)
+semobserved = SemObservedData(data = x, specification = nothing)
 
-loss_ml = SemLoss(SEM.SemML(;observed = semobserved, n_par = length(start_val)))
+loss_ml = SemLoss(SEM.SemML(;observed = semobserved, n_par = length(start)))
 
 diff = 
-    SemDiffOptim(
+    SemOptimizerOptim(
         BFGS(;linesearch = BackTracking(order=3), alphaguess = InitialHagerZhang()),# m = 100), 
         Optim.Options(
             ;f_tol = 1e-10, 
             x_tol = 1.5e-8))
 
 model_ml = Sem(semobserved, imply_ml, loss_ml, diff)
-model_ml(true_val, true, false, false)
+objective!(model_ml, true_val)
 solution_ml = sem_fit(model_ml)
 
 @test isapprox(true_val, solution(solution_ml); atol = .05)

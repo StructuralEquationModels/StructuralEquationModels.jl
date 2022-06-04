@@ -1,7 +1,10 @@
 using StructuralEquationModels, Test, FiniteDiff
 import LinearAlgebra: diagind
 # import StructuralEquationModels as SEM
-include("helper.jl")
+include(
+    joinpath(chop(dirname(pathof(StructuralEquationModels)), tail = 3), 
+    "test/examples/helper.jl")
+    )
 
 dat = example_data("holzinger_swineford")
 dat_missing = example_data("holzinger_swineford_missing")
@@ -13,9 +16,9 @@ dat_g2 = dat[dat.school .== "Grant-White", :]
 dat_miss_g1 = dat_missing[dat_missing.school .== "Pasteur", :]
 dat_miss_g2 = dat_missing[dat_missing.school .== "Grant-White", :]
 
-############################################################################
+############################################################################################
 ### specification - RAMMatrices
-############################################################################
+############################################################################################
 
 x = Symbol.(:x, 1:36)
 #x = [x...]
@@ -64,17 +67,17 @@ partable = EnsembleParameterTable(
 specification_miss_g1 = nothing
 specification_miss_g2 = nothing
 
-start_test = [fill(1.0, 9); fill(0.05, 3); fill(0.01, 3); fill(0.5, 6); fill(1.0, 9); fill(0.05, 3); fill(0.01, 3)]
-semdiff = SemDiffOptim
+start_test = [fill(1.0, 9); fill(0.05, 3); fill(0.01, 3); fill(0.5, 6); fill(1.0, 9); 
+    fill(0.05, 3); fill(0.01, 3)]
+semdiff = SemOptimizerOptim
+
 @testset "RAMMatrices | constructor | Optim" begin include("build_models.jl") end
 
-############################################################################
+############################################################################################
 ### specification - Graph
-############################################################################
+############################################################################################
 
-using StenoGraphs
-
-# w.o. meanstructure -------------------------------------------------------
+# w.o. meanstructure -----------------------------------------------------------------------
 
 latent_vars = [:visual, :textual, :speed]
 observed_vars = Symbol.(:x, 1:9)
@@ -100,7 +103,7 @@ specification = RAMMatrices(partable)
 specification_g1 = specification[:Pasteur]
 specification_g2 = specification[:Grant_White]
 
-# w. meanstructure (fiml) ----------------------------------------------------
+# w. meanstructure (fiml) ------------------------------------------------------------------
 
 latent_vars = [:visual, :textual, :speed]
 observed_vars = Symbol.(:x, 1:9)
@@ -128,6 +131,12 @@ specification_miss = RAMMatrices(partable_miss)
 specification_miss_g1 = specification_miss[:Pasteur]
 specification_miss_g2 = specification_miss[:Grant_White]
 
-start_test = [fill(0.5, 6); fill(1.0, 9); 0.05; 0.01; 0.01; 0.05; 0.01; 0.05; fill(1.0, 9); 0.05; 0.01; 0.01; 0.05; 0.01; 0.05]
-semdiff = SemDiffOptim
-@testset "Graph → Partable → RAMMatrices | constructor | Optim" begin include("build_models.jl") end
+start_test = [
+    fill(0.5, 6); 
+    fill(1.0, 9); 0.05; 0.01; 0.01; 0.05; 0.01; 0.05; 
+    fill(1.0, 9); 0.05; 0.01; 0.01; 0.05; 0.01; 0.05]
+semdiff = SemOptimizerOptim
+
+@testset "Graph → Partable → RAMMatrices | constructor | Optim" begin 
+    include("build_models.jl") 
+end

@@ -1,6 +1,6 @@
-############################################################################
+############################################################################################
 ### Expectation Maximization Algorithm
-############################################################################
+############################################################################################
 
 # An EM Algorithm for MVN-distributed Data with missing values
 # Adapted from supplementary Material to the book Machine Learning: A Probabilistic Perspective
@@ -10,10 +10,20 @@
 
 # what about random restarts?
 
-# outer function -----------------------------------------------------------------
+# outer function ---------------------------------------------------------------------------
+"""
+    em_mvn(;
+        observed::SemObservedMissing,
+        start_em = start_em_observed,
+        max_iter_em = 100,
+        rtol_em = 1e-4,
+        kwargs...)
 
+Estimates the covariance matrix and mean vector of the normal distribution via expectation maximization for `observed`.
+Overwrites the statistics stored in `observed`.
+"""
 function em_mvn(
-    observed::SemObsMissing;
+    observed::SemObservedMissing;
     start_em = start_em_observed,
     max_iter_em = 100,
     rtol_em = 1e-4,
@@ -74,7 +84,7 @@ function em_mvn(
     
 end
 
-# E and M step ------------------------------------------------------------------------------
+# E and M step -----------------------------------------------------------------------------
 
 function em_mvn_Estep!(𝔼x, 𝔼xxᵀ, em_model, observed, 𝔼x_pre, 𝔼xxᵀ_pre)
 
@@ -143,10 +153,10 @@ function em_mvn_Mstep!(em_model, n_obs, 𝔼x, 𝔼xxᵀ)
     return nothing
 end
 
-# generate starting values --------------------------------------------------------------
+# generate starting values -----------------------------------------------------------------
 
 # use μ and Σ of full cases
-function start_em_observed(observed::SemObsMissing; kwargs...)
+function start_em_observed(observed::SemObservedMissing; kwargs...)
 
     if (length(observed.patterns[1]) == observed.n_man) & (observed.pattern_n_obs[1] > 1)
         μ = copy(observed.obs_mean[1])
@@ -162,7 +172,7 @@ function start_em_observed(observed::SemObsMissing; kwargs...)
 end
 
 # use μ = O and Σ = I
-function start_em_simple(observed::SemObsMissing; kwargs...)
+function start_em_simple(observed::SemObservedMissing; kwargs...)
     n_man = Int(observed.n_man)
     μ = zeros(n_man)
     Σ = rand(n_man, n_man); Σ = Σ*Σ'
@@ -171,6 +181,6 @@ function start_em_simple(observed::SemObsMissing; kwargs...)
 end
 
 # set to passed values
-function start_em_set(observed::SemObsMissing; model_em, kwargs...)
+function start_em_set(observed::SemObservedMissing; model_em, kwargs...)
     return em_model
 end

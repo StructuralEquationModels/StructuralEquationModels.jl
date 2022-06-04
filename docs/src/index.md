@@ -1,7 +1,13 @@
-# StructuralEquationModes.jl: a fast and flexible SEM framework
+# A fast and flexible SEM framework
 
-This is a package for Structural Equation Modeling.
-It is still *in development*.
+This is a package for Structural Equation Modeling *in development*.
+It is written for extensibility, that is, you can easily define your own objective functions and other parts of the model.
+At the same time, it is (very) fast.
+
+To get started right away, we recommend installing our package ([Installation](@ref)) and then reading [A first model](@ref) and [Our Concept of a Structural Equation Model](@ref).
+
+After that, if you are interested in specifying your own loss functions or other parts, you can proceed with [Extending the package](@ref).
+
 Models you can fit include
 - Linear SEM that can be specified in RAM notation
 - ML, GLS and FIML estimation
@@ -12,24 +18,25 @@ Models you can fit include
 We provide fast objective functions, gradients, and for some cases hessians as well as approximations thereof.
 As a user, you can easily define custom loss functions.
 For those, you can decide to provide analytical gradients or use finite difference approximation / automatic differentiation.
-You can choose to mix and match loss functions natively found in this package and those you provide.
+You can choose to mix loss functions natively found in this package and those you provide.
 In such cases, you optimize over a sum of different objectives (e.g. ML + Ridge).
-This mix and match strategy also applies to gradients, where you may supply analytic gradients or opt for automatic differentiation or mix analytical and automatic differentiation.
+This strategy also applies to gradients, where you may supply analytic gradients or opt for automatic differentiation or mixed analytical and automatic differentiation.
 
-You may consider using this package if:
-- you want to extend SEM (e.g. add a new objective function) and need an extendable framework
-- you want to extend SEM, and your implementation needs to be fast (because you want to do a simulation, for example)
+You may consider using this package if you need **extensibility** and/or **speed**, e.g.
+- you want to extend SEM (e.g. add a new objective function)
+- you want to extend SEM, and your implementation needs to be fast
 - you want to fit the same model(s) to many datasets (bootstrapping, simulation studies)
 - you are planning a study and would like to do power simulations
 
 For examples on how to use the package, see the Tutorials.
 
 ## Installation
+You need to have [julia](https://julialang.org/downloads/) installed and may want to additionally use an IDE of your choice (we like VS Code with the Julia extension).
 
-To install the latest version from GitHub, use the following commands in your julia REPL:
+To install the latest version of our package from GitHub, use the following commands:
 ```julia
 using Pkg
-Pkd.add("https://github.com/StructuralEquationModels/StructuralEquationModels.jl")
+Pkg.add(url = "https://github.com/StructuralEquationModels/StructuralEquationModels.jl")
 ```
 
 ## Citing the package

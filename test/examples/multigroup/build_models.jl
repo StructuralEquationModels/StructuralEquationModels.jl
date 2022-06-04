@@ -1,6 +1,6 @@
-####################################################################
+############################################################################################
 # ML estimation
-####################################################################
+############################################################################################
 
 model_g1 = Sem(
     specification = specification_g1,
@@ -16,9 +16,9 @@ model_g2 = Sem(
 
 model_ml_multigroup = SemEnsemble(model_g1, model_g2; diff = semdiff)
 
-############################################################################
+############################################################################################
 ### test gradients
-############################################################################
+############################################################################################
 
 @testset "ml_gradients_multigroup" begin
     @test test_gradient(model_ml_multigroup, start_test; atol = 1e-9)
@@ -49,42 +49,25 @@ end
         lav_groups = Dict(:Pasteur => 1, :Grant_White => 2))
 end
 
-####################################################################
+############################################################################################
 # ML estimation - user defined loss function
-####################################################################
+############################################################################################
 
-struct UserSemML <: SemLossFunction
-    objective
-    gradient
-    hessian
-end
+struct UserSemML <: SemLossFunction end
 
-############################################################################
-### constructor
-############################################################################
-
-UserSemML(;n_par, kwargs...) = UserSemML([1.0], zeros(n_par), zeros(n_par, n_par)) 
-
-############################################################################
+############################################################################################
 ### functors
-############################################################################
+############################################################################################
 
-import LinearAlgebra: Symmetric, cholesky, isposdef, logdet, tr
-import LinearAlgebra
+import LinearAlgebra: isposdef, logdet, tr, inv
+import StructuralEquationModels: Σ, obs_cov, objective!
 
-function (semml::UserSemML)(par, F, G, H, model)
-    if G error("analytic gradient of ML is not implemented (yet)") end
-    if H error("analytic hessian of ML is not implemented (yet)") end
-
-    a = cholesky(Symmetric(model.imply.Σ); check = false)
-    if !isposdef(a)
-        semml.objective[1] = Inf
-    else
-        ld = logdet(a)
-        Σ_inv = LinearAlgebra.inv(a)
-        if !isnothing(F)
-            prod = Σ_inv*model.observed.obs_cov
-            semml.objective[1] = ld + tr(prod)
+function objective!(semml::UserSemML, parameters, model::AbstractSem)
+    let Σ = Σ(imply(model)), Σₒ = obs_cov(observed(model))
+        if !isposdef(Σ)
+            return Inf
+        else
+            return logdet(Σ) + tr(inv(Σ)*Σₒ)
         end
     end
 end
@@ -100,7 +83,7 @@ model_g2 = SemFiniteDiff(
     specification = specification_g2,
     data = dat_g2,
     imply = RAMSymbolic,
-    loss = UserSemML
+    loss = UserSemML()
 )
 
 model_ml_multigroup = SemEnsemble(model_g1, model_g2; diff = semdiff)
@@ -119,9 +102,9 @@ end
         lav_groups = Dict(:Pasteur => 1, :Grant_White => 2))
 end
 
-####################################################################
+############################################################################################
 # GLS estimation
-####################################################################
+############################################################################################
 
 model_ls_g1 = Sem(
     specification = specification_g1,
@@ -168,35 +151,37 @@ end
         lav_groups = Dict(:Pasteur => 1, :Grant_White => 2))
 end
 
-if !isnothing(specification_miss_g1)
-
-####################################################################
+############################################################################################
 # FIML estimation
-####################################################################
+############################################################################################
+
+if !isnothing(specification_miss_g1)
 
 model_g1 = Sem(
     specification = specification_miss_g1,
-    observed = SemObsMissing,
+    observed = SemObservedMissing,
     loss = SemFIML,
     data = dat_miss_g1,
     imply = RAM,
-    diff = SemDiffEmpty()
+    diff = SemOptimizerEmpty(),
+    meanstructure = true
 )
 
 model_g2 = Sem(
     specification = specification_miss_g2,
-    observed = SemObsMissing,
+    observed = SemObservedMissing,
     loss = SemFIML,
     data = dat_miss_g2,
     imply = RAM,
-    diff = SemDiffEmpty()
+    diff = SemOptimizerEmpty(),
+    meanstructure = true
 )
 
 model_ml_multigroup = SemEnsemble(model_g1, model_g2; diff = semdiff)
 
-############################################################################
+############################################################################################
 ### test gradients
-############################################################################
+############################################################################################
 
 start_test = [
     fill(0.5, 6); 

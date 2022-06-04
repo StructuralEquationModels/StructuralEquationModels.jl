@@ -1,5 +1,21 @@
-# Single Models ---------------------------------------------------------------------------------
+"""
+    start_simple(
+        model;
+        start_loadings = 0.5,
+        start_regressions = 0.0,
+        start_variances_observed = 1,
+        start_variances_latent = 0.05,
+        start_covariances_observed = 0.0,
+        start_covariances_latent = 0.0,
+        start_covariances_obs_lat = 0.0,
+        start_means = 0.0,
+        kwargs...)
+    
+Return a vector of simple starting values.
+"""
+function start_simple end
 
+# Single Models ----------------------------------------------------------------------------
 function start_simple(model::Union{Sem, SemForwardDiff, SemFiniteDiff}; kwargs...)
     return start_simple(
         model.observed, 
@@ -13,7 +29,7 @@ function start_simple(observed, imply::Union{RAM, RAMSymbolic}, diff, args...; k
     return start_simple(imply.ram_matrices; kwargs...)
 end
 
-# Ensemble Models --------------------------------------------------------------------------------
+# Ensemble Models --------------------------------------------------------------------------
 function start_simple(model::SemEnsemble; kwargs...)
     
     start_vals = []
@@ -48,7 +64,11 @@ function start_simple(
     kwargs...)
 
     A_ind, S_ind, F_ind, M_ind, parameters = 
-        ram_matrices.A_ind, ram_matrices.S_ind, ram_matrices.F_ind, ram_matrices.M_ind, ram_matrices.parameters
+        ram_matrices.A_ind, 
+        ram_matrices.S_ind, 
+        ram_matrices.F_ind, 
+        ram_matrices.M_ind, 
+        ram_matrices.parameters
 
     n_par = length(parameters)
     start_val = zeros(n_par)

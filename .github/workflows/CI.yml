@@ -1,9 +1,5 @@
 name: CI
 on:
-  pull_request:
-    branches:
-      - main
-      - devel
   push:
     branches: '*'
     tags: '*'
@@ -13,8 +9,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     env:
       JULIA_NUM_THREADS: 8
+      JULIA_EXTENDED_TESTS: false
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix:
         version:
           - '1.7.2'

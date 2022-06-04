@@ -1,20 +1,23 @@
 using StructuralEquationModels, Test, FiniteDiff
 # import StructuralEquationModels as SEM
-include("helper.jl")
+include(
+    joinpath(chop(dirname(pathof(StructuralEquationModels)), tail = 3), 
+    "test/examples/helper.jl")
+    )
 
-############################################################################
+############################################################################################
 ### data
-############################################################################
+############################################################################################
 
 dat = example_data("political_democracy")
 dat_missing = example_data("political_democracy_missing")
 solution_lav = example_data("political_democracy_solution")
 
-############################################################################
+############################################################################################
 ### specification - RAMMatrices
-############################################################################
+############################################################################################
 
-# w.o. meanstructure -------------------------------------------------------
+# w.o. meanstructure -----------------------------------------------------------------------
 
 x = Symbol.("x".*string.(1:31))
 
@@ -70,7 +73,7 @@ spec = RAMMatrices(;
 
 partable = ParameterTable(spec)
 
-# w. meanstructure ----------------------------------------------------------------------------
+# w. meanstructure -------------------------------------------------------------------------
 
 x = Symbol.("x".*string.(1:38))
 
@@ -89,16 +92,23 @@ partable_mean = ParameterTable(spec_mean)
 start_test = [fill(1.0, 11); fill(0.05, 3); fill(0.05, 6); fill(0.5, 8); fill(0.05, 3)]
 start_test_mean = [fill(1.0, 11); fill(0.05, 3); fill(0.05, 6); fill(0.5, 8); fill(0.05, 3); fill(0.1, 7)]
 
-semdiff = SemDiffOptim
+semdiff = SemOptimizerOptim
 @testset "RAMMatrices | constructor | Optim" begin include("constructor.jl") end
-semdiff = SemDiffNLopt
+semdiff = SemOptimizerNLopt
 @testset "RAMMatrices | constructor | NLopt" begin include("constructor.jl") end
+
+if ENV["JULIA_EXTENDED_TESTS"] == "true"
+    semdiff = SemOptimizerOptim
+    @testset "RAMMatrices | parts | Optim" begin include("by_parts.jl") end
+    semdiff = SemOptimizerNLopt
+    @testset "RAMMatrices | parts | NLopt" begin include("by_parts.jl") end
+end
 
 @testset "constraints | NLopt" begin include("constraints.jl") end
 
-############################################################################
+############################################################################################
 ### specification - RAMMatrices → ParameterTable
-############################################################################
+############################################################################################
 
 spec = ParameterTable(spec)
 spec_mean = ParameterTable(spec_mean)
@@ -106,15 +116,21 @@ spec_mean = ParameterTable(spec_mean)
 partable = spec
 partable_mean = spec_mean
 
-semdiff = SemDiffOptim
+semdiff = SemOptimizerOptim
 @testset "RAMMatrices → ParameterTable | constructor | Optim" begin include("constructor.jl") end
-semdiff = SemDiffNLopt
+semdiff = SemOptimizerNLopt
 @testset "RAMMatrices → ParameterTable | constructor | NLopt" begin include("constructor.jl") end
 
-############################################################################
+if ENV["JULIA_EXTENDED_TESTS"] == "true"
+    semdiff = SemOptimizerOptim
+    @testset "RAMMatrices → ParameterTable | parts | Optim" begin include("by_parts.jl") end
+    semdiff = SemOptimizerNLopt
+    @testset "RAMMatrices → ParameterTable | parts | NLopt" begin include("by_parts.jl") end
+end
+
+############################################################################################
 ### specification - Graph
-############################################################################
-using StenoGraphs
+############################################################################################
 
 observed_vars = [:x1, :x2, :x3, :y1, :y2, :y3, :y4, :y5, :y6, :y7, :y8]
 latent_vars = [:ind60, :dem60, :dem65]
@@ -183,7 +199,14 @@ partable_mean = spec_mean
 start_test = [fill(0.5, 8); fill(0.05, 3); fill(1.0, 11);  fill(0.05, 9)]
 start_test_mean = [fill(0.5, 8); fill(0.05, 3); fill(1.0, 11); fill(0.05, 3); fill(0.05, 13)]
 
-semdiff = SemDiffOptim
+semdiff = SemOptimizerOptim
 @testset "Graph → ParameterTable | constructor | Optim" begin include("constructor.jl") end
-semdiff = SemDiffNLopt
+semdiff = SemOptimizerNLopt
 @testset "Graph → ParameterTable | constructor | NLopt" begin include("constructor.jl") end
+
+if ENV["JULIA_EXTENDED_TESTS"] == "true"
+    semdiff = SemOptimizerOptim
+    @testset "Graph → ParameterTable | parts | Optim" begin include("by_parts.jl") end
+    semdiff = SemOptimizerNLopt
+    @testset "Graph → ParameterTable | parts | NLopt" begin include("by_parts.jl") end
+end

@@ -1,13 +1,15 @@
-############################################################################
+############################################################################################
 ### connect to NLopt.jl as backend
-############################################################################
+############################################################################################
 
 # wrapper to define the objective
-function sem_wrap_nlopt(par, G, sem::AbstractSem)
+function sem_wrap_nlopt(par, G, model::AbstractSem)
     need_gradient = length(G) != 0
-    sem(par, true, need_gradient, false)
-    if need_gradient G .= gradient(sem) end
-    return objective(sem)[1]
+    if need_gradient
+        return objective_gradient!(G, model, par)
+    else
+        return objective!(model, par)
+    end
 end
 
 mutable struct NLoptResult
@@ -31,7 +33,7 @@ function SemFit_NLopt(optimization_result, model::AbstractSem, start_val, opt)
 end
 
 # sem_fit method
-function sem_fit(model::Sem{O, I, L, D}; start_val = start_val, kwargs...) where {O, I, L, D <: SemDiffNLopt}
+function sem_fit(model::Sem{O, I, L, D}; start_val = start_val, kwargs...) where {O, I, L, D <: SemOptimizerNLopt}
 
     # starting values
     if !isa(start_val, Vector)
@@ -39,7 +41,10 @@ function sem_fit(model::Sem{O, I, L, D}; start_val = start_val, kwargs...) where
     end
 
     # construct the NLopt problem
-    opt = construct_NLopt_problem(model.diff.algorithm, model.diff.options, length(start_val))
+    opt = construct_NLopt_problem(
+        model.diff.algorithm, 
+        model.diff.options, 
+        length(start_val))
     set_NLopt_constraints!(opt, model.diff)   
     opt.min_objective = (par, G) -> sem_wrap_nlopt(par, G, model)
 
@@ -57,7 +62,7 @@ function sem_fit(model::Sem{O, I, L, D}; start_val = start_val, kwargs...) where
     return SemFit_NLopt(result, model, start_val, opt)
 end
 
-function sem_fit(model::SemEnsemble{N, T , V, D, S}; start_val = start_val, kwargs...) where {N, T, V, D <: SemDiffNLopt, S}
+function sem_fit(model::SemEnsemble{N, T , V, D, S}; start_val = start_val, kwargs...) where {N, T, V, D <: SemOptimizerNLopt, S}
 
     # starting values
     if !isa(start_val, Vector)
@@ -65,7 +70,10 @@ function sem_fit(model::SemEnsemble{N, T , V, D, S}; start_val = start_val, kwar
     end
 
     # construct the NLopt problem
-    opt = construct_NLopt_problem(model.diff.algorithm, model.diff.options, length(start_val))
+    opt = construct_NLopt_problem(
+        model.diff.algorithm, 
+        model.diff.options, 
+        length(start_val))
     set_NLopt_constraints!(opt, model.diff)   
     opt.min_objective = (par, G) -> sem_wrap_nlopt(par, G, model)
 
@@ -83,9 +91,9 @@ function sem_fit(model::SemEnsemble{N, T , V, D, S}; start_val = start_val, kwar
     return SemFit_NLopt(result, model, start_val, opt)
 end
 
-############################################################################
+############################################################################################
 ### additional functions
-############################################################################
+############################################################################################
 
 function construct_NLopt_problem(algorithm, options, npar)
     opt = Opt(algorithm, npar)
@@ -98,7 +106,7 @@ function construct_NLopt_problem(algorithm, options, npar)
 
 end
 
-function set_NLopt_constraints!(opt, diff::SemDiffNLopt)
+function set_NLopt_constraints!(opt, diff::SemOptimizerNLopt)
     for con in diff.inequality_constraints
         inequality_constraint!(opt::Opt, con.f, con.tol)
     end
@@ -107,9 +115,9 @@ function set_NLopt_constraints!(opt, diff::SemDiffNLopt)
     end
 end
 
-##############################################################
+############################################################################################
 # pretty printing
-##############################################################
+############################################################################################
 
 function Base.show(io::IO, result::NLoptResult)
     print(io, "Optimizer status: $(result.result[3]) \n")

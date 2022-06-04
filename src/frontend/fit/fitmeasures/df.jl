@@ -1,8 +1,14 @@
-df(sem_fit) = df(sem_fit.model)
+"""
+    df(sem_fit::SemFit)
+    df(model::AbstractSem)
 
-df(model::AbstractSemSingle) = n_dp(model) - n_par(model)
+Return the degrees of freedom.
+"""
+function df end
 
-df(model::SemEnsemble) = n_dp(model) - n_par(model)
+df(sem_fit::SemFit) = df(sem_fit.model)
+
+df(model::AbstractSem) = n_dp(model) - n_par(model)
 
 function n_dp(model::AbstractSemSingle)
     nman = n_man(model)
