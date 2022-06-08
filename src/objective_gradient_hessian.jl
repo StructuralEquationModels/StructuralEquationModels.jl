@@ -78,7 +78,7 @@ hessian!(hessian, model::SemForwardDiff, par) =
 function gradient!(
         gradient, 
         model::Union{SemFiniteDiff, SemForwardDiff}, 
-        par, 
+        parameters, 
         has_gradient::Val{true})
     fill!(gradient, zero(eltype(gradient)))
     gradient!(imply(model), parameters, model)
@@ -89,7 +89,7 @@ end
 function objective_gradient!(
         gradient, 
         model::Union{SemFiniteDiff, SemForwardDiff}, 
-        par, 
+        parameters, 
         has_gradient::Val{true})
     fill!(gradient, zero(eltype(gradient)))
     objective_gradient!(imply(model), parameters, model)
@@ -99,11 +99,11 @@ end
 function objective_gradient!(
         gradient, 
         model::Union{SemFiniteDiff, SemForwardDiff}, 
-        par, 
+        parameters, 
         has_gradient::Val{false})
     fill!(gradient, zero(eltype(gradient)))
-    gradient!(gradient, model, par)
-    return objective!(model, par)
+    gradient!(gradient, model, parameters)
+    return objective!(model, parameters)
 end
 
 # other methods
@@ -118,21 +118,21 @@ function gradient_hessian!(
     hessian!(hessian, model, parameters)
 end
 
-function objective_hessian!(hessian, model::Union{SemFiniteDiff, SemForwardDiff}, par)
+function objective_hessian!(hessian, model::Union{SemFiniteDiff, SemForwardDiff}, parameters)
     fill!(hessian, zero(eltype(hessian)))
-    hessian!(hessian, model, par)
-    return objective!(model, par)
+    hessian!(hessian, model, parameters)
+    return objective!(model, parameters)
 end
 
 function objective_gradient_hessian!(
         gradient, 
         hessian, 
         model::Union{SemFiniteDiff, SemForwardDiff}, 
-        par)
+        parameters)
     fill!(gradient, zero(eltype(gradient)))
     fill!(hessian, zero(eltype(hessian)))
-    hessian!(hessian, model, par)
-    return objective_gradient!(gradient, model, par)
+    hessian!(hessian, model, parameters)
+    return objective_gradient!(gradient, model, parameters)
 end
 
 ############################################################################################
