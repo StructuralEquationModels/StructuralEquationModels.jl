@@ -19,7 +19,7 @@ Structural Equation Model
    diff:      SemOptimizerOptim
 ```
 
-The output of this call tells you exactly what model you just constructed (i.e. what the loss functions, observed, imply and diff parts are).
+The output of this call tells you exactly what model you just constructed (i.e. what the loss functions, observed, imply and optimizer parts are).
 
 As you can see, by default, we use maximum likelihood estimation, the RAM imply type and the `Optim.jl` optimization backend. 
 To choose something different, you can provide it as a keyword argument:

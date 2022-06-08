@@ -8,7 +8,7 @@ To get started right away, we recommend installing our package ([Installation](@
 
 After that, if you are interested in specifying your own loss functions or other parts, you can proceed with [Extending the package](@ref).
 
-Models you can fit include
+Models you can fit out of the box include
 - Linear SEM that can be specified in RAM notation
 - ML, GLS and FIML estimation
 - Ridge Regularization
@@ -31,7 +31,7 @@ You may consider using this package if you need **extensibility** and/or **speed
 For examples on how to use the package, see the Tutorials.
 
 ## Installation
-You need to have [julia](https://julialang.org/downloads/) installed and may want to additionally use an IDE of your choice (we like VS Code with the Julia extension).
+You need to have [julia](https://julialang.org/downloads/) installed (and we strongly recommend to additionally use an IDE of your choice; we like VS Code with the Julia extension).
 
 To install the latest version of our package from GitHub, use the following commands:
 ```julia

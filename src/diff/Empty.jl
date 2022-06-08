@@ -3,7 +3,7 @@
 ############################################################################################
 """
 Empty placeholder for models that don't need
-a diff part.
+an optimizer part.
 
 # Constructor
 
@@ -27,7 +27,7 @@ struct SemOptimizerEmpty <: SemOptimizer end
 ### Recommended methods
 ############################################################################################
 
-update_observed(diff::SemOptimizerEmpty, observed::SemObserved; kwargs...) = diff
+update_observed(optimizer::SemOptimizerEmpty, observed::SemObserved; kwargs...) = optimizer
 
 ############################################################################################
 ### Pretty Printing

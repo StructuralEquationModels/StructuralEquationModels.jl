@@ -55,8 +55,8 @@ function sem_fit(
     result = Optim.optimize(
                 Optim.only_fgh!((F, G, H, par) -> sem_wrap_optim(par, F, G, H, model)),
                 start_val,
-                model.diff.algorithm,
-                model.diff.options)
+                model.optimizer.algorithm,
+                model.optimizer.options)
     return SemFit(result, model, start_val)
 
 end
@@ -73,8 +73,8 @@ function sem_fit(
     result = Optim.optimize(
                 Optim.only_fgh!((F, G, H, par) -> sem_wrap_optim(par, F, G, H, model)),
                 start_val,
-                model.diff.algorithm,
-                model.diff.options)
+                model.optimizer.algorithm,
+                model.optimizer.options)
     return SemFit(result, model, start_val)
 
 end

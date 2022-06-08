@@ -52,8 +52,6 @@ graph = @StenoGraph begin
     ξ₃ → fixed(NaN)*x7 + x8 + label(:λ₁)*x9
 
     ξ₃ ↔ fixed(1.0)*ξ₃
-    ...
-
 end
 ```
 would 

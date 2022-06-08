@@ -1,6 +1,6 @@
 # A first model
 
-In this tutorial, we will fit our very first Structural Equation Model with our package. 
+In this tutorial, we will fit an example SEM with our package. 
 The example we are using is from [the `lavaan` tutorial](https://lavaan.ugent.be/tutorial/sem.html), so it may be familiar.
 It looks like this:
 
@@ -71,6 +71,13 @@ graph = @StenoGraph begin
 
 end
 ```
+
+!!! note "Time to first model"
+    When executing the code from this tutorial the first time in a fresh julia session,
+    you may wonder that it takes quite some time. This is not because the implementation is slow,
+    but because the functions are compiled the first time you use them.
+    Try rerunning the example a second time - you will see that all function executions after the first one
+    are quite fast.
 
 We then use this graph to define a `ParameterTable` object
 

@@ -25,10 +25,10 @@ Connects to `NLopt.jl` as the optimization backend.
 
 # Example
 ```julia
-my_diff = SemOptimizerNLopt()
+my_optimizer = SemOptimizerNLopt()
 
 # constrained optimization with augmented lagrangian
-my_constrained_diff = SemOptimizerNLopt(;
+my_constrained_optimizer = SemOptimizerNLopt(;
     algorithm = :AUGLAG,
     local_algorithm = :LD_LBFGS,
     local_options = Dict(:ftol_rel => 1e-6),
@@ -44,12 +44,12 @@ For information on how to use inequality and equality constraints, see XXX in ou
 # Extended help
 
 ## Interfaces
-- `algorithm(diff::SemOptimizerNLopt)`
-- `local_algorithm(diff::SemOptimizerNLopt)`
-- `options(diff::SemOptimizerNLopt)`
-- `local_options(diff::SemOptimizerNLopt)`
-- `equality_constraints(diff::SemOptimizerNLopt)`
-- `inequality_constraints(diff::SemOptimizerNLopt)`
+- `algorithm(::SemOptimizerNLopt)`
+- `local_algorithm(::SemOptimizerNLopt)`
+- `options(::SemOptimizerNLopt)`
+- `local_options(::SemOptimizerNLopt)`
+- `equality_constraints(::SemOptimizerNLopt)`
+- `inequality_constraints(::SemOptimizerNLopt)`
 
 ## Implementation
 
@@ -98,16 +98,16 @@ end
 ### Recommended methods
 ############################################################################################
 
-update_observed(diff::SemOptimizerNLopt, observed::SemObserved; kwargs...) = diff
+update_observed(optimizer::SemOptimizerNLopt, observed::SemObserved; kwargs...) = optimizer
 
 ############################################################################################
 ### additional methods
 ############################################################################################
 
-algorithm(diff::SemOptimizerNLopt) = diff.algorithm
-local_algorithm(diff::SemOptimizerNLopt) = diff.local_algorithm
-options(diff::SemOptimizerNLopt) = diff.options
-local_options(diff::SemOptimizerNLopt) = diff.local_options
-equality_constraints(diff::SemOptimizerNLopt) = diff.equality_constraints
-inequality_constraints(diff::SemOptimizerNLopt) = diff.inequality_constraints
+algorithm(optimizer::SemOptimizerNLopt) = optimizer.algorithm
+local_algorithm(optimizer::SemOptimizerNLopt) = optimizer.local_algorithm
+options(optimizer::SemOptimizerNLopt) = optimizer.options
+local_options(optimizer::SemOptimizerNLopt) = optimizer.local_options
+equality_constraints(optimizer::SemOptimizerNLopt) = optimizer.equality_constraints
+inequality_constraints(optimizer::SemOptimizerNLopt) = optimizer.inequality_constraints
 

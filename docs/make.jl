@@ -33,7 +33,7 @@ makedocs(
             "Extending the package" => "developer/extending.md",
             "Custom loss functions" => "developer/loss.md",
             "Custom imply types" => "developer/imply.md",
-            "Custom diff types" => "developer/diff.md",
+            "Custom optimizer types" => "developer/optimizer.md",
             "Custom observed types" => "developer/observed.md",
             "Custom model types" => "developer/sem.md"
         ],

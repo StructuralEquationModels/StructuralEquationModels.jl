@@ -1,6 +1,6 @@
-# Custom diff types
+# Custom optimizer types
 
-The diff part of a model connects it to the optimization backend. 
+The optimizer part of a model connects it to the optimization backend. 
 The first part of the implementation is very similar to loss functions, so we just show the implementation of `SemOptimizerOptim` here:
 
 ```julia
@@ -24,14 +24,14 @@ end
 ### Recommended methods
 ############################################################################
 
-update_observed(diff::SemOptimizerOptim, observed::SemObserved; kwargs...) = diff
+update_observed(optimizer::SemOptimizerOptim, observed::SemObserved; kwargs...) = optimizer
 
 ############################################################################
 ### additional methods
 ############################################################################
 
-algorithm(diff::SemOptimizerOptim) = diff.algorithm
-options(diff::SemOptimizerOptim) = diff.options
+algorithm(optimizer::SemOptimizerOptim) = optimizer.algorithm
+options(optimizer::SemOptimizerOptim) = optimizer.options
 ```
 
 Now comes a part that is a little bit more complicated: We need to write methods for `sem_fit`:

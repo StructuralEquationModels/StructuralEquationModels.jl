@@ -42,16 +42,16 @@ function sem_fit(model::Sem{O, I, L, D}; start_val = start_val, kwargs...) where
 
     # construct the NLopt problem
     opt = construct_NLopt_problem(
-        model.diff.algorithm, 
-        model.diff.options, 
+        model.optimizer.algorithm, 
+        model.optimizer.options, 
         length(start_val))
-    set_NLopt_constraints!(opt, model.diff)   
+    set_NLopt_constraints!(opt, model.optimizer)   
     opt.min_objective = (par, G) -> sem_wrap_nlopt(par, G, model)
 
-    if !isnothing(model.diff.local_algorithm)
+    if !isnothing(model.optimizer.local_algorithm)
         opt_local = construct_NLopt_problem(
-            model.diff.local_algorithm,
-            model.diff.local_options,
+            model.optimizer.local_algorithm,
+            model.optimizer.local_options,
             length(start_val))
         opt.local_optimizer = opt_local
     end
@@ -71,16 +71,16 @@ function sem_fit(model::SemEnsemble{N, T , V, D, S}; start_val = start_val, kwar
 
     # construct the NLopt problem
     opt = construct_NLopt_problem(
-        model.diff.algorithm, 
-        model.diff.options, 
+        model.optimizer.algorithm, 
+        model.optimizer.options, 
         length(start_val))
-    set_NLopt_constraints!(opt, model.diff)   
+    set_NLopt_constraints!(opt, model.optimizer)   
     opt.min_objective = (par, G) -> sem_wrap_nlopt(par, G, model)
 
-    if !isnothing(model.diff.local_algorithm)
+    if !isnothing(model.optimizer.local_algorithm)
         opt_local = construct_NLopt_problem(
-            model.diff.local_algorithm,
-            model.diff.local_options,
+            model.optimizer.local_algorithm,
+            model.optimizer.local_options,
             length(start_val))
         opt.local_optimizer = opt_local
     end
@@ -106,11 +106,11 @@ function construct_NLopt_problem(algorithm, options, npar)
 
 end
 
-function set_NLopt_constraints!(opt, diff::SemOptimizerNLopt)
-    for con in diff.inequality_constraints
+function set_NLopt_constraints!(opt, optimizer::SemOptimizerNLopt)
+    for con in optimizer.inequality_constraints
         inequality_constraint!(opt::Opt, con.f, con.tol)
     end
-    for con in diff.equality_constraints
+    for con in optimizer.equality_constraints
         equality_constraint!(opt::Opt, con.f, con.tol)
     end
 end
