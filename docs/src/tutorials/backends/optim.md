@@ -9,7 +9,7 @@ We can load the `Optim` and `LineSearches` packages to choose something differen
 using Optim, LineSearches
 
 my_optimizer = SemOptimizerOptim(
-    algorithm = Newton(
+    algorithm = BFGS(
         linesearch = BackTracking(order=3), 
         alphaguess = InitialHagerZhang()
         ),
@@ -17,6 +17,6 @@ my_optimizer = SemOptimizerOptim(
     )
 ```
 
-A model with this optimizer object will use Newtons method (= hessian based optimization) with a back tracking linesearch and a certain initial step length guess. Also, the trace of the optimization will be printed to the console.
+A model with this optimizer object will use BFGS (!not L-BFGS) with a back tracking linesearch and a certain initial step length guess. Also, the trace of the optimization will be printed to the console.
 
 For a list of all available algorithms and options, we refer to [this page](https://julianlsolvers.github.io/Optim.jl/stable/#user/config/) of the `Optim.jl` manual.

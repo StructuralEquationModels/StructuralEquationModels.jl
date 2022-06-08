@@ -172,14 +172,15 @@ end
 """
     SemEnsemble(models..., optimizer = SemOptimizerOptim, weights = nothing, kwargs...)
 
-Constructor for `SemForwardDiff`.
-All additional kwargs are passed down to the constructor for the optimizer field.
+Constructor for ensemble models.
 
 # Arguments
 - `models...`: `AbstractSem`s.
 - `optimizer`: object of subtype `SemOptimizer` or a constructor.
 - `weights::Vector`:  Weights for each model. Defaults to the number of observed data points.
 
+All additional kwargs are passed down to the constructor for the optimizer field.
+    
 Returns a SemEnsemble with fields
 - `n::Int`: Number of models.
 - `sems::Tuple`: `AbstractSem`s.

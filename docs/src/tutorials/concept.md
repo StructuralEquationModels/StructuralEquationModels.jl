@@ -18,7 +18,17 @@ In julia, everything has a type. To make more precise which objects can be used 
 
 So everything that can be used as the 'observed' part has to be of type `SemObserved`.
 
-The rest of this page is about which building blocks are available for each part. First, we explain every part and give an overview on the different options that are available. After that, the [API - model parts](@ref) section serves as a reference for detailed explanations about the different options.
+Here is an overview on the available building blocks:
+
+|[`SemObserved`](@ref)            | [`SemImply`](@ref)    | [`SemLossFunction`](@ref) | [`SemOptimizer`](@ref)        |
+|---------------------------------|-----------------------|---------------------------|-------------------------------|
+| [`SemObservedData`](@ref)       | [`RAM`](@ref)         | [`SemML`](@ref)           | [`SemOptimizerOptim`](@ref)   |
+| [`SemObservedCovariance`](@ref) | [`RAMSymbolic`](@ref) | [`SemWLS`](@ref)          | [`SemOptimizerNLopt`](@ref)   |
+| [`SemObservedMissing`](@ref)    | [`ImplyEmpty`](@ref)  | [`SemFIML`](@ref)         |                               |
+|                                 |                       | [`SemRidge`](@ref)        |                               |   
+|                                 |                       | [`SemConstant`](@ref)     |                               |   
+
+The rest of this page is explains the building blocks for each part. First, we explain every part and give an overview on the different options that are available. After that, the [API - model parts](@ref) section serves as a reference for detailed explanations about the different options.
 (How to stick them together to a final model is explained in the section on [Model construction](@ref).)
 
 ## The observed part aka [`SemObserved`](@ref)

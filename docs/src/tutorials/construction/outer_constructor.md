@@ -55,7 +55,8 @@ model = Sem(
     specification = partable,
     data = data,
     loss = SemFIML,
-    observed = SemObservedMissing
+    observed = SemObservedMissing,
+    meanstructure = true
 )
 ```
 
@@ -112,7 +113,7 @@ help>SemObservedMissing
 Extended help is available with `??`
 ```
 
-## Optimize loss functions without implemented analytic gradient
+## Optimize loss functions without analytic gradient
 
 For loss functions without analytic gradients, it is possible to use finite difference approximation or forward mode automatic differentiation. 
 All loss functions provided in the package do have analytic gradients (and some even hessians or approximations thereof), so there is no need do use this feature if you are only working with them.
@@ -142,3 +143,9 @@ model = SemFiniteDiff(
 ```
 
 will construct a model that, when fitted, will use [Newton's Method](https://julianlsolvers.github.io/Optim.jl/stable/#algo/newton/) from the `Optim.jl` package with gradients computed analytically and hessians computed via finite difference approximation.
+
+
+!!! note "Using automatic differentiation"
+    You can construct a `SemForwardDiff` to use forward-mode automatic differentiation for the gradients.
+    However, at the moment, this does not work with the imply types in our package 
+    (e.g. it only works with models that use `ImplyEmpty`).

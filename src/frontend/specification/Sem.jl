@@ -145,9 +145,9 @@ function Base.show(io::IO, sem::Sem{O, I, L, D})  where {O, I, L, D}
     print(io, "- Loss Functions \n")
     print(io, lossfuntypes...)
     print(io, "- Fields \n")
-    print(io, "   observed:  $(nameof(O)) \n")
-    print(io, "   imply:     $(nameof(I)) \n")
-    print(io, "   optimizer: $(nameof(D)) \n")
+    print(io, "   observed:    $(nameof(O)) \n")
+    print(io, "   imply:       $(nameof(I)) \n")
+    print(io, "   optimizer:   $(nameof(D)) \n")
 end
 
 function Base.show(io::IO, sem::SemFiniteDiff{O, I, L, D})  where {O, I, L, D}
@@ -157,9 +157,9 @@ function Base.show(io::IO, sem::SemFiniteDiff{O, I, L, D})  where {O, I, L, D}
     print(io, "- Loss Functions \n")
     print(io, lossfuntypes...)
     print(io, "- Fields \n")
-    print(io, "   observed:  $(nameof(O)) \n")
-    print(io, "   imply:     $(nameof(I)) \n")
-    print(io, "   optimizer: $(nameof(D)) \n") 
+    print(io, "   observed:    $(nameof(O)) \n")
+    print(io, "   imply:       $(nameof(I)) \n")
+    print(io, "   optimizer:   $(nameof(D)) \n") 
 end
 
 function Base.show(io::IO, sem::SemForwardDiff{O, I, L, D})  where {O, I, L, D}
@@ -169,9 +169,9 @@ function Base.show(io::IO, sem::SemForwardDiff{O, I, L, D})  where {O, I, L, D}
     print(io, "- Loss Functions \n")
     print(io, lossfuntypes...)
     print(io, "- Fields \n")
-    print(io, "   observed:  $(nameof(O)) \n")
-    print(io, "   imply:     $(nameof(I)) \n")
-    print(io, "   optimizer: $(nameof(D)) \n") 
+    print(io, "   observed:    $(nameof(O)) \n")
+    print(io, "   imply:       $(nameof(I)) \n")
+    print(io, "   optimizer:   $(nameof(D)) \n") 
 end
 
 function Base.show(io::IO, loss::SemLoss)
@@ -198,9 +198,9 @@ function Base.show(io::IO, models::SemEnsemble)
     print(io, "- optimizer: $(nameof(typeof(optimizer(models)))) \n")
 
     print(io, "\n", "Models: \n")
-    print(io, "=========================", "\n")
+    print(io, "===============================================", "\n")
     for (model, i) in zip(models.sems, 1:models.n)
-        print(io, "----------- ", i, " -----------", "\n")
+        print(io, "---------------------- ", i, " ----------------------", "\n")
         print(io, model)
     end
 end

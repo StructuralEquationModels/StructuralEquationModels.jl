@@ -23,3 +23,10 @@ One important thing to note is that the individual optimizer entries of each mod
 You may also pass a vector of weigths to `SemEnsemble`. By default, those are set to ``N_{model}/N_{total}``, i.e. each model is weighted by the number of observations in it's data (which matches the formula for multigroup models).
 
 Multigroup models can also be specified via the graph interface; for an example, see [Multigroup models](@ref).
+
+# API - collections
+
+```@docs
+SemEnsemble
+AbstractSemCollection
+```

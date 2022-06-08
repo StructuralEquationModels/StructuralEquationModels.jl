@@ -7,18 +7,20 @@ model_fit = sem_fit(model)
 
 # output
 
-Fitted Structural Equation Model
-================================
-------------- Model ------------
-Structural Equation Model
-- Loss Functions
-   SemML
-- Fields
-   observed:  SemObservedCommon
-   imply:     RAM
-   optimizer: SemOptimizerOptim
+Fitted Structural Equation Model 
+=============================================== 
+--------------------- Model ------------------- 
 
------ Optimization result ------
+Structural Equation Model 
+- Loss Functions 
+   SemML
+- Fields 
+   observed:  SemObservedData 
+   imply:     RAM 
+   optimizer: SemOptimizerOptim 
+
+------------- Optimization result ------------- 
+
  * Status: success
 
  * Candidate solution
@@ -28,17 +30,17 @@ Structural Equation Model
     Algorithm:     L-BFGS
 
  * Convergence measures
-    |x - x'|               = 3.81e-05 ≰ 1.5e-08
-    |x - x'|/|x'|          = 5.10e-06 ≰ 0.0e+00
+    |x - x'|               = 6.13e-05 ≰ 1.5e-08
+    |x - x'|/|x'|          = 8.21e-06 ≰ 0.0e+00
     |f(x) - f(x')|         = 1.05e-09 ≰ 0.0e+00
-    |f(x) - f(x')|/|f(x')| = 4.97e-11 ≤ 1.0e-10
-    |g(x)|                 = 7.31e-05 ≰ 1.0e-08
+    |f(x) - f(x')|/|f(x')| = 4.94e-11 ≤ 1.0e-10
+    |g(x)|                 = 2.48e-05 ≰ 1.0e-08
 
  * Work counters
     Seconds run:   0  (vs limit Inf)
-    Iterations:    136
-    f(x) calls:    413
-    ∇f(x) calls:   413
+    Iterations:    175
+    f(x) calls:    524
+    ∇f(x) calls:   524
 ```
 
 You may optionally specify [Starting values](@ref).
