@@ -195,7 +195,7 @@ function Base.show(io::IO, models::SemEnsemble)
     print(io, "SemEnsemble \n")
     print(io, "- Number of Models: $(models.n) \n")
     print(io, "- Weights: $(round.(models.weights, digits = 2)) \n")
-    print(io, "- optimizer: $(nameof(typeof(optimizer(model)))) \n")
+    print(io, "- optimizer: $(nameof(typeof(optimizer(models)))) \n")
 
     print(io, "\n", "Models: \n")
     print(io, "=========================", "\n")

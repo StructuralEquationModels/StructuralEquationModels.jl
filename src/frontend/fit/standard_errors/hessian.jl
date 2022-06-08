@@ -41,7 +41,7 @@ H_scaling(model::AbstractSemSingle) =
         model,
         model.observed,
         model.imply,
-        model.diff,
+        model.optimizer,
         model.loss.functions...)
 
 H_scaling(model, obs, imp, optimizer, lossfun::Union{SemML, SemWLS}) =
