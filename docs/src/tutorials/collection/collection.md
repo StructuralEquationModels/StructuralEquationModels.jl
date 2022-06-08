@@ -15,7 +15,7 @@ model_2 = SemFiniteDiff(...)
 
 model_3 = SemForwardDiff(...)
 
-model_ensemble = SemEnsemble(model_1, model_2, model_3; diff = ...)
+model_ensemble = SemEnsemble(model_1, model_2, model_3; optimizer = ...)
 ```
 
 So you just construct the individual models (however you like) and pass them to `SemEnsemble`.

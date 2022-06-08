@@ -20,12 +20,12 @@ function start_simple(model::Union{Sem, SemForwardDiff, SemFiniteDiff}; kwargs..
     return start_simple(
         model.observed, 
         model.imply,
-        model.diff, 
+        model.optimizer, 
         model.loss.functions...,
         kwargs...)
 end
 
-function start_simple(observed, imply::Union{RAM, RAMSymbolic}, diff, args...; kwargs...)
+function start_simple(observed, imply::Union{RAM, RAMSymbolic}, optimizer, args...; kwargs...)
     return start_simple(imply.ram_matrices; kwargs...)
 end
 

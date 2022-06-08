@@ -44,7 +44,7 @@ include("loss/ML/FIML.jl")
 include("loss/regularization/ridge.jl")
 include("loss/WLS/WLS.jl")
 include("loss/constant/constant.jl")
-# diff
+# optimizer
 include("diff/optim.jl")
 include("diff/NLopt.jl")
 include("diff/Empty.jl")
@@ -92,7 +92,7 @@ export  AbstractSem,
             SemLossFunction, SemML, SemFIML, em_mvn, SemLasso, SemRidge,
             SemConstant, SemWLS, loss,
         SemOptimizer, 
-            SemOptimizerEmpty, SemOptimizerOptim, SemOptimizerNLopt, NLoptConstraint, diff,
+            SemOptimizerEmpty, SemOptimizerOptim, SemOptimizerNLopt, NLoptConstraint,
         SemObserved, 
             SemObservedData, SemObservedCovariance, SemObservedMissing, observed,
         sem_fit, 

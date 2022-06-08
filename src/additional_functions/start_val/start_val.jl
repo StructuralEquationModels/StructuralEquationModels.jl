@@ -14,7 +14,7 @@ start_val(model::Union{Sem, SemFiniteDiff, SemForwardDiff}; kwargs...) =
         model, 
         model.observed, 
         model.imply, 
-        model.diff, 
+        model.optimizer, 
         model.loss.functions...; 
         kwargs...)
 
@@ -23,7 +23,7 @@ start_val(
         model, 
         observed, 
         imply::Union{RAM, RAMSymbolic}, 
-        diff, 
+        optimizer, 
         args...; 
         kwargs...) =
     start_fabin3(model; kwargs...)

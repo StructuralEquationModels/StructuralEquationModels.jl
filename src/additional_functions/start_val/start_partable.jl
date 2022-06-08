@@ -10,13 +10,13 @@ function start_parameter_table(model::Union{Sem, SemForwardDiff, SemFiniteDiff};
     return start_parameter_table(
         model.observed, 
         model.imply,
-        model.diff, 
+        model.optimizer, 
         model.loss.functions...;
         kwargs...)
 end
 
 # RAM(Symbolic)
-function start_parameter_table(observed, imply::Union{RAM, RAMSymbolic}, diff, args...; kwargs...)
+function start_parameter_table(observed, imply::Union{RAM, RAMSymbolic}, optimizer, args...; kwargs...)
     return start_parameter_table(
         imply.ram_matrices;
         kwargs...)

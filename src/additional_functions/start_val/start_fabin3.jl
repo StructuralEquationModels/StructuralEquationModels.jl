@@ -13,7 +13,7 @@ function start_fabin3(
     return start_fabin3(
         model.observed, 
         model.imply,
-        model.diff, 
+        model.optimizer, 
         model.loss.functions...,
         kwargs...)
 end
@@ -21,7 +21,7 @@ end
 function start_fabin3(
         observed, 
         imply::Union{RAM, RAMSymbolic}, 
-        diff, 
+        optimizer, 
         args...;
         kwargs...)
     return start_fabin3(
@@ -34,7 +34,7 @@ end
 function start_fabin3(
         observed::SemObservedMissing, 
         imply::Union{RAM, RAMSymbolic}, 
-        diff, 
+        optimizer, 
         args...; 
         kwargs...)
 

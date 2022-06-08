@@ -15,23 +15,23 @@ minus2ll(sem_fit::SemFit{Mi, So, St, Mo, O} where {Mi, So, St, Mo <: AbstractSem
         sem_fit,
         sem_fit.model.observed,
         sem_fit.model.imply,
-        sem_fit.model.diff,
+        sem_fit.model.optimizer,
         sem_fit.model.loss.functions...
         )
 
-minus2ll(sem_fit::SemFit, obs, imp, diff, args...) = minus2ll(sem_fit.minimum, obs, imp, diff, args...)
+minus2ll(sem_fit::SemFit, obs, imp, optimizer, args...) = minus2ll(sem_fit.minimum, obs, imp, optimizer, args...)
 
 # SemML ------------------------------------------------------------------------------------
-minus2ll(minimum::Number, obs, imp::Union{RAM, RAMSymbolic}, diff, loss_ml::SemML) =
+minus2ll(minimum::Number, obs, imp::Union{RAM, RAMSymbolic}, optimizer, loss_ml::SemML) =
     n_obs(obs)*(minimum + log(2π)*n_man(obs))
 
 # WLS --------------------------------------------------------------------------------------
-minus2ll(minimum::Number, obs, imp::Union{RAM, RAMSymbolic}, diff, loss_ml::SemWLS) =
+minus2ll(minimum::Number, obs, imp::Union{RAM, RAMSymbolic}, optimizer, loss_ml::SemWLS) =
     missing
 
 # compute likelihood for missing data - H0 -------------------------------------------------
 # -2ll = (∑ log(2π)*(nᵢ + mᵢ)) + F*n
-function minus2ll(minimum::Number, observed, imp::Union{RAM, RAMSymbolic}, diff, loss_ml::SemFIML)
+function minus2ll(minimum::Number, observed, imp::Union{RAM, RAMSymbolic}, optimizer, loss_ml::SemFIML)
     F = minimum
     F *= n_obs(observed)
     F += sum(log(2π)*observed.pattern_n_obs.*observed.pattern_nvar_obs)
@@ -101,7 +101,7 @@ end
 ############################################################################################
 
 minus2ll(minimum, model::AbstractSemSingle) = 
-    minus2ll(minimum, model.observed, model.imply, model.diff, model.loss.functions...)
+    minus2ll(minimum, model.observed, model.imply, model.optimizer, model.loss.functions...)
 
 function minus2ll(sem_fit::SemFit{Mi, So, St, Mo, O} where {Mi, So, St, Mo <: SemEnsemble, O})
     m2ll = 0.0

@@ -4,5 +4,5 @@ model_ridge_id = Sem(
     loss = (SemML, SemRidge),
     α_ridge = .001,
     which_ridge = [:x16, :x17, :x18, :x19, :x20],
-    diff = semdiff
+    optimizer = semoptimizer
 )

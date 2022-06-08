@@ -53,14 +53,14 @@ semobserved = SemObservedData(data = x, specification = nothing)
 
 loss_ml = SemLoss(SEM.SemML(;observed = semobserved, n_par = length(start)))
 
-diff = 
+optimizer = 
     SemOptimizerOptim(
         BFGS(;linesearch = BackTracking(order=3), alphaguess = InitialHagerZhang()),# m = 100), 
         Optim.Options(
             ;f_tol = 1e-10, 
             x_tol = 1.5e-8))
 
-model_ml = Sem(semobserved, imply_ml, loss_ml, diff)
+model_ml = Sem(semobserved, imply_ml, loss_ml, optimizer)
 objective!(model_ml, true_val)
 solution_ml = sem_fit(model_ml)
 

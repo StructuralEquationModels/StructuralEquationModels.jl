@@ -16,7 +16,7 @@ Structural Equation Model
 - Fields
    observed:  SemObservedCommon
    imply:     RAM
-   diff:      SemOptimizerOptim
+   optimizer: SemOptimizerOptim
 
 ----- Optimization result ------
  * Status: success

@@ -7,7 +7,7 @@ import Statistics: cov, mean
 model_ml = Sem(
     specification = spec,
     data = dat,
-    diff = semdiff
+    optimizer = semoptimizer
 )
 
 model_ml_cov = Sem(
@@ -15,7 +15,7 @@ model_ml_cov = Sem(
     observed = SemObservedCovariance,
     obs_cov = cov(Matrix(dat)),
     obs_colnames = Symbol.(names(dat)),
-    diff = semdiff,
+    optimizer = semoptimizer,
     n_obs = 75.0
 )
 
@@ -24,14 +24,14 @@ model_ls_sym = Sem(
     data = dat,
     imply = RAMSymbolic,
     loss = SemWLS,
-    diff = semdiff
+    optimizer = semoptimizer
 )
 
 model_ml_sym = Sem(
     specification = spec,
     data = dat,
     imply = RAMSymbolic,
-    diff = semdiff
+    optimizer = semoptimizer
 )
 
 model_ridge = Sem(
@@ -40,7 +40,7 @@ model_ridge = Sem(
     loss = (SemML, SemRidge),
     α_ridge = .001,
     which_ridge = 16:20,
-    diff = semdiff
+    optimizer = semoptimizer
 )
 
 model_constant = Sem(
@@ -48,14 +48,14 @@ model_constant = Sem(
     data = dat,
     loss = (SemML, SemConstant),
     constant_loss = 3.465,
-    diff = semdiff
+    optimizer = semoptimizer
 )
 
 model_ml_weighted = Sem(
     specification = partable,
     data = dat,
     loss_weights = (n_obs(model_ml),),
-    diff = semdiff
+    optimizer = semoptimizer
 )
 
 ############################################################################################
@@ -147,7 +147,7 @@ end
 ### test hessians
 ############################################################################################
 
-if semdiff == SemOptimizerOptim
+if semoptimizer == SemOptimizerOptim
     using Optim, LineSearches
 
     model_ls = Sem(
@@ -202,14 +202,14 @@ model_ls = Sem(
     imply = RAMSymbolic,
     loss = SemWLS,
     meanstructure = true,
-    diff = semdiff
+    optimizer = semoptimizer
 )
 
 model_ml = Sem(
     specification = spec_mean,
     data = dat,
     meanstructure = true,
-    diff = semdiff
+    optimizer = semoptimizer
 )
 
 model_ml_cov = Sem(
@@ -219,7 +219,7 @@ model_ml_cov = Sem(
     obs_mean = vcat(mean(Matrix(dat), dims = 1)...),
     obs_colnames = Symbol.(names(dat)),
     meanstructure = true,
-    diff = semdiff,
+    optimizer = semoptimizer,
     n_obs = 75.0
 )
 
@@ -229,7 +229,7 @@ model_ml_sym = Sem(
     imply = RAMSymbolic,
     meanstructure = true,
     start_val = start_test_mean,
-    diff = semdiff
+    optimizer = semoptimizer
 )
 
 ############################################################################################
@@ -302,7 +302,7 @@ model_ml = Sem(
     data = dat_missing,
     observed = SemObservedMissing,
     loss = SemFIML,
-    diff = semdiff,
+    optimizer = semoptimizer,
     meanstructure = true
 )
 
@@ -313,7 +313,7 @@ model_ml_sym = Sem(
     imply = RAMSymbolic,
     loss = SemFIML,
     start_val = start_test_mean,
-    diff = semdiff,
+    optimizer = semoptimizer,
     meanstructure = true
 )
 

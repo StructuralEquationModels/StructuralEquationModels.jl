@@ -147,7 +147,7 @@ function Base.show(io::IO, sem::Sem{O, I, L, D})  where {O, I, L, D}
     print(io, "- Fields \n")
     print(io, "   observed:  $(nameof(O)) \n")
     print(io, "   imply:     $(nameof(I)) \n")
-    print(io, "   optimizer:      $(nameof(D)) \n")
+    print(io, "   optimizer: $(nameof(D)) \n")
 end
 
 function Base.show(io::IO, sem::SemFiniteDiff{O, I, L, D})  where {O, I, L, D}
@@ -159,7 +159,7 @@ function Base.show(io::IO, sem::SemFiniteDiff{O, I, L, D})  where {O, I, L, D}
     print(io, "- Fields \n")
     print(io, "   observed:  $(nameof(O)) \n")
     print(io, "   imply:     $(nameof(I)) \n")
-    print(io, "   optimizer:      $(nameof(D)) \n") 
+    print(io, "   optimizer: $(nameof(D)) \n") 
 end
 
 function Base.show(io::IO, sem::SemForwardDiff{O, I, L, D})  where {O, I, L, D}
@@ -171,7 +171,7 @@ function Base.show(io::IO, sem::SemForwardDiff{O, I, L, D})  where {O, I, L, D}
     print(io, "- Fields \n")
     print(io, "   observed:  $(nameof(O)) \n")
     print(io, "   imply:     $(nameof(I)) \n")
-    print(io, "   optimizer:      $(nameof(D)) \n") 
+    print(io, "   optimizer: $(nameof(D)) \n") 
 end
 
 function Base.show(io::IO, loss::SemLoss)

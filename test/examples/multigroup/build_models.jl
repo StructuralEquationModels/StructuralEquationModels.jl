@@ -14,7 +14,7 @@ model_g2 = Sem(
     imply = RAM
 )
 
-model_ml_multigroup = SemEnsemble(model_g1, model_g2; diff = semdiff)
+model_ml_multigroup = SemEnsemble(model_g1, model_g2; optimizer = semoptimizer)
 
 ############################################################################################
 ### test gradients
@@ -86,7 +86,7 @@ model_g2 = SemFiniteDiff(
     loss = UserSemML()
 )
 
-model_ml_multigroup = SemEnsemble(model_g1, model_g2; diff = semdiff)
+model_ml_multigroup = SemEnsemble(model_g1, model_g2; optimizer = semoptimizer)
 
 @testset "gradients_user_defined_loss" begin
     @test test_gradient(model_ml_multigroup, start_test; atol = 1e-9)
@@ -120,7 +120,7 @@ model_ls_g2 = Sem(
     loss = SemWLS
 )
 
-model_ls_multigroup = SemEnsemble(model_ls_g1, model_ls_g2; diff = semdiff)
+model_ls_multigroup = SemEnsemble(model_ls_g1, model_ls_g2; optimizer = semoptimizer)
 
 @testset "ls_gradients_multigroup" begin
     @test test_gradient(model_ls_multigroup, start_test; atol = 1e-9)
@@ -163,7 +163,7 @@ model_g1 = Sem(
     loss = SemFIML,
     data = dat_miss_g1,
     imply = RAM,
-    diff = SemOptimizerEmpty(),
+    optimizer = SemOptimizerEmpty(),
     meanstructure = true
 )
 
@@ -173,11 +173,11 @@ model_g2 = Sem(
     loss = SemFIML,
     data = dat_miss_g2,
     imply = RAM,
-    diff = SemOptimizerEmpty(),
+    optimizer = SemOptimizerEmpty(),
     meanstructure = true
 )
 
-model_ml_multigroup = SemEnsemble(model_g1, model_g2; diff = semdiff)
+model_ml_multigroup = SemEnsemble(model_g1, model_g2; optimizer = semoptimizer)
 
 ############################################################################################
 ### test gradients

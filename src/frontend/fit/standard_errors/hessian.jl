@@ -44,10 +44,10 @@ H_scaling(model::AbstractSemSingle) =
         model.diff,
         model.loss.functions...)
 
-H_scaling(model, obs, imp, diff, lossfun::Union{SemML, SemWLS}) =
+H_scaling(model, obs, imp, optimizer, lossfun::Union{SemML, SemWLS}) =
     2/(n_obs(model)-1)
 
-H_scaling(model, obs, imp, diff, lossfun::SemFIML) =
+H_scaling(model, obs, imp, optimizer, lossfun::SemFIML) =
     2/n_obs(model)
 
 H_scaling(model::SemEnsemble) =
