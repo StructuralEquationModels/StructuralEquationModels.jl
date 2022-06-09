@@ -315,6 +315,8 @@ I_A⁻¹(imply::RAM) = imply.I_A⁻¹ # only for gradient available!
 
 has_meanstructure(imply::RAM) = imply.has_meanstructure
 
+ram_matrices(imply::RAM) = imply.ram_matrices
+
 ############################################################################################
 ### additional functions
 ############################################################################################

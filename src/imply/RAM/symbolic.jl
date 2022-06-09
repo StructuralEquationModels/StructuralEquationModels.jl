@@ -262,6 +262,8 @@ end
 
 has_meanstructure(imply::RAMSymbolic) = imply.has_meanstructure
 
+ram_matrices(imply::RAMSymbolic) = imply.ram_matrices
+
 ############################################################################################
 ### additional functions
 ############################################################################################
