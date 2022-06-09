@@ -83,7 +83,7 @@ include("frontend/fit/standard_errors/bootstrap.jl")
 
 
 export  AbstractSem, 
-            AbstractSemSingle, AbstractSemCollection, Sem, SemFiniteDiff, SemForwardDiff, 
+            AbstractSemSingle, AbstractSemCollection, Sem, SemFiniteDiff, 
             SemEnsemble,
         SemImply, 
             RAMSymbolic, RAMSymbolicZ, RAM, ImplyEmpty, imply,

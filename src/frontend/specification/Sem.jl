@@ -25,7 +25,6 @@ function SemFiniteDiff(;
         imply::I = RAM,
         loss::L = SemML,
         optimizer::D = SemOptimizerOptim,
-        has_gradient = false,
         kwargs...) where {O, I, L, D}
 
     kwargs = Dict{Symbol, Any}(kwargs...)
@@ -34,27 +33,8 @@ function SemFiniteDiff(;
     
     observed, imply, loss, optimizer = get_fields!(kwargs, observed, imply, loss, optimizer)
 
-    sem = SemFiniteDiff(observed, imply, loss, optimizer, Val(has_gradient))
+    sem = SemFiniteDiff(observed, imply, loss, optimizer)
 
-    return sem
-end
-
-function SemForwardDiff(;
-        observed::O = SemObservedData,
-        imply::I = RAM,
-        loss::L = SemML,
-        optimizer::D = SemOptimizerOptim,
-        has_gradient = false,
-        kwargs...) where {O, I, L, D}
-
-    kwargs = Dict{Symbol, Any}(kwargs...)
-
-    set_field_type_kwargs!(kwargs, observed, imply, loss, optimizer, O, I, D)
-    
-    observed, imply, loss, optimizer = get_fields!(kwargs, observed, imply, loss, optimizer)
-
-    sem = SemForwardDiff(observed, imply, loss, optimizer, Val(has_gradient))
-    
     return sem
 end
 
@@ -154,18 +134,6 @@ function Base.show(io::IO, sem::SemFiniteDiff{O, I, L, D})  where {O, I, L, D}
     lossfuntypes = @. string(nameof(typeof(sem.loss.functions)))
     lossfuntypes = "   ".*lossfuntypes.*("\n")
     print(io, "Structural Equation Model : Finite Diff Approximation\n")
-    print(io, "- Loss Functions \n")
-    print(io, lossfuntypes...)
-    print(io, "- Fields \n")
-    print(io, "   observed:    $(nameof(O)) \n")
-    print(io, "   imply:       $(nameof(I)) \n")
-    print(io, "   optimizer:   $(nameof(D)) \n") 
-end
-
-function Base.show(io::IO, sem::SemForwardDiff{O, I, L, D})  where {O, I, L, D}
-    lossfuntypes = @. string(nameof(typeof(sem.loss.functions)))
-    lossfuntypes = "   ".*lossfuntypes.*("\n")
-    print(io, "Structural Equation Model : Forward Mode Autodiff\n")
     print(io, "- Loss Functions \n")
     print(io, lossfuntypes...)
     print(io, "- Fields \n")
