@@ -268,3 +268,5 @@ model_ml = SemFiniteDiff(
 
 model_fit = sem_fit(model_ml)
 ```
+
+If you want to differentiate your own loss functions via automatic differentiation, check out the [AutoDiffSEM](https://github.com/StructuralEquationModels/AutoDiffSEM) package (spoiler allert: it's really easy).
