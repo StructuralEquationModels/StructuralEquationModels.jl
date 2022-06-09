@@ -4,7 +4,7 @@ using LinearAlgebra, Optim,
     NLSolversBase, Statistics, SparseArrays, Symbolics,
     NLopt, FiniteDiff, ForwardDiff, PrettyTables,
     Distributions, StenoGraphs, LazyArtifacts, DelimitedFiles,
-    DataFrames
+    DataFrames, Zygote, ChainRulesCore
 
 import DataFrames: DataFrame
 export *, ==, @StenoGraph, AbstractEdge, AbstractNode, DirectedEdge, Edge, EdgeModifier, 
@@ -38,6 +38,7 @@ include("frontend/specification/documentation.jl")
 include("imply/RAM/symbolic.jl")
 include("imply/RAM/generic.jl")
 include("imply/empty.jl")
+include("imply/RAM/symbolic_zygote.jl")
 # loss
 include("loss/ML/ML.jl")
 include("loss/ML/FIML.jl")
@@ -85,7 +86,7 @@ export  AbstractSem,
             AbstractSemSingle, AbstractSemCollection, Sem, SemFiniteDiff, SemForwardDiff, 
             SemEnsemble,
         SemImply, 
-            RAMSymbolic, RAM, ImplyEmpty, imply,
+            RAMSymbolic, RAMSymbolicZ, RAM, ImplyEmpty, imply,
         start_val,
             start_fabin3, start_simple, start_parameter_table,
         SemLoss, 
