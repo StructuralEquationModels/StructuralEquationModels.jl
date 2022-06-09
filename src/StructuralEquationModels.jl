@@ -38,7 +38,6 @@ include("frontend/specification/documentation.jl")
 include("imply/RAM/symbolic.jl")
 include("imply/RAM/generic.jl")
 include("imply/empty.jl")
-include("imply/RAM/symbolic_zygote.jl")
 # loss
 include("loss/ML/ML.jl")
 include("loss/ML/FIML.jl")
