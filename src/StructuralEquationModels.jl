@@ -2,9 +2,9 @@ module StructuralEquationModels
 
 using LinearAlgebra, Optim,
     NLSolversBase, Statistics, SparseArrays, Symbolics,
-    NLopt, FiniteDiff, ForwardDiff, PrettyTables,
+    NLopt, FiniteDiff, PrettyTables,
     Distributions, StenoGraphs, LazyArtifacts, DelimitedFiles,
-    DataFrames, Zygote, ChainRulesCore
+    DataFrames
 
 import DataFrames: DataFrame
 export *, ==, @StenoGraph, AbstractEdge, AbstractNode, DirectedEdge, Edge, EdgeModifier, 
