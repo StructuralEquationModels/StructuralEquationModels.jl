@@ -16,7 +16,7 @@ Return a vector of simple starting values.
 function start_simple end
 
 # Single Models ----------------------------------------------------------------------------
-function start_simple(model::Union{Sem, SemForwardDiff, SemFiniteDiff}; kwargs...)
+function start_simple(model::AbstractSemSingle; kwargs...)
     return start_simple(
         model.observed, 
         model.imply,
@@ -25,7 +25,7 @@ function start_simple(model::Union{Sem, SemForwardDiff, SemFiniteDiff}; kwargs..
         kwargs...)
 end
 
-function start_simple(observed, imply::Union{RAM, RAMSymbolic}, optimizer, args...; kwargs...)
+function start_simple(observed, imply, optimizer, args...; kwargs...)
     return start_simple(imply.ram_matrices; kwargs...)
 end
 

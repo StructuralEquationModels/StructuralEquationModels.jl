@@ -13,7 +13,7 @@ model_1 = Sem(...)
 
 model_2 = SemFiniteDiff(...)
 
-model_3 = SemForwardDiff(...)
+model_3 = Sem(...)
 
 model_ensemble = SemEnsemble(model_1, model_2, model_3; optimizer = ...)
 ```

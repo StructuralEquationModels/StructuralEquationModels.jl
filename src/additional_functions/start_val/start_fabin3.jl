@@ -8,7 +8,7 @@ function start_fabin3 end
 
 # splice model and loss functions
 function start_fabin3(
-        model::Union{Sem, SemForwardDiff, SemFiniteDiff}; 
+        model::AbstractSemSingle; 
         kwargs...)
     return start_fabin3(
         model.observed, 
@@ -20,12 +20,12 @@ end
 
 function start_fabin3(
         observed, 
-        imply::Union{RAM, RAMSymbolic}, 
+        imply, 
         optimizer, 
         args...;
         kwargs...)
     return start_fabin3(
-        imply.ram_matrices,
+        ram_matrices(imply),
         obs_cov(observed),
         obs_mean(observed))
 end
@@ -33,7 +33,7 @@ end
 # SemObservedMissing
 function start_fabin3(
         observed::SemObservedMissing, 
-        imply::Union{RAM, RAMSymbolic}, 
+        imply, 
         optimizer, 
         args...; 
         kwargs...)
@@ -43,7 +43,7 @@ function start_fabin3(
     end
 
     return start_fabin3(
-        imply.ram_matrices,
+        ram_matrices(imply),
         observed.em_model.Σ,
         observed.em_model.μ)
 end

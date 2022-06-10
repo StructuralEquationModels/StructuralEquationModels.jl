@@ -111,7 +111,7 @@ end
 # automatic differentiation
 ############################################################################################
 """
-    SemFiniteDiff(;observed = SemObservedData, imply = RAM, loss = SemML, optimizer = SemOptimizerOptim, has_gradient = false, kwargs...)
+    SemFiniteDiff(;observed = SemObservedData, imply = RAM, loss = SemML, optimizer = SemOptimizerOptim, kwargs...)
 
 Constructor for `SemFiniteDiff`.
 All additional kwargs are passed down to the constructors for the observed, imply, loss and optimizer fields.
@@ -121,49 +121,18 @@ All additional kwargs are passed down to the constructors for the observed, impl
 - `imply`: object of subtype `SemImply` or a constructor.
 - `loss`: object of subtype `SemLossFunction`s or constructor; or a tuple of such.
 - `optimizer`: object of subtype `SemOptimizer` or a constructor.
-- `has_gradient::Bool`: are analytic gradients available for this model.
 
 Returns a Sem with fields
 - `observed::SemObserved`: Stores observed data, sample statistics, etc. See also [`SemObserved`](@ref).
 - `imply::SemImply`: Computes model implied statistics, like Σ, μ, etc. See also [`SemImply`](@ref).
 - `loss::SemLoss`: Computes the objective and gradient of a sum of loss functions. See also [`SemLoss`](@ref).
 - `optimizer::SemOptimizer`: Connects the model to the optimizer. See also [`SemOptimizer`](@ref).
-- `has_gradient::Val{Bool}`: signifies if analytic gradients are available for this model.
 """
-struct SemFiniteDiff{O <: SemObserved, I <: SemImply, L <: SemLoss, D <: SemOptimizer, G} <: AbstractSemSingle{O, I, L, D}
+struct SemFiniteDiff{O <: SemObserved, I <: SemImply, L <: SemLoss, D <: SemOptimizer} <: AbstractSemSingle{O, I, L, D}
     observed::O
     imply::I
     loss::L
     optimizer::D
-    has_gradient::G
-end
-
-"""
-    SemForwardDiff(;observed = SemObservedData, imply = RAM, loss = SemML, optimizer = SemOptimizerOptim, has_gradient = false, kwargs...)
-
-Constructor for `SemForwardDiff`.
-All additional kwargs are passed down to the constructors for the observed, imply, loss and optimizer fields.
-
-# Arguments
-- `observed`: object of subtype `SemObserved` or a constructor.
-- `imply`: object of subtype `SemImply` or a constructor.
-- `loss`: object of subtype `SemLossFunction`s or constructor; or a tuple of such.
-- `optimizer`: object of subtype `SemOptimizer` or a constructor.
-- `has_gradient::Bool`: are analytic gradients available for this model.
-
-Returns a Sem with fields
-- `observed::SemObserved`: Stores observed data, sample statistics, etc. See also [`SemObserved`](@ref).
-- `imply::SemImply`: Computes model implied statistics, like Σ, μ, etc. See also [`SemImply`](@ref).
-- `loss::SemLoss`: Computes the objective and gradient of a sum of loss functions. See also [`SemLoss`](@ref).
-- `optimizer::SemOptimizer`: Connects the model to the optimizer. See also [`SemOptimizer`](@ref).
-- `has_gradient::Val{Bool}`: signifies if analytic gradients are available for this model.
-"""
-struct SemForwardDiff{O <: SemObserved, I <: SemImply, L <: SemLoss, D <: SemOptimizer, G} <: AbstractSemSingle{O, I, L, D}
-    observed::O
-    imply::I 
-    loss::L 
-    optimizer::D
-    has_gradient::G
 end
 
 ############################################################################################
@@ -286,11 +255,3 @@ loss(model::AbstractSemSingle) = model.loss
 Returns the optimizer part of a model.
 """
 optimizer(model::AbstractSemSingle) = model.optimizer
-
-"""
-    has_gradient(model::AbstractSemSingle) -> Val{bool}
-
-Returns whether the model has analytic gradients.
-"""
-has_gradient(model::SemForwardDiff) = model.has_gradient
-has_gradient(model::SemFiniteDiff) = model.has_gradient
