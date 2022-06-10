@@ -15,20 +15,20 @@ function χ² end
         sem_fit,
         sem_fit.model.observed,
         sem_fit.model.imply,
-        sem_fit.model.diff,
+        sem_fit.model.optimizer,
         sem_fit.model.loss.functions...
         )
 
 # RAM + SemML
-χ²(sem_fit::SemFit, observed, imp::Union{RAM, RAMSymbolic}, diff, loss_ml::SemML) = 
+χ²(sem_fit::SemFit, observed, imp::Union{RAM, RAMSymbolic}, optimizer, loss_ml::SemML) = 
     (n_obs(sem_fit)-1)*(sem_fit.minimum - logdet(observed.obs_cov) - observed.n_man)
 
 # bollen, p. 115, only correct for GLS weight matrix
-χ²(sem_fit::SemFit, observed, imp::Union{RAM, RAMSymbolic}, diff, loss_ml::SemWLS) = 
+χ²(sem_fit::SemFit, observed, imp::Union{RAM, RAMSymbolic}, optimizer, loss_ml::SemWLS) = 
     (n_obs(sem_fit)-1)*sem_fit.minimum
 
 # FIML
-function χ²(sem_fit::SemFit, observed::SemObservedMissing, imp, diff, loss_ml::SemFIML)
+function χ²(sem_fit::SemFit, observed::SemObservedMissing, imp, optimizer, loss_ml::SemFIML)
     ll_H0 = minus2ll(sem_fit)
     ll_H1 = minus2ll(observed)
     chi2 = ll_H0 - ll_H1

@@ -9,12 +9,12 @@ function start_val end
 # Single Models ----------------------------------------------------------------------------
 
 # splice model and loss functions
-start_val(model::Union{Sem, SemFiniteDiff, SemForwardDiff}; kwargs...) = 
+start_val(model::AbstractSemSingle; kwargs...) = 
     start_val(
         model, 
         model.observed, 
         model.imply, 
-        model.diff, 
+        model.optimizer, 
         model.loss.functions...; 
         kwargs...)
 
@@ -22,8 +22,8 @@ start_val(model::Union{Sem, SemFiniteDiff, SemForwardDiff}; kwargs...) =
 start_val(
         model, 
         observed, 
-        imply::Union{RAM, RAMSymbolic}, 
-        diff, 
+        imply, 
+        optimizer, 
         args...; 
         kwargs...) =
     start_fabin3(model; kwargs...)

@@ -46,93 +46,46 @@ function objective_gradient_hessian!(gradient, hessian, model::AbstractSemSingle
 end
 
 ############################################################################################
-# methods for SemFiniteDiff and SemForwardDiff
+# methods for SemFiniteDiff 
 ############################################################################################
 
-# gradient methods call themselves with the additional model.has_gradient argument
-
-gradient!(gradient, model::Union{SemFiniteDiff, SemForwardDiff}, par) = 
-    gradient!(gradient, model, par, model.has_gradient)
-
-objective_gradient!(gradient, model::Union{SemFiniteDiff, SemForwardDiff}, par) = 
-    objective_gradient!(gradient, model, par, model.has_gradient)
-
-# methods where autodiff takes place 
-# - these are specific to the method of automatic differentiation
-
-# FiniteDiff
-gradient!(gradient, model::SemFiniteDiff, par, has_gradient::Val{false}) =
+gradient!(gradient, model::SemFiniteDiff, par) =
     FiniteDiff.finite_difference_gradient!(gradient, x -> objective!(model, x), par)
 
 hessian!(hessian, model::SemFiniteDiff, par) = 
     FiniteDiff.finite_difference_hessian!(hessian, x -> objective!(model, x), par)
 
-# ForwardDiff
-gradient!(gradient, model::SemForwardDiff, par, has_gradient::Val{false}) =
-    ForwardDiff.gradient!(gradient, x -> objective!(model, x), par)
-
-hessian!(hessian, model::SemForwardDiff, par) = 
-    ForwardDiff.hessian!(hessian, x -> objective!(model, x), par)
-
-# gradient!
-function gradient!(
-        gradient, 
-        model::Union{SemFiniteDiff, SemForwardDiff}, 
-        par, 
-        has_gradient::Val{true})
-    fill!(gradient, zero(eltype(gradient)))
-    gradient!(imply(model), parameters, model)
-    gradient!(gradient, loss(model), parameters, model)
-end
-
-# objective_gradient!
-function objective_gradient!(
-        gradient, 
-        model::Union{SemFiniteDiff, SemForwardDiff}, 
-        par, 
-        has_gradient::Val{true})
-    fill!(gradient, zero(eltype(gradient)))
-    objective_gradient!(imply(model), parameters, model)
-    return objective_gradient!(gradient, loss(model), parameters, model)
-end
 
 function objective_gradient!(
         gradient, 
-        model::Union{SemFiniteDiff, SemForwardDiff}, 
-        par, 
-        has_gradient::Val{false})
-    fill!(gradient, zero(eltype(gradient)))
-    gradient!(gradient, model, par)
-    return objective!(model, par)
+        model::SemFiniteDiff, 
+        parameters)
+    gradient!(gradient, model, parameters)
+    return objective!(model, parameters)
 end
 
 # other methods
 function gradient_hessian!(
         gradient, 
         hessian, 
-        model::Union{SemFiniteDiff, SemForwardDiff}, 
+        model::SemFiniteDiff, 
         parameters)
-    fill!(gradient, zero(eltype(gradient)))
-    fill!(hessian, zero(eltype(hessian)))
     gradient!(gradient, model, parameters)
     hessian!(hessian, model, parameters)
 end
 
-function objective_hessian!(hessian, model::Union{SemFiniteDiff, SemForwardDiff}, par)
-    fill!(hessian, zero(eltype(hessian)))
-    hessian!(hessian, model, par)
-    return objective!(model, par)
+function objective_hessian!(hessian, model::SemFiniteDiff, parameters)
+    hessian!(hessian, model, parameters)
+    return objective!(model, parameters)
 end
 
 function objective_gradient_hessian!(
         gradient, 
         hessian, 
-        model::Union{SemFiniteDiff, SemForwardDiff}, 
-        par)
-    fill!(gradient, zero(eltype(gradient)))
-    fill!(hessian, zero(eltype(hessian)))
-    hessian!(hessian, model, par)
-    return objective_gradient!(gradient, model, par)
+        model::SemFiniteDiff, 
+        parameters)
+    hessian!(hessian, model, parameters)
+    return objective_gradient!(gradient, model, parameters)
 end
 
 ############################################################################################

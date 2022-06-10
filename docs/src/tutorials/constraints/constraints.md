@@ -143,7 +143,7 @@ In this example, we set both tolerances to `1e-8`.
 model_constrained = Sem(
     specification = partable,
     data = data,
-    diff = constrained_optimizer
+    optimizer = constrained_optimizer
 )
 
 model_fit_constrained = sem_fit(model_constrained)

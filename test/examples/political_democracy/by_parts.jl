@@ -24,22 +24,22 @@ loss_ml = SemLoss(ml)
 
 loss_wls = SemLoss(wls)
 
-# diff -------------------------------------------------------------------------------------
-diff_obj = semdiff()
+# optimizer -------------------------------------------------------------------------------------
+optimizer_obj = semoptimizer()
 
 # models -----------------------------------------------------------------------------------
 
-model_ml = Sem(observed, imply_ram, loss_ml, diff_obj)
+model_ml = Sem(observed, imply_ram, loss_ml, optimizer_obj)
 
-model_ls_sym = Sem(observed, RAMSymbolic(specification = spec, vech = true), loss_wls, diff_obj)
+model_ls_sym = Sem(observed, RAMSymbolic(specification = spec, vech = true), loss_wls, optimizer_obj)
 
-model_ml_sym = Sem(observed, imply_ram_sym, loss_ml, diff_obj)
+model_ml_sym = Sem(observed, imply_ram_sym, loss_ml, optimizer_obj)
 
-model_ridge = Sem(observed, imply_ram, SemLoss(ml, ridge), diff_obj)
+model_ridge = Sem(observed, imply_ram, SemLoss(ml, ridge), optimizer_obj)
 
-model_constant = Sem(observed, imply_ram, SemLoss(ml, constant), diff_obj)
+model_constant = Sem(observed, imply_ram, SemLoss(ml, constant), optimizer_obj)
 
-model_ml_weighted = Sem(observed, imply_ram, SemLoss(ml; loss_weights = [n_obs(model_ml)]), diff_obj)
+model_ml_weighted = Sem(observed, imply_ram, SemLoss(ml; loss_weights = [n_obs(model_ml)]), optimizer_obj)
 
 ############################################################################################
 ### test gradients
@@ -130,10 +130,10 @@ end
 ### test hessians
 ############################################################################################
 
-if semdiff == SemOptimizerOptim
+if semoptimizer == SemOptimizerOptim
     using Optim, LineSearches
 
-    diff_obj = SemOptimizerOptim(
+    optimizer_obj = SemOptimizerOptim(
         algorithm = Newton(
             ;linesearch = BackTracking(order=3), 
             alphaguess = InitialHagerZhang()
@@ -145,7 +145,7 @@ if semdiff == SemOptimizerOptim
     imply_sym_hessian = RAMSymbolic(specification = spec, hessian = true)
 
 
-    model_ls = Sem(observed, imply_sym_hessian_vech, loss_wls, diff_obj)
+    model_ls = Sem(observed, imply_sym_hessian_vech, loss_wls, optimizer_obj)
 
     model_ml = Sem(observed, imply_sym_hessian, loss_ml, SemOptimizerOptim(algorithm = Newton()))
 
@@ -194,19 +194,19 @@ loss_ml = SemLoss(ml)
 
 loss_wls = SemLoss(wls)
 
-# diff -------------------------------------------------------------------------------------
-diff_obj = semdiff()
+# optimizer -------------------------------------------------------------------------------------
+optimizer_obj = semoptimizer()
 
 # models -----------------------------------------------------------------------------------
-model_ml = Sem(observed, imply_ram, loss_ml, diff_obj)
+model_ml = Sem(observed, imply_ram, loss_ml, optimizer_obj)
 
 model_ls = Sem(
     observed, 
     RAMSymbolic(specification = spec_mean, meanstructure = true, vech = true), 
     loss_wls, 
-    diff_obj)
+    optimizer_obj)
 
-model_ml_sym = Sem(observed, imply_ram_sym, loss_ml, diff_obj)
+model_ml_sym = Sem(observed, imply_ram_sym, loss_ml, optimizer_obj)
 
 ############################################################################################
 ### test gradients
@@ -278,9 +278,9 @@ fiml = SemFIML(observed = observed, specification = spec_mean)
 
 loss_fiml = SemLoss(fiml)
 
-model_ml = Sem(observed, imply_ram, loss_fiml, diff_obj)
+model_ml = Sem(observed, imply_ram, loss_fiml, optimizer_obj)
 
-model_ml_sym = Sem(observed, imply_ram_sym, loss_fiml, diff_obj)
+model_ml_sym = Sem(observed, imply_ram_sym, loss_fiml, optimizer_obj)
 
 ############################################################################################
 ### test gradients

@@ -21,12 +21,12 @@ the Optim.jl online documentation.
 
 # Examples
 ```julia
-my_diff = SemOptimizerOptim()
+my_optimizer = SemOptimizerOptim()
 
 # hessian based optimization with backtracking linesearch and modified initial step size
 using Optim, LineSearches
 
-my_newton_diff = SemOptimizerOptim(
+my_newton_optimizer = SemOptimizerOptim(
     algorithm = Newton(
         ;linesearch = BackTracking(order=3), 
         alphaguess = InitialHagerZhang()
@@ -59,11 +59,11 @@ SemOptimizerOptim(;
 ### Recommended methods
 ############################################################################################
 
-update_observed(diff::SemOptimizerOptim, observed::SemObserved; kwargs...) = diff
+update_observed(optimizer::SemOptimizerOptim, observed::SemObserved; kwargs...) = optimizer
 
 ############################################################################################
 ### additional methods
 ############################################################################################
 
-algorithm(diff::SemOptimizerOptim) = diff.algorithm
-options(diff::SemOptimizerOptim) = diff.options
+algorithm(optimizer::SemOptimizerOptim) = optimizer.algorithm
+options(optimizer::SemOptimizerOptim) = optimizer.options

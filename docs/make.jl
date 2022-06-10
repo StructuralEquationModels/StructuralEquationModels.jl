@@ -11,11 +11,13 @@ makedocs(
                 "tutorials/specification/specification.md",
                 "tutorials/specification/graph_interface.md",
                 "tutorials/specification/ram_matrices.md",
-                "tutorials/specification/parameter_table.md"],
+                "tutorials/specification/parameter_table.md"
+            ],
             "Model Construction" => [
                 "tutorials/construction/construction.md",
                 "tutorials/construction/outer_constructor.md",
-                "tutorials/construction/build_by_parts.md"],
+                "tutorials/construction/build_by_parts.md"
+            ],
             "Optimization Backends" => [
                 "tutorials/backends/optim.md",
                 "tutorials/backends/nlopt.md"
@@ -33,7 +35,7 @@ makedocs(
             "Extending the package" => "developer/extending.md",
             "Custom loss functions" => "developer/loss.md",
             "Custom imply types" => "developer/imply.md",
-            "Custom diff types" => "developer/diff.md",
+            "Custom optimizer types" => "developer/optimizer.md",
             "Custom observed types" => "developer/observed.md",
             "Custom model types" => "developer/sem.md"
         ],

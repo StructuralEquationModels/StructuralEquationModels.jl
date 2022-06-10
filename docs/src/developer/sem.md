@@ -1,20 +1,17 @@
 # Custom model types
 
-The abstract supertype for all models is `AbstractSem`, which has two subtypes, `AbstractSemSingle{O, I, L, D}` and `AbstractSemCollection`. Currently, there are three subtypes of `AbstractSemSingle`: `Sem`, `SemFiniteDiff` and `SemForwardDiff`. All subtypes of `AbstractSemSingle` should have at least observed, imply, loss and diff fields, and share their types (`{O, I, L, D}`) with the parametric abstract supertype. For example, the `SemFiniteDiff` type is implemented as
+The abstract supertype for all models is `AbstractSem`, which has two subtypes, `AbstractSemSingle{O, I, L, D}` and `AbstractSemCollection`. Currently, there are 2 subtypes of `AbstractSemSingle`: `Sem`, `SemFiniteDiff`. All subtypes of `AbstractSemSingle` should have at least observed, imply, loss and optimizer fields, and share their types (`{O, I, L, D}`) with the parametric abstract supertype. For example, the `SemFiniteDiff` type is implemented as
 
 ```julia
 struct SemFiniteDiff{
         O <: SemObserved, 
         I <: SemImply, 
         L <: SemLoss, 
-        D <: SemOptimizer, 
-        G} <: AbstractSemSingle{O, I, L, D}
+        D <: SemOptimizer} <: AbstractSemSingle{O, I, L, D}
     observed::O
     imply::I
     loss::L
-    diff::D
-    has_gradient::G
-end
+    optimizer::Dend
 ```
 
 Additionally, we need to define a method to compute at least the objective value, and if you want to use gradient based optimizers (which you most probably will), we need also to define a method to compute the gradient. For example, the respective fallback methods for all `AbstractSemSingle` models are defined as

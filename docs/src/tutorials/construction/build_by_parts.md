@@ -65,9 +65,3 @@ optimizer = SemOptimizerOptim()
 
 model_ml = Sem(observed, imply_ram, loss_ml, optimizer)
 ```
-
-Different models may need additional arguments (just check the help of the specific model types):
-
-```@example build
-model_ml_fd = SemFiniteDiff(observed, imply_ram, loss_ml, optimizer, Val(false))
-```

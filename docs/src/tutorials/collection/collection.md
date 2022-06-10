@@ -13,9 +13,9 @@ model_1 = Sem(...)
 
 model_2 = SemFiniteDiff(...)
 
-model_3 = SemForwardDiff(...)
+model_3 = Sem(...)
 
-model_ensemble = SemEnsemble(model_1, model_2, model_3; diff = ...)
+model_ensemble = SemEnsemble(model_1, model_2, model_3; optimizer = ...)
 ```
 
 So you just construct the individual models (however you like) and pass them to `SemEnsemble`.
@@ -23,3 +23,10 @@ One important thing to note is that the individual optimizer entries of each mod
 You may also pass a vector of weigths to `SemEnsemble`. By default, those are set to ``N_{model}/N_{total}``, i.e. each model is weighted by the number of observations in it's data (which matches the formula for multigroup models).
 
 Multigroup models can also be specified via the graph interface; for an example, see [Multigroup models](@ref).
+
+# API - collections
+
+```@docs
+SemEnsemble
+AbstractSemCollection
+```

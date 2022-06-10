@@ -17,15 +17,15 @@ function make_onelement_array(A)
 end
  =#
 
-function semvec(observed, imply, loss, diff)
+function semvec(observed, imply, loss, optimizer)
 
     observed = make_onelement_array(observed)
     imply = make_onelement_array(imply)
     loss = make_onelement_array(loss)
-    diff = make_onelement_array(diff)
+    optimizer = make_onelement_array(optimizer)
 
-    #sem_vec = Array{AbstractSem}(undef, maximum(length.([observed, imply, loss, diff])))
-    sem_vec = Sem.(observed, imply, loss, diff)
+    #sem_vec = Array{AbstractSem}(undef, maximum(length.([observed, imply, loss, optimizer])))
+    sem_vec = Sem.(observed, imply, loss, optimizer)
 
     return sem_vec
 end

@@ -16,16 +16,16 @@ Return a vector of simple starting values.
 function start_simple end
 
 # Single Models ----------------------------------------------------------------------------
-function start_simple(model::Union{Sem, SemForwardDiff, SemFiniteDiff}; kwargs...)
+function start_simple(model::AbstractSemSingle; kwargs...)
     return start_simple(
         model.observed, 
         model.imply,
-        model.diff, 
+        model.optimizer, 
         model.loss.functions...,
         kwargs...)
 end
 
-function start_simple(observed, imply::Union{RAM, RAMSymbolic}, diff, args...; kwargs...)
+function start_simple(observed, imply, optimizer, args...; kwargs...)
     return start_simple(imply.ram_matrices; kwargs...)
 end
 

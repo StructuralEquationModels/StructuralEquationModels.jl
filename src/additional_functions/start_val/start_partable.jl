@@ -6,19 +6,19 @@ Return a vector of starting values taken from `parameter_table`.
 function start_parameter_table end
 
 # splice model and loss functions
-function start_parameter_table(model::Union{Sem, SemForwardDiff, SemFiniteDiff}; kwargs...)
+function start_parameter_table(model::AbstractSemSingle; kwargs...)
     return start_parameter_table(
         model.observed, 
         model.imply,
-        model.diff, 
+        model.optimizer, 
         model.loss.functions...;
         kwargs...)
 end
 
 # RAM(Symbolic)
-function start_parameter_table(observed, imply::Union{RAM, RAMSymbolic}, diff, args...; kwargs...)
+function start_parameter_table(observed, imply, optimizer, args...; kwargs...)
     return start_parameter_table(
-        imply.ram_matrices;
+        ram_matrices(imply);
         kwargs...)
 end
 

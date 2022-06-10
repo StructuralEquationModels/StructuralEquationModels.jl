@@ -92,15 +92,15 @@ partable_mean = ParameterTable(spec_mean)
 start_test = [fill(1.0, 11); fill(0.05, 3); fill(0.05, 6); fill(0.5, 8); fill(0.05, 3)]
 start_test_mean = [fill(1.0, 11); fill(0.05, 3); fill(0.05, 6); fill(0.5, 8); fill(0.05, 3); fill(0.1, 7)]
 
-semdiff = SemOptimizerOptim
+semoptimizer = SemOptimizerOptim
 @testset "RAMMatrices | constructor | Optim" begin include("constructor.jl") end
-semdiff = SemOptimizerNLopt
+semoptimizer = SemOptimizerNLopt
 @testset "RAMMatrices | constructor | NLopt" begin include("constructor.jl") end
 
 if ENV["JULIA_EXTENDED_TESTS"] == "true"
-    semdiff = SemOptimizerOptim
+    semoptimizer = SemOptimizerOptim
     @testset "RAMMatrices | parts | Optim" begin include("by_parts.jl") end
-    semdiff = SemOptimizerNLopt
+    semoptimizer = SemOptimizerNLopt
     @testset "RAMMatrices | parts | NLopt" begin include("by_parts.jl") end
 end
 
@@ -116,15 +116,15 @@ spec_mean = ParameterTable(spec_mean)
 partable = spec
 partable_mean = spec_mean
 
-semdiff = SemOptimizerOptim
+semoptimizer = SemOptimizerOptim
 @testset "RAMMatrices → ParameterTable | constructor | Optim" begin include("constructor.jl") end
-semdiff = SemOptimizerNLopt
+semoptimizer = SemOptimizerNLopt
 @testset "RAMMatrices → ParameterTable | constructor | NLopt" begin include("constructor.jl") end
 
 if ENV["JULIA_EXTENDED_TESTS"] == "true"
-    semdiff = SemOptimizerOptim
+    semoptimizer = SemOptimizerOptim
     @testset "RAMMatrices → ParameterTable | parts | Optim" begin include("by_parts.jl") end
-    semdiff = SemOptimizerNLopt
+    semoptimizer = SemOptimizerNLopt
     @testset "RAMMatrices → ParameterTable | parts | NLopt" begin include("by_parts.jl") end
 end
 
@@ -199,14 +199,14 @@ partable_mean = spec_mean
 start_test = [fill(0.5, 8); fill(0.05, 3); fill(1.0, 11);  fill(0.05, 9)]
 start_test_mean = [fill(0.5, 8); fill(0.05, 3); fill(1.0, 11); fill(0.05, 3); fill(0.05, 13)]
 
-semdiff = SemOptimizerOptim
+semoptimizer = SemOptimizerOptim
 @testset "Graph → ParameterTable | constructor | Optim" begin include("constructor.jl") end
-semdiff = SemOptimizerNLopt
+semoptimizer = SemOptimizerNLopt
 @testset "Graph → ParameterTable | constructor | NLopt" begin include("constructor.jl") end
 
 if ENV["JULIA_EXTENDED_TESTS"] == "true"
-    semdiff = SemOptimizerOptim
+    semoptimizer = SemOptimizerOptim
     @testset "Graph → ParameterTable | parts | Optim" begin include("by_parts.jl") end
-    semdiff = SemOptimizerNLopt
+    semoptimizer = SemOptimizerNLopt
     @testset "Graph → ParameterTable | parts | NLopt" begin include("by_parts.jl") end
 end

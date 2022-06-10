@@ -42,14 +42,14 @@ swap_observed(model::AbstractSemSingle, observed_type; kwargs...) =
     swap_observed(model, observed_type(;kwargs...); kwargs...)
 
 swap_observed(model::AbstractSemSingle, new_observed::SemObserved; kwargs...) =
-    swap_observed(model, observed(model), imply(model), loss(model), diff(model), new_observed; kwargs...)
+    swap_observed(model, observed(model), imply(model), loss(model), optimizer(model), new_observed; kwargs...)
 
 function swap_observed(
         model::AbstractSemSingle, 
         old_observed,
         imply,
         loss,
-        diff,
+        optimizer,
         new_observed::SemObserved; 
         kwargs...)
 
@@ -60,7 +60,7 @@ function swap_observed(
     kwargs[:old_observed_type] = typeof(old_observed)
     kwargs[:imply_type] = typeof(imply)
     kwargs[:loss_types] = [typeof(lossfun) for lossfun in loss.functions]
-    kwargs[:diff_type] = typeof(diff)
+    kwargs[:optimizer_type] = typeof(optimizer)
 
     # update imply
     imply = update_observed(imply, new_observed; kwargs...)
@@ -71,8 +71,8 @@ function swap_observed(
     loss = update_observed(loss, new_observed; kwargs...)
     kwargs[:loss] = loss
 
-    # update diff
-    diff = update_observed(diff, new_observed; kwargs...)
+    # update optimizer
+    optimizer = update_observed(optimizer, new_observed; kwargs...)
 
     #new_imply = update_observed(model.imply, new_observed; kwargs...)
 
@@ -80,7 +80,7 @@ function swap_observed(
         new_observed, 
         update_observed(model.imply, new_observed; kwargs...),
         update_observed(model.loss, new_observed; kwargs...),
-        update_observed(model.diff, new_observed; kwargs...)
+        update_observed(model.optimizer, new_observed; kwargs...)
         )
 end
 

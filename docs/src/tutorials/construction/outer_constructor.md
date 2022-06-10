@@ -16,10 +16,10 @@ Structural Equation Model
 - Fields
    observed:  SemObservedCommon
    imply:     RAM
-   diff:      SemOptimizerOptim
+   optimizer: SemOptimizerOptim
 ```
 
-The output of this call tells you exactly what model you just constructed (i.e. what the loss functions, observed, imply and diff parts are).
+The output of this call tells you exactly what model you just constructed (i.e. what the loss functions, observed, imply and optimizer parts are).
 
 As you can see, by default, we use maximum likelihood estimation, the RAM imply type and the `Optim.jl` optimization backend. 
 To choose something different, you can provide it as a keyword argument:
@@ -31,7 +31,7 @@ model = Sem(
     observed = ...,
     imply = ...,
     loss = ...,
-    diff = ...
+    optimizer = ...
 )
 ```
 
@@ -43,7 +43,7 @@ model = Sem(
     data = data,
     imply = RAMSymbolic,
     loss = SemWLS,
-    diff = SemOptimizerNLopt
+    optimizer = SemOptimizerNLopt
 )
 ```
 
@@ -55,7 +55,8 @@ model = Sem(
     specification = partable,
     data = data,
     loss = SemFIML,
-    observed = SemObservedMissing
+    observed = SemObservedMissing,
+    meanstructure = true
 )
 ```
 
@@ -112,12 +113,14 @@ help>SemObservedMissing
 Extended help is available with `??`
 ```
 
-## Optimize loss functions without implemented analytic gradient
+## Optimize loss functions without analytic gradient
 
-For loss functions without analytic gradients, it is possible to use finite difference approximation or forward mode automatic differentiation. 
+For loss functions without analytic gradients, it is possible to use finite difference approximation or automatic differentiation.
 All loss functions provided in the package do have analytic gradients (and some even hessians or approximations thereof), so there is no need do use this feature if you are only working with them.
 However, if you implement your own loss function, you do not have to provide analytic gradients.
-In that case, you may construct your model just as before, but swap the `Sem` constructor for either `SemFiniteDiff` or `SemForwardDiff`. For example
+This page is a about finite difference approximation. For information about how to use automatic differentiation, see the documentation of the [AutoDiffSEM](https://github.com/StructuralEquationModels/AutoDiffSEM) package.
+
+To use finite difference approximation, you may construct your model just as before, but swap the `Sem` constructor for `SemFiniteDiff`. For example
 
 ```julia
 model = SemFiniteDiff(
@@ -127,18 +130,3 @@ model = SemFiniteDiff(
 ```
 
 constructs a model that will use finite difference approximation if you estimate the parameters via `sem_fit(model)`.
-Both `SemFiniteDiff` and `SemForwardDiff` have an additional keyword argument, `has_gradient = ...` that can be set to `true` to indicate that the model has analytic gradients, and only the hessian should be computed via finite difference approximation / automatic differentiation.
-For example
-
-```julia
-using Optim, LineSearches
-
-model = SemFiniteDiff(
-    specification = partable,
-    data = data,
-    has_gradient = true,
-    algorithm = Newton()
-)
-```
-
-will construct a model that, when fitted, will use [Newton's Method](https://julianlsolvers.github.io/Optim.jl/stable/#algo/newton/) from the `Optim.jl` package with gradients computed analytically and hessians computed via finite difference approximation.

@@ -65,7 +65,7 @@ spec = RAMMatrices(;
 
 model = Sem(
     specification = spec,
-    ...
+    data = example_data("political_democracy")
 )
 ```
 
@@ -100,7 +100,7 @@ Finally, we construct a model, passing our `RAMMatrices` as the `specification =
 ```julia
 model = Sem(
     specification = spec,
-    ...
+    data = example_data("political_democracy")
 )
 ```
 ## Meanstructure

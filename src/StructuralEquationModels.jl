@@ -4,7 +4,7 @@ using LinearAlgebra, Optim,
     NLSolversBase, Statistics, SparseArrays, Symbolics,
     NLopt, FiniteDiff, ForwardDiff, PrettyTables,
     Distributions, StenoGraphs, LazyArtifacts, DelimitedFiles,
-    DataFrames
+    DataFrames, Zygote, ChainRulesCore
 
 import DataFrames: DataFrame
 export *, ==, @StenoGraph, AbstractEdge, AbstractNode, DirectedEdge, Edge, EdgeModifier, 
@@ -44,7 +44,7 @@ include("loss/ML/FIML.jl")
 include("loss/regularization/ridge.jl")
 include("loss/WLS/WLS.jl")
 include("loss/constant/constant.jl")
-# diff
+# optimizer
 include("diff/optim.jl")
 include("diff/NLopt.jl")
 include("diff/Empty.jl")
@@ -82,17 +82,17 @@ include("frontend/fit/standard_errors/bootstrap.jl")
 
 
 export  AbstractSem, 
-            AbstractSemSingle, AbstractSemCollection, Sem, SemFiniteDiff, SemForwardDiff, 
+            AbstractSemSingle, AbstractSemCollection, Sem, SemFiniteDiff, 
             SemEnsemble,
         SemImply, 
-            RAMSymbolic, RAM, ImplyEmpty, imply,
+            RAMSymbolic, RAMSymbolicZ, RAM, ImplyEmpty, imply,
         start_val,
             start_fabin3, start_simple, start_parameter_table,
         SemLoss, 
             SemLossFunction, SemML, SemFIML, em_mvn, SemLasso, SemRidge,
             SemConstant, SemWLS, loss,
         SemOptimizer, 
-            SemOptimizerEmpty, SemOptimizerOptim, SemOptimizerNLopt, NLoptConstraint, diff,
+            SemOptimizerEmpty, SemOptimizerOptim, SemOptimizerNLopt, NLoptConstraint,
         SemObserved, 
             SemObservedData, SemObservedCovariance, SemObservedMissing, observed,
         sem_fit, 
