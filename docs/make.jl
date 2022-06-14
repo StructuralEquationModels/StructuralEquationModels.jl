@@ -39,6 +39,9 @@ makedocs(
             "Custom observed types" => "developer/observed.md",
             "Custom model types" => "developer/sem.md"
         ],
+        "Advanced tutorials" => [
+            "Regularization" => "tutorials/regularization/regularization.md"
+        ],
         "Performance tips" => [
             "Model sorting" => "performance/sorting.md",
             "MKL" => "performance/mkl.md",
