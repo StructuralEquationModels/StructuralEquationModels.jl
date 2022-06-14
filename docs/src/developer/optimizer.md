@@ -1,7 +1,7 @@
 # Custom optimizer types
 
 The optimizer part of a model connects it to the optimization backend. 
-The first part of the implementation is very similar to loss functions, so we just show the implementation of `SemOptimizerOptim` here:
+The first part of the implementation is very similar to loss functions, so we just show the implementation of `SemOptimizerOptim` here as a reference:
 
 ```julia
 ############################################################################
