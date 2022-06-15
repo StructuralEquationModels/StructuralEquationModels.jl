@@ -1,4 +1,7 @@
 # Regularization
+
+## Setup
+
 For ridge regularization, you can simply use `SemRidge` as an additional loss function 
 (for example, a model with the loss functions `SemML` and `SemRidge` corresponds to ridge-regularized maximum likelihood estimation).
 
@@ -30,6 +33,8 @@ Pkg.add("ProximalOperators")
 using ProximalOperators
 ```
 
+## `SemOptimizerProximal`
+
 `ProximalSEM` provides a new "building block" for the optimizer part of a model, called `SemOptimizerProximal`.
 It connects our package to the [`ProximalAlgorithms.jl`](https://github.com/JuliaFirstOrder/ProximalAlgorithms.jl) optimization backend, providing so-called proximal optimization algorithms. 
 Those can handle, amongst other things, various forms of regularization.
@@ -47,6 +52,8 @@ SemOptimizerProximal(
 
 The proximal operator (aka the regularization function) can be passed as `operator_g`, available options are listed [here](https://juliafirstorder.github.io/ProximalOperators.jl/stable/functions/).
 The available Algorithms are listed [here](https://juliafirstorder.github.io/ProximalAlgorithms.jl/stable/guide/implemented_algorithms/).
+
+## First example - lasso
 
 To show how it works, let's revisit [A first model](@ref):
 
@@ -135,7 +142,41 @@ fit = sem_fit(model)
 
 update_estimate!(partable, fit)
 
-update_partable!(partable, fit_lasso, solution(fit_lasso), :estimate_regularized)
+update_partable!(partable, fit_lasso, solution(fit_lasso), :estimate_lasso)
+
+sem_summary(partable)
+```
+
+## Second example - mixed l1 and l0 regularization
+
+You can choose to penalize different parameters with different types of regularization functions.
+Let's use the lasso again on the covariances, but additionally penalyze the error variances of the observed items via l0 regularization.
+
+The l0 penalty is defined as
+```math
+\lambda \mathrm{nnz}(\theta)
+```
+
+To define a sup of separable proximal operators (i.e. no parameter is penalized twice),
+we can use [`SlicedSeparableSum`](https://juliafirstorder.github.io/ProximalOperators.jl/stable/calculus/#ProximalOperators.SlicedSeparableSum) from the `ProximalOperators` package:
+
+```@example reg
+prox_operator = SlicedSeparableSum((NormL1(0.02), NormL0(20.0), NormL0(0.0)), ([ind], [12:22], [vcat(1:11, 23:25)]))
+
+model_mixed = Sem(
+    specification = partable,
+    data = data,
+    optimizer = SemOptimizerProximal,
+    operator_g = prox_operator
+)
+
+fit_mixed = sem_fit(model_mixed)
+```
+
+Let's again compare the different results:
+
+```@example reg
+update_partable!(partable, fit_mixed, solution(fit_mixed), :estimate_mixed)
 
 sem_summary(partable)
 ```
