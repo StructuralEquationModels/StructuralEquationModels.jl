@@ -56,4 +56,4 @@ Pkg.add(url = "https://github.com/StructuralEquationModels/StructuralEquationMod
 
 ## Citing the package
 
-To cite our package, see [this page](https://github.com/StructuralEquationModels/StructuralEquationModels.jl/blob/main/CITATION.cff).
+To cite our package, go to the [GitHub repostory](https://github.com/StructuralEquationModels/StructuralEquationModels.jl) and click on "Cite this repostiory" on the right side or see [the CSL file](https://github.com/StructuralEquationModels/StructuralEquationModels.jl/blob/main/CITATION.cff).
