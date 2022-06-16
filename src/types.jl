@@ -10,7 +10,7 @@ abstract type AbstractSemSingle{O, I, L, D} <: AbstractSem end
 "Supertype for all collections of multiple SEMs"
 abstract type AbstractSemCollection <: AbstractSem end
 
-"Supertype for all loss functions of SEMs. If you want to implement a custom loss function, it should be a subtype of `SemLossFunction`."
+"Supertype for all loss functions of SEMs. If you want to implement a custom loss function, it should be a subtype of `SemLossFunction`, e.g. `struct MyLoss <: SemLossFunction end"
 abstract type SemLossFunction end
 
 """
