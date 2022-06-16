@@ -9,9 +9,11 @@ At the same time, it is (very) fast.
 These properties enable SEM researchers (such as you!) to play around with ideas (extensibility) and run extensive simulations (speed) to evaluate these ideas and users to profit from the resulting innovation.
 
 To get started, we recommend the following order:
-install the package ([Installation](@ref)),
-read [A first model](@ref), and
-get familiar with [Our Concept of a Structural Equation Model](@ref).
+
+1. install the package ([Installation](@ref)),
+2. read [A first model](@ref), and
+3. get familiar with [Our Concept of a Structural Equation Model](@ref).
+
 After that, if you are interested in specifying a custom loss functions or other parts, you can proceed with [Extending the package](@ref).
 
 Models you can fit out of the box include
@@ -40,6 +42,7 @@ For examples of how to use the package, see the Tutorials.
 You must have [julia](https://julialang.org/downloads/) installed (and we strongly recommend using an IDE of your choice; we like VS Code with the Julia extension).
 
 To install the latest version of our package from GitHub, use the following commands:
+
 ```julia
 using Pkg
 Pkg.add(url = "https://github.com/StructuralEquationModels/StructuralEquationModels.jl")
