@@ -1,4 +1,4 @@
-# Model construction
+# Model Construction
 
 There are two different ways of constructing a SEM in our package. You can use the [Outer Constructor](@ref) oder [Build by parts](@ref).
 The final models will be the same, the outer constructor just has some sensible defaults that make your life easier.
