@@ -2,7 +2,6 @@
 
 `StructuralEquationModels.jl` is a package for Structural Equation Modeling (SEM) still under active development.
 It is written for one purpose: Facilitating methodological innovations for SEM.
-We aim to help SEM users become SEM researchers and SEM researchers become SEM developers.
 This purpose implies two subgoals for the package: Easy extensibility and speed.
 You can easily define custom objective functions and other parts of the model.
 At the same time, it is (very) fast.
@@ -16,7 +15,7 @@ To get started, we recommend the following order:
 2. read [A first model](@ref), and
 3. get familiar with [Our Concept of a Structural Equation Model](@ref).
 
-After that, if you are interested in specifying a custom loss functions or other parts, you can proceed with [Extending the package](@ref).
+After that, if you are interested in specifying your own loss function (or other parts), you can proceed with [Extending the package](@ref).
 
 ## Target Group
 
