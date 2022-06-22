@@ -21,6 +21,9 @@ Pkg.add(url = "https://github.com/StructuralEquationModels/ProximalSEM.jl")
 using StructuralEquationModels, ProximalSEM
 ```
 
+!!! warning "ProximalSEM is still WIP"
+    The ProximalSEM package does not have any releases yet, and is not well tested - until the first release, use at your own risk and expect interfaces to change without prior notice.
+
 Additionally, you need to install and load `ProximalOperators.jl`:
 
 ```@setup reg
