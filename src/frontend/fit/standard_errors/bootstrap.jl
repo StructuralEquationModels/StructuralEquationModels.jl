@@ -11,6 +11,10 @@ Only works for single models.
 """
 function se_bootstrap(semfit::SemFit; n_boot = 3000, data = nothing, specification = nothing, kwargs...)
 
+    if model(semfit) isa AbstractSemCollection
+        throw(ArgumentError("Bootstrap standard errors for ensemble models are not available yet"))
+    end
+
     if isnothing(data)
         data = get_data(observed(model(semfit)))
     end
