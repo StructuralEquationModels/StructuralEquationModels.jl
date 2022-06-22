@@ -7,10 +7,7 @@ using LinearAlgebra, Optim,
     DataFrames, Zygote, ChainRulesCore
 
 import DataFrames: DataFrame
-export *, ==, @StenoGraph, AbstractEdge, AbstractNode, DirectedEdge, Edge, EdgeModifier, 
-    MetaEdge, MetaNode, ModifiedEdge, ModifiedNode, Modifier, ModifyingNode, Node, 
-    NodeModifier, NodeOrEdgeModifier, SimpleNode, StenoGraphs, UndirectedEdge, convert, 
-    promote_rule, show, unarrow, unmeta, ←, →, ↔, ⇐, ⇒, ⇔, meld
+export StenoGraphs, @StenoGraph, meld
 
 # type hierarchy
 include("types.jl")
