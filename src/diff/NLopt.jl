@@ -39,7 +39,8 @@ my_constrained_optimizer = SemOptimizerNLopt(;
 # Usage
 All algorithms and options from the NLopt library are available, for more information see 
 the NLopt.jl package and the NLopt online documentation.
-For information on how to use inequality and equality constraints, see XXX in our online documentation.
+For information on how to use inequality and equality constraints, 
+see [Constrained optimization](@ref) in our online documentation.
 
 # Extended help
 
