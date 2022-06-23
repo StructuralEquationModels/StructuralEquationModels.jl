@@ -28,7 +28,7 @@ Here is an overview on the available building blocks:
 |                                 |                       | [`SemRidge`](@ref)        |                               |   
 |                                 |                       | [`SemConstant`](@ref)     |                               |   
 
-The rest of this page is explains the building blocks for each part. First, we explain every part and give an overview on the different options that are available. After that, the [API - model parts](@ref) section serves as a reference for detailed explanations about the different options.
+The rest of this page explains the building blocks for each part. First, we explain every part and give an overview on the different options that are available. After that, the [API - model parts](@ref) section serves as a reference for detailed explanations about the different options.
 (How to stick them together to a final model is explained in the section on [Model construction](@ref).)
 
 ## The observed part aka [`SemObserved`](@ref)
