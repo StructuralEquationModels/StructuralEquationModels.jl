@@ -186,7 +186,7 @@ if semoptimizer == SemOptimizerOptim
     @testset "ls_solution_hessian" begin
         solution = sem_fit(model_ls)
         update_estimate!(partable, solution)
-        @test compare_estimates(partable, solution_lav[:parameter_estimates_ls]; atol = 1e-3)
+        @test compare_estimates(partable, solution_lav[:parameter_estimates_ls]; atol = 0.002, rtol = 0.0)
     end
 
 end
@@ -356,5 +356,5 @@ end
 
     update_partable!(partable_mean, identifier(model_ml), se_hessian(solution_ml), :se)
     @test compare_estimates(partable_mean, solution_lav[:parameter_estimates_fiml]; 
-        atol = 1e-3, col = :se, lav_col = :se)
+        atol = 0.002, col = :se, lav_col = :se)
 end
