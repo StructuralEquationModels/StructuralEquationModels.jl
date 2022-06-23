@@ -32,8 +32,8 @@ The package makes use of
 - Optim.jl and NLopt.jl to provide a range of different Optimizers/Linesearches.
 - FiniteDiff.jl and ForwardDiff.jl to provide gradients for user-defined loss functions.
 
-Before the release of the package, we are still working on
-- optimizing performance for big models with hundreds of parameters
+At the moment, we are still working on
+- optimizing performance for big models (with hundreds of parameters)
 
 # Questions?
 
