@@ -1,6 +1,6 @@
 # Custom imply types
 
-We recommend to read first the part [Custom loss functions](@ref), as the overall implementation is the same and we will describe it here more briefly.
+We recommend to first read the part [Custom loss functions](@ref), as the overall implementation is the same and we will describe it here more briefly.
 
 Imply types are of subtype `SemImply`. To implement your own imply type, you should define a struct
 
@@ -28,7 +28,7 @@ To make stored computations available to loss functions, simply write a function
 Σ(imply::RAM) = imply.Σ
 ```
 
-Additionally, you can specify methods for `gradient` and `hessian` as well as the combinations describen in [Custom loss functions](@ref).
+Additionally, you can specify methods for `gradient` and `hessian` as well as the combinations described in [Custom loss functions](@ref).
 
 The last thing nedded to make it work is a method for `n_par` that takes your imply type and returns the number of parameters of the model:
 
@@ -38,7 +38,7 @@ n_par(imply::MyImply) = ...
 
 Just as described in [Custom loss functions](@ref), you may define a constructor. Typically, this will depend on the `specification = ...` argument that can be a `ParameterTable` or a `RAMMatrices` object.
 
-We implement an `ImplyEmpty` type in our package that does nothing but serving as an imply field in case you are using a loss function that does not need any imply type at all. You may use it as a template for defining your own imply type, as it also shows how to handle the specification objects.
+We implement an `ImplyEmpty` type in our package that does nothing but serving as an imply field in case you are using a loss function that does not need any imply type at all. You may use it as a template for defining your own imply type, as it also shows how to handle the specification objects:
 
 ```julia
 ############################################################################
