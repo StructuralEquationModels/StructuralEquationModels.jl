@@ -12,7 +12,7 @@ end
 
 function get_colnames(specification::RAMMatrices)
     if isnothing(specification.colnames)
-        @warn "Your RAMMatrices do not contain column names. Please make shure the order of variables in your data is correct!"
+        @warn "Your RAMMatrices do not contain column names. Please make sure the order of variables in your data is correct!"
         return nothing
     else
         colnames = specification.colnames[specification.F_ind]

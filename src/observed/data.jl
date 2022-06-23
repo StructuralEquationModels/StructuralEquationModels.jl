@@ -32,7 +32,7 @@ Subtype of `SemObserved`
 ## Remarks
 (1) the `specification` argument can also be `nothing`, but this turns of checking whether
 the observed data/covariance columns are in the correct order! As a result, you should only
-use this if you are shure your observed data is in the right format.
+use this if you are sure your observed data is in the right format.
 
 ## Additional keyword arguments:
 - `spec_colnames::Vector{Symbol} = nothing`: overwrites column names of the specification object
@@ -85,7 +85,7 @@ function SemObservedData(;
             if data isa DataFrame
                 throw(ArgumentError(
                     "You passed your data as a `DataFrame`, but also specified `obs_colnames`. "*
-                    "Please make shure the column names of your data frame indicate the correct variables "*
+                    "Please make sure the column names of your data frame indicate the correct variables "*
                     "or pass your data in a different format.")
                     )
             end

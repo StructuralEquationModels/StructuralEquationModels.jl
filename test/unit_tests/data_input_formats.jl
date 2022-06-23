@@ -27,7 +27,7 @@ dat_mean = vcat(Statistics.mean(dat_matrix, dims = 1)...)
 # errors
 @test_throws ArgumentError(
     "You passed your data as a `DataFrame`, but also specified `obs_colnames`. "*
-    "Please make shure the column names of your data frame indicate the correct variables "*
+    "Please make sure the column names of your data frame indicate the correct variables "*
     "or pass your data in a different format.") begin
     SemObservedData(specification = spec, data = dat, obs_colnames = Symbol.(names(dat)))
 end
@@ -114,7 +114,7 @@ end
 # errors
 @test_throws ArgumentError(
     "You passed your data as a `DataFrame`, but also specified `obs_colnames`. "*
-    "Please make shure the column names of your data frame indicate the correct variables "*
+    "Please make sure the column names of your data frame indicate the correct variables "*
     "or pass your data in a different format.") begin
     SemObservedData(specification = spec, data = dat, obs_colnames = Symbol.(names(dat)), meanstructure = true)
 end
@@ -337,7 +337,7 @@ end
 # errors
 @test_throws ArgumentError(
     "You passed your data as a `DataFrame`, but also specified `obs_colnames`. "*
-    "Please make shure the column names of your data frame indicate the correct variables "*
+    "Please make sure the column names of your data frame indicate the correct variables "*
     "or pass your data in a different format.") begin
     SemObservedMissing(specification = spec, data = dat_missing, obs_colnames = Symbol.(names(dat)))
 end
