@@ -1,13 +1,8 @@
-# StructuralEquationModels.jl
+# <img src="https://github.com/StructuralEquationModels/Data/blob/main/images/logo.png" width = 100> StructuralEquationModels.jl
 
 | **Documentation**                                                               | **Build Status**                                                                                |
 |:-------------------------------------------------------------------------------:|:-----------------------------------------------------------------------------------------------:|
-| [![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://structuralequationmodels.github.io/StructuralEquationModels.jl/)
-[![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://structuralequationmodels.github.io/StructuralEquationModels.jl/dev/) | [![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
-[![Github Action CI](https://github.com/StructuralEquationModels/StructuralEquationModels.jl/workflows/CI_extended/badge.svg)](https://github.com/StructuralEquationModels/StructuralEquationModels.jl/actions/)
-[![codecov](https://codecov.io/gh/StructuralEquationModels/StructuralEquationModels.jl/branch/main/graph/badge.svg?token=P2kjzpvM4V)](https://codecov.io/gh/StructuralEquationModels/StructuralEquationModels.jl) |
-
-<img src="https://github.com/StructuralEquationModels/Data/blob/main/images/logo.png" width = 250>
+| [![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://structuralequationmodels.github.io/StructuralEquationModels.jl/) [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://structuralequationmodels.github.io/StructuralEquationModels.jl/dev/) | [![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active) [![Github Action CI](https://github.com/StructuralEquationModels/StructuralEquationModels.jl/workflows/CI_extended/badge.svg)](https://github.com/StructuralEquationModels/StructuralEquationModels.jl/actions/) [![codecov](https://codecov.io/gh/StructuralEquationModels/StructuralEquationModels.jl/branch/main/graph/badge.svg?token=P2kjzpvM4V)](https://codecov.io/gh/StructuralEquationModels/StructuralEquationModels.jl) |
 
 This is a package for Structural Equation Modeling.
 It is still *in development*.
