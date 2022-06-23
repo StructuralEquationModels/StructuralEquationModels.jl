@@ -25,7 +25,17 @@ Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7"
 
 [compat]
 julia = "1.7"
-StenoGraphs = "≥ 0.2.0"
+StenoGraphs = "0.2"
+DataFrames = "1"
+Distributions = "0.25"
+FiniteDiff = "2"
+LineSearches = "7"
+NLSolversBase = "7"
+NLopt = "0.6"
+Optim = "1"
+PrettyTables = "1"
+StatsBase = "0.33"
+Symbolics = "4"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
