@@ -1,10 +1,11 @@
 # StructuralEquationModels.jl
 
-[![Github Action CI](https://github.com/StructuralEquationModels/StructuralEquationModels.jl/workflows/CI/badge.svg)](https://github.com/sem-jl/SEM.jl/actions)
-[![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://structuralequationmodels.github.io/StructuralEquationModels.jl/dev/)
-[![codecov](https://codecov.io/gh/StructuralEquationModels/StructuralEquationModels.jl/branch/main/graph/badge.svg?token=P2kjzpvM4V)](https://codecov.io/gh/StructuralEquationModels/StructuralEquationModels.jl)
-[![Project Status: WIP – Initial development is in progress, but there has not yet been a stable, usable release suitable for the public.](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
-
+| **Documentation**                                                               | **Build Status**                                                                                |
+|:-------------------------------------------------------------------------------:|:-----------------------------------------------------------------------------------------------:|
+| [![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://structuralequationmodels.github.io/StructuralEquationModels.jl/)
+[![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://structuralequationmodels.github.io/StructuralEquationModels.jl/dev/) | [![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
+[![Github Action CI](https://github.com/StructuralEquationModels/StructuralEquationModels.jl/workflows/CI_extended/badge.svg)](https://github.com/StructuralEquationModels/StructuralEquationModels.jl/actions/)
+[![codecov](https://codecov.io/gh/StructuralEquationModels/StructuralEquationModels.jl/branch/main/graph/badge.svg?token=P2kjzpvM4V)](https://codecov.io/gh/StructuralEquationModels/StructuralEquationModels.jl) |
 
 <img src="https://github.com/StructuralEquationModels/Data/blob/main/images/logo.png" width = 250>
 
