@@ -69,7 +69,22 @@ end
 
 # Sorting ----------------------------------------------------------------------------------
 
-# todo
+# Sorting ----------------------------------------------------------------------------------
+
+function sort!(ensemble_partable::EnsembleParameterTable)
+
+    for partable in values(ensemble_partable.tables)
+        sort!(partable)
+    end
+
+    return ensemble_partable
+end
+
+function sort(partable::EnsembleParameterTable)
+    new_partable = deepcopy(partable)
+    sort!(new_partable)
+    return new_partable
+end
 
 # add a row --------------------------------------------------------------------------------
 
