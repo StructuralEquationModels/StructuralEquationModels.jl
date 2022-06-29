@@ -217,7 +217,7 @@ Let's make a sligtly more complicated example: we will reimplement maximum likel
 To keep it simple, we only cover models without a meanstructure. The maximum likelihood objective is defined as
 
 ```math
-F_{ML} = \log \det \Sigma_i + \mathrm{tr}(\Sigma_i \Sigma_o)
+F_{ML} = \log \det \Sigma_i + \mathrm{tr}\left(\Sigma_{i}^{-1} \Sigma_o \right)
 ```
 
 where ``\Sigma_i`` is the model implied covariance matrix and ``\Sigma_o`` is the observed covariance matrix. We can query the model implied covariance matrix from the `imply` par of our model, and the observed covariance matrix from the `observed` path of our model.
