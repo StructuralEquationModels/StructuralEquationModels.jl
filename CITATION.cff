@@ -21,3 +21,4 @@ authors:
 repository-code: >-
   https://github.com/StructuralEquationModels/StructuralEquationModels.jl
 license: MIT
+doi: 10.5281/zenodo.6719626
