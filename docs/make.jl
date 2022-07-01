@@ -72,5 +72,6 @@ makedocs(
 
 deploydocs(
     repo = "github.com/StructuralEquationModels/StructuralEquationModels.jl",
+    devbranch = "devel",
     push_preview = "push_preview=true" ∈ ARGS
 )
