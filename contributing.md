@@ -42,7 +42,6 @@ We follow the Gitflow workflow described [here](https://www.atlassian.com/git/tu
 
 ### main
 - contains the recent released version
-- all commits are tagged
 
 ### devel
 - contains all changes until a new minor/major release branche is created
@@ -67,7 +66,7 @@ We follow the Gitflow workflow described [here](https://www.atlassian.com/git/tu
 - forked from main/release/devel merged into main/release/devel.
 - **only** changes to documentation
 
-### testing/xxx
+### test/xxx
 - changes that do not touch the code but only test
 - **only** changes that fix faulty tests or increase test coverage
 - forked from main/release/devel merged into main/release/devel
