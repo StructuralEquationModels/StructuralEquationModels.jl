@@ -24,7 +24,7 @@ StenoGraphs = "78862bba-adae-4a83-bb4d-33c106177f81"
 Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7"
 
 [compat]
-julia = "1.7"
+julia = "1.8"
 StenoGraphs = "0.2"
 DataFrames = "1"
 Distributions = "0.25"
