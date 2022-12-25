@@ -24,7 +24,7 @@ You can choose to mix and match loss functions natively found in this package an
 In such cases, you optimize over a sum of different objectives (e.g. ML + Ridge).
 This mix and match strategy also applies to gradients, where you may supply analytic gradients or opt for automatic differentiation or mix analytical and automatic differentiation.
 
-# you may consider using this package if:
+# You may consider using this package if:
 
 - you want to extend SEM (e.g. add a new objective function) and need an extendable framework
 - you want to extend SEM, and your implementation needs to be fast (because you want to do a simulation, for example)
