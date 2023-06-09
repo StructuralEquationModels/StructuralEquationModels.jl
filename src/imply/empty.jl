@@ -3,6 +3,7 @@
 ############################################################################################
 """
 Empty placeholder for models that don't need an imply part.
+(For example, models that only regularize parameters.)
 
 # Constructor
 
