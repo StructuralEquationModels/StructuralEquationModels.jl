@@ -42,7 +42,6 @@ We follow the Gitflow workflow described [here](https://www.atlassian.com/git/tu
 
 ### main
 - contains the recent released version
-- all commits are tagged
 
 ### devel
 - contains all changes until a new minor/major release branche is created
@@ -53,6 +52,7 @@ We follow the Gitflow workflow described [here](https://www.atlassian.com/git/tu
 - no new features (only bug fixes, documentation generation, etc.)
 - is merged into main and tagged to create a new release
 - also merged into devel when release is created
+- trigger registrator after successfull and validated/tested merge into main
 
 ### feature/xxx: 
 - forked from devel to develop a new feature
@@ -61,13 +61,15 @@ We follow the Gitflow workflow described [here](https://www.atlassian.com/git/tu
 ### hotfix/xxx
 - forked from main
 - merged into main and devel (or the current release branch) and main is tagged
+- trigger registrator after successfull and validated/tested merge into main
+
 
 ### documentation/xxx
 - remember to add an apropriate tag if merged into main/release (e.g. v1.2.3+doc1 see [Documenter.jl docs](http://mortenpi.eu/Documenter.jl/dev/man/hosting/#Documentation-Versions))
 - forked from main/release/devel merged into main/release/devel.
 - **only** changes to documentation
 
-### testing/xxx
+### test/xxx
 - changes that do not touch the code but only test
 - **only** changes that fix faulty tests or increase test coverage
 - forked from main/release/devel merged into main/release/devel
