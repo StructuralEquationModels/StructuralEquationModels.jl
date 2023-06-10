@@ -26,7 +26,7 @@ function se_hessian(sem_fit::SemFit; hessian = :finitediff)
     elseif hessian == :expected
         throw(ArgumentError("standard errors based on the expected hessian are not implemented yet"))
     else
-        throw(ArgumentError("I dont know how to compute `$how` standard-errors"))
+        throw(ArgumentError("I dont know how to compute `$hessian` standard-errors"))
     end
 
     invH = c*inv(H)
