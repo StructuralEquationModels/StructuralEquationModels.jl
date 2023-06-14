@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Constraints · StructuralEquationModels.jl</title><script data-outdated-warner src="../../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.045/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.24/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../../assets/documenter.js"></script><script src="../../../siteinfo.js"></script><script src="../../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../../assets/themeswap.js"></script><link href="../../../assets/favicon_zeta.ico" rel="icon" type="image/x-icon"/></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../../../"><img src="../../../assets/logo.svg" alt="StructuralEquationModels.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href="../../../">StructuralEquationModels.jl</a></span></div><form class="docs-search" action="../../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../../../">A fast and flexible SEM framework</a></li><li><input class="collapse-toggle" id="menuitem-2" type="checkbox" checked/><label class="tocitem" for="menuitem-2"><span class="docs-label">Tutorials</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../first_model/">A first model</a></li><li><a class="tocitem" href="../../concept/">Our Concept of a Structural Equation Model</a></li><li><input class="collapse-toggle" id="menuitem-2-3" type="checkbox"/><label class="tocitem" for="menuitem-2-3"><span class="docs-label">Model Specification</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../specification/specification/">Model specification</a></li><li><a class="tocitem" href="../../specification/graph_interface/">Graph interface</a></li><li><a class="tocitem" href="../../specification/ram_matrices/">RAMMatrices interface</a></li><li><a class="tocitem" href="../../specification/parameter_table/">ParameterTable interface</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-2-4" type="checkbox"/><label class="tocitem" for="menuitem-2-4"><span class="docs-label">Model Construction</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../construction/construction/">Model Construction</a></li><li><a class="tocitem" href="../../construction/outer_constructor/">Outer Constructor</a></li><li><a class="tocitem" href="../../construction/build_by_parts/">Build by parts</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-2-5" type="checkbox"/><label class="tocitem" for="menuitem-2-5"><span class="docs-label">Optimization Backends</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../backends/optim/">Using Optim.jl</a></li><li><a class="tocitem" href="../../backends/nlopt/">Using NLopt.jl</a></li></ul></li><li><a class="tocitem" href="../../fitting/fitting/">Model Fitting</a></li><li><a class="tocitem" href="../../inspection/inspection/">Model Inspection</a></li><li><a class="tocitem" href="../../meanstructure/">Mean Structures</a></li><li><input class="collapse-toggle" id="menuitem-2-9" type="checkbox"/><label class="tocitem" for="menuitem-2-9"><span class="docs-label">Collections</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../collection/collection/">Collections</a></li><li><a class="tocitem" href="../../collection/multigroup/">Multigroup models</a></li></ul></li><li class="is-active"><a class="tocitem" href>Constraints</a><ul class="internal"><li><a class="tocitem" href="#Using-the-NLopt-backend"><span>Using the NLopt backend</span></a></li><li><a class="tocitem" href="#Using-the-Optim.jl-backend"><span>Using the Optim.jl backend</span></a></li></ul></li></ul></li><li><input class="collapse-toggle" id="menuitem-3" type="checkbox"/><label class="tocitem" for="menuitem-3"><span class="docs-label">Developer documentation</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../developer/extending/">Extending the package</a></li><li><a class="tocitem" href="../../../developer/loss/">Custom loss functions</a></li><li><a class="tocitem" href="../../../developer/imply/">Custom imply types</a></li><li><a class="tocitem" href="../../../developer/optimizer/">Custom optimizer types</a></li><li><a class="tocitem" href="../../../developer/observed/">Custom observed types</a></li><li><a class="tocitem" href="../../../developer/sem/">Custom model types</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-4" type="checkbox"/><label class="tocitem" for="menuitem-4"><span class="docs-label">Advanced tutorials</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../regularization/regularization/">Regularization</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-5" type="checkbox"/><label class="tocitem" for="menuitem-5"><span class="docs-label">Performance tips</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../performance/sorting/">Model sorting</a></li><li><a class="tocitem" href="../../../performance/mkl/">MKL</a></li><li><a class="tocitem" href="../../../performance/simulation/">Simulation studies</a></li><li><a class="tocitem" href="../../../performance/symbolic/">Symbolic precomputation</a></li><li><a class="tocitem" href="../../../performance/starting_values/">Starting values</a></li><li><a class="tocitem" href="../../../performance/parametric/">Parametric Types</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-6" type="checkbox"/><label class="tocitem" for="menuitem-6"><span class="docs-label">Internals and design</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../internals/internals/">Internals and design</a></li><li><a class="tocitem" href="../../../internals/files/">files</a></li><li><a class="tocitem" href="../../../internals/types/">types</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-7" type="checkbox"/><label class="tocitem" for="menuitem-7"><span class="docs-label">Complementary material</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../complementary/maths/">Mathematical appendix</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Tutorials</a></li><li class="is-active"><a href>Constraints</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Constraints</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/StructuralEquationModels/StructuralEquationModels.jl/blob/main/docs/src/tutorials/constraints/constraints.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Constrained-optimization"><a class="docs-heading-anchor" href="#Constrained-optimization">Constrained optimization</a><a id="Constrained-optimization-1"></a><a class="docs-heading-anchor-permalink" href="#Constrained-optimization" title="Permalink"></a></h1><h2 id="Using-the-NLopt-backend"><a class="docs-heading-anchor" href="#Using-the-NLopt-backend">Using the NLopt backend</a><a id="Using-the-NLopt-backend-1"></a><a class="docs-heading-anchor-permalink" href="#Using-the-NLopt-backend" title="Permalink"></a></h2><h3 id="Define-an-example-model"><a class="docs-heading-anchor" href="#Define-an-example-model">Define an example model</a><a id="Define-an-example-model-1"></a><a class="docs-heading-anchor-permalink" href="#Define-an-example-model" title="Permalink"></a></h3><p>Let&#39;s revisit our model from <a href="../../first_model/#A-first-model">A first model</a>:</p><pre><code class="language-julia hljs">using StructuralEquationModels
+
+observed_vars = [:x1, :x2, :x3, :y1, :y2, :y3, :y4, :y5, :y6, :y7, :y8]
+latent_vars = [:ind60, :dem60, :dem65]
+
+graph = @StenoGraph begin
+
+    # loadings
+    ind60 → fixed(1)*x1 + x2 + x3
+    dem60 → fixed(1)*y1 + y2 + y3 + y4
+    dem65 → fixed(1)*y5 + y6 + y7 + y8
+
+    # latent regressions
+    ind60 → dem60
+    dem60 → dem65
+    ind60 → dem65
+
+    # variances
+    _(observed_vars) ↔ _(observed_vars)
+    _(latent_vars) ↔ _(latent_vars)
+
+    # covariances
+    y1 ↔ y5
+    y2 ↔ y4 + y6
+    y3 ↔ y7
+    y8 ↔ y4 + y6
+
+end
+
+partable = ParameterTable(
+    latent_vars = latent_vars,
+    observed_vars = observed_vars,
+    graph = graph)
+
+data = example_data(&quot;political_democracy&quot;)
+
+model = Sem(
+    specification = partable,
+    data = data
+)
+
+model_fit = sem_fit(model)
+
+update_estimate!(partable, model_fit)
+
+sem_summary(partable)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi"><span class="sgr36"><span class="sgr1">[ Info: </span></span>Your model is acyclic, specifying the A Matrix as either Upper or Lower Triangular can have great performance benefits.
+
+<span class="sgr96">--------------------------------- Variables --------------------------------- </span>
+
+<span class="sgr96">Latent variables:    </span>ind60 dem60 dem65
+<span class="sgr96">Observed variables:  </span>x1 x2 x3 y1 y2 y3 y4 y5 y6 y7 y8
+
+<span class="sgr96">---------------------------- Parameter Estimates ----------------------------- </span>
+
+<span class="sgr96">Loadings: </span>
+
+<span class="sgr93">ind60</span>
+
+ <span class="sgr1"> to </span> <span class="sgr1"> estimate </span> <span class="sgr1"> identifier </span> <span class="sgr1"> value_fixed </span> <span class="sgr1"> start </span> <span class="sgr1"> free </span> <span class="sgr1"> from  </span> <span class="sgr1"> type </span>
+
+  x1   0.0        const        1.0           0.0     0.0    ind60   →
+  x2   2.18       θ_1          0.0           0.0     1.0    ind60   →
+  x3   1.82       θ_2          0.0           0.0     1.0    ind60   →
+
+<span class="sgr93">dem60</span>
+
+ <span class="sgr1"> to </span> <span class="sgr1"> estimate </span> <span class="sgr1"> identifier </span> <span class="sgr1"> value_fixed </span> <span class="sgr1"> start </span> <span class="sgr1"> free </span> <span class="sgr1"> from  </span> <span class="sgr1"> type </span>
+
+  y1   0.0        const        1.0           0.0     0.0    dem60   →
+  y2   1.26       θ_3          0.0           0.0     1.0    dem60   →
+  y3   1.06       θ_4          0.0           0.0     1.0    dem60   →
+  y4   1.26       θ_5          0.0           0.0     1.0    dem60   →
+
+<span class="sgr93">dem65</span>
+
+ <span class="sgr1"> to </span> <span class="sgr1"> estimate </span> <span class="sgr1"> identifier </span> <span class="sgr1"> value_fixed </span> <span class="sgr1"> start </span> <span class="sgr1"> free </span> <span class="sgr1"> from  </span> <span class="sgr1"> type </span>
+
+  y5   0.0        const        1.0           0.0     0.0    dem65   →
+  y6   1.19       θ_6          0.0           0.0     1.0    dem65   →
+  y7   1.28       θ_7          0.0           0.0     1.0    dem65   →
+  y8   1.27       θ_8          0.0           0.0     1.0    dem65   →
+
+<span class="sgr96">Directed Effects: </span>
+
+ <span class="sgr1"> from  </span> <span class="sgr1">   </span> <span class="sgr1"> to    </span> <span class="sgr1"> estimate </span> <span class="sgr1"> identifier </span> <span class="sgr1"> value_fixed </span> <span class="sgr1"> start </span> <span class="sgr1"> free </span>
+
+  ind60   →   dem60   1.48       θ_9          0.0           0.0     1.0
+  dem60   →   dem65   0.84       θ_10         0.0           0.0     1.0
+  ind60   →   dem65   0.57       θ_11         0.0           0.0     1.0
+
+<span class="sgr96">Variances: </span>
+
+ <span class="sgr1"> from  </span> <span class="sgr1">   </span> <span class="sgr1"> to    </span> <span class="sgr1"> estimate </span> <span class="sgr1"> identifier </span> <span class="sgr1"> value_fixed </span> <span class="sgr1"> start </span> <span class="sgr1"> free </span>
+
+  x1      ↔   x1      0.08       θ_12         0.0           0.0     1.0
+  x2      ↔   x2      0.12       θ_13         0.0           0.0     1.0
+  x3      ↔   x3      0.47       θ_14         0.0           0.0     1.0
+  y1      ↔   y1      1.92       θ_15         0.0           0.0     1.0
+  y2      ↔   y2      7.47       θ_16         0.0           0.0     1.0
+  y3      ↔   y3      5.13       θ_17         0.0           0.0     1.0
+  y4      ↔   y4      3.19       θ_18         0.0           0.0     1.0
+  y5      ↔   y5      2.38       θ_19         0.0           0.0     1.0
+  y6      ↔   y6      5.02       θ_20         0.0           0.0     1.0
+  y7      ↔   y7      3.48       θ_21         0.0           0.0     1.0
+  y8      ↔   y8      3.3        θ_22         0.0           0.0     1.0
+  ind60   ↔   ind60   0.45       θ_23         0.0           0.0     1.0
+  dem60   ↔   dem60   4.01       θ_24         0.0           0.0     1.0
+  dem65   ↔   dem65   0.17       θ_25         0.0           0.0     1.0
+
+<span class="sgr96">Covariances: </span>
+
+ <span class="sgr1"> from </span> <span class="sgr1">   </span> <span class="sgr1"> to </span> <span class="sgr1"> estimate </span> <span class="sgr1"> identifier </span> <span class="sgr1"> value_fixed </span> <span class="sgr1"> start </span> <span class="sgr1"> free </span>
+
+  y1     ↔   y5   0.63       θ_26         0.0           0.0     1.0
+  y2     ↔   y4   1.33       θ_27         0.0           0.0     1.0
+  y2     ↔   y6   2.18       θ_28         0.0           0.0     1.0
+  y3     ↔   y7   0.81       θ_29         0.0           0.0     1.0
+  y8     ↔   y4   0.35       θ_30         0.0           0.0     1.0
+  y8     ↔   y6   1.37       θ_31         0.0           0.0     1.0</code></pre><h3 id="Define-the-constraints"><a class="docs-heading-anchor" href="#Define-the-constraints">Define the constraints</a><a id="Define-the-constraints-1"></a><a class="docs-heading-anchor-permalink" href="#Define-the-constraints" title="Permalink"></a></h3><p>Let&#39;s introduce some constraints:</p><ol><li><strong>Equality constraint</strong>: The covariances <code>y3 ↔ y7</code> and <code>y8 ↔ y4</code> should sum up to <code>1</code>.</li><li><strong>Inequality constraint</strong>: The difference between the loadings <code>dem60 → y2</code> and <code>dem60 → y3</code> should be smaller than <code>0.1</code></li><li><strong>Bound constraint</strong>: The directed effect from  <code>ind60 → dem65</code> should be smaller than <code>0.5</code></li></ol><p>(Of course those constaints only serve an illustratory purpose.)</p><p>We first need to get the indices of the respective parameters that are invoved in the constraints. We can look up their labels in the output above, and retrieve their indices as</p><pre><code class="language-julia hljs">parameter_indices = get_identifier_indices([:θ_29, :θ_30, :θ_3, :θ_4, :θ_11], model)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">5-element Vector{Int64}:
+ 29
+ 30
+  3
+  4
+ 11</code></pre><p>The bound constraint is easy to specify: Just give a vector of upper or lower bounds that contains the bound for each parameter. In our example, only parameter number 11 has an upper bound, and the number of total parameters is <code>n_par(model) = 31</code>, so we define</p><pre><code class="language-julia hljs">upper_bounds = fill(Inf, 31)
+upper_bounds[11] = 0.5</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">0.5</code></pre><p>The equailty and inequality constraints have to be reformulated to be of the form <code>x = 0</code> or <code>x ≤ 0</code>:</p><ol><li><code>y3 ↔ y7 + y8 ↔ y4 - 1 = 0</code></li><li><code>dem60 → y2 - dem60 → y3 - 0.1 ≤ 0</code></li></ol><p>Now they can be defined as functions of the parameter vector:</p><pre><code class="language-julia hljs"># θ[29] + θ[30] - 1 = 0.0
+function eq_constraint(θ, gradient)
+    if length(gradient) &gt; 0
+        gradient .= 0.0
+        gradient[29] = 1.0
+        gradient[30] = 1.0
+    end
+    return θ[29] + θ[30] - 1
+end
+
+# θ[3] - θ[4] - 0.1 ≤ 0
+function ineq_constraint(θ, gradient)
+    if length(gradient) &gt; 0
+        gradient .= 0.0
+        gradient[3] = 1.0
+        gradient[4] = -1.0
+    end
+    θ[3] - θ[4] - 0.1
+end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">ineq_constraint (generic function with 1 method)</code></pre><p>If the algorithm needs gradients at an iteration, it will pass the vector <code>gradient</code> that is of the same size as the parameters. With <code>if length(gradient) &gt; 0</code> we check if the algorithm needs gradients, and if it does, we fill the <code>gradient</code> vector with the gradients  of the constraint w.r.t. the parameters.</p><p>In NLopt, vector-valued constraints are also possible, but we refer to the documentation fot that.</p><h3 id="Fit-the-model"><a class="docs-heading-anchor" href="#Fit-the-model">Fit the model</a><a id="Fit-the-model-1"></a><a class="docs-heading-anchor-permalink" href="#Fit-the-model" title="Permalink"></a></h3><p>We now have everything together to specify and fit our model. First, we specify our optimizer backend as</p><pre><code class="language-julia hljs">constrained_optimizer = SemOptimizerNLopt(
+    algorithm = :AUGLAG,
+    options = Dict(:upper_bounds =&gt; upper_bounds, :xtol_abs =&gt; 1e-4),
+    local_algorithm = :LD_LBFGS,
+    equality_constraints = NLoptConstraint(;f = eq_constraint, tol = 1e-8),
+    inequality_constraints = NLoptConstraint(;f = ineq_constraint, tol = 1e-8),
+)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">SemOptimizerNLopt
+   algorithm: Symbol
+   local_algorithm: Symbol
+   options: Dict{Symbol, Any}
+   local_options: Dict{Symbol, Any}
+   equality_constraints: Vector{NLoptConstraint}
+   inequality_constraints: Vector{NLoptConstraint}
+</code></pre><p>As you see, the equality constraints and inequality constraints are passed as keyword arguments, and the bounds are passed as options for the (outer) optimization algorithm. Additionally, for equality and inequality constraints, a feasibility tolerance can be specified that controls if a solution can be accepted, even if it violates the constraints by a small amount.  Especially for equality constraints, it is recommended to allow for a small positive tolerance. In this example, we set both tolerances to <code>1e-8</code>.</p><div class="admonition is-warning"><header class="admonition-header">Convergence criteria</header><div class="admonition-body"><p>We have often observed that the default convergence criteria in NLopt lead to non-convergence flags. Indeed, this example does not convergence with default criteria. As you see above, we used a realively liberal absolute tolerance in the optimization parameters of 1e-4. This should not be a problem in most cases, as the sampling variance in (almost all) structural equation models  should lead to uncertainty in the parameter estimates that are orders of magnitude larger. We nontheless recommend choosing a convergence criterion with care (i.e. w.r.t. the scale of your parameters), inspecting the solutions for plausibility, and comparing them to unconstrained solutions.</p></div></div><pre><code class="language-julia hljs">model_constrained = Sem(
+    specification = partable,
+    data = data,
+    optimizer = constrained_optimizer
+)
+
+model_fit_constrained = sem_fit(model_constrained)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Fitted Structural Equation Model 
+=============================================== 
+--------------------- Model ------------------- 
+
+Structural Equation Model 
+- Loss Functions 
+   SemML
+- Fields 
+   observed:    SemObservedData 
+   imply:       RAM 
+   optimizer:   SemOptimizerNLopt 
+
+------------- Optimization result ------------- 
+
+Optimizer status: XTOL_REACHED 
+Minimum:          21.21 
+Algorithm:        AUGLAG 
+No. evaluations:  1518 
+</code></pre><p>As you can see, the optimizer converged (<code>:XTOL_REACHED</code>) and investigating the solution yields</p><pre><code class="language-julia hljs">update_partable!(
+    partable,
+    model_fit_constrained,
+    solution(model_fit_constrained),
+    :estimate_constr)
+
+sem_summary(partable)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">
+<span class="sgr96">--------------------------------- Variables --------------------------------- </span>
+
+<span class="sgr96">Latent variables:    </span>ind60 dem60 dem65
+<span class="sgr96">Observed variables:  </span>x1 x2 x3 y1 y2 y3 y4 y5 y6 y7 y8
+
+<span class="sgr96">---------------------------- Parameter Estimates ----------------------------- </span>
+
+<span class="sgr96">Loadings: </span>
+
+<span class="sgr93">ind60</span>
+
+ <span class="sgr1"> to </span> <span class="sgr1"> estimate </span> <span class="sgr1"> identifier </span> <span class="sgr1"> value_fixed </span> <span class="sgr1"> start </span> <span class="sgr1"> estimate_constr </span> <span class="sgr1"> free </span> <span class="sgr1"> from  </span> <span class="sgr1"> type </span>
+
+  x1   0.0        const        1.0           0.0     0.0               0.0    ind60   →
+  x2   2.18       θ_1          0.0           0.0     2.18              1.0    ind60   →
+  x3   1.82       θ_2          0.0           0.0     1.82              1.0    ind60   →
+
+<span class="sgr93">dem60</span>
+
+ <span class="sgr1"> to </span> <span class="sgr1"> estimate </span> <span class="sgr1"> identifier </span> <span class="sgr1"> value_fixed </span> <span class="sgr1"> start </span> <span class="sgr1"> estimate_constr </span> <span class="sgr1"> free </span> <span class="sgr1"> from  </span> <span class="sgr1"> type </span>
+
+  y1   0.0        const        1.0           0.0     0.0               0.0    dem60   →
+  y2   1.26       θ_3          0.0           0.0     1.2               1.0    dem60   →
+  y3   1.06       θ_4          0.0           0.0     1.1               1.0    dem60   →
+  y4   1.26       θ_5          0.0           0.0     1.26              1.0    dem60   →
+
+<span class="sgr93">dem65</span>
+
+ <span class="sgr1"> to </span> <span class="sgr1"> estimate </span> <span class="sgr1"> identifier </span> <span class="sgr1"> value_fixed </span> <span class="sgr1"> start </span> <span class="sgr1"> estimate_constr </span> <span class="sgr1"> free </span> <span class="sgr1"> from  </span> <span class="sgr1"> type </span>
+
+  y5   0.0        const        1.0           0.0     0.0               0.0    dem65   →
+  y6   1.19       θ_6          0.0           0.0     1.17              1.0    dem65   →
+  y7   1.28       θ_7          0.0           0.0     1.3               1.0    dem65   →
+  y8   1.27       θ_8          0.0           0.0     1.27              1.0    dem65   →
+
+<span class="sgr96">Directed Effects: </span>
+
+ <span class="sgr1"> from  </span> <span class="sgr1">   </span> <span class="sgr1"> to    </span> <span class="sgr1"> estimate </span> <span class="sgr1"> identifier </span> <span class="sgr1"> value_fixed </span> <span class="sgr1"> start </span> <span class="sgr1"> estimate_constr </span> <span class="sgr1"> free </span>
+
+  ind60   →   dem60   1.48       θ_9          0.0           0.0     1.5               1.0
+  dem60   →   dem65   0.84       θ_10         0.0           0.0     0.84              1.0
+  ind60   →   dem65   0.57       θ_11         0.0           0.0     0.5               1.0
+
+<span class="sgr96">Variances: </span>
+
+ <span class="sgr1"> from  </span> <span class="sgr1">   </span> <span class="sgr1"> to    </span> <span class="sgr1"> estimate </span> <span class="sgr1"> identifier </span> <span class="sgr1"> value_fixed </span> <span class="sgr1"> start </span> <span class="sgr1"> estimate_constr </span> <span class="sgr1"> free </span>
+
+  x1      ↔   x1      0.08       θ_12         0.0           0.0     0.08              1.0
+  x2      ↔   x2      0.12       θ_13         0.0           0.0     0.12              1.0
+  x3      ↔   x3      0.47       θ_14         0.0           0.0     0.47              1.0
+  y1      ↔   y1      1.92       θ_15         0.0           0.0     1.93              1.0
+  y2      ↔   y2      7.47       θ_16         0.0           0.0     7.62              1.0
+  y3      ↔   y3      5.13       θ_17         0.0           0.0     5.04              1.0
+  y4      ↔   y4      3.19       θ_18         0.0           0.0     3.2               1.0
+  y5      ↔   y5      2.38       θ_19         0.0           0.0     2.4               1.0
+  y6      ↔   y6      5.02       θ_20         0.0           0.0     5.05              1.0
+  y7      ↔   y7      3.48       θ_21         0.0           0.0     3.41              1.0
+  y8      ↔   y8      3.3        θ_22         0.0           0.0     3.29              1.0
+  ind60   ↔   ind60   0.45       θ_23         0.0           0.0     0.46              1.0
+  dem60   ↔   dem60   4.01       θ_24         0.0           0.0     3.97              1.0
+  dem65   ↔   dem65   0.17       θ_25         0.0           0.0     0.16              1.0
+
+<span class="sgr96">Covariances: </span>
+
+ <span class="sgr1"> from </span> <span class="sgr1">   </span> <span class="sgr1"> to </span> <span class="sgr1"> estimate </span> <span class="sgr1"> identifier </span> <span class="sgr1"> value_fixed </span> <span class="sgr1"> start </span> <span class="sgr1"> estimate_constr </span> <span class="sgr1"> free </span>
+
+  y1     ↔   y5   0.63       θ_26         0.0           0.0     0.62              1.0
+  y2     ↔   y4   1.33       θ_27         0.0           0.0     1.4               1.0
+  y2     ↔   y6   2.18       θ_28         0.0           0.0     2.22              1.0
+  y3     ↔   y7   0.81       θ_29         0.0           0.0     0.68              1.0
+  y8     ↔   y4   0.35       θ_30         0.0           0.0     0.32              1.0
+  y8     ↔   y6   1.37       θ_31         0.0           0.0     1.38              1.0</code></pre><p>As we can see, the constrained solution is very close to the original solution (compare the columns estimate and estimate_constr), with the difference that the constrained parameters fulfill their constraints.  As all parameters are estimated simultaneously, it is expexted that some unconstrained parameters are also affected (e.g., the constraint on <code>dem60 → y2</code> leads to a higher estimate of the residual variance <code>y2 ↔ y2</code>).</p><h2 id="Using-the-Optim.jl-backend"><a class="docs-heading-anchor" href="#Using-the-Optim.jl-backend">Using the Optim.jl backend</a><a id="Using-the-Optim.jl-backend-1"></a><a class="docs-heading-anchor-permalink" href="#Using-the-Optim.jl-backend" title="Permalink"></a></h2><p>Information about constrained optimization using <code>Optim.jl</code> can be found in the packages <a href="https://julianlsolvers.github.io/Optim.jl/stable/#examples/generated/ipnewton_basics/">documentation</a>.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../collection/multigroup/">« Multigroup models</a><a class="docs-footer-nextpage" href="../../../developer/extending/">Extending the package »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.24 on <span class="colophon-date" title="Wednesday 14 June 2023 11:30">Wednesday 14 June 2023</span>. Using Julia version 1.9.1.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

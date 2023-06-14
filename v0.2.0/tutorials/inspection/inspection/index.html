@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Model Inspection · StructuralEquationModels.jl</title><script data-outdated-warner src="../../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.045/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.24/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../../assets/documenter.js"></script><script src="../../../siteinfo.js"></script><script src="../../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../../assets/themeswap.js"></script><link href="../../../assets/favicon_zeta.ico" rel="icon" type="image/x-icon"/></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../../../"><img src="../../../assets/logo.svg" alt="StructuralEquationModels.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href="../../../">StructuralEquationModels.jl</a></span></div><form class="docs-search" action="../../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../../../">A fast and flexible SEM framework</a></li><li><input class="collapse-toggle" id="menuitem-2" type="checkbox" checked/><label class="tocitem" for="menuitem-2"><span class="docs-label">Tutorials</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../first_model/">A first model</a></li><li><a class="tocitem" href="../../concept/">Our Concept of a Structural Equation Model</a></li><li><input class="collapse-toggle" id="menuitem-2-3" type="checkbox"/><label class="tocitem" for="menuitem-2-3"><span class="docs-label">Model Specification</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../specification/specification/">Model specification</a></li><li><a class="tocitem" href="../../specification/graph_interface/">Graph interface</a></li><li><a class="tocitem" href="../../specification/ram_matrices/">RAMMatrices interface</a></li><li><a class="tocitem" href="../../specification/parameter_table/">ParameterTable interface</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-2-4" type="checkbox"/><label class="tocitem" for="menuitem-2-4"><span class="docs-label">Model Construction</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../construction/construction/">Model Construction</a></li><li><a class="tocitem" href="../../construction/outer_constructor/">Outer Constructor</a></li><li><a class="tocitem" href="../../construction/build_by_parts/">Build by parts</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-2-5" type="checkbox"/><label class="tocitem" for="menuitem-2-5"><span class="docs-label">Optimization Backends</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../backends/optim/">Using Optim.jl</a></li><li><a class="tocitem" href="../../backends/nlopt/">Using NLopt.jl</a></li></ul></li><li><a class="tocitem" href="../../fitting/fitting/">Model Fitting</a></li><li class="is-active"><a class="tocitem" href>Model Inspection</a><ul class="internal"><li><a class="tocitem" href="#Export-results"><span>Export results</span></a></li><li class="toplevel"><a class="tocitem" href="#API-model-inspection"><span>API - model inspection</span></a></li><li><a class="tocitem" href="#Additional-functions"><span>Additional functions</span></a></li><li><a class="tocitem" href="#Fit-measures"><span>Fit measures</span></a></li></ul></li><li><a class="tocitem" href="../../meanstructure/">Mean Structures</a></li><li><input class="collapse-toggle" id="menuitem-2-9" type="checkbox"/><label class="tocitem" for="menuitem-2-9"><span class="docs-label">Collections</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../collection/collection/">Collections</a></li><li><a class="tocitem" href="../../collection/multigroup/">Multigroup models</a></li></ul></li><li><a class="tocitem" href="../../constraints/constraints/">Constraints</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-3" type="checkbox"/><label class="tocitem" for="menuitem-3"><span class="docs-label">Developer documentation</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../developer/extending/">Extending the package</a></li><li><a class="tocitem" href="../../../developer/loss/">Custom loss functions</a></li><li><a class="tocitem" href="../../../developer/imply/">Custom imply types</a></li><li><a class="tocitem" href="../../../developer/optimizer/">Custom optimizer types</a></li><li><a class="tocitem" href="../../../developer/observed/">Custom observed types</a></li><li><a class="tocitem" href="../../../developer/sem/">Custom model types</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-4" type="checkbox"/><label class="tocitem" for="menuitem-4"><span class="docs-label">Advanced tutorials</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../regularization/regularization/">Regularization</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-5" type="checkbox"/><label class="tocitem" for="menuitem-5"><span class="docs-label">Performance tips</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../performance/sorting/">Model sorting</a></li><li><a class="tocitem" href="../../../performance/mkl/">MKL</a></li><li><a class="tocitem" href="../../../performance/simulation/">Simulation studies</a></li><li><a class="tocitem" href="../../../performance/symbolic/">Symbolic precomputation</a></li><li><a class="tocitem" href="../../../performance/starting_values/">Starting values</a></li><li><a class="tocitem" href="../../../performance/parametric/">Parametric Types</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-6" type="checkbox"/><label class="tocitem" for="menuitem-6"><span class="docs-label">Internals and design</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../internals/internals/">Internals and design</a></li><li><a class="tocitem" href="../../../internals/files/">files</a></li><li><a class="tocitem" href="../../../internals/types/">types</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-7" type="checkbox"/><label class="tocitem" for="menuitem-7"><span class="docs-label">Complementary material</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../complementary/maths/">Mathematical appendix</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Tutorials</a></li><li class="is-active"><a href>Model Inspection</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Model Inspection</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/StructuralEquationModels/StructuralEquationModels.jl/blob/main/docs/src/tutorials/inspection/inspection.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Model-inspection"><a class="docs-heading-anchor" href="#Model-inspection">Model inspection</a><a id="Model-inspection-1"></a><a class="docs-heading-anchor-permalink" href="#Model-inspection" title="Permalink"></a></h1><p>After you fitted a model,</p><pre><code class="language-julia hljs">model_fit = sem_fit(model)</code></pre><p>you end up with an object of type <a href="#StructuralEquationModels.SemFit"><code>SemFit</code></a>.</p><p>You can get some more information about it by using the <code>sem_summary</code> function:</p><pre><code class="language-julia hljs">sem_summary(model_fit)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">
+Fitted Structural Equation Model
+
+<span class="sgr96">--------------------------------- Properties --------------------------------- </span>
+
+Optimization algorithm:      L-BFGS
+Convergence:                 true
+No. iterations/evaluations:  181
+
+Number of parameters:        31
+Number of observations:      75.0
+
+<span class="sgr96">----------------------------------- Model ----------------------------------- </span>
+
+Structural Equation Model
+- Loss Functions
+   SemML
+- Fields
+   observed:    SemObservedData
+   imply:       RAM
+   optimizer:   SemOptimizerOptim</code></pre><p>To compute fit measures, we use</p><pre><code class="language-julia hljs">fit_measures(model_fit)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Dict{Symbol, Union{Missing, Float64}} with 8 entries:
+  :minus2ll =&gt; 3106.66
+  :AIC      =&gt; 3168.66
+  :BIC      =&gt; 3240.5
+  :df       =&gt; 35.0
+  :χ²       =&gt; 37.6169
+  :p_value  =&gt; 0.350263
+  :RMSEA    =&gt; 0.0315739
+  :n_par    =&gt; 31.0</code></pre><p>or compute them individually:</p><pre><code class="language-julia hljs">AIC(model_fit)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">3168.655880821327</code></pre><p>A list of available <a href="#Fit-measures">Fit measures</a> is at the end of this page.</p><p>To inspect the parameter estimates, we can update a <code>ParameterTable</code> object and call <code>sem_summary</code> on it:</p><pre><code class="language-julia hljs">update_estimate!(partable, model_fit)
+
+sem_summary(partable)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">
+<span class="sgr96">--------------------------------- Variables --------------------------------- </span>
+
+<span class="sgr96">Latent variables:    </span>ind60 dem60 dem65
+<span class="sgr96">Observed variables:  </span>x1 x2 x3 y1 y2 y3 y4 y5 y6 y7 y8
+
+<span class="sgr96">---------------------------- Parameter Estimates ----------------------------- </span>
+
+<span class="sgr96">Loadings: </span>
+
+<span class="sgr93">ind60</span>
+
+ <span class="sgr1"> to </span> <span class="sgr1"> estimate </span> <span class="sgr1"> identifier </span> <span class="sgr1"> value_fixed </span> <span class="sgr1"> start </span> <span class="sgr1"> free </span> <span class="sgr1"> from  </span> <span class="sgr1"> type </span>
+
+  x1   0.0        const        1.0           0.0     0.0    ind60   →
+  x2   2.18       θ_1          0.0           0.0     1.0    ind60   →
+  x3   1.82       θ_2          0.0           0.0     1.0    ind60   →
+
+<span class="sgr93">dem60</span>
+
+ <span class="sgr1"> to </span> <span class="sgr1"> estimate </span> <span class="sgr1"> identifier </span> <span class="sgr1"> value_fixed </span> <span class="sgr1"> start </span> <span class="sgr1"> free </span> <span class="sgr1"> from  </span> <span class="sgr1"> type </span>
+
+  y1   0.0        const        1.0           0.0     0.0    dem60   →
+  y2   1.26       θ_3          0.0           0.0     1.0    dem60   →
+  y3   1.06       θ_4          0.0           0.0     1.0    dem60   →
+  y4   1.26       θ_5          0.0           0.0     1.0    dem60   →
+
+<span class="sgr93">dem65</span>
+
+ <span class="sgr1"> to </span> <span class="sgr1"> estimate </span> <span class="sgr1"> identifier </span> <span class="sgr1"> value_fixed </span> <span class="sgr1"> start </span> <span class="sgr1"> free </span> <span class="sgr1"> from  </span> <span class="sgr1"> type </span>
+
+  y5   0.0        const        1.0           0.0     0.0    dem65   →
+  y6   1.19       θ_6          0.0           0.0     1.0    dem65   →
+  y7   1.28       θ_7          0.0           0.0     1.0    dem65   →
+  y8   1.27       θ_8          0.0           0.0     1.0    dem65   →
+
+<span class="sgr96">Directed Effects: </span>
+
+ <span class="sgr1"> from  </span> <span class="sgr1">   </span> <span class="sgr1"> to    </span> <span class="sgr1"> estimate </span> <span class="sgr1"> identifier </span> <span class="sgr1"> value_fixed </span> <span class="sgr1"> start </span> <span class="sgr1"> free </span>
+
+  ind60   →   dem60   1.48       θ_9          0.0           0.0     1.0
+  dem60   →   dem65   0.84       θ_10         0.0           0.0     1.0
+  ind60   →   dem65   0.57       θ_11         0.0           0.0     1.0
+
+<span class="sgr96">Variances: </span>
+
+ <span class="sgr1"> from  </span> <span class="sgr1">   </span> <span class="sgr1"> to    </span> <span class="sgr1"> estimate </span> <span class="sgr1"> identifier </span> <span class="sgr1"> value_fixed </span> <span class="sgr1"> start </span> <span class="sgr1"> free </span>
+
+  x1      ↔   x1      0.08       θ_12         0.0           0.0     1.0
+  x2      ↔   x2      0.12       θ_13         0.0           0.0     1.0
+  x3      ↔   x3      0.47       θ_14         0.0           0.0     1.0
+  y1      ↔   y1      1.92       θ_15         0.0           0.0     1.0
+  y2      ↔   y2      7.47       θ_16         0.0           0.0     1.0
+  y3      ↔   y3      5.13       θ_17         0.0           0.0     1.0
+  y4      ↔   y4      3.19       θ_18         0.0           0.0     1.0
+  y5      ↔   y5      2.38       θ_19         0.0           0.0     1.0
+  y6      ↔   y6      5.02       θ_20         0.0           0.0     1.0
+  y7      ↔   y7      3.48       θ_21         0.0           0.0     1.0
+  y8      ↔   y8      3.3        θ_22         0.0           0.0     1.0
+  ind60   ↔   ind60   0.45       θ_23         0.0           0.0     1.0
+  dem60   ↔   dem60   4.01       θ_24         0.0           0.0     1.0
+  dem65   ↔   dem65   0.17       θ_25         0.0           0.0     1.0
+
+<span class="sgr96">Covariances: </span>
+
+ <span class="sgr1"> from </span> <span class="sgr1">   </span> <span class="sgr1"> to </span> <span class="sgr1"> estimate </span> <span class="sgr1"> identifier </span> <span class="sgr1"> value_fixed </span> <span class="sgr1"> start </span> <span class="sgr1"> free </span>
+
+  y1     ↔   y5   0.63       θ_26         0.0           0.0     1.0
+  y2     ↔   y4   1.33       θ_27         0.0           0.0     1.0
+  y2     ↔   y6   2.18       θ_28         0.0           0.0     1.0
+  y3     ↔   y7   0.81       θ_29         0.0           0.0     1.0
+  y8     ↔   y4   0.35       θ_30         0.0           0.0     1.0
+  y8     ↔   y6   1.37       θ_31         0.0           0.0     1.0</code></pre><p>We can also update the <code>ParameterTable</code> object with other information via <a href="#StructuralEquationModels.update_partable!"><code>update_partable!</code></a>. For example, if we want to compare hessian-based and bootstrap-based standard errors, we may write</p><pre><code class="language-julia hljs">se_bs = se_bootstrap(model_fit; n_boot = 20)
+se_he = se_hessian(model_fit)
+
+update_partable!(partable, model_fit, se_he, :se_hessian)
+update_partable!(partable, model_fit, se_bs, :se_bootstrap)
+
+sem_summary(partable)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Number of nonconverged models: 0.0
+
+<span class="sgr96">--------------------------------- Variables --------------------------------- </span>
+
+<span class="sgr96">Latent variables:    </span>ind60 dem60 dem65
+<span class="sgr96">Observed variables:  </span>x1 x2 x3 y1 y2 y3 y4 y5 y6 y7 y8
+
+<span class="sgr96">---------------------------- Parameter Estimates ----------------------------- </span>
+
+<span class="sgr96">Loadings: </span>
+
+<span class="sgr93">ind60</span>
+
+ <span class="sgr1"> to </span> <span class="sgr1"> estimate </span> <span class="sgr1"> identifier </span> <span class="sgr1"> value_fixed </span> <span class="sgr1"> start </span> <span class="sgr1"> free </span> <span class="sgr1"> from  </span> <span class="sgr1"> type </span> <span class="sgr1"> se_bootstrap </span> <span class="sgr1"> se_hessian </span>
+
+  x1   0.0        const        1.0           0.0     0.0    ind60   →      0.0            0.0
+  x2   2.18       θ_1          0.0           0.0     1.0    ind60   →      0.16           0.14
+  x3   1.82       θ_2          0.0           0.0     1.0    ind60   →      0.16           0.15
+
+<span class="sgr93">dem60</span>
+
+ <span class="sgr1"> to </span> <span class="sgr1"> estimate </span> <span class="sgr1"> identifier </span> <span class="sgr1"> value_fixed </span> <span class="sgr1"> start </span> <span class="sgr1"> free </span> <span class="sgr1"> from  </span> <span class="sgr1"> type </span> <span class="sgr1"> se_bootstrap </span> <span class="sgr1"> se_hessian </span>
+
+  y1   0.0        const        1.0           0.0     0.0    dem60   →      0.0            0.0
+  y2   1.26       θ_3          0.0           0.0     1.0    dem60   →      0.13           0.19
+  y3   1.06       θ_4          0.0           0.0     1.0    dem60   →      0.14           0.15
+  y4   1.26       θ_5          0.0           0.0     1.0    dem60   →      0.11           0.15
+
+<span class="sgr93">dem65</span>
+
+ <span class="sgr1"> to </span> <span class="sgr1"> estimate </span> <span class="sgr1"> identifier </span> <span class="sgr1"> value_fixed </span> <span class="sgr1"> start </span> <span class="sgr1"> free </span> <span class="sgr1"> from  </span> <span class="sgr1"> type </span> <span class="sgr1"> se_bootstrap </span> <span class="sgr1"> se_hessian </span>
+
+  y5   0.0        const        1.0           0.0     0.0    dem65   →      0.0            0.0
+  y6   1.19       θ_6          0.0           0.0     1.0    dem65   →      0.19           0.17
+  y7   1.28       θ_7          0.0           0.0     1.0    dem65   →      0.17           0.16
+  y8   1.27       θ_8          0.0           0.0     1.0    dem65   →      0.23           0.16
+
+<span class="sgr96">Directed Effects: </span>
+
+ <span class="sgr1"> from  </span> <span class="sgr1">   </span> <span class="sgr1"> to    </span> <span class="sgr1"> estimate </span> <span class="sgr1"> identifier </span> <span class="sgr1"> value_fixed </span> <span class="sgr1"> start </span> <span class="sgr1"> free </span> <span class="sgr1"> se_bootstrap </span> <span class="sgr1"> se_hessian </span>
+
+  ind60   →   dem60   1.48       θ_9          0.0           0.0     1.0    0.36           0.4
+  dem60   →   dem65   0.84       θ_10         0.0           0.0     1.0    0.1            0.1
+  ind60   →   dem65   0.57       θ_11         0.0           0.0     1.0    0.24           0.24
+
+<span class="sgr96">Variances: </span>
+
+ <span class="sgr1"> from  </span> <span class="sgr1">   </span> <span class="sgr1"> to    </span> <span class="sgr1"> estimate </span> <span class="sgr1"> identifier </span> <span class="sgr1"> value_fixed </span> <span class="sgr1"> start </span> <span class="sgr1"> free </span> <span class="sgr1"> se_bootstrap </span> <span class="sgr1"> se_hessian </span>
+
+  x1      ↔   x1      0.08       θ_12         0.0           0.0     1.0    0.02           0.02
+  x2      ↔   x2      0.12       θ_13         0.0           0.0     1.0    0.06           0.07
+  x3      ↔   x3      0.47       θ_14         0.0           0.0     1.0    0.08           0.09
+  y1      ↔   y1      1.92       θ_15         0.0           0.0     1.0    0.62           0.48
+  y2      ↔   y2      7.47       θ_16         0.0           0.0     1.0    1.5            1.37
+  y3      ↔   y3      5.13       θ_17         0.0           0.0     1.0    0.93           0.99
+  y4      ↔   y4      3.19       θ_18         0.0           0.0     1.0    0.89           0.77
+  y5      ↔   y5      2.38       θ_19         0.0           0.0     1.0    0.5            0.5
+  y6      ↔   y6      5.02       θ_20         0.0           0.0     1.0    0.97           0.91
+  y7      ↔   y7      3.48       θ_21         0.0           0.0     1.0    0.63           0.74
+  y8      ↔   y8      3.3        θ_22         0.0           0.0     1.0    0.91           0.72
+  ind60   ↔   ind60   0.45       θ_23         0.0           0.0     1.0    0.07           0.09
+  dem60   ↔   dem60   4.01       θ_24         0.0           0.0     1.0    0.8            0.96
+  dem65   ↔   dem65   0.17       θ_25         0.0           0.0     1.0    0.3            0.22
+
+<span class="sgr96">Covariances: </span>
+
+ <span class="sgr1"> from </span> <span class="sgr1">   </span> <span class="sgr1"> to </span> <span class="sgr1"> estimate </span> <span class="sgr1"> identifier </span> <span class="sgr1"> value_fixed </span> <span class="sgr1"> start </span> <span class="sgr1"> free </span> <span class="sgr1"> se_bootstrap </span> <span class="sgr1"> se_hessian </span>
+
+  y1     ↔   y5   0.63       θ_26         0.0           0.0     1.0    0.52           0.38
+  y2     ↔   y4   1.33       θ_27         0.0           0.0     1.0    0.66           0.71
+  y2     ↔   y6   2.18       θ_28         0.0           0.0     1.0    0.76           0.74
+  y3     ↔   y7   0.81       θ_29         0.0           0.0     1.0    0.65           0.63
+  y8     ↔   y4   0.35       θ_30         0.0           0.0     1.0    0.45           0.47
+  y8     ↔   y6   1.37       θ_31         0.0           0.0     1.0    0.88           0.58</code></pre><h2 id="Export-results"><a class="docs-heading-anchor" href="#Export-results">Export results</a><a id="Export-results-1"></a><a class="docs-heading-anchor-permalink" href="#Export-results" title="Permalink"></a></h2><p>You may convert a <code>ParameterTable</code> to a <code>DataFrame</code> and use the <a href="https://github.com/JuliaData/DataFrames.jl"><code>DataFrames</code></a> package for further analysis (or to save it to your hard drive).</p><pre><code class="language- hljs">using DataFrames
+
+parameters_df = DataFrame(partable)</code></pre><h1 id="API-model-inspection"><a class="docs-heading-anchor" href="#API-model-inspection">API - model inspection</a><a id="API-model-inspection-1"></a><a class="docs-heading-anchor-permalink" href="#API-model-inspection" title="Permalink"></a></h1><article class="docstring"><header><a class="docstring-binding" id="StructuralEquationModels.sem_summary" href="#StructuralEquationModels.sem_summary"><code>StructuralEquationModels.sem_summary</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">(1) sem_summary(sem_fit::SemFit; show_fitmeasures = false)
+
+(2) sem_summary(partable::AbstractParameterTable)</code></pre><p>Print information about (1) a fitted SEM or (2) a parameter table to stdout.</p><p><strong>Extended help</strong></p><p><strong>Addition keyword arguments</strong></p><ul><li><code>digits = 2</code>: controls precision of printed estimates, standard errors, etc.</li><li><code>color = :light_cyan</code>: color of some parts of the printed output. Can be adjusted for readability.</li><li><code>secondary_color = :light_yellow</code></li><li><code>show_variables = true</code></li></ul></div><a class="docs-sourcelink" target="_blank" href="https://github.com/StructuralEquationModels/StructuralEquationModels.jl/blob/e0ce63c24e7eb8508c35d06948194cca50d4afb4/src/frontend/fit/summary.jl#L218-L231">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="StructuralEquationModels.update_estimate!" href="#StructuralEquationModels.update_estimate!"><code>StructuralEquationModels.update_estimate!</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">update_estimate!(
+    partable::AbstractParameterTable, 
+    sem_fit::SemFit)</code></pre><p>Write parameter estimates from <code>sem_fit</code> to the <code>:estimate</code> column of <code>partable</code></p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/StructuralEquationModels/StructuralEquationModels.jl/blob/e0ce63c24e7eb8508c35d06948194cca50d4afb4/src/frontend/specification/ParameterTable.jl#L213-L219">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="StructuralEquationModels.update_partable!" href="#StructuralEquationModels.update_partable!"><code>StructuralEquationModels.update_partable!</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">update_partable!(partable::AbstractParameterTable, sem_fit::SemFit, vec, column)</code></pre><p>Write <code>vec</code> to <code>column</code> of <code>partable</code>.</p><p><strong>Arguments</strong></p><ul><li><code>vec::Vector</code>: has to be in the same order as the <code>model</code> parameters</li></ul></div><a class="docs-sourcelink" target="_blank" href="https://github.com/StructuralEquationModels/StructuralEquationModels.jl/blob/e0ce63c24e7eb8508c35d06948194cca50d4afb4/src/frontend/specification/ParameterTable.jl#L201-L208">source</a></section></article><h2 id="Additional-functions"><a class="docs-heading-anchor" href="#Additional-functions">Additional functions</a><a id="Additional-functions-1"></a><a class="docs-heading-anchor-permalink" href="#Additional-functions" title="Permalink"></a></h2><p>Additional functions that can be used to extract information from a <code>SemFit</code> object:</p><article class="docstring"><header><a class="docstring-binding" id="StructuralEquationModels.SemFit" href="#StructuralEquationModels.SemFit"><code>StructuralEquationModels.SemFit</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">SemFit</code></pre><p>Fitted structural equation model.</p><p><strong>Interfaces</strong></p><ul><li><p><code>minimum(::SemFit)</code> -&gt; minimum objective value</p></li><li><p><code>solution(::SemFit)</code> -&gt; parameter estimates</p></li><li><p><code>start_val(::SemFit)</code> -&gt; starting values</p></li><li><p><code>model(::SemFit)</code></p></li><li><p><code>optimization_result(::SemFit)</code></p></li><li><p><code>optimizer(::SemFit)</code> -&gt; optimization algorithm</p></li><li><p><code>n_iterations(::SemFit)</code> -&gt; number of iterations</p></li><li><p><code>convergence(::SemFit)</code> -&gt; convergence properties</p></li></ul></div><a class="docs-sourcelink" target="_blank" href="https://github.com/StructuralEquationModels/StructuralEquationModels.jl/blob/e0ce63c24e7eb8508c35d06948194cca50d4afb4/src/frontend/fit/SemFit.jl#L4-L19">source</a></section></article><h2 id="Fit-measures"><a class="docs-heading-anchor" href="#Fit-measures">Fit measures</a><a id="Fit-measures-1"></a><a class="docs-heading-anchor-permalink" href="#Fit-measures" title="Permalink"></a></h2><article class="docstring"><header><a class="docstring-binding" id="StructuralEquationModels.fit_measures" href="#StructuralEquationModels.fit_measures"><code>StructuralEquationModels.fit_measures</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">fit_measures(sem_fit, args...)</code></pre><p>Return a default set of fit measures or the fit measures passed as <code>arg...</code>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/StructuralEquationModels/StructuralEquationModels.jl/blob/e0ce63c24e7eb8508c35d06948194cca50d4afb4/src/frontend/fit/fitmeasures/fit_measures.jl#L25-L29">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="StructuralEquationModels.AIC" href="#StructuralEquationModels.AIC"><code>StructuralEquationModels.AIC</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">AIC(sem_fit::SemFit)</code></pre><p>Return the akaike information criterion.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/StructuralEquationModels/StructuralEquationModels.jl/blob/e0ce63c24e7eb8508c35d06948194cca50d4afb4/src/frontend/fit/fitmeasures/AIC.jl#L1-L5">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="StructuralEquationModels.BIC" href="#StructuralEquationModels.BIC"><code>StructuralEquationModels.BIC</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">BIC(sem_fit::SemFit)</code></pre><p>Return the bayesian information criterion.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/StructuralEquationModels/StructuralEquationModels.jl/blob/e0ce63c24e7eb8508c35d06948194cca50d4afb4/src/frontend/fit/fitmeasures/BIC.jl#L1-L5">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="StructuralEquationModels.χ²" href="#StructuralEquationModels.χ²"><code>StructuralEquationModels.χ²</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">χ²(sem_fit::SemFit)</code></pre><p>Return the χ² value.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/StructuralEquationModels/StructuralEquationModels.jl/blob/e0ce63c24e7eb8508c35d06948194cca50d4afb4/src/frontend/fit/fitmeasures/chi2.jl#L1-L5">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="StructuralEquationModels.df" href="#StructuralEquationModels.df"><code>StructuralEquationModels.df</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">df(sem_fit::SemFit)
+df(model::AbstractSem)</code></pre><p>Return the degrees of freedom.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/StructuralEquationModels/StructuralEquationModels.jl/blob/e0ce63c24e7eb8508c35d06948194cca50d4afb4/src/frontend/fit/fitmeasures/df.jl#L1-L6">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="StructuralEquationModels.minus2ll" href="#StructuralEquationModels.minus2ll"><code>StructuralEquationModels.minus2ll</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">minus2ll(sem_fit::SemFit)</code></pre><p>Return the negative 2* log likelihood.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/StructuralEquationModels/StructuralEquationModels.jl/blob/e0ce63c24e7eb8508c35d06948194cca50d4afb4/src/frontend/fit/fitmeasures/minus2ll.jl#L1-L5">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="StructuralEquationModels.n_man" href="#StructuralEquationModels.n_man"><code>StructuralEquationModels.n_man</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">n_man(sem_fit::SemFit)
+n_man(model::AbstractSemSingle)</code></pre><p>Return the number of manifest variables.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/StructuralEquationModels/StructuralEquationModels.jl/blob/e0ce63c24e7eb8508c35d06948194cca50d4afb4/src/frontend/fit/fitmeasures/n_man.jl#L1-L6">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="StructuralEquationModels.n_obs" href="#StructuralEquationModels.n_obs"><code>StructuralEquationModels.n_obs</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">n_obs(sem_fit::SemFit)
+n_obs(model::AbstractSemSingle)
+n_obs(model::SemEnsemble)</code></pre><p>Return the number of observed data points.</p><p>For ensemble models, return the sum over all submodels.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/StructuralEquationModels/StructuralEquationModels.jl/blob/e0ce63c24e7eb8508c35d06948194cca50d4afb4/src/frontend/fit/fitmeasures/n_obs.jl#L1-L9">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="StructuralEquationModels.n_par" href="#StructuralEquationModels.n_par"><code>StructuralEquationModels.n_par</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">n_par(sem_fit::SemFit)
+n_par(model::AbstractSemSingle)
+n_par(model::SemEnsemble)
+n_par(identifier::Dict)</code></pre><p>Return the number of parameters.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/StructuralEquationModels/StructuralEquationModels.jl/blob/e0ce63c24e7eb8508c35d06948194cca50d4afb4/src/frontend/fit/fitmeasures/n_par.jl#L4-L11">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="StructuralEquationModels.p_value" href="#StructuralEquationModels.p_value"><code>StructuralEquationModels.p_value</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">p(sem_fit::SemFit)</code></pre><p>Return the p value computed from the χ² test statistic.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/StructuralEquationModels/StructuralEquationModels.jl/blob/e0ce63c24e7eb8508c35d06948194cca50d4afb4/src/frontend/fit/fitmeasures/p.jl#L1-L5">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="StructuralEquationModels.RMSEA" href="#StructuralEquationModels.RMSEA"><code>StructuralEquationModels.RMSEA</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">RMSEA(sem_fit::SemFit)</code></pre><p>Return the RMSEA.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/StructuralEquationModels/StructuralEquationModels.jl/blob/e0ce63c24e7eb8508c35d06948194cca50d4afb4/src/frontend/fit/fitmeasures/RMSEA.jl#L1-L5">source</a></section></article></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../fitting/fitting/">« Model Fitting</a><a class="docs-footer-nextpage" href="../../meanstructure/">Mean Structures »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.24 on <span class="colophon-date" title="Wednesday 14 June 2023 11:30">Wednesday 14 June 2023</span>. Using Julia version 1.9.1.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
