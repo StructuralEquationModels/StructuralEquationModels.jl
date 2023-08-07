@@ -122,7 +122,7 @@ function start_fabin3(ram_matrices::RAMMatrices, Σ, μ)
         end
 
         for ram_constant in constants
-            if (ram_constant.matrix == :A) & (ram_constant.index[2] == i) & (ram_constant.index[1] ∈ F_ind)
+            if (ram_constant.matrix == :A) && (ram_constant.index[2] == i) && (ram_constant.index[1] ∈ F_ind)
                 push!(loadings, Symbol(""))
                 if isone(ram_constant.value)
                     push!(reference, ram_constant.index[1])

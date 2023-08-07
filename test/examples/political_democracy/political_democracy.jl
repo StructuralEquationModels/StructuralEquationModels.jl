@@ -185,6 +185,7 @@ graph = @StenoGraph begin
     y8 ↔ y4 + y6
     # means
     Symbol("1") → _(mean_labels).*_(observed_vars)
+    Symbol("1") → fixed(0)*ind60
 end
 
 spec_mean = ParameterTable(
