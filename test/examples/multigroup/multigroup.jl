@@ -1,5 +1,5 @@
 using StructuralEquationModels, Test, FiniteDiff
-import LinearAlgebra: diagind
+import LinearAlgebra: diagind, LowerTriangular
 # import StructuralEquationModels as SEM
 include(
     joinpath(chop(dirname(pathof(StructuralEquationModels)), tail = 3), 

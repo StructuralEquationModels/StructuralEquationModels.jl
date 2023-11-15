@@ -3,6 +3,7 @@
 ############################################################################################
 """
 Empty placeholder for models that don't need an imply part.
+(For example, models that only regularize parameters.)
 
 # Constructor
 
@@ -10,6 +11,10 @@ Empty placeholder for models that don't need an imply part.
 
 # Arguments
 - `specification`: either a `RAMMatrices` or `ParameterTable` object
+
+# Examples
+A multigroup model with ridge regularization could be specified as a `SemEnsemble` with one
+model per group and an additional model with `ImplyEmpty` and `SemRidge` for the regularization part.
 
 # Extended help
 

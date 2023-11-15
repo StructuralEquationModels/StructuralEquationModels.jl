@@ -1,0 +1,39 @@
+name: Preview Documentation
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+env:
+  PR_NUMBER: ${{ github.event.pull_request.number }}
+  GHP_URL: 'https://structuralequationmodels.github.io/StructuralEquationModels.jl/'
+
+jobs:
+  build:
+    if:  startsWith(github.head_ref, 'documentation/')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: julia-actions/setup-julia@latest
+        with:
+          version: '1'
+      - name: Install dependencies
+        run: julia --project=docs/ -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate()'
+      - name: Build and deploy
+        id: deploy
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # If authenticating with GitHub Actions token
+          DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }} # If authenticating with SSH deploy key
+        run: julia --project=docs/ docs/make.jl push_preview=true
+
+      - uses: actions/github-script@v5
+        if: steps.deploy.outcome == 'success'
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: 'Docs can be previewed here: ${{ env.GHP_URL }}previews/PR${{ env.PR_NUMBER }}'
+            })

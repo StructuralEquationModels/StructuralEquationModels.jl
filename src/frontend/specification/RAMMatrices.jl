@@ -82,7 +82,7 @@ function set_RAMConstant!(A, S, M, rc::RAMConstant)
         S[rc.index] = rc.value
         S[rc.index[2], rc.index[1]] = rc.value
     elseif rc.matrix == :M
-        M[rd.index] = rc.value
+        M[rc.index] = rc.value
     end
 end
 

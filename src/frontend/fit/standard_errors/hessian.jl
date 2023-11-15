@@ -26,7 +26,7 @@ function se_hessian(sem_fit::SemFit; hessian = :finitediff)
     elseif hessian == :expected
         throw(ArgumentError("standard errors based on the expected hessian are not implemented yet"))
     else
-        throw(ArgumentError("I dont know how to compute `$how` standard-errors"))
+        throw(ArgumentError("I dont know how to compute `$hessian` standard-errors"))
     end
 
     invH = c*inv(H)
@@ -44,8 +44,13 @@ H_scaling(model::AbstractSemSingle) =
         model.optimizer,
         model.loss.functions...)
 
-H_scaling(model, obs, imp, optimizer, lossfun::Union{SemML, SemWLS}) =
+H_scaling(model, obs, imp, optimizer, lossfun::SemML) =
     2/(n_obs(model)-1)
+
+function H_scaling(model, obs, imp, optimizer, lossfun::SemWLS)
+    @warn "Standard errors for WLS are only correct if a GLS weight matrix (the default) is used."
+    return 2/(n_obs(model)-1)
+end
 
 H_scaling(model, obs, imp, optimizer, lossfun::SemFIML) =
     2/n_obs(model)

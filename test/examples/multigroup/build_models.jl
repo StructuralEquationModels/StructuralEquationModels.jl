@@ -16,10 +16,8 @@ model_g2 = Sem(
 
 model_ml_multigroup = SemEnsemble(model_g1, model_g2; optimizer = semoptimizer)
 
-############################################################################################
-### test gradients
-############################################################################################
 
+# gradients
 @testset "ml_gradients_multigroup" begin
     @test test_gradient(model_ml_multigroup, start_test; atol = 1e-9)
 end
@@ -47,6 +45,69 @@ end
         solution_lav[:parameter_estimates_ml]; atol = 1e-3, 
         col = :se, lav_col = :se,
         lav_groups = Dict(:Pasteur => 1, :Grant_White => 2))
+end
+
+############################################################################################
+# ML estimation - sorted
+############################################################################################
+
+partable_s = sort(partable)
+
+specification_s = RAMMatrices(partable_s)
+
+specification_g1_s = specification_s[:Pasteur]
+specification_g2_s = specification_s[:Grant_White]
+
+model_g1 = Sem(
+    specification = specification_g1_s,
+    data = dat_g1,
+    imply = RAMSymbolic
+)
+
+model_g2 = Sem(
+    specification = specification_g2_s,
+    data = dat_g2,
+    imply = RAM
+)
+
+model_ml_multigroup = SemEnsemble(model_g1, model_g2; optimizer = semoptimizer)
+
+# gradients
+@testset "ml_gradients_multigroup | sorted" begin
+    @test test_gradient(model_ml_multigroup, start_test; atol = 1e-2)
+end
+
+grad = similar(start_test)
+gradient!(grad, model_ml_multigroup, rand(36))
+grad_fd = FiniteDiff.finite_difference_gradient(x -> objective!(model_ml_multigroup, x), start_test)
+
+# fit
+@testset "ml_solution_multigroup | sorted" begin
+    solution = sem_fit(model_ml_multigroup)
+    update_estimate!(partable_s, solution)
+    @test compare_estimates(
+        partable, 
+        solution_lav[:parameter_estimates_ml]; atol = 1e-4,
+        lav_groups = Dict(:Pasteur => 1, :Grant_White => 2))
+end
+
+@testset "fitmeasures/se_ml | sorted" begin
+    solution_ml = sem_fit(model_ml_multigroup)
+    @test all(test_fitmeasures(
+        fit_measures(solution_ml), 
+        solution_lav[:fitmeasures_ml]; rtol = 1e-2, atol = 1e-7))
+
+    update_partable!(
+        partable_s, identifier(model_ml_multigroup), se_hessian(solution_ml), :se)
+    @test compare_estimates(
+        partable_s, 
+        solution_lav[:parameter_estimates_ml]; atol = 1e-3, 
+        col = :se, lav_col = :se,
+        lav_groups = Dict(:Pasteur => 1, :Grant_White => 2))
+end
+
+@testset "sorted | LowerTriangular A" begin
+    @test imply(model_ml_multigroup.sems[2]).A isa LowerTriangular
 end
 
 ############################################################################################
