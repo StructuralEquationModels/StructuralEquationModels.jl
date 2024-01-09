@@ -33,7 +33,7 @@ LineSearches = "7"
 NLSolversBase = "7"
 NLopt = "0.6"
 Optim = "1"
-PrettyTables = "1"
+PrettyTables = "2"
 StatsBase = "0.33"
 Symbolics = "4"
 
