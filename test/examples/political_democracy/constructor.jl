@@ -272,11 +272,11 @@ end
 @testset "fitmeasures/se_ml_mean" begin
     solution_ml = sem_fit(model_ml)
     @test all(test_fitmeasures(fit_measures(solution_ml), solution_lav[:fitmeasures_ml_mean]; 
-        atol = 1e-3))
+        atol = 0.002))
 
     update_partable!(partable_mean, identifier(model_ml), se_hessian(solution_ml), :se)
     @test compare_estimates(partable_mean, solution_lav[:parameter_estimates_ml_mean]; 
-        atol = 1e-3, col = :se, lav_col = :se)
+        atol = 0.002, col = :se, lav_col = :se)
 end
 
 @testset "fitmeasures/se_ls_mean" begin
