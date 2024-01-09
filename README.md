@@ -11,7 +11,7 @@ It is still *in development*.
 Models you can fit include
 - Linear SEM that can be specified in RAM (or LISREL) notation
 - ML, GLS and FIML estimation
-- Ridge Regularization
+- Regularization
 - Multigroup SEM
 - Sums of arbitrary loss functions (everything the optimizer can handle).
 
@@ -26,7 +26,7 @@ This mix and match strategy also applies to gradients, where you may supply anal
 
 # You may consider using this package if:
 
-- you want to extend SEM (e.g. add a new objective function) and need an extendable framework
+- you want to extend SEM (e.g. add a new objective function) and need an extensible framework
 - you want to extend SEM, and your implementation needs to be fast (because you want to do a simulation, for example)
 - you want to fit the same model(s) to many datasets (bootstrapping, simulation studies)
 - you are planning a study and would like to do power simulations
