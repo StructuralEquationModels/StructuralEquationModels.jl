@@ -264,8 +264,8 @@ function gradient!(
     @. imply.I_A = -imply.A
     @view(imply.I_A[diagind(imply.I_A)]) .+= 1
 
-    imply.I_A⁻¹ .= LinearAlgebra.inv!(factorize(imply.I_A⁻¹))
-    imply.F⨉I_A⁻¹ .= imply.F * imply.I_A⁻¹
+    imply.I_A⁻¹ = LinearAlgebra.inv!(factorize(imply.I_A))
+    mul!(imply.F⨉I_A⁻¹, imply.F, imply.I_A⁻¹)
 
     Σ_RAM!(imply.Σ, imply.F⨉I_A⁻¹, imply.S, imply.F⨉I_A⁻¹S)
 
