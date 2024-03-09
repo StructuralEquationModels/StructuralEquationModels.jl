@@ -94,10 +94,9 @@ end
 
 function objective!(loss::SemLoss, par, model)
     return mapreduce(
-        fun_weight -> fun_weight[2]*objective!(fun_weight[1], par, model), 
-        +, 
-        zip(loss.functions, loss.weights)
-        )
+        (fun, weight) -> weight*objective!(fun, par, model),
+        +,
+        loss.functions, loss.weights)
 end
 
 function gradient!(gradient, loss::SemLoss, par, model)
@@ -115,18 +114,16 @@ end
 
 function objective_gradient!(gradient, loss::SemLoss, par, model)
     return mapreduce(
-        fun_weight -> objective_gradient_wrap_(gradient, fun_weight[1], par, model, fun_weight[2]),
-        +, 
-        zip(loss.functions, loss.weights)
-        )
+        (fun, weight) -> objective_gradient_wrap_(gradient, fun, par, model, weight),
+        +,
+        loss.functions, loss.weights)
 end
 
 function objective_hessian!(hessian, loss::SemLoss, par, model)
     return mapreduce(
-        fun_weight -> objective_hessian_wrap_(hessian, fun_weight[1], par, model, fun_weight[2]),
-        +, 
-        zip(loss.functions, loss.weights)
-        )
+        (fun, weight) -> objective_hessian_wrap_(hessian, fun, par, model, weight),
+        +,
+        loss.functions, loss.weights)
 end
 
 function gradient_hessian!(gradient, hessian, loss::SemLoss, par, model)
@@ -139,10 +136,9 @@ end
 
 function objective_gradient_hessian!(gradient, hessian, loss::SemLoss, par, model)
     return mapreduce(
-        fun_weight -> objective_gradient_hessian_wrap_(gradient, hessian, fun_weight[1], par, model, fun_weight[2]),
-        +, 
-        zip(loss.functions, loss.weights)
-        )
+        (fun, weight) -> objective_gradient_hessian_wrap_(gradient, hessian, fun, par, model, weight),
+        +,
+        loss.functions, loss.weights)
 end
 
 # wrapper to update gradient/hessian and return objective value
@@ -171,10 +167,9 @@ end
 
 function objective!(ensemble::SemEnsemble, par)
     return mapreduce(
-        model_weight -> model_weight[2]*objective!(model_weight[1], par), 
-        +, 
-        zip(ensemble.sems, ensemble.weights)
-        )
+        (model, weight) -> weight*objective!(model, par),
+        +,
+        ensemble.sems, ensemble.weights)
 end
 
 function gradient!(gradient, ensemble::SemEnsemble, par)
@@ -198,19 +193,17 @@ end
 function objective_gradient!(gradient, ensemble::SemEnsemble, par)
     fill!(gradient, zero(eltype(gradient)))
     return mapreduce(
-        model_weight -> objective_gradient_wrap_(gradient, model_weight[1], par, model_weight[2]),
-        +, 
-        zip(ensemble.sems, ensemble.weights)
-        )
+        (model, weight) -> objective_gradient_wrap_(gradient, model, par, weight),
+        +,
+        ensemble.sems, ensemble.weights)
 end
 
 function objective_hessian!(hessian, ensemble::SemEnsemble, par)
     fill!(hessian, zero(eltype(hessian)))
     return mapreduce(
-        model_weight -> objective_hessian_wrap_(hessian, model_weight[1], par, model_weight[2]),
+        (model, weight) -> objective_hessian_wrap_(hessian, model, par, weight),
         +,
-        zip(ensemble.sems, ensemble.weights)
-        )
+        ensemble.sems, ensemble.weights)
 end
 
 function gradient_hessian!(gradient, hessian, ensemble::SemEnsemble, par)
@@ -233,10 +226,9 @@ function objective_gradient_hessian!(gradient, hessian, ensemble::SemEnsemble, p
     fill!(gradient, zero(eltype(gradient)))
     fill!(hessian, zero(eltype(hessian)))
     return mapreduce(
-        model_weight -> objective_gradient_hessian_wrap_(gradient, hessian, model_weight[1], par, model, model_weight[2]),
-        +, 
-        zip(ensemble.sems, ensemble.weights)
-        )
+        (model, weight) -> objective_gradient_hessian_wrap_(gradient, hessian, model, par, model, weight),
+        +,
+        ensemble.sems, ensemble.weights)
 end
 
 # wrapper to update gradient/hessian and return objective value
