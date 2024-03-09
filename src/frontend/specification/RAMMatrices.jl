@@ -64,7 +64,16 @@ end
 ### Constructor
 ############################################################################################
 
-function RAMMatrices(;A, S, F, M = nothing, parameters, colnames)
+function RAMMatrices(; A::AbstractMatrix, S::AbstractMatrix,
+                       F::AbstractMatrix, M::Union{AbstractVector, Nothing} = nothing,
+                     parameters::AbstractVector{Symbol},
+                     colnames::AbstractVector{Symbol})
+    ncols = length(colnames)
+    size(A, 1) == size(A, 2) || throw(DimensionMismatch("A must be a square matrix"))
+    size(S, 1) == size(S, 2) || throw(DimensionMismatch("S must be a square matrix"))
+    size(A, 2) == ncols || throw(DimensionMismatch("A should have as many rows and columns as colnames length ($(length(colnames))), $(size(A)) found"))
+    size(S, 2) == ncols || throw(DimensionMismatch("S should have as many rows and columns as colnames length ($(length(colnames))), $(size(S)) found"))
+    size(F, 2) == ncols || throw(DimensionMismatch("F should have as many columns as colnames length ($(length(colnames))), $(size(F, 2)) found"))
     A_indices = array_parameters_map_linear(parameters, A)
     S_indices = array_parameters_map_linear(parameters, S)
     M_indices = !isnothing(M) ? array_parameters_map_linear(parameters, M) : nothing
