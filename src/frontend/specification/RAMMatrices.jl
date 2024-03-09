@@ -124,7 +124,7 @@ function RAMMatrices(partable::ParameterTable;
         copy(partable.variables.sorted) :
         [partable.variables.observed;
          partable.variables.latent]
-    positions = Dict(colnames .=> eachindex(colnames))
+    cols_index = Dict(col => i for (i, col) in enumerate(colnames))
 
     # fill Matrices
     # known_labels = Dict{Symbol, Int64}()
@@ -141,8 +141,8 @@ function RAMMatrices(partable::ParameterTable;
 
     for row in partable
 
-        row_ind = positions[row.to]
-        col_ind = row.from != Symbol("1") ? positions[row.from] : nothing
+        row_ind = cols_index[row.to]
+        col_ind = row.from != Symbol("1") ? cols_index[row.from] : nothing
 
         if !row.free
             if (row.parameter_type == :→) && (row.from == Symbol("1"))
