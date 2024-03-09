@@ -1,5 +1,5 @@
 function fill_A_S_M(A, S, M, A_indices, S_indices, M_indices, parameters)
-    for (iA, iS, par) in zip(A_indices, S_indices, parameters)
+    @inbounds for (iA, iS, par) in zip(A_indices, S_indices, parameters)
         for index_A in iA
             A[index_A] = par
         end
@@ -10,7 +10,7 @@ function fill_A_S_M(A, S, M, A_indices, S_indices, M_indices, parameters)
     end
 
     if !isnothing(M)
-        for (iM, par) in zip(M_indices, parameters)
+        @inbounds for (iM, par) in zip(M_indices, parameters)
             for index_M in iM
                 M[index_M] = par
             end
