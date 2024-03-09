@@ -254,8 +254,8 @@ function gradient!(imply::RAM, parameters, model::AbstractSemSingle, has_meanstr
         end
     end
 
-    imply.I_A⁻¹ .= LinearAlgebra.inv!(factorize(imply.I_A⁻¹))
-    imply.F⨉I_A⁻¹ .= imply.F*imply.I_A⁻¹
+    imply.I_A⁻¹ = LinearAlgebra.inv!(factorize(imply.I_A))
+    mul!(imply.F⨉I_A⁻¹, imply.F, imply.I_A⁻¹)
 
     Σ_RAM!(
         imply.Σ,
