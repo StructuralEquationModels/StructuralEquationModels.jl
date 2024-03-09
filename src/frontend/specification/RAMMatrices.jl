@@ -2,11 +2,15 @@
 ### Type
 ############################################################################################
 
+# map from parameter index to linear indices of matrix/vector positions where it occurs
+AbstractArrayParamsMap = AbstractVector{<:AbstractVector{<:Integer}}
+ArrayParamsMap = Vector{Vector{Int}}
+
 struct RAMMatrices
-    A_ind
-    S_ind
-    F_ind
-    M_ind
+    A_ind::ArrayParamsMap
+    S_ind::ArrayParamsMap
+    F_ind::Vector{Int}
+    M_ind::Union{ArrayParamsMap, Nothing}
     parameters
     colnames
     constants
@@ -18,12 +22,13 @@ end
 ############################################################################################
 
 function RAMMatrices(;A, S, F, M = nothing, parameters, colnames)
-    A_indices = get_parameter_indices(parameters, A)
-    S_indices = get_parameter_indices(parameters, S)
-    isnothing(M) ? M_indices = nothing : M_indices = get_parameter_indices(parameters, M)
+    A_indices = array_parameters_map_linear(parameters, A)
+    S_indices = array_parameters_map_linear(parameters, S)
+    M_indices = !isnothing(M) ? array_parameters_map_linear(parameters, M) : nothing
     F_indices = findall([any(isone.(col)) for col in eachcol(F)])
     constants = get_RAMConstants(A, S, M)
-    return RAMMatrices(A_indices, S_indices, F_indices, M_indices, parameters, colnames, constants, size(F))
+    return RAMMatrices(A_indices, S_indices, F_indices, M_indices,
+                       parameters, colnames, constants, size(F))
 end
 
 RAMMatrices(a::RAMMatrices) = a
