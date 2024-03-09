@@ -50,7 +50,7 @@ end
 import Base.==
 
 function ==(c1::RAMConstant, c2::RAMConstant)
-    res = ((c1.matrix == c2.matrix) & (c1.index == c2.index) & (c1.value == c2.value))
+    res = ((c1.matrix == c2.matrix) && (c1.index == c2.index) && (c1.value == c2.value))
     return res
 end
 
@@ -425,13 +425,13 @@ end
 
 function ==(mat1::RAMMatrices, mat2::RAMMatrices)
     res = (
-        (mat1.A_ind == mat2.A_ind) &
-        (mat1.S_ind == mat2.S_ind) &
-        (mat1.F_ind == mat2.F_ind) &
-        (mat1.M_ind == mat2.M_ind) &
-        (mat1.parameters == mat2.parameters) &
-        (mat1.colnames == mat2.colnames) &
-        (mat1.size_F == mat2.size_F) &
+        (mat1.A_ind == mat2.A_ind) &&
+        (mat1.S_ind == mat2.S_ind) &&
+        (mat1.F_ind == mat2.F_ind) &&
+        (mat1.M_ind == mat2.M_ind) &&
+        (mat1.parameters == mat2.parameters) &&
+        (mat1.colnames == mat2.colnames) &&
+        (mat1.size_F == mat2.size_F) &&
         (mat1.constants == mat2.constants)
     )
     return res
