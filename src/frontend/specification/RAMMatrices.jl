@@ -3,8 +3,8 @@
 ############################################################################################
 
 struct RAMConstant
-    matrix
-    index
+    matrix::Symbol
+    index::CartesianIndex
     value
 end
 
@@ -16,32 +16,14 @@ function ==(c1::RAMConstant, c2::RAMConstant)
     return res
 end
 
-function get_RAMConstants(A, S, M)
-    
-    constants = Vector{RAMConstant}()
-
-    for index in CartesianIndices(A)
-        if (A[index] isa Number) && !iszero(A[index])
-            push!(constants, RAMConstant(:A, index, A[index]))
+function append_RAMConstants!(constants::AbstractVector{RAMConstant},
+                              mtx_name::Symbol, mtx::AbstractArray)
+    for (index, val) in pairs(mtx)
+        if isa(val, Number) && !iszero(val)
+            push!(constants, RAMConstant(mtx_name, index, val))
         end
     end
-
-    for index in CartesianIndices(S)
-        if (S[index] isa Number) && !iszero(S[index])
-            push!(constants, RAMConstant(:S, index, S[index]))
-        end
-    end
-
-    if !isnothing(M)
-        for index in CartesianIndices(M)
-            if (M[index] isa Number) && !iszero(M[index])
-                push!(constants, RAMConstant(:M, index, M[index]))
-            end
-        end
-    end
-
     return constants
-
 end
 
 function set_RAMConstant!(A, S, M, rc::RAMConstant)
@@ -49,7 +31,7 @@ function set_RAMConstant!(A, S, M, rc::RAMConstant)
         A[rc.index] = rc.value
     elseif rc.matrix == :S
         S[rc.index] = rc.value
-        S[rc.index[2], rc.index[1]] = rc.value
+        S[rc.index[2], rc.index[1]] = rc.value # symmetric
     elseif rc.matrix == :M
         M[rc.index] = rc.value
     end
@@ -74,7 +56,7 @@ struct RAMMatrices
     M_ind::Union{ArrayParamsMap, Nothing}
     parameters
     colnames
-    constants
+    constants::Vector{RAMConstant}
     size_F
 end
 
@@ -87,7 +69,10 @@ function RAMMatrices(;A, S, F, M = nothing, parameters, colnames)
     S_indices = array_parameters_map_linear(parameters, S)
     M_indices = !isnothing(M) ? array_parameters_map_linear(parameters, M) : nothing
     F_indices = findall([any(isone.(col)) for col in eachcol(F)])
-    constants = get_RAMConstants(A, S, M)
+    constants = Vector{RAMConstant}()
+    append_RAMConstants!(constants, :A, A)
+    append_RAMConstants!(constants, :S, S)
+    isnothing(M) || append_RAMConstants!(constants, :M, M)
     return RAMMatrices(A_indices, S_indices, F_indices, M_indices,
                        parameters, colnames, constants, size(F))
 end
