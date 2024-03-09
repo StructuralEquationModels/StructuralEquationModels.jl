@@ -531,8 +531,7 @@ function gradient!(
             μ₋ᵀΣ⁻¹ = μ₋' * Σ⁻¹
             k = μ₋ᵀΣ⁻¹ * F⨉I_A⁻¹
 
-            gradient +=
-                -2k * ∇M - 2vec(k'M'I_A⁻¹')'∇A - 2vec(k'k * S * I_A⁻¹')'∇A - vec(k'k)'∇S
+            gradient .+= -2k * ∇M - 2vec(k' * (M' + k * S) * I_A⁻¹')'∇A - vec(k'k)'∇S
         end
 
         return gradient'
@@ -582,8 +581,7 @@ function objective_gradient!(
 
                 μ₋ᵀΣ⁻¹ = μ₋' * Σ⁻¹
                 k = μ₋ᵀΣ⁻¹ * F⨉I_A⁻¹
-                gradient +=
-                    -2k * ∇M - 2vec(k'M'I_A⁻¹')'∇A - 2vec(k'k * S * I_A⁻¹')'∇A - vec(k'k)'∇S
+                gradient .+= -2k * ∇M - 2vec(k' * (M' + k * S) * I_A⁻¹')'∇A - vec(k'k)'∇S
             end
 
             return objective, gradient'
