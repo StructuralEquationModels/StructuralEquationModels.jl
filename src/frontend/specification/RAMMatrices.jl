@@ -1,4 +1,49 @@
 ############################################################################################
+### Constants
+############################################################################################
+
+struct RAMConstant
+    matrix::Symbol
+    index::Union{Int, CartesianIndex{2}}
+    value::Any
+end
+
+function Base.:(==)(c1::RAMConstant, c2::RAMConstant)
+    res = ((c1.matrix == c2.matrix) && (c1.index == c2.index) && (c1.value == c2.value))
+    return res
+end
+
+function append_RAMConstants!(
+    constants::AbstractVector{RAMConstant},
+    mtx_name::Symbol,
+    mtx::AbstractArray,
+)
+    for (index, val) in pairs(mtx)
+        if isa(val, Number) && !iszero(val)
+            push!(constants, RAMConstant(mtx_name, index, val))
+        end
+    end
+    return constants
+end
+
+function set_RAMConstant!(A, S, M, rc::RAMConstant)
+    if rc.matrix == :A
+        A[rc.index] = rc.value
+    elseif rc.matrix == :S
+        S[rc.index] = rc.value
+        S[rc.index[2], rc.index[1]] = rc.value # symmetric
+    elseif rc.matrix == :M
+        M[rc.index] = rc.value
+    end
+end
+
+function set_RAMConstants!(A, S, M, rc_vec::Vector{RAMConstant})
+    for rc in rc_vec
+        set_RAMConstant!(A, S, M, rc)
+    end
+end
+
+############################################################################################
 ### Type
 ############################################################################################
 
@@ -13,7 +58,7 @@ struct RAMMatrices <: SemSpecification
     M_ind::Union{ArrayParamsMap, Nothing}
     params::Any
     colnames::Any
-    constants::Any
+    constants::Vector{RAMConstant}
     size_F::Any
 end
 
@@ -26,7 +71,10 @@ function RAMMatrices(; A, S, F, M = nothing, params, colnames)
     S_indices = array_params_map(params, S)
     M_indices = !isnothing(M) ? array_params_map(params, M) : nothing
     F_indices = findall([any(isone.(col)) for col in eachcol(F)])
-    constants = get_RAMConstants(A, S, M)
+    constants = Vector{RAMConstant}()
+    append_RAMConstants!(constants, :A, A)
+    append_RAMConstants!(constants, :S, S)
+    isnothing(M) || append_RAMConstants!(constants, :M, M)
     return RAMMatrices(
         A_indices,
         S_indices,
@@ -37,64 +85,6 @@ function RAMMatrices(; A, S, F, M = nothing, params, colnames)
         constants,
         size(F),
     )
-end
-
-############################################################################################
-### Constants
-############################################################################################
-
-struct RAMConstant
-    matrix::Any
-    index::Any
-    value::Any
-end
-
-function Base.:(==)(c1::RAMConstant, c2::RAMConstant)
-    res = ((c1.matrix == c2.matrix) && (c1.index == c2.index) && (c1.value == c2.value))
-    return res
-end
-
-function get_RAMConstants(A, S, M)
-    constants = Vector{RAMConstant}()
-
-    for index in CartesianIndices(A)
-        if (A[index] isa Number) && !iszero(A[index])
-            push!(constants, RAMConstant(:A, index, A[index]))
-        end
-    end
-
-    for index in CartesianIndices(S)
-        if (S[index] isa Number) && !iszero(S[index])
-            push!(constants, RAMConstant(:S, index, S[index]))
-        end
-    end
-
-    if !isnothing(M)
-        for index in CartesianIndices(M)
-            if (M[index] isa Number) && !iszero(M[index])
-                push!(constants, RAMConstant(:M, index, M[index]))
-            end
-        end
-    end
-
-    return constants
-end
-
-function set_RAMConstant!(A, S, M, rc::RAMConstant)
-    if rc.matrix == :A
-        A[rc.index] = rc.value
-    elseif rc.matrix == :S
-        S[rc.index] = rc.value
-        S[rc.index[2], rc.index[1]] = rc.value
-    elseif rc.matrix == :M
-        M[rc.index] = rc.value
-    end
-end
-
-function set_RAMConstants!(A, S, M, rc_vec::Vector{RAMConstant})
-    for rc in rc_vec
-        set_RAMConstant!(A, S, M, rc)
-    end
 end
 
 ############################################################################################
