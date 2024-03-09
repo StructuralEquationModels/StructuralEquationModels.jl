@@ -351,9 +351,9 @@ function check_acyclic(A_pre, n_par, A_indices)
     acyclic = isone(det(I-A_rand))
 
     # check if A is lower or upper triangular
-    if iszero(A_rand[.!tril(ones(Bool, size(A_pre)...))])
+    if istril(A_rand)
         A_pre = LowerTriangular(A_pre)
-    elseif iszero(A_rand[.!tril(ones(Bool, size(A_pre)...))'])
+    elseif istriu(A_rand)
         A_pre = UpperTriangular(A_pre)
     elseif acyclic
         @info "Your model is acyclic, specifying the A Matrix as either Upper or Lower Triangular can have great performance benefits.\n" maxlog=1
