@@ -216,7 +216,11 @@ function objective!(imply::RAM, parameters, model, has_meanstructure::Val{T}) wh
         imply.M_indices,
         parameters)
 
-    imply.I_A .= I - imply.A
+    @inbounds for (j, I_Aj, Aj) in zip(axes(imply.A, 2), eachcol(imply.I_A), eachcol(imply.A))
+        for i in axes(imply.A, 1)
+            I_Aj[i] = ifelse(i == j, 1, 0) - Aj[i]
+        end
+    end
 
     copyto!(imply.F⨉I_A⁻¹, imply.F)
     rdiv!(imply.F⨉I_A⁻¹, factorize(imply.I_A))
@@ -244,8 +248,11 @@ function gradient!(imply::RAM, parameters, model::AbstractSemSingle, has_meanstr
         imply.M_indices,
         parameters)
 
-    imply.I_A .= I - imply.A
-    copyto!(imply.I_A⁻¹, imply.I_A)
+    @inbounds for (j, I_Aj, Aj) in zip(axes(imply.A, 2), eachcol(imply.I_A), eachcol(imply.A))
+        for i in axes(imply.A, 1)
+            I_Aj[i] = ifelse(i == j, 1, 0) - Aj[i]
+        end
+    end
 
     imply.I_A⁻¹ .= LinearAlgebra.inv!(factorize(imply.I_A⁻¹))
     imply.F⨉I_A⁻¹ .= imply.F*imply.I_A⁻¹
