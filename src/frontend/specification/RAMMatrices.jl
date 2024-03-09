@@ -68,7 +68,7 @@ function RAMMatrices(;A, S, F, M = nothing, parameters, colnames)
     A_indices = array_parameters_map_linear(parameters, A)
     S_indices = array_parameters_map_linear(parameters, S)
     M_indices = !isnothing(M) ? array_parameters_map_linear(parameters, M) : nothing
-    F_indices = findall([any(isone.(col)) for col in eachcol(F)])
+    F_indices = [i for (i, col) in zip(axes(F, 2), eachcol(F)) if any(isone, col)]
     constants = Vector{RAMConstant}()
     append_RAMConstants!(constants, :A, A)
     append_RAMConstants!(constants, :S, S)
