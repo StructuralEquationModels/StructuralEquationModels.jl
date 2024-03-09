@@ -33,7 +33,7 @@ function se_hessian(sem_fit::SemFit; hessian = :finitediff)
             ),
         )
     else
-        throw(ArgumentError("I dont know how to compute `$hessian` standard-errors"))
+        throw(ArgumentError("I don't know how to compute `$hessian` standard-errors"))
     end
 
     invH = c * inv(H)
