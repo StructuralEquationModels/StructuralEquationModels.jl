@@ -140,8 +140,7 @@ function RAM(;
     # get indices
     A_indices = copy(ram_matrices.A_ind)
     S_indices = copy(ram_matrices.S_ind)
-    !isnothing(ram_matrices.M_ind) ? M_indices = copy(ram_matrices.M_ind) :
-    M_indices = nothing
+    M_indices = !isnothing(ram_matrices.M_ind) ? copy(ram_matrices.M_ind) : nothing
 
     #preallocate arrays
     A_pre = zeros(n_nod, n_nod)
