@@ -134,10 +134,10 @@ function gradient!(
         if T
             μ₋ = μₒ - μ
             μ₋ᵀΣ⁻¹ = μ₋' * Σ⁻¹
-            gradient = vec(Σ⁻¹ * (I - Σₒ * Σ⁻¹ - μ₋ * μ₋ᵀΣ⁻¹))' * ∇Σ - 2 * μ₋ᵀΣ⁻¹ * ∇μ
+            gradient = vec(Σ⁻¹ - Σ⁻¹Σₒ * Σ⁻¹ - μ₋ᵀΣ⁻¹'μ₋ᵀΣ⁻¹)' * ∇Σ - 2 * μ₋ᵀΣ⁻¹ * ∇μ
             return gradient'
         else
-            gradient = (vec(Σ⁻¹) - vec(Σ⁻¹Σₒ * Σ⁻¹))' * ∇Σ
+            gradient = vec(Σ⁻¹ - Σ⁻¹Σₒ * Σ⁻¹)' * ∇Σ
             return gradient'
         end
     end
@@ -494,9 +494,9 @@ function gradient!(
         Σ_chol = cholesky!(Symmetric(Σ⁻¹); check = false)
         isposdef(Σ_chol) || return ones(eltype(par), size(par))
         Σ⁻¹ = LinearAlgebra.inv!(Σ_chol)
-        #mul!(Σ⁻¹Σₒ, Σ⁻¹, Σₒ)
+        mul!(Σ⁻¹Σₒ, Σ⁻¹, Σₒ)
 
-        C = F⨉I_A⁻¹' * (I - Σₒ * Σ⁻¹)' * Σ⁻¹ * F⨉I_A⁻¹
+        C = F⨉I_A⁻¹' * (I - Σ⁻¹Σₒ) * Σ⁻¹ * F⨉I_A⁻¹
         gradient = 2vec(C * S * I_A⁻¹')'∇A + vec(C)'∇S
 
         if T
@@ -544,7 +544,7 @@ function objective_gradient!(
             mul!(Σ⁻¹Σₒ, Σ⁻¹, Σₒ)
             objective = ld + tr(Σ⁻¹Σₒ)
 
-            C = F⨉I_A⁻¹' * (I - Σₒ * Σ⁻¹)' * Σ⁻¹ * F⨉I_A⁻¹
+            C = F⨉I_A⁻¹' * (I - Σ⁻¹Σₒ) * Σ⁻¹ * F⨉I_A⁻¹
             gradient = 2vec(C * S * I_A⁻¹')'∇A + vec(C)'∇S
 
             if T
