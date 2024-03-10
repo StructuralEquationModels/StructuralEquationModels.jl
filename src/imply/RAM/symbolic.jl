@@ -277,11 +277,11 @@ function get_Σ_symbolic_RAM(S, A, F; vech = false)
     Σ_symbolic = F * invia * S * permutedims(invia) * permutedims(F)
     Σ_symbolic = Array(Σ_symbolic)
     # Σ_symbolic = Symbolics.simplify.(Σ_symbolic)
-    Threads.@threads for i in eachindex(Σ_symbolic)
-        Σ_symbolic[i] = Symbolics.simplify(Σ_symbolic[i])
-    end
     if vech
         Σ_symbolic = Σ_symbolic[tril(trues(size(F, 1), size(F, 1)))]
+    end
+    Threads.@threads for i in eachindex(Σ_symbolic)
+        Σ_symbolic[i] = Symbolics.simplify(Σ_symbolic[i])
     end
     return Σ_symbolic
 end
