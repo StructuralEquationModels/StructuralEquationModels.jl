@@ -30,17 +30,16 @@ function semvec(observed, imply, loss, optimizer)
     return sem_vec
 end
 
-function get_observed(rowind, data, semobserved;
+# construct a vector of SemObserved objects
+# for each specified data row
+function observed(::Type{T}, data, rowinds;
             args = (),
-            kwargs = NamedTuple())
-    observed_vec = Vector{semobserved}(undef, length(rowind))
-    for i in 1:length(rowind)
-        observed_vec[i] = semobserved(
-                            args...;
-                            data = Matrix(data[rowind[i], :]),
-                            kwargs...)
-    end
-    return observed_vec
+            kwargs = NamedTuple()) where T <: SemObserved
+    return T[
+        T(args...;
+          data = Matrix(view(data, row, :)),
+          kwargs...)
+        for row in rowinds]
 end
 
 function skipmissing_mean(mat::AbstractMatrix)
