@@ -152,8 +152,8 @@ function reorder_data(data::AbstractArray, spec_colnames, obs_colnames)
     if spec_colnames == obs_colnames
         return data
     else
-        new_position = [findall(x .== obs_colnames)[1] for x in spec_colnames]
-        data = data[:, new_position]
-        return data
+        obs_positions = Dict(col => i for (i, col) in enumerate(obs_colnames))
+        new_positions = [obs_positions[col] for col in spec_colnames]
+        return data[:, new_positions]
     end
 end
