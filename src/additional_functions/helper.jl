@@ -52,10 +52,10 @@ function F_one_person(imp_mean, meandiff, inverse, data, logdet)
     return F
 end
 
-function remove_all_missing(data)
+function remove_all_missing(data::AbstractMatrix)
     keep = Vector{Int64}()
-    for i in 1:size(data, 1)
-        if any(.!ismissing.(data[i, :]))
+    for (i, coldata) in zip(axes(data, 1), eachrow(data))
+        if any(!ismissing, coldata)
             push!(keep, i)
         end
     end
