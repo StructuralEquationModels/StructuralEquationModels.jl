@@ -150,7 +150,7 @@ function hessian!(semwls::SemWLS, par, model::AbstractSemSingle, has_meanstructu
             if !semwls.approximate_hessian
                 J = -2*(σ₋'*semwls.V)'
                 ∇²Σ_function!(∇²Σ, J, par)
-                hessian += ∇²Σ
+                hessian .+= ∇²Σ
             end
             return hessian
         end
@@ -192,7 +192,7 @@ function objective_hessian!(semwls::SemWLS, par, model::AbstractSemSingle, has_m
         if !semwls.approximate_hessian
             J = -2*(σ₋'*semwls.V)'
             ∇²Σ_function!(∇²Σ, J, par)
-            hessian += ∇²Σ
+            hessian .+= ∇²Σ
         end
 
         return objective, hessian
@@ -216,7 +216,7 @@ function gradient_hessian!(semwls::SemWLS, par, model::AbstractSemSingle, has_me
         if !semwls.approximate_hessian
             J = -2*(σ₋'*semwls.V)'
             ∇²Σ_function!(∇²Σ, J, par)
-            hessian += ∇²Σ
+            hessian .+= ∇²Σ
         end
 
         return gradient, hessian
@@ -240,7 +240,7 @@ function objective_gradient_hessian!(semwls::SemWLS, par, model::AbstractSemSing
         if !semwls.approximate_hessian
             J = -2*(σ₋'*semwls.V)'
             ∇²Σ_function!(∇²Σ, J, par)
-            hessian += ∇²Σ
+            hessian .+= ∇²Σ
         end
         return objective, gradient, hessian
     end

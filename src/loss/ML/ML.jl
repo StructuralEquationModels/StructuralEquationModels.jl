@@ -158,7 +158,7 @@ function hessian!(
         # outer
         H_outer = 2*kron(Σ⁻¹ΣₒΣ⁻¹, Σ⁻¹) - kron(Σ⁻¹, Σ⁻¹)
         hessian = ∇Σ'*H_outer*∇Σ
-        hessian += ∇²Σ
+        hessian .+= ∇²Σ
     end
     
     return hessian
@@ -241,7 +241,7 @@ function objective_hessian!(
                 # outer
                 H_outer = 2*kron(Σ⁻¹ΣₒΣ⁻¹, Σ⁻¹) - kron(Σ⁻¹, Σ⁻¹)
                 hessian = ∇Σ'*H_outer*∇Σ
-                hessian += ∇²Σ
+                hessian .+= ∇²Σ
             end
 
             return objective, hessian
@@ -289,7 +289,7 @@ function gradient_hessian!(
             # outer
             H_outer = 2*kron(Σ⁻¹ΣₒΣ⁻¹, Σ⁻¹) - kron(Σ⁻¹, Σ⁻¹)
             hessian = ∇Σ'*H_outer*∇Σ
-            hessian += ∇²Σ
+            hessian .+= ∇²Σ
         end
         
         return gradient', hessian
@@ -343,7 +343,7 @@ function objective_gradient_hessian!(
             # outer
             H_outer = 2*kron(Σ⁻¹ΣₒΣ⁻¹, Σ⁻¹) - kron(Σ⁻¹, Σ⁻¹)
             hessian = ∇Σ'*H_outer*∇Σ
-            hessian += ∇²Σ
+            hessian .+= ∇²Σ
         end
         
         return objective, gradient', hessian
@@ -429,7 +429,7 @@ function gradient!(semml::SemML, par, model::AbstractSemSingle, has_meanstructur
             μ₋ᵀΣ⁻¹ = μ₋'*Σ⁻¹
             k = μ₋ᵀΣ⁻¹*F⨉I_A⁻¹
 
-            gradient += -2k*∇M - 2vec(k'*(M'+k*S)*I_A⁻¹')'∇A - vec(k'k)'∇S
+            gradient .+= -2k*∇M - 2vec(k'*(M'+k*S)*I_A⁻¹')'∇A - vec(k'k)'∇S
         end
 
         return gradient'
@@ -469,7 +469,7 @@ function objective_gradient!(
 
                 μ₋ᵀΣ⁻¹ = μ₋'*Σ⁻¹
                 k = μ₋ᵀΣ⁻¹*F⨉I_A⁻¹
-                gradient += -2k*∇M - 2vec(k'*(M'+k*S)*I_A⁻¹')'∇A - vec(k'k)'∇S
+                gradient .+= -2k*∇M - 2vec(k'*(M'+k*S)*I_A⁻¹')'∇A - vec(k'k)'∇S
             end
 
             return objective, gradient'
