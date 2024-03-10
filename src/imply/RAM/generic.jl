@@ -158,8 +158,8 @@ function RAM(;
     I_A = similar(A_pre)
 
     if gradient
-        ∇A = get_matrix_derivative(A_indices, parameters, n_nod^2)
-        ∇S = get_matrix_derivative(S_indices, parameters, n_nod^2)
+        ∇A = matrix_gradient(A_indices, n_nod^2)
+        ∇S = matrix_gradient(S_indices, n_nod^2)
     else
         ∇A = nothing
         ∇S = nothing
@@ -168,15 +168,8 @@ function RAM(;
     # μ
     if meanstructure
         has_meanstructure = Val(true)
-
-        if gradient
-            ∇M = get_matrix_derivative(M_indices, parameters, n_nod)
-        else
-            ∇M = nothing
-        end
-
+        ∇M = gradient ? matrix_gradient(M_indices, n_nod) : nothing
         μ = zeros(n_var)
-
     else
         has_meanstructure = Val(false)
         M_indices = nothing
