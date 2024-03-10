@@ -17,9 +17,10 @@ function ==(c1::RAMConstant, c2::RAMConstant)
 end
 
 function append_RAMConstants!(constants::AbstractVector{RAMConstant},
-                              mtx_name::Symbol, mtx::AbstractArray)
+                              mtx_name::Symbol, mtx::AbstractArray;
+                              skip_zeros::Bool = true)
     for (index, val) in pairs(mtx)
-        if isa(val, Number) && !iszero(val)
+        if isa(val, Number) && !(skip_zeros && iszero(val))
             push!(constants, RAMConstant(mtx_name, index, val))
         end
     end
