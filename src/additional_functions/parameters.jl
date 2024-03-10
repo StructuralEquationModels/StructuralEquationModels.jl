@@ -106,18 +106,14 @@ function check_constants(M)
 end
 
 
-function get_matrix_derivative(M_indices, parameters, n_long)
-
-    ∇M = [
-    sparsevec(
-        M_indices[i], 
-        ones(length(M_indices[i])),
-        n_long) for i in 1:length(parameters)]
-
-    ∇M = reduce(hcat, ∇M)
-
-    return ∇M
-
+# construct length(M)×length(parameters) sparse matrix of 1s at the positions,
+# where the corresponding parameter occurs in the M matrix
+function matrix_gradient(M_indices::ArrayParamsMap,
+                         M_length::Integer)
+    rowval = reduce(vcat, M_indices)
+    colptr = pushfirst!(accumulate((ptr, M_ind) -> ptr + length(M_ind), M_indices, init=1), 1)
+    return SparseMatrixCSC(M_length, length(M_indices),
+                colptr, rowval, ones(length(rowval)))
 end
 
 # fill M with parameters
