@@ -1,4 +1,13 @@
-function fill_A_S_M(A, S, M, A_indices, S_indices, M_indices, parameters)
+# fill A, S, and M matrices with the parameter values according to the parameters map
+function fill_A_S_M!(
+    A::AbstractMatrix,
+    S::AbstractMatrix,
+    M::Union{AbstractVector, Nothing},
+    A_indices::AbstractArrayParamsMap,
+    S_indices::AbstractArrayParamsMap,
+    M_indices::Union{AbstractArrayParamsMap, Nothing},
+    parameters::AbstractVector,
+)
     @inbounds for (iA, iS, par) in zip(A_indices, S_indices, parameters)
         for index_A in iA
             A[index_A] = par
@@ -88,12 +97,18 @@ function get_matrix_derivative(M_indices, parameters, n_long)
     return ∇M
 end
 
-function fill_matrix(M, M_indices, parameters)
+# fill M with parameters
+function fill_matrix!(
+    M::AbstractMatrix,
+    M_indices::AbstractArrayParamsMap,
+    parameters::AbstractVector,
+)
     for (iM, par) in zip(M_indices, parameters)
         for index_M in iM
             M[index_M] = par
         end
     end
+    return M
 end
 
 function get_partition(A_indices, S_indices)

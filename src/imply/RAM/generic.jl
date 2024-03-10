@@ -222,7 +222,7 @@ gradient!(imply::RAM, par, model::AbstractSemSingle) =
 
 # objective and gradient
 function objective!(imply::RAM, parameters, model, has_meanstructure::Val{T}) where {T}
-    fill_A_S_M(
+    fill_A_S_M!(
         imply.A,
         imply.S,
         imply.M,
@@ -250,7 +250,7 @@ function gradient!(
     model::AbstractSemSingle,
     has_meanstructure::Val{T},
 ) where {T}
-    fill_A_S_M(
+    fill_A_S_M!(
         imply.A,
         imply.S,
         imply.M,
@@ -346,7 +346,7 @@ function check_acyclic(A_pre, n_par, A_indices)
     A_rand = copy(A_pre)
     randpar = rand(n_par)
 
-    fill_matrix(A_rand, A_indices, randpar)
+    fill_matrix!(A_rand, A_indices, randpar)
 
     # check if the model is acyclic
     acyclic = isone(det(I - A_rand))
