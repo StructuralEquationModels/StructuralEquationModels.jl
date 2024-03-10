@@ -388,7 +388,7 @@ function gradient!(semml::SemML, par, model::AbstractSemSingle, imp::RAM)
         Σ⁻¹ = LinearAlgebra.inv!(Σ_chol)
         #mul!(Σ⁻¹Σₒ, Σ⁻¹, Σₒ)
 
-        C = F⨉I_A⁻¹'*(I-Σₒ*Σ⁻¹)'*Σ⁻¹*F⨉I_A⁻¹
+        C = F⨉I_A⁻¹'*(I-Σ⁻¹Σₒ)*Σ⁻¹*F⨉I_A⁻¹
         gradient = 2vec(C*S*I_A⁻¹')'∇A + vec(C)'∇S
 
         if MeanStructure(imply(model)) === HasMeanStructure
