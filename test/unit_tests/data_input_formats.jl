@@ -57,16 +57,16 @@ observed_nospec = SemObservedData(
 )
 
 observed_matrix = SemObservedData(
-    specification = spec, 
-    data = dat_matrix, 
+    specification = spec,
+    data = dat_matrix,
     obs_colnames = Symbol.(names(dat))
 )
 
-all_equal_cov = 
+all_equal_cov =
     (obs_cov(observed) == obs_cov(observed_nospec)) &
     (obs_cov(observed) == obs_cov(observed_matrix))
 
-all_equal_data = 
+all_equal_data =
     (get_data(observed) == get_data(observed_nospec)) &
     (get_data(observed) == get_data(observed_matrix))
 
@@ -90,16 +90,16 @@ observed_shuffle = SemObservedData(
 )
 
 observed_matrix_shuffle = SemObservedData(
-    specification = spec, 
-    data = shuffle_dat_matrix, 
+    specification = spec,
+    data = shuffle_dat_matrix,
     obs_colnames = shuffle_names
 )
 
-all_equal_cov_suffled = 
+all_equal_cov_suffled =
     (obs_cov(observed) == obs_cov(observed_shuffle)) &
     (obs_cov(observed) == obs_cov(observed_matrix_shuffle))
 
-all_equal_data_suffled = 
+all_equal_data_suffled =
     (get_data(observed) == get_data(observed_shuffle)) &
     (get_data(observed) == get_data(observed_matrix_shuffle))
 
@@ -146,13 +146,13 @@ observed_nospec = SemObservedData(
 )
 
 observed_matrix = SemObservedData(
-    specification = spec, 
-    data = dat_matrix, 
+    specification = spec,
+    data = dat_matrix,
     obs_colnames = Symbol.(names(dat)),
     meanstructure = true
 )
 
-all_equal_mean = 
+all_equal_mean =
     (obs_mean(observed) == obs_mean(observed_nospec)) &
     (obs_mean(observed) == obs_mean(observed_matrix))
 
@@ -176,15 +176,15 @@ observed_shuffle = SemObservedData(
 )
 
 observed_matrix_shuffle = SemObservedData(
-    specification = spec, 
-    data = shuffle_dat_matrix, 
+    specification = spec,
+    data = shuffle_dat_matrix,
     obs_colnames = shuffle_names,
     meanstructure = true
 )
 
-all_equal_mean_suffled = 
+all_equal_mean_suffled =
     (obs_mean(observed) == obs_mean(observed_shuffle)) &
-    (obs_mean(observed) == obs_mean(observed_matrix_shuffle)) 
+    (obs_mean(observed) == obs_mean(observed_matrix_shuffle))
 
 
 @testset "unit tests | SemObservedData | input formats shuffled - mean" begin
@@ -367,12 +367,12 @@ observed_nospec = SemObservedMissing(
 )
 
 observed_matrix = SemObservedMissing(
-    specification = spec, 
-    data = dat_missing_matrix, 
+    specification = spec,
+    data = dat_missing_matrix,
     obs_colnames = Symbol.(names(dat))
 )
 
-all_equal_data = 
+all_equal_data =
     isequal(get_data(observed), get_data(observed_nospec)) &
     isequal(get_data(observed), get_data(observed_matrix))
 
@@ -395,12 +395,12 @@ observed_shuffle = SemObservedMissing(
 )
 
 observed_matrix_shuffle = SemObservedMissing(
-    specification = spec, 
-    data = shuffle_dat_missing_matrix, 
+    specification = spec,
+    data = shuffle_dat_missing_matrix,
     obs_colnames = shuffle_names
 )
 
-all_equal_data_shuffled = 
+all_equal_data_shuffled =
     isequal(get_data(observed), get_data(observed_shuffle)) &
     isequal(get_data(observed), get_data(observed_matrix_shuffle))
 

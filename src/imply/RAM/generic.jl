@@ -123,7 +123,7 @@ function RAM(;
     M_pre = !isnothing(M_indices) ? zeros(n_var) : nothing
 
     set_RAMConstants!(A_pre, S_pre, M_pre, ram_matrices.constants)
-    
+
     A_pre = check_acyclic(A_pre, n_par, A_indices)
 
     # pre-allocate some matrices
@@ -225,7 +225,7 @@ end
 identifier(imply::RAM) = imply.identifier
 nparams(imply::RAM) = nparams(imply.ram_matrices)
 
-function update_observed(imply::RAM, observed::SemObserved; kwargs...) 
+function update_observed(imply::RAM, observed::SemObserved; kwargs...)
     if n_man(observed) == size(imply.Σ, 1)
         return imply
     else

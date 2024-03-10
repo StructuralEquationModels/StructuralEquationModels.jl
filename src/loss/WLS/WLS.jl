@@ -10,20 +10,20 @@ Weighted least squares estimation.
 
     SemWLS(;
         observed,
-        meanstructure = false, 
-        wls_weight_matrix = nothing, 
-        wls_weight_matrix_mean = nothing, 
-        approximate_hessian = false, 
+        meanstructure = false,
+        wls_weight_matrix = nothing,
+        wls_weight_matrix_mean = nothing,
+        approximate_hessian = false,
         kwargs...)
 
 # Arguments
 - `observed`: the `SemObserved` part of the model
 - `meanstructure::Bool`: does the model have a meanstructure?
 - `approximate_hessian::Bool`: should the hessian be swapped for an approximation
-- `wls_weight_matrix`: the weight matrix for weighted least squares. 
-    Defaults to GLS estimation (``0.5*(D^T*kron(S,S)*D)`` where D is the duplication matrix 
+- `wls_weight_matrix`: the weight matrix for weighted least squares.
+    Defaults to GLS estimation (``0.5*(D^T*kron(S,S)*D)`` where D is the duplication matrix
     and S is the inverse ob the observed covariance matrix)
-- `wls_weight_matrix_mean`: the weight matrix for the mean part of weighted least squares. 
+- `wls_weight_matrix_mean`: the weight matrix for the mean part of weighted least squares.
     Defaults to GLS estimation (the inverse of the observed covariance matrix)
 
 # Examples
@@ -135,4 +135,5 @@ end
 ### Recommended methods
 ############################################################################################
 
-update_observed(lossfun::SemWLS, observed::SemObserved; kwargs...) = SemWLS(;observed = observed, kwargs...)
+update_observed(lossfun::SemWLS, observed::SemObserved; kwargs...) =
+    SemWLS(; observed = observed, kwargs...)

@@ -147,7 +147,7 @@ function RAMSymbolic(;
         for i in 1:n_sig
             ∇²Σ_symbolic += J[i]*∇²Σ_symbolic_vec[i]
         end
-    
+
         ∇²Σ_function = Symbolics.build_function(∇²Σ_symbolic, J, par, expression=Val{false})[2]
         ∇²Σ = zeros(n_par, n_par)
     else

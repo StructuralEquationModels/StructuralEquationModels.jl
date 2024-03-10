@@ -1,6 +1,6 @@
 """
     start_fabin3(model)
-    
+
 Return a vector of FABIN 3 starting values (see Hägglund 1982).
 Not available for ensemble models.
 """
@@ -8,20 +8,20 @@ function start_fabin3 end
 
 # splice model and loss functions
 function start_fabin3(
-        model::AbstractSemSingle; 
+        model::AbstractSemSingle;
         kwargs...)
     return start_fabin3(
-        model.observed, 
+        model.observed,
         model.imply,
-        model.optimizer, 
+        model.optimizer,
         model.loss.functions...,
         kwargs...)
 end
 
 function start_fabin3(
-        observed, 
-        imply, 
-        optimizer, 
+        observed,
+        imply,
+        optimizer,
         args...;
         kwargs...)
     return start_fabin3(
@@ -32,10 +32,10 @@ end
 
 # SemObservedMissing
 function start_fabin3(
-        observed::SemObservedMissing, 
-        imply, 
-        optimizer, 
-        args...; 
+        observed::SemObservedMissing,
+        imply,
+        optimizer,
+        args...;
         kwargs...)
 
     if !observed.em_model.fitted
@@ -77,8 +77,8 @@ function start_fabin3(ram_matrices::RAMMatrices, Σ, μ)
     if !isnothing(M)
         in_M = length.(M_ind) .!= 0
         in_any = in_A .| in_S .| in_M
-    else 
-        in_any = in_A .| in_S 
+    else
+        in_any = in_A .| in_S
     end
 
     if !all(in_any)

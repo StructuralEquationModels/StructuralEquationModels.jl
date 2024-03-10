@@ -16,18 +16,14 @@ function fill_A_S_M!(
         for index_S in iS
             S[index_S] = par
         end
-
     end
 
     if !isnothing(M)
-
         @inbounds for (iM, par) in zip(M_indices, parameters)
             for index_M in iM
                 M[index_M] = par
             end
-
         end
-
     end
 
 end

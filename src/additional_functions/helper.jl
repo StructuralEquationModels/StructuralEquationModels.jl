@@ -10,7 +10,7 @@ function neumann_series(mat::SparseMatrixCSC)
     return inverse
 end
 
-#= 
+#=
 function make_onelement_array(A)
     isa(A, Array) ? nothing : (A = [A])
     return A
@@ -129,7 +129,7 @@ function duplication_matrix(nobs)
             u[Int((j-1)*nobs + i-0.5*j*(j-1))] = 1
             T = zeros(nobs, nobs)
             T[j,i] = 1; T[i, j] = 1
-            Dt += u*transpose(vec(T)) 
+            Dt += u*transpose(vec(T))
         end
     end
     D = transpose(Dt)
@@ -148,7 +148,7 @@ function elimination_matrix(nobs)
             u[Int((j-1)*nobs + i-0.5*j*(j-1))] = 1
             T = zeros(nobs, nobs)
             T[i, j] = 1
-            L += u*transpose(vec(T)) 
+            L += u*transpose(vec(T))
         end
     end
     return L
@@ -215,11 +215,11 @@ function get_commutation_lookup(n2::Int64)
     end
 
     return lookup
-    
+
 end
 
 function commutation_matrix_pre_square!(A::SparseMatrixCSC, lookup) # comuptes B + KₙA
-    
+
     for (i, rowind) in enumerate(A.rowval)
         A.rowval[i] = lookup[rowind]
     end

@@ -224,9 +224,9 @@ update_partable!(partable::AbstractParameterTable, sem_fit::SemFit,
 # update estimates -------------------------------------------------------------------------
 """
     update_estimate!(
-        partable::AbstractParameterTable, 
+        partable::AbstractParameterTable,
         sem_fit::SemFit)
-    
+
 Write parameter estimates from `sem_fit` to the `:estimate` column of `partable`
 """
 update_estimate!(partable::AbstractParameterTable, sem_fit::SemFit) =
@@ -236,7 +236,7 @@ update_estimate!(partable::AbstractParameterTable, sem_fit::SemFit) =
 """
     update_start!(partable::AbstractParameterTable, sem_fit::SemFit)
     update_start!(partable::AbstractParameterTable, model::AbstractSem, start_val; kwargs...)
-    
+
 Write starting values from `sem_fit` or `start_val` to the `:estimate` column of `partable`.
 
 # Arguments
@@ -248,9 +248,9 @@ update_start!(partable::AbstractParameterTable, sem_fit::SemFit) =
     update_partable!(partable, sem_fit, sem_fit.start_val, :start)
 
 function update_start!(
-        partable::AbstractParameterTable, 
-        model::AbstractSem, 
-        start_val; 
+        partable::AbstractParameterTable,
+        model::AbstractSem,
+        start_val;
         kwargs...)
     if !(start_val isa Vector)
         start_val = start_val(model; kwargs...)
@@ -261,10 +261,10 @@ end
 # update partable standard errors ----------------------------------------------------------
 """
     update_se_hessian!(
-        partable::AbstractParameterTable, 
-        sem_fit::SemFit; 
+        partable::AbstractParameterTable,
+        sem_fit::SemFit;
         hessian = :finitediff)
-    
+
 Write hessian standard errors computed for `sem_fit` to the `:se` column of `partable`
 
 # Arguments
@@ -274,8 +274,8 @@ Write hessian standard errors computed for `sem_fit` to the `:se` column of `par
 
 """
 function update_se_hessian!(
-        partable::AbstractParameterTable, 
-        sem_fit::SemFit; 
+        partable::AbstractParameterTable,
+        sem_fit::SemFit;
         hessian = :finitediff)
     se = se_hessian(sem_fit; hessian = hessian)
     return update_partable!(partable, sem_fit, se, :se)

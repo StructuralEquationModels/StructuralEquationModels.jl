@@ -59,7 +59,7 @@ end
 
 function SemLoss(functions...; loss_weights = nothing, kwargs...)
 
-    if !isnothing(loss_weights) 
+    if !isnothing(loss_weights)
         loss_weights = SemWeight.(loss_weights)
     else
         loss_weights = Tuple(SemWeight(nothing) for _ in 1:length(functions))
@@ -174,7 +174,7 @@ Constructor for ensemble models.
 - `weights::Vector`:  Weights for each model. Defaults to the number of observed data points.
 
 All additional kwargs are passed down to the constructor for the optimizer field.
-    
+
 Returns a SemEnsemble with fields
 - `n::Int`: Number of models.
 - `sems::Tuple`: `AbstractSem`s.
@@ -194,7 +194,7 @@ function SemEnsemble(models...; optimizer = SemOptimizerOptim, weights = nothing
     n = length(models)
 
     # default weights
-    
+
     if isnothing(weights)
         nobs_total = sum(n_obs.(models))
         weights = [n_obs(model)/nobs_total for model in models]
