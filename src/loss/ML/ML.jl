@@ -87,11 +87,9 @@ function objective!(
 
         copyto!(Σ⁻¹, Σ)
         Σ_chol = cholesky!(Symmetric(Σ⁻¹); check = false)
-
-        if !isposdef(Σ_chol) return non_posdef_return(par) end
-
+        isposdef(Σ_chol) || return non_posdef_return(par)
         ld = logdet(Σ_chol)
-        Σ⁻¹ .= LinearAlgebra.inv!(Σ_chol)
+        Σ⁻¹ = LinearAlgebra.inv!(Σ_chol)
         #mul!(Σ⁻¹Σₒ, Σ⁻¹, Σₒ)
 
         if T
@@ -116,12 +114,8 @@ function gradient!(
         
         copyto!(Σ⁻¹, Σ)
         Σ_chol = cholesky!(Symmetric(Σ⁻¹); check = false)
-
-        if !isposdef(Σ_chol) 
-            return ones(eltype(par), size(par))
-        end
-
-        Σ⁻¹ .= LinearAlgebra.inv!(Σ_chol)
+        isposdef(Σ_chol) || return ones(eltype(par), size(par))
+        Σ⁻¹ = LinearAlgebra.inv!(Σ_chol)
         mul!(Σ⁻¹Σₒ, Σ⁻¹, Σₒ)
 
         if T
@@ -149,12 +143,9 @@ function hessian!(
 
     copyto!(Σ⁻¹, Σ)
     Σ_chol = cholesky!(Symmetric(Σ⁻¹); check = false)
-
-    if !isposdef(Σ_chol)
+    isposdef(Σ_chol) ||
         return diagm(fill(one(eltype(par)), length(par)))
-    end
-
-    Σ⁻¹ .= LinearAlgebra.inv!(Σ_chol)
+    Σ⁻¹ = LinearAlgebra.inv!(Σ_chol)
 
     if semml.approximate_hessian
         hessian = 2*∇Σ'*kron(Σ⁻¹, Σ⁻¹)*∇Σ
@@ -196,12 +187,11 @@ function objective_gradient!(
 
         copyto!(Σ⁻¹, Σ)
         Σ_chol = cholesky!(Symmetric(Σ⁻¹); check = false)
-
-        if !isposdef(Σ_chol) 
+        if !isposdef(Σ_chol)
             return non_posdef_return(par), ones(eltype(par), size(par))
         else
             ld = logdet(Σ_chol)
-            Σ⁻¹ .= LinearAlgebra.inv!(Σ_chol)
+            Σ⁻¹ = LinearAlgebra.inv!(Σ_chol)
             mul!(Σ⁻¹Σₒ, Σ⁻¹, Σₒ)
 
             if T
@@ -233,12 +223,11 @@ function objective_hessian!(
 
         copyto!(Σ⁻¹, Σ)
         Σ_chol = cholesky!(Symmetric(Σ⁻¹); check = false)
-
-        if !isposdef(Σ_chol) 
+        if !isposdef(Σ_chol)
             return non_posdef_return(par), diagm(fill(one(eltype(par)), length(par)))
         else
             ld = logdet(Σ_chol)
-            Σ⁻¹ .= LinearAlgebra.inv!(Σ_chol)
+            Σ⁻¹ = LinearAlgebra.inv!(Σ_chol)
             mul!(Σ⁻¹Σₒ, Σ⁻¹, Σₒ)
             objective = ld + tr(Σ⁻¹Σₒ)
 
@@ -282,12 +271,9 @@ function gradient_hessian!(
         
         copyto!(Σ⁻¹, Σ)
         Σ_chol = cholesky!(Symmetric(Σ⁻¹); check = false)
-
-        if !isposdef(Σ_chol)
+        isposdef(Σ_chol) ||
             return ones(eltype(par), size(par)), diagm(fill(one(eltype(par)), length(par)))
-        end
-
-        Σ⁻¹ .= LinearAlgebra.inv!(Σ_chol)
+        Σ⁻¹ = LinearAlgebra.inv!(Σ_chol)
         mul!(Σ⁻¹Σₒ, Σ⁻¹, Σₒ)
 
         Σ⁻¹ΣₒΣ⁻¹ = Σ⁻¹Σₒ*Σ⁻¹
@@ -332,16 +318,14 @@ function objective_gradient_hessian!(
         
         copyto!(Σ⁻¹, Σ)
         Σ_chol = cholesky!(Symmetric(Σ⁻¹); check = false)
-
-        if !isposdef(Σ_chol) 
+        if !isposdef(Σ_chol)
             objective = non_posdef_return(par)
             gradient = ones(eltype(par), size(par))
             hessian = diagm(fill(one(eltype(par)), length(par)))
             return objective, gradient, hessian
         end
-
         ld = logdet(Σ_chol)
-        Σ⁻¹ .= LinearAlgebra.inv!(Σ_chol)
+        Σ⁻¹ = LinearAlgebra.inv!(Σ_chol)
         mul!(Σ⁻¹Σₒ, Σ⁻¹, Σₒ)
         objective = ld + tr(Σ⁻¹Σₒ)
 
@@ -409,11 +393,9 @@ function objective!(
 
         copyto!(Σ⁻¹, Σ)
         Σ_chol = cholesky!(Symmetric(Σ⁻¹); check = false)
-
-        if !isposdef(Σ_chol) return non_posdef_return(par) end
-
+        isposdef(Σ_chol) || return non_posdef_return(par)
         ld = logdet(Σ_chol)
-        Σ⁻¹ .= LinearAlgebra.inv!(Σ_chol)
+        Σ⁻¹ = LinearAlgebra.inv!(Σ_chol)
         mul!(Σ⁻¹Σₒ, Σ⁻¹, Σₒ)
 
         if T
@@ -432,13 +414,11 @@ function gradient!(semml::SemML, par, model::AbstractSemSingle, has_meanstructur
         F⨉I_A⁻¹ = F⨉I_A⁻¹(imply(model)), I_A⁻¹ = I_A⁻¹(imply(model)), 
         ∇A = ∇A(imply(model)), ∇S = ∇S(imply(model)), ∇M = ∇M(imply(model)),
         μ = μ(imply(model)), μₒ = obs_mean(observed(model))
-        
+
         copyto!(Σ⁻¹, Σ)
         Σ_chol = cholesky!(Symmetric(Σ⁻¹); check = false)
-
-        if !isposdef(Σ_chol) return ones(eltype(par), size(par)) end
-
-        Σ⁻¹ .= LinearAlgebra.inv!(Σ_chol)
+        isposdef(Σ_chol) || return ones(eltype(par), size(par))
+        Σ⁻¹ = LinearAlgebra.inv!(Σ_chol)
         #mul!(Σ⁻¹Σₒ, Σ⁻¹, Σₒ)
 
         C = F⨉I_A⁻¹'*(I-Σₒ*Σ⁻¹)'*Σ⁻¹*F⨉I_A⁻¹
@@ -467,17 +447,16 @@ function objective_gradient!(
         S = S(imply(model)), M = M(imply(model)), F⨉I_A⁻¹ = F⨉I_A⁻¹(imply(model)), I_A⁻¹ = I_A⁻¹(imply(model)), 
         ∇A = ∇A(imply(model)), ∇S = ∇S(imply(model)), ∇M = ∇M(imply(model)),
         μ = μ(imply(model)), μₒ = obs_mean(observed(model))
-        
+
         copyto!(Σ⁻¹, Σ)
         Σ_chol = cholesky!(Symmetric(Σ⁻¹); check = false)
-
-        if !isposdef(Σ_chol) 
+        if !isposdef(Σ_chol)
             objective = non_posdef_return(par)
             gradient = ones(eltype(par), size(par))
             return objective, gradient
         else
             ld = logdet(Σ_chol)
-            Σ⁻¹ .= LinearAlgebra.inv!(Σ_chol)
+            Σ⁻¹ = LinearAlgebra.inv!(Σ_chol)
             mul!(Σ⁻¹Σₒ, Σ⁻¹, Σₒ)
             objective = ld + tr(Σ⁻¹Σₒ)
 
