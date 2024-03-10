@@ -102,28 +102,12 @@ function SemObservedData(;
         data = Matrix(data)
     end
 
-    n_obs, n_man = Float64.(size(data))
-    
-    if compute_covariance
-        obs_cov = Statistics.cov(data)
-    else
-        obs_cov = nothing
-    end
-
-    # if a meanstructure is needed, compute observed means
-    if meanstructure
-        obs_mean = vcat(Statistics.mean(data, dims = 1)...)
-    else
-        obs_mean = nothing
-    end
-
-    if rowwise
-        data_rowwise = [data[i, :] for i = 1:convert(Int64, n_obs)]
-    else
-        data_rowwise = nothing
-    end
-
-    return SemObservedData(data, obs_cov, obs_mean, n_man, n_obs, data_rowwise)
+    return SemObservedData(data,
+        compute_covariance ? Statistics.cov(data) : nothing,
+        meanstructure ? vec(Statistics.mean(data, dims = 1)) : nothing,
+        Float64.(size(data, 2)),
+        Float64.(size(data, 1)),
+        rowwise ? [data[i, :] for i in axes(data, 1)] : nothing)
 end
 
 ############################################################################################
