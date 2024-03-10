@@ -80,6 +80,25 @@ function start_fabin3(ram_matrices::RAMMatrices, Σ, μ)
     A_ind_c = [linear2cartesian(ind, (n_nod, n_nod)) for ind in A_ind]
     # ind_Λ = findall([is_in_Λ(ind_vec, F_ind) for ind_vec in A_ind_c])
 
+    function calculate_lambda(
+        ref::Integer,
+        indicator::Integer,
+        indicators::AbstractVector{<:Integer},
+    )
+        instruments = filter(i -> (i != ref) && (i != indicator), indicators)
+        if length(instruments) == 1
+            s13 = Σ[ref, instruments[1]]
+            s32 = Σ[instruments[1], indicator]
+            return s32 / s13
+        else
+            s13 = Σ[ref, instruments]
+            s32 = Σ[instruments, indicator]
+            S33 = Σ[instruments, instruments]
+            temp = S33 \ s13
+            return dot(s32, temp) / dot(s13, temp)
+        end
+    end
+
     for i in setdiff(1:n_nod, F_ind)
         reference = Int64[]
         indicators = Int64[]
@@ -118,21 +137,9 @@ function start_fabin3(ram_matrices::RAMMatrices, Σ, μ)
             ref = reference[1]
 
             for (j, indicator) in enumerate(indicators)
-                if indicator != ref
-                    instruments = filter(i -> (i != ref) && (i != indicator), indicators)
-
-                    s32 = Σ[instruments, indicator]
-                    s13 = Σ[ref, instruments]
-                    S33 = Σ[instruments, instruments]
-
-                    if size(instruments, 1) == 1
-                        temp = S33[1] / s13[1]
-                        λ = s32[1] * temp / (s13[1] * temp)
-                    else
-                        temp = S33 \ s13
-                        λ = s32' * temp / (s13' * temp)
-                    end
-                    start_val[indicator2parampos[indicator]] = λ
+                if (indicator != ref) &&
+                   (parampos = get(indicator2parampos, indicator, 0)) != 0
+                    start_val[parampos] = calculate_lambda(ref, indicator, indicators)
                 end
             end
             # no reference indicator:
@@ -142,40 +149,20 @@ function start_fabin3(ram_matrices::RAMMatrices, Σ, μ)
             λ[1] = 1.0
             for (j, indicator) in enumerate(indicators)
                 if indicator != ref
-                    instruments = filter(i -> (i != ref) && (i != indicator), indicators)
-
-                    s32 = Σ[instruments, indicator]
-                    s13 = Σ[ref, instruments]
-                    S33 = Σ[instruments, instruments]
-
-                    if length(instruments) == 1
-                        temp = S33[1] / s13[1]
-                        λ[j] = s32[1] * temp / (s13[1] * temp)
-                    else
-                        temp = S33 \ s13
-                        λ[j] = s32' * temp / (s13' * temp)
-                    end
-
-                    if size(instruments, 1) == 1
-                        temp = S33[1] / s13[1]
-                        λ[j] = s32[1] * temp / (s13[1] * temp)
-                    else
-                        temp = S33 \ s13
-                        λ[j] = s32' * temp / (s13' * temp)
-                    end
+                    λ[j] = calculate_lambda(ref, indicator, indicators)
                 end
             end
 
             Σ_λ = Σ[indicators, indicators]
-            D = λ * λ' ./ sum(λ .^ 2)
+            l₂ = sum(abs2, λ)
+            D = λ * λ' ./ l₂
             θ = (I - D .^ 2) \ (diag(Σ_λ - D * Σ_λ * D))
 
             # 3. psi
             Σ₁ = Σ_λ - Diagonal(θ)
-            l₂ = sum(λ .^ 2)
-            Ψ = sum(sum(λ .* Σ₁, dims = 1) .* λ') ./ l₂^2
+            Ψ = dot(λ, Σ₁, λ) / l₂^2
 
-            λ = λ .* sign(Ψ) .* sqrt(abs(Ψ))
+            λ .*= sign(Ψ) * sqrt(abs(Ψ))
 
             for (j, indicator) in enumerate(indicators)
                 if (parampos = get(indicator2parampos, indicator, 0)) != 0
