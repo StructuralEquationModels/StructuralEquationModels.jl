@@ -111,97 +111,23 @@ function fill_matrix!(
     return M
 end
 
-function get_partition(A_indices, S_indices)
-    n_par = length(A_indices)
+# range of parameters that are referenced in the matrix
+function param_range(mtx_indices::AbstractArrayParamsMap)
+    first_i = findfirst(!isempty, mtx_indices)
+    last_i = findlast(!isempty, mtx_indices)
 
-    first_A = "a"
-    first_S = "a"
-    last_A = "a"
-    last_S = "a"
-
-    for i in 1:n_par
-        if length(A_indices[i]) != 0
-            first_A = i
-            break
+    if !isnothing(first_i) && !isnothing(last_i)
+        for i in first_i:last_i
+            if isempty(mtx_indices[i])
+                # TODO show which parameter is missing in which matrix
+                throw(
+                    ErrorException(
+                        "Your parameter vector is not partitioned into directed and undirected effects",
+                    ),
+                )
+            end
         end
     end
 
-    for i in 1:n_par
-        if length(S_indices[i]) != 0
-            first_S = i
-            break
-        end
-    end
-
-    for i in n_par + 1 .- (1:n_par)
-        if length(A_indices[i]) != 0
-            last_A = i
-            break
-        end
-    end
-
-    for i in n_par + 1 .- (1:n_par)
-        if length(S_indices[i]) != 0
-            last_S = i
-            break
-        end
-    end
-
-    for i in first_A:last_A
-        if length(A_indices[i]) == 0
-            throw(
-                ErrorException(
-                    "Your parameter vector is not partitioned into directed and undirected effects",
-                ),
-            )
-            return nothing
-        end
-    end
-
-    for i in first_S:last_S
-        if length(S_indices[i]) == 0
-            throw(
-                ErrorException(
-                    "Your parameter vector is not partitioned into directed and undirected effects",
-                ),
-            )
-            return nothing
-        end
-    end
-
-    return first_A:last_A, first_S:last_S
-end
-
-function get_partition(M_indices)
-    n_par = length(M_indices)
-
-    first_M = "a"
-    last_M = "a"
-
-    for i in 1:n_par
-        if length(M_indices[i]) != 0
-            first_M = i
-            break
-        end
-    end
-
-    for i in n_par + 1 .- (1:n_par)
-        if length(M_indices[i]) != 0
-            last_M = i
-            break
-        end
-    end
-
-    for i in first_M:last_M
-        if length(M_indices[i]) == 0
-            throw(
-                ErrorException(
-                    "Your parameter vector is not partitioned into directed, undirected and mean effects",
-                ),
-            )
-            return nothing
-        end
-    end
-
-    return first_M:last_M
+    return first_i:last_i
 end
