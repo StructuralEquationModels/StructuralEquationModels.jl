@@ -103,7 +103,7 @@ function get_matrix_derivative(M_indices, parameters, n_long)
         ones(length(M_indices[i])),
         n_long) for i in 1:length(parameters)]
 
-    ∇M = hcat(∇M...)
+    ∇M = reduce(hcat, ∇M)
 
     return ∇M
 
