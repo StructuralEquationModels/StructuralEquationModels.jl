@@ -113,7 +113,7 @@ end
     solution_ml = sem_fit(model_ml)
     solution_ml_weighted = sem_fit(model_ml_weighted)
     @test isapprox(solution(solution_ml), solution(solution_ml_weighted), rtol = 1e-3)
-    @test isapprox(n_obs(model_ml)*StructuralEquationModels.minimum(solution_ml), 
+    @test isapprox(n_obs(model_ml)*StructuralEquationModels.minimum(solution_ml),
         StructuralEquationModels.minimum(solution_ml_weighted), rtol = 1e-6)
 end
 
@@ -123,23 +123,23 @@ end
 
 @testset "fitmeasures/se_ml" begin
     solution_ml = sem_fit(model_ml)
-    @test all(test_fitmeasures(fit_measures(solution_ml), solution_lav[:fitmeasures_ml]; 
+    @test all(test_fitmeasures(fit_measures(solution_ml), solution_lav[:fitmeasures_ml];
         atol = 1e-3))
 
     update_partable!(partable, identifier(model_ml), se_hessian(solution_ml), :se)
-    @test compare_estimates(partable, solution_lav[:parameter_estimates_ml]; 
+    @test compare_estimates(partable, solution_lav[:parameter_estimates_ml];
         atol = 1e-3, col = :se, lav_col = :se)
 end
 
 @testset "fitmeasures/se_ls" begin
     solution_ls = sem_fit(model_ls_sym)
     fm = fit_measures(solution_ls)
-    @test all(test_fitmeasures(fm, solution_lav[:fitmeasures_ls]; atol = 1e-3, 
+    @test all(test_fitmeasures(fm, solution_lav[:fitmeasures_ls]; atol = 1e-3,
         fitmeasure_names = fitmeasure_names_ls))
     @test (fm[:AIC] === missing) & (fm[:BIC] === missing) & (fm[:minus2ll] === missing)
 
     update_partable!(partable, identifier(model_ls_sym), se_hessian(solution_ls), :se)
-    @test compare_estimates(partable, solution_lav[:parameter_estimates_ls]; atol = 1e-2, 
+    @test compare_estimates(partable, solution_lav[:parameter_estimates_ls]; atol = 1e-2,
         col = :se, lav_col = :se)
 end
 
@@ -157,7 +157,7 @@ if semoptimizer == SemOptimizerOptim
         loss = SemWLS,
         hessian = true,
         algorithm = Newton(
-            ;linesearch = BackTracking(order=3), 
+            ;linesearch = BackTracking(order=3),
             alphaguess = InitialHagerZhang())
     )
 
@@ -271,20 +271,20 @@ end
 
 @testset "fitmeasures/se_ml_mean" begin
     solution_ml = sem_fit(model_ml)
-    @test all(test_fitmeasures(fit_measures(solution_ml), solution_lav[:fitmeasures_ml_mean]; 
+    @test all(test_fitmeasures(fit_measures(solution_ml), solution_lav[:fitmeasures_ml_mean];
         atol = 0.002))
 
     update_partable!(partable_mean, identifier(model_ml), se_hessian(solution_ml), :se)
-    @test compare_estimates(partable_mean, solution_lav[:parameter_estimates_ml_mean]; 
+    @test compare_estimates(partable_mean, solution_lav[:parameter_estimates_ml_mean];
         atol = 0.002, col = :se, lav_col = :se)
 end
 
 @testset "fitmeasures/se_ls_mean" begin
     solution_ls = sem_fit(model_ls)
     fm = fit_measures(solution_ls)
-    @test all(test_fitmeasures(fm, 
-        solution_lav[:fitmeasures_ls_mean]; 
-        atol = 1e-3, 
+    @test all(test_fitmeasures(fm,
+        solution_lav[:fitmeasures_ls_mean];
+        atol = 1e-3,
         fitmeasure_names = fitmeasure_names_ls))
     @test (fm[:AIC] === missing) & (fm[:BIC] === missing) & (fm[:minus2ll] === missing)
 
@@ -351,10 +351,10 @@ end
 
 @testset "fitmeasures/se_fiml" begin
     solution_ml = sem_fit(model_ml)
-    @test all(test_fitmeasures(fit_measures(solution_ml), solution_lav[:fitmeasures_fiml]; 
+    @test all(test_fitmeasures(fit_measures(solution_ml), solution_lav[:fitmeasures_fiml];
         atol = 1e-3))
 
     update_partable!(partable_mean, identifier(model_ml), se_hessian(solution_ml), :se)
-    @test compare_estimates(partable_mean, solution_lav[:parameter_estimates_fiml]; 
+    @test compare_estimates(partable_mean, solution_lav[:parameter_estimates_fiml];
         atol = 0.002, col = :se, lav_col = :se)
 end

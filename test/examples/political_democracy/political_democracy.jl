@@ -1,7 +1,7 @@
 using StructuralEquationModels, Test, FiniteDiff
 
 include(
-    joinpath(chop(dirname(pathof(StructuralEquationModels)), tail = 3), 
+    joinpath(chop(dirname(pathof(StructuralEquationModels)), tail = 3),
     "test/examples/helper.jl")
     )
 
@@ -64,9 +64,9 @@ A =[0  0  0  0  0  0  0  0  0  0  0     1.0   0     0
     0  0  0  0  0  0  0  0  0  0  0     :x30  :x31  0]
 
 spec = RAMMatrices(;
-    A = A, 
-    S = S, 
-    F = F, 
+    A = A,
+    S = S,
+    F = F,
     parameters = x,
     colnames = [:x1, :x2, :x3, :y1, :y2, :y3, :y4, :y5, :y6, :y7, :y8, :ind60, :dem60, :dem65]
 )
@@ -80,8 +80,8 @@ x = Symbol.("x".*string.(1:38))
 M = [:x32; :x33; :x34; :x35; :x36; :x37; :x38; :x35; :x36; :x37; :x38; 0.0; 0.0; 0.0]
 
 spec_mean = RAMMatrices(;
-    A = A, 
-    S = S, 
+    A = A,
+    S = S,
     F = F,
     M = M,
     parameters = x,

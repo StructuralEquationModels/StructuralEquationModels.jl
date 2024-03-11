@@ -2,7 +2,7 @@ using StructuralEquationModels, Test, FiniteDiff
 using LinearAlgebra: diagind, LowerTriangular
 # using StructuralEquationModels as SEM
 include(
-    joinpath(chop(dirname(pathof(StructuralEquationModels)), tail = 3), 
+    joinpath(chop(dirname(pathof(StructuralEquationModels)), tail = 3),
     "test/examples/helper.jl")
     )
 
@@ -65,7 +65,7 @@ partable = EnsembleParameterTable(
 specification_miss_g1 = nothing
 specification_miss_g2 = nothing
 
-start_test = [fill(1.0, 9); fill(0.05, 3); fill(0.01, 3); fill(0.5, 6); fill(1.0, 9); 
+start_test = [fill(1.0, 9); fill(0.05, 3); fill(0.01, 3); fill(0.5, 6); fill(1.0, 9);
     fill(0.05, 3); fill(0.01, 3)]
 semoptimizer = SemOptimizerOptim
 
@@ -91,7 +91,7 @@ graph = @StenoGraph begin
 end
 
 partable = EnsembleParameterTable(;
-    graph = graph, 
+    graph = graph,
     observed_vars = observed_vars,
     latent_vars = latent_vars,
     groups = [:Pasteur, :Grant_White])
@@ -119,7 +119,7 @@ graph = @StenoGraph begin
 end
 
 partable_miss = EnsembleParameterTable(;
-    graph = graph, 
+    graph = graph,
     observed_vars = observed_vars,
     latent_vars = latent_vars,
     groups = [:Pasteur, :Grant_White])
@@ -130,11 +130,11 @@ specification_miss_g1 = specification_miss[:Pasteur]
 specification_miss_g2 = specification_miss[:Grant_White]
 
 start_test = [
-    fill(0.5, 6); 
-    fill(1.0, 9); 0.05; 0.01; 0.01; 0.05; 0.01; 0.05; 
+    fill(0.5, 6);
+    fill(1.0, 9); 0.05; 0.01; 0.01; 0.05; 0.01; 0.05;
     fill(1.0, 9); 0.05; 0.01; 0.01; 0.05; 0.01; 0.05]
 semoptimizer = SemOptimizerOptim
 
-@testset "Graph → Partable → RAMMatrices | constructor | Optim" begin 
-    include("build_models.jl") 
+@testset "Graph → Partable → RAMMatrices | constructor | Optim" begin
+    include("build_models.jl")
 end

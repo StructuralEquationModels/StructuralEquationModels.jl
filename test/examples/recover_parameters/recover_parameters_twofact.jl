@@ -1,7 +1,7 @@
 using StructuralEquationModels, Distributions, Random, Optim, LineSearches
 
 include(
-     joinpath(chop(dirname(pathof(StructuralEquationModels)), tail = 3), 
+     joinpath(chop(dirname(pathof(StructuralEquationModels)), tail = 3),
      "test/examples/helper.jl")
      )
 
@@ -53,11 +53,11 @@ semobserved = SemObservedData(data = x, specification = nothing)
 
 loss_ml = SemLoss(SemML(;observed = semobserved, nparams = length(start)))
 
-optimizer = 
+optimizer =
     SemOptimizerOptim(
-        BFGS(;linesearch = BackTracking(order=3), alphaguess = InitialHagerZhang()),# m = 100), 
+        BFGS(;linesearch = BackTracking(order=3), alphaguess = InitialHagerZhang()),# m = 100),
         Optim.Options(
-            ;f_tol = 1e-10, 
+            ;f_tol = 1e-10,
             x_tol = 1.5e-8))
 
 model_ml = Sem(semobserved, imply_ml, loss_ml, optimizer)

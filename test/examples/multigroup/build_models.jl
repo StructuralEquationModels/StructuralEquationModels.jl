@@ -27,7 +27,7 @@ end
     solution = sem_fit(model_ml_multigroup)
     update_estimate!(partable, solution)
     @test compare_estimates(
-        partable, 
+        partable,
         solution_lav[:parameter_estimates_ml]; atol = 1e-4,
         lav_groups = Dict(:Pasteur => 1, :Grant_White => 2))
 end
@@ -35,14 +35,14 @@ end
 @testset "fitmeasures/se_ml" begin
     solution_ml = sem_fit(model_ml_multigroup)
     @test all(test_fitmeasures(
-        fit_measures(solution_ml), 
+        fit_measures(solution_ml),
         solution_lav[:fitmeasures_ml]; rtol = 1e-2, atol = 1e-7))
 
     update_partable!(
         partable, identifier(model_ml_multigroup), se_hessian(solution_ml), :se)
     @test compare_estimates(
-        partable, 
-        solution_lav[:parameter_estimates_ml]; atol = 1e-3, 
+        partable,
+        solution_lav[:parameter_estimates_ml]; atol = 1e-3,
         col = :se, lav_col = :se,
         lav_groups = Dict(:Pasteur => 1, :Grant_White => 2))
 end
@@ -86,7 +86,7 @@ grad_fd = FiniteDiff.finite_difference_gradient(x -> SEM.objective!(model_ml_mul
     solution = sem_fit(model_ml_multigroup)
     update_estimate!(partable_s, solution)
     @test compare_estimates(
-        partable, 
+        partable,
         solution_lav[:parameter_estimates_ml]; atol = 1e-4,
         lav_groups = Dict(:Pasteur => 1, :Grant_White => 2))
 end
@@ -94,14 +94,14 @@ end
 @testset "fitmeasures/se_ml | sorted" begin
     solution_ml = sem_fit(model_ml_multigroup)
     @test all(test_fitmeasures(
-        fit_measures(solution_ml), 
+        fit_measures(solution_ml),
         solution_lav[:fitmeasures_ml]; rtol = 1e-2, atol = 1e-7))
 
     update_partable!(
         partable_s, identifier(model_ml_multigroup), se_hessian(solution_ml), :se)
     @test compare_estimates(
-        partable_s, 
-        solution_lav[:parameter_estimates_ml]; atol = 1e-3, 
+        partable_s,
+        solution_lav[:parameter_estimates_ml]; atol = 1e-3,
         col = :se, lav_col = :se,
         lav_groups = Dict(:Pasteur => 1, :Grant_White => 2))
 end
@@ -114,7 +114,7 @@ end
 # ML estimation - user defined loss function
 ############################################################################################
 
-import LinearAlgebra: isposdef, logdet, tr, inv
+using LinearAlgebra: isposdef, logdet, tr, inv
 
 SEM = StructuralEquationModels
 
@@ -155,7 +155,7 @@ end
     solution = sem_fit(model_ml_multigroup)
     update_estimate!(partable, solution)
     @test compare_estimates(
-        partable, 
+        partable,
         solution_lav[:parameter_estimates_ml]; atol = 1e-4,
         lav_groups = Dict(:Pasteur => 1, :Grant_White => 2))
 end
@@ -188,7 +188,7 @@ end
     solution = sem_fit(model_ls_multigroup)
     update_estimate!(partable, solution)
     @test compare_estimates(
-        partable, 
+        partable,
         solution_lav[:parameter_estimates_ls]; atol = 1e-4,
         lav_groups = Dict(:Pasteur => 1, :Grant_White => 2))
 end
@@ -196,14 +196,14 @@ end
 @testset "fitmeasures/se_ls" begin
     solution_ls = sem_fit(model_ls_multigroup)
     @test all(test_fitmeasures(
-        fit_measures(solution_ls), 
+        fit_measures(solution_ls),
         solution_lav[:fitmeasures_ls];
         fitmeasure_names = fitmeasure_names_ls, rtol = 1e-2, atol = 1e-5))
 
     update_partable!(
         partable, identifier(model_ls_multigroup), se_hessian(solution_ls), :se)
     @test compare_estimates(
-        partable, 
+        partable,
         solution_lav[:parameter_estimates_ls]; atol = 1e-2,
         col = :se, lav_col = :se,
         lav_groups = Dict(:Pasteur => 1, :Grant_White => 2))
@@ -242,11 +242,11 @@ model_ml_multigroup = SemEnsemble(model_g1, model_g2; optimizer = semoptimizer)
 ############################################################################################
 
 start_test = [
-    fill(0.5, 6); 
-    fill(1.0, 9); 
-    0.05; 0.01; 0.01; 0.05; 0.01; 0.05; 
+    fill(0.5, 6);
+    fill(1.0, 9);
+    0.05; 0.01; 0.01; 0.05; 0.01; 0.05;
     fill(0.01, 9);
-    fill(1.0, 9); 
+    fill(1.0, 9);
     0.05; 0.01; 0.01; 0.05; 0.01; 0.05;
     fill(0.01, 9)]
 
@@ -259,7 +259,7 @@ end
     solution = sem_fit(model_ml_multigroup)
     update_estimate!(partable_miss, solution)
     @test compare_estimates(
-        partable_miss, 
+        partable_miss,
         solution_lav[:parameter_estimates_fiml]; atol = 1e-4,
         lav_groups = Dict(:Pasteur => 1, :Grant_White => 2))
 end
@@ -267,13 +267,13 @@ end
 @testset "fitmeasures/se_fiml" begin
     solution = sem_fit(model_ml_multigroup)
     @test all(test_fitmeasures(
-        fit_measures(solution), 
+        fit_measures(solution),
         solution_lav[:fitmeasures_fiml]; rtol = 1e-3, atol = 0))
 
     update_partable!(
         partable_miss, identifier(model_ml_multigroup), se_hessian(solution), :se)
     @test compare_estimates(
-        partable_miss, 
+        partable_miss,
         solution_lav[:parameter_estimates_fiml]; atol = 1e-3,
         col = :se, lav_col = :se,
         lav_groups = Dict(:Pasteur => 1, :Grant_White => 2))
