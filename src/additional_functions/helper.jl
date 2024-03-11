@@ -114,11 +114,11 @@ function sparse_outer_mul!(C, A, B::Vector, ind) #computes A*S*B -> C, where ind
 end
 
 function cov_and_mean(rows; corrected = false)
-    data = permutedims(hcat(rows...))
+    data = reduce(vcat, rows)
     size(rows, 1) > 1 ?
         obs_cov = Statistics.cov(data; corrected = corrected) :
         obs_cov = reshape([0.0],1,1)
-    obs_mean = vcat(Statistics.mean(data, dims = 1)...)
+    obs_mean = vec(Statistics.mean(data, dims = 1))
     return obs_cov, obs_mean
 end
 
