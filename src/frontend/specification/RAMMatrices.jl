@@ -49,9 +49,7 @@ struct RAMConstant
     value::Any
 end
 
-import Base.==
-
-function ==(c1::RAMConstant, c2::RAMConstant)
+function Base.:(==)(c1::RAMConstant, c2::RAMConstant)
     res = ((c1.matrix == c2.matrix) && (c1.index == c2.index) && (c1.value == c2.value))
     return res
 end
@@ -410,7 +408,7 @@ function push_partable_rows!(partable, position_names, par, i, A_ind, S_ind, M_i
     return nothing
 end
 
-function ==(mat1::RAMMatrices, mat2::RAMMatrices)
+function Base.:(==)(mat1::RAMMatrices, mat2::RAMMatrices)
     res = (
         (mat1.A_ind == mat2.A_ind) &&
         (mat1.S_ind == mat2.S_ind) &&
