@@ -252,12 +252,13 @@ function check_acyclic(A_pre, n_par, A_indices)
 
     # check if A is lower or upper triangular
     if istril(A_rand)
-        A_pre = LowerTriangular(A_pre)
+        @info "A matrix is lower triangular"
+        return LowerTriangular(A_pre)
     elseif istriu(A_rand)
-        A_pre = UpperTriangular(A_pre)
+        @info "A matrix is upper triangular"
+        return UpperTriangular(A_pre)
     elseif acyclic
         @info "Your model is acyclic, specifying the A Matrix as either Upper or Lower Triangular can have great performance benefits.\n" maxlog=1
+        return A_pre
     end
-
-    return A_pre
 end
