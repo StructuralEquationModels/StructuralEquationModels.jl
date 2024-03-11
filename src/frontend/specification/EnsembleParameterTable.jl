@@ -94,13 +94,11 @@ end
 # add a row --------------------------------------------------------------------------------
 
 # do we really need this?
-import Base.push!
-
-function push!(partable::EnsembleParameterTable, d::AbstractDict, group)
+function Base.push!(partable::EnsembleParameterTable, d::AbstractDict, group)
     push!(partable.tables[group], d)
 end
 
-push!(partable::EnsembleParameterTable, d::Nothing, group) = nothing
+Base.push!(partable::EnsembleParameterTable, d::Nothing, group) = nothing
 
 Base.getindex(partable::EnsembleParameterTable, group) = partable.tables[group]
 
