@@ -71,7 +71,7 @@ function SemLoss(functions...; loss_weights = nothing, kwargs...)
         )
 end
 
-# weights for loss functions or models. If the weight is nothing, multiplication returs second argument
+# weights for loss functions or models. If the weight is nothing, multiplication returns the second argument
 struct SemWeight{T}
     w::T
 end
