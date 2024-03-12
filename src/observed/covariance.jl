@@ -71,7 +71,9 @@ function SemObservedCovariance(;
 
     end
 
-    if isnothing(spec_colnames) spec_colnames = get_colnames(specification) end
+    if isnothing(spec_colnames) && !isnothing(specification)
+        spec_colnames = observed_vars(specification)
+    end
 
     if !isnothing(spec_colnames) & isnothing(obs_colnames)
 
