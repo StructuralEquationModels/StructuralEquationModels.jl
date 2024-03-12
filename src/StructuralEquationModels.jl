@@ -40,7 +40,6 @@ include("frontend/fit/summary.jl")
 # pretty printing
 include("frontend/pretty_printing.jl")
 # observed
-include("observed/get_colnames.jl")
 include("observed/covariance.jl")
 include("observed/data.jl")
 include("observed/missing.jl")
