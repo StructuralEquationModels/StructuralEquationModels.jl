@@ -2,7 +2,7 @@ module StructuralEquationModels
 
 using LinearAlgebra, Optim,
     NLSolversBase, Statistics, StatsBase, SparseArrays, Symbolics,
-    NLopt, FiniteDiff, PrettyTables,
+    FiniteDiff, PrettyTables,
     Distributions, StenoGraphs, LazyArtifacts, DelimitedFiles,
     DataFrames
 
@@ -44,12 +44,10 @@ include("loss/WLS/WLS.jl")
 include("loss/constant/constant.jl")
 # optimizer
 include("diff/optim.jl")
-include("diff/NLopt.jl")
 include("diff/Empty.jl")
 # optimizer
 include("optimizer/documentation.jl")
 include("optimizer/optim.jl")
-include("optimizer/NLopt.jl")
 # helper functions
 include("additional_functions/helper.jl")
 include("additional_functions/start_val/start_fabin3.jl")
@@ -88,7 +86,7 @@ export  AbstractSem,
             SemLossFunction, SemML, SemFIML, em_mvn, SemLasso, SemRidge,
             SemConstant, SemWLS, loss,
         SemOptimizer,
-            SemOptimizerEmpty, SemOptimizerOptim, SemOptimizerNLopt, NLoptConstraint,
+            SemOptimizerEmpty, SemOptimizerOptim,
             optimizer, n_iterations, convergence,
         SemObserved,
             SemObservedData, SemObservedCovariance, SemObservedMissing, observed,
