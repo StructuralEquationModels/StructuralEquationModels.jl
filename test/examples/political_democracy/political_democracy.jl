@@ -146,7 +146,7 @@ semoptimizer = SemOptimizerNLopt
     include("constructor.jl")
 end
 
-if !haskey(ENV, "JULIA_EXTENDED_TESTS") || ENV["JULIA_EXTENDED_TESTS"] == "true"
+if is_extended_tests()
     semoptimizer = SemOptimizerOptim
     @testset "RAMMatrices | parts | Optim" begin
         include("by_parts.jl")
@@ -182,7 +182,7 @@ semoptimizer = SemOptimizerNLopt
     include("constructor.jl")
 end
 
-if !haskey(ENV, "JULIA_EXTENDED_TESTS") || ENV["JULIA_EXTENDED_TESTS"] == "true"
+if is_extended_tests()
     semoptimizer = SemOptimizerOptim
     @testset "RAMMatrices → ParameterTable | parts | Optim" begin
         include("by_parts.jl")
@@ -269,7 +269,7 @@ semoptimizer = SemOptimizerNLopt
     include("constructor.jl")
 end
 
-if !haskey(ENV, "JULIA_EXTENDED_TESTS") || ENV["JULIA_EXTENDED_TESTS"] == "true"
+if is_extended_tests()
     semoptimizer = SemOptimizerOptim
     @testset "Graph → ParameterTable | parts | Optim" begin
         include("by_parts.jl")
