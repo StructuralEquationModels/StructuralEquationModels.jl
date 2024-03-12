@@ -110,7 +110,7 @@ function compare_estimates(partable::ParameterTable, partable_lav;
             if type == :↔
                 type = "~~"
             elseif type == :→
-                if (from ∈ partable.variables[:latent_vars]) & (to ∈ partable.variables[:observed_vars])
+                if (from ∈ partable.variables.latent) && (to ∈ partable.variables.observed)
                     type = "=~"
                 else
                     type = "~"
@@ -207,7 +207,7 @@ function compare_estimates(ens_partable::EnsembleParameterTable, partable_lav;
                 if type == :↔
                     type = "~~"
                 elseif type == :→
-                    if (from ∈ partable.variables[:latent_vars]) & (to ∈ partable.variables[:observed_vars])
+                    if (from ∈ partable.variables.latent) && (to ∈ partable.variables.observed)
                         type = "=~"
                     else
                         type = "~"

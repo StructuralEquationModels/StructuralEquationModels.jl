@@ -103,26 +103,23 @@ function RAMMatrices(partable::ParameterTable; par_id = nothing)
         par_id[:parameters], par_id[:n_par], par_id[:par_positions]
     end
 
-    n_observed = size(partable.variables[:observed_vars], 1)
-    n_latent = size(partable.variables[:latent_vars], 1)
+    n_observed = length(partable.variables.observed)
+    n_latent = length(partable.variables.latent)
     n_node = n_observed + n_latent
 
     # F indices
-    if length(partable.variables[:sorted_vars]) != 0
-        F_ind = findall(x -> x ∈ partable.variables[:observed_vars], partable.variables[:sorted_vars])
-    else
-        F_ind = 1:n_observed
-    end
+    F_ind = length(partable.variables.sorted) != 0 ?
+        findall(∈(Set(partable.variables.observed)),
+                partable.variables.sorted) :
+        1:n_observed
 
     # indices of the colnames
-    if length(partable.variables[:sorted_vars]) != 0
-        positions = Dict(zip(partable.variables[:sorted_vars], collect(1:n_observed+n_latent)))
-        colnames = copy(partable.variables[:sorted_vars])
-    else
-        positions = Dict(zip([partable.variables[:observed_vars]; partable.variables[:latent_vars]], collect(1:n_observed+n_latent)))
-        colnames = [partable.variables[:observed_vars]; partable.variables[:latent_vars]]
-    end
-    
+    colnames = length(partable.variables.sorted) != 0 ?
+        copy(partable.variables.sorted) :
+        [partable.variables.observed;
+         partable.variables.latent]
+    positions = Dict(colnames .=> eachindex(colnames))
+
     # fill Matrices
     # known_labels = Dict{Symbol, Int64}()
 
@@ -132,43 +129,40 @@ function RAMMatrices(partable::ParameterTable; par_id = nothing)
     for i in 1:length(S_ind) S_ind[i] = Vector{Int64}() end
 
     # is there a meanstructure?
-    if any(partable.columns[:from] .== Symbol("1"))
-        M_ind = Vector{Vector{Int64}}(undef, n_par)
-        for i in 1:length(M_ind) M_ind[i] = Vector{Int64}() end
-    else
-        M_ind = nothing
-    end
+    M_ind = any(==(Symbol("1")), partable.columns.from) ?
+        [Vector{Int64}() for _ in 1:n_par] : nothing
 
-    # handel constants
+    # handle constants
     constants = Vector{RAMConstant}()
-    
-    for i in 1:length(partable)
 
-        from, parameter_type, to, free, value_fixed, identifier = partable[i]
+    for row in partable
 
-        row_ind = positions[to]
-        if from != Symbol("1") col_ind = positions[from] end
-        
+        row_ind = positions[row.to]
+        col_ind = row.from != Symbol("1") ? positions[row.from] : nothing
 
-        if !free
-            if (parameter_type == :→) & (from == Symbol("1"))
-                push!(constants, RAMConstant(:M, row_ind, value_fixed))
-            elseif (parameter_type == :→)
-                push!(constants, RAMConstant(:A, CartesianIndex(row_ind, col_ind), value_fixed))
+        if !row.free
+            if (row.parameter_type == :→) && (row.from == Symbol("1"))
+                push!(constants, RAMConstant(:M, row_ind, row.value_fixed))
+            elseif (row.parameter_type == :→)
+                push!(constants, RAMConstant(:A, CartesianIndex(row_ind, col_ind), row.value_fixed))
+            elseif (row.parameter_type == :↔)
+                push!(constants, RAMConstant(:S, CartesianIndex(row_ind, col_ind), row.value_fixed))
             else
-                push!(constants, RAMConstant(:S, CartesianIndex(row_ind, col_ind), value_fixed))
+                error("Unsupported parameter type: $(row.parameter_type)")
             end
         else
-            par_ind = par_positions[identifier]
-            if (parameter_type == :→) && (from == Symbol("1"))
+            par_ind = par_positions[row.identifier]
+            if (row.parameter_type == :→) && (row.from == Symbol("1"))
                 push!(M_ind[par_ind], row_ind)
-            elseif parameter_type == :→
-                push!(A_ind[par_ind], (row_ind + (col_ind-1)*n_node))
-            else
+            elseif row.parameter_type == :→
+                push!(A_ind[par_ind], row_ind + (col_ind-1)*n_node)
+            elseif row.parameter_type == :↔
                 push!(S_ind[par_ind], row_ind + (col_ind-1)*n_node)
                 if row_ind != col_ind
                     push!(S_ind[par_ind], col_ind + (row_ind-1)*n_node)
                 end
+            else
+                error("Unsupported parameter type: $(row.parameter_type)")
             end
         end
 
@@ -182,21 +176,14 @@ end
 ############################################################################################
 
 function ParameterTable(ram_matrices::RAMMatrices)
-    
-    partable = ParameterTable(nothing)
 
     colnames = ram_matrices.colnames
+
+    partable = ParameterTable(observed_vars = colnames[ram_matrices.F_ind],
+                              latent_vars = colnames[setdiff(eachindex(colnames),
+                                                             ram_matrices.F_ind)])
+
     position_names = Dict{Int64, Symbol}(1:length(colnames) .=> colnames)
-
-    # observed and latent variables
-    names_obs = colnames[ram_matrices.F_ind]
-    names_lat = colnames[findall(x -> !(x ∈ ram_matrices.F_ind), 1:length(colnames))]
-
-    partable.variables = Dict(
-        :sorted_vars => Vector{Symbol}(),
-        :observed_vars => names_obs,
-        :latent_vars => names_lat
-    )
 
     # constants
     for c in ram_matrices.constants
