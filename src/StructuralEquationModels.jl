@@ -4,7 +4,8 @@ using LinearAlgebra, Optim,
     NLSolversBase, Statistics, StatsBase, SparseArrays, Symbolics,
     FiniteDiff, PrettyTables,
     Distributions, StenoGraphs, LazyArtifacts, DelimitedFiles,
-    DataFrames
+    DataFrames,
+    PackageExtensionCompat
 
 export StenoGraphs, @StenoGraph, meld
 
@@ -109,4 +110,9 @@ export  AbstractSem,
         example_data,
         swap_observed, update_observed,
         @StenoGraph, →, ←, ↔, ⇔
+
+function __init__()
+    @require_extensions
+end
+
 end
