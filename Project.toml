@@ -46,6 +46,10 @@ test = ["Test"]
 
 [weakdeps]
 NLopt = "76087f3c-5699-56af-9a33-bf431cd00edd"
+ProximalAlgorithms = "140ffc9f-1907-541a-a177-7475e0a401e9"
+ProximalCore = "dc4f5ac2-75d1-4f31-931e-60435d74994b"
+ProximalOperators = "f3b72e0c-5f3e-4b3e-8f3e-3f4f3e3e3e3e"
 
 [extensions]
 SEMNLOptExt = "NLopt"
+SEMProximalOptExt = ["ProximalCore", "ProximalAlgorithms", "ProximalOperators"]
