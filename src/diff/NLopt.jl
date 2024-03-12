@@ -56,7 +56,7 @@ see [Constrained optimization](@ref) in our online documentation.
 
 Subtype of `SemOptimizer`.
 """
-struct SemOptimizerNLopt{A, A2, B, B2, C} <: SemOptimizer
+struct SemOptimizerNLopt{A, A2, B, B2, C} <: SemOptimizer{:NLopt}
     algorithm::A
     local_algorithm::A2
     options::B
@@ -94,6 +94,8 @@ function SemOptimizerNLopt(;
         equality_constraints, 
         inequality_constraints)
 end
+
+SemOptimizer{:NLopt}(args...; kwargs...) = SemOptimizerNLopt(args...; kwargs...)
 
 ############################################################################################
 ### Recommended methods

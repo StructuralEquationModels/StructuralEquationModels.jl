@@ -44,15 +44,18 @@ my_newton_optimizer = SemOptimizerOptim(
 
 Subtype of `SemOptimizer`.
 """
-mutable struct SemOptimizerOptim{A, B} <: SemOptimizer
+mutable struct SemOptimizerOptim{A, B} <: SemOptimizer{:Optim}
     algorithm::A
     options::B
 end
 
+SemOptimizer{:Optim}(args...; kwargs...) =
+    SemOptimizerOptim(args...; kwargs...)
+
 SemOptimizerOptim(;
-    algorithm = LBFGS(), 
-    options = Optim.Options(;f_tol = 1e-10, x_tol = 1.5e-8), 
-    kwargs...) = 
+    algorithm = LBFGS(),
+    options = Optim.Options(;f_tol = 1e-10, x_tol = 1.5e-8),
+    kwargs...) =
     SemOptimizerOptim(algorithm, options)
 
 ############################################################################################
