@@ -25,7 +25,7 @@ loss_ml = SemLoss(ml)
 loss_wls = SemLoss(wls)
 
 # optimizer -------------------------------------------------------------------------------------
-optimizer_obj = semoptimizer()
+optimizer_obj = SemOptimizer(engine = opt_engine)
 
 # models -----------------------------------------------------------------------------------
 
