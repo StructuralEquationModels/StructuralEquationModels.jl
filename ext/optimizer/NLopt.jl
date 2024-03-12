@@ -7,9 +7,9 @@ mutable struct NLoptResult
     problem::Any
 end
 
-optimizer(res::NLoptResult) = res.problem.algorithm
-n_iterations(res::NLoptResult) = res.problem.numevals
-convergence(res::NLoptResult) = res.result[3]
+SEM.optimizer(res::NLoptResult) = res.problem.algorithm
+SEM.n_iterations(res::NLoptResult) = res.problem.numevals
+SEM.convergence(res::NLoptResult) = res.result[3]
 
 # construct SemFit from fitted NLopt object
 function SemFit_NLopt(optimization_result, model::AbstractSem, start_val, opt)
@@ -23,7 +23,7 @@ function SemFit_NLopt(optimization_result, model::AbstractSem, start_val, opt)
 end
 
 # sem_fit method
-function sem_fit(
+function SEM.sem_fit(
     optimizer::SemOptimizerNLopt,
     model::AbstractSem,
     start_params::AbstractVector;
