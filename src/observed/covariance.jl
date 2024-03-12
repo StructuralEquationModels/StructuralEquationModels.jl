@@ -118,9 +118,8 @@ function reorder_obs_cov(obs_cov, spec_colnames, obs_colnames)
     if spec_colnames == obs_colnames
         return obs_cov
     else
-        new_position = [findall(x .== obs_colnames)[1] for x in spec_colnames]
-        indices = reshape([CartesianIndex(i, j) for j in new_position for i in new_position], size(obs_cov, 1), size(obs_cov, 1))
-        obs_cov = obs_cov[indices]
+        new_position = [findfirst(==(x), obs_colnames) for x in spec_colnames]
+        obs_cov = obs_cov[new_position, new_position]
         return obs_cov
     end
 end
@@ -132,7 +131,7 @@ function reorder_obs_mean(obs_mean, spec_colnames, obs_colnames)
     if spec_colnames == obs_colnames
         return obs_mean
     else
-        new_position = [findall(x .== obs_colnames)[1] for x in spec_colnames]
+        new_position = [findfirst(==(x), obs_colnames) for x in spec_colnames]
         obs_mean = obs_mean[new_position]
         return obs_mean
     end
