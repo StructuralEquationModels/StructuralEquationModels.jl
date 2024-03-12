@@ -25,7 +25,7 @@ function start_fabin3(
         args...;
         kwargs...)
     return start_fabin3(
-        ram_matrices(imply),
+        imply.ram_matrices,
         obs_cov(observed),
         obs_mean(observed))
 end
@@ -43,7 +43,7 @@ function start_fabin3(
     end
 
     return start_fabin3(
-        ram_matrices(imply),
+        imply.ram_matrices,
         observed.em_model.Σ,
         observed.em_model.μ)
 end
