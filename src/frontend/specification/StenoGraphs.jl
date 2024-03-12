@@ -106,23 +106,17 @@ end
 ### constructor for EnsembleParameterTable from graph
 ############################################################################################
 
-function EnsembleParameterTable(;graph, observed_vars, latent_vars, groups)
+function EnsembleParameterTable(graph::AbstractStenoGraph;
+                                observed_vars, latent_vars, groups)
 
     graph = unique(graph)
 
-    partable = EnsembleParameterTable(nothing)
-
-    for (i, group) in enumerate(groups)
-        push!(
-            partable.tables, 
-            Symbol(group) => 
-                ParameterTable(;
-                graph = graph, 
-                observed_vars = observed_vars, 
-                latent_vars = latent_vars, 
-                g = i,
-                parname = Symbol(:g, i)))
-    end
-
-        return partable
+    partables = Dict(group => ParameterTable(
+            graph;
+            observed_vars = observed_vars,
+            latent_vars = latent_vars,
+            group = i,
+            param_prefix = Symbol(:g, group))
+            for (i, group) in enumerate(groups))
+    return EnsembleParameterTable(partables)
 end
