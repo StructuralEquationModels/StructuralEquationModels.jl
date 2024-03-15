@@ -1,5 +1,5 @@
 using StructuralEquationModels, Distributions, Random, Optim, LineSearches
-import StructuralEquationModels as SEM
+
 include(
      joinpath(chop(dirname(pathof(StructuralEquationModels)), tail = 3), 
      "test/examples/helper.jl")
@@ -51,7 +51,7 @@ Random.seed!(1234)
 x = transpose(rand(true_dist, 100000))
 semobserved = SemObservedData(data = x, specification = nothing)
 
-loss_ml = SemLoss(SEM.SemML(;observed = semobserved, nparams = length(start)))
+loss_ml = SemLoss(SemML(;observed = semobserved, nparams = length(start)))
 
 optimizer = 
     SemOptimizerOptim(

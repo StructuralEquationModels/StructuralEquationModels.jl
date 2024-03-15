@@ -1,5 +1,5 @@
 using StructuralEquationModels, Test, FiniteDiff
-# import StructuralEquationModels as SEM
+
 include(
     joinpath(chop(dirname(pathof(StructuralEquationModels)), tail = 3), 
     "test/examples/helper.jl")

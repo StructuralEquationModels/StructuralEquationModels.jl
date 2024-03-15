@@ -1,4 +1,4 @@
-import Statistics: cov, mean
+using Statistics: cov, mean
 
 ############################################################################################
 ### models w.o. meanstructure
