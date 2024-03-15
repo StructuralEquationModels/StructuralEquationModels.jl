@@ -64,4 +64,4 @@ model_ml = Sem(semobserved, imply_ml, loss_ml, optimizer)
 objective!(model_ml, true_val)
 solution_ml = sem_fit(model_ml)
 
-@test isapprox(true_val, solution(solution_ml); atol = .05)
+@test true_val ≈ solution(solution_ml) atol = .05
