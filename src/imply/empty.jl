@@ -39,7 +39,7 @@ function ImplyEmpty(;
         kwargs...)
 
         ram_matrices = RAMMatrices(specification)
-        identifier = StructuralEquationModels.identifier(ram_matrices)
+        identifier = identifier(ram_matrices)
         
         n_par = length(ram_matrices.parameters)
 
