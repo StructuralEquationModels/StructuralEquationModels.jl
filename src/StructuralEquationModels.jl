@@ -18,6 +18,8 @@ using LinearAlgebra,
 import DataFrames: DataFrame
 export StenoGraphs, @StenoGraph, meld
 
+const SEM = StructuralEquationModels
+
 # type hierarchy
 include("types.jl")
 include("objective_gradient_hessian.jl")
