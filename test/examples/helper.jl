@@ -14,30 +14,29 @@ function test_gradient(model, parameters; rtol = 1e-10, atol = 0)
 end
 
 function test_hessian(model, parameters; rtol = 1e-4, atol = 0)
-    true_hessian = FiniteDiff.finite_difference_hessian(x -> objective!(model, x)[1], parameters)
-    hessian = zeros(size(true_hessian)); hessian .= 1.0
+    true_hessian = FiniteDiff.finite_difference_hessian(Base.Fix1(objective!, model), parameters)
+    hessian = similar(parameters, size(true_hessian))
     gradient = similar(parameters)
 
     # H
+    fill!(hessian, NaN)
     hessian!(hessian, model, parameters)
-    correct1 = isapprox(hessian, true_hessian; rtol = rtol, atol = atol)
+    @test hessian ≈ true_hessian rtol = rtol atol = atol
 
     # F and H
-    hessian .= 1.0
+    fill!(hessian, NaN)
     objective_hessian!(hessian, model, parameters)
-    correct2 = isapprox(hessian, true_hessian; rtol = rtol, atol = atol)
+    @test hessian ≈ true_hessian rtol = rtol atol = atol
 
     # G and H
-    hessian .= 1.0
+    fill!(hessian, NaN)
     gradient_hessian!(gradient, hessian, model, parameters)
-    correct3 = isapprox(hessian, true_hessian; rtol = rtol, atol = atol)
+    @test hessian ≈ true_hessian rtol = rtol atol = atol
 
     # F, G and H
-    hessian .= 1.0
+    fill!(hessian, NaN)
     objective_gradient_hessian!(gradient, hessian, model, parameters)
-    correct4 = isapprox(hessian, true_hessian; rtol = rtol, atol = atol)
-    
-    return correct1 & correct2 & correct3 & correct4
+    @test hessian ≈ true_hessian rtol = rtol atol = atol
 end
 
 fitmeasure_names_ml = Dict(

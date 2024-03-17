@@ -170,11 +170,11 @@ if semoptimizer == SemOptimizerOptim
     )
 
     @testset "ml_hessians" begin
-        @test test_hessian(model_ml, start_test; atol = 1e-4)
+        test_hessian(model_ml, start_test; atol = 1e-4)
     end
 
     @testset "ls_hessians" begin
-        @test test_hessian(model_ls, start_test; atol = 1e-4)
+        test_hessian(model_ls, start_test; atol = 1e-4)
     end
 
     @testset "ml_solution_hessian" begin
