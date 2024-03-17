@@ -8,7 +8,7 @@ function sem_summary(sem_fit::SemFit; show_fitmeasures = false, color = :light_c
     println("Convergence:                 $(convergence(sem_fit))")
     println("No. iterations/evaluations:  $(n_iterations(sem_fit))")
     print("\n")
-    println("Number of parameters:        $(n_par(sem_fit))")
+    println("Number of parameters:        $(nparams(sem_fit))")
     println("Number of observations:      $(n_obs(sem_fit))")
     print("\n")
     printstyled("----------------------------------- Model ----------------------------------- \n"; color = color)

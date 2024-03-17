@@ -1,7 +1,7 @@
 fit_measures(sem_fit) = 
     fit_measures(
         sem_fit,
-        n_par,
+        nparams,
         df,
         AIC,
         BIC,

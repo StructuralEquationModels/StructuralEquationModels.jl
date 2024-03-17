@@ -35,7 +35,7 @@ and for models with a meanstructure, the model implied means are computed as
 
 ## Interfaces
 - `identifier(::RAM) `-> Dict containing the parameter labels and their position
-- `n_par(::RAM)` -> Number of parameters
+- `nparams(::RAM)` -> Number of parameters
 
 - `Σ(::RAM)` -> model implied covariance matrix
 - `μ(::RAM)` -> model implied mean vector
@@ -283,7 +283,7 @@ objective_gradient_hessian!(imply::RAM, par, model::AbstractSemSingle, has_means
 ############################################################################################
 
 identifier(imply::RAM) = imply.identifier
-n_par(imply::RAM) = nparams(imply.ram_matrices)
+nparams(imply::RAM) = nparams(imply.ram_matrices)
 
 function update_observed(imply::RAM, observed::SemObserved; kwargs...) 
     if n_man(observed) == size(imply.Σ, 1)

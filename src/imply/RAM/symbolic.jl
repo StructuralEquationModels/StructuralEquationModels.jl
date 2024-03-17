@@ -30,7 +30,7 @@ Subtype of `SemImply`.
 
 ## Interfaces
 - `identifier(::RAMSymbolic) `-> Dict containing the parameter labels and their position
-- `n_par(::RAMSymbolic)` -> Number of parameters
+- `nparams(::RAMSymbolic)` -> number of parameters
 
 - `Σ(::RAMSymbolic)` -> model implied covariance matrix
 - `μ(::RAMSymbolic)` -> model implied mean vector
@@ -233,7 +233,7 @@ objective_gradient_hessian!(imply::RAMSymbolic, par, model) = gradient!(imply, p
 ############################################################################################
 
 identifier(imply::RAMSymbolic) = imply.identifier
-n_par(imply::RAMSymbolic) = nparams(imply.ram_matrices)
+nparams(imply::RAMSymbolic) = nparams(imply.ram_matrices)
 
 function update_observed(imply::RAMSymbolic, observed::SemObserved; kwargs...) 
     if Int(n_man(observed)) == size(imply.Σ, 1)

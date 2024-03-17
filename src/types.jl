@@ -167,7 +167,6 @@ end
 
 function SemEnsemble(models...; optimizer = SemOptimizerOptim, weights = nothing, kwargs...)
     n = length(models)
-    npar = n_par(models[1])
 
     # default weights
     

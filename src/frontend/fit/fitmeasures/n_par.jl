@@ -2,19 +2,19 @@
 ### get number of parameters
 ############################################################################################
 """
-    n_par(sem_fit::SemFit)
-    n_par(model::AbstractSemSingle)
-    n_par(model::SemEnsemble)
-    n_par(identifier::Dict)
+    nparams(sem_fit::SemFit)
+    nparams(model::AbstractSemSingle)
+    nparams(model::SemEnsemble)
+    nparams(identifier::Dict)
 
 Return the number of parameters.
 """
-function n_par end
+function nparams end
 
-n_par(fit::SemFit) = n_par(fit.model)
+nparams(fit::SemFit) = nparams(fit.model)
 
-n_par(model::AbstractSemSingle) = n_par(model.imply)
+nparams(model::AbstractSemSingle) = nparams(model.imply)
 
-n_par(model::SemEnsemble) = n_par(model.identifier)
+nparams(model::SemEnsemble) = nparams(model.identifier)
 
-n_par(identifier::Dict) = length(identifier)
+nparams(identifier::Dict) = length(identifier)

@@ -20,7 +20,7 @@ model per group and an additional model with `ImplyEmpty` and `SemRidge` for the
 
 ## Interfaces
 - `identifier(::RAMSymbolic) `-> Dict containing the parameter labels and their position
-- `n_par(::RAMSymbolic)` -> Number of parameters
+- `nparams(::RAMSymbolic)` -> Number of parameters
 
 ## Implementation
 Subtype of `SemImply`.
@@ -59,6 +59,6 @@ hessian!(imply::ImplyEmpty, par, model) = nothing
 ############################################################################################
 
 identifier(imply::ImplyEmpty) = imply.identifier
-n_par(imply::ImplyEmpty) = imply.n_par
+nparams(imply::ImplyEmpty) = imply.nparams
 
 update_observed(imply::ImplyEmpty, observed::SemObserved; kwargs...) = imply

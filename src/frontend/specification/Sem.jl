@@ -69,7 +69,7 @@ function get_fields!(kwargs, observed, imply, loss, optimizer)
     end
 
     kwargs[:imply] = imply
-    kwargs[:n_par] = n_par(imply)
+    kwargs[:nparams] = nparams(imply)
 
     # loss
     loss = get_SemLoss(loss; kwargs...)

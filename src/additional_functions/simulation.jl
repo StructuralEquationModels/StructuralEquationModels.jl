@@ -65,7 +65,7 @@ function swap_observed(
     # update imply
     imply = update_observed(imply, new_observed; kwargs...)
     kwargs[:imply] = imply
-    kwargs[:n_par] = n_par(imply)
+    kwargs[:nparams] = nparams(imply)
 
     # update loss
     loss = update_observed(loss, new_observed; kwargs...)
