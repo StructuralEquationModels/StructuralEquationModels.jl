@@ -68,7 +68,7 @@ model_names = ["ml", "ml_cov", "ls_sym", "ridge", "constant", "ml_sym", "ml_weig
 for (model, name) in zip(models, model_names)
     try
         @testset "$(name)_gradient" begin
-            @test test_gradient(model, start_test; rtol = 1e-9)
+            test_gradient(model, start_test; rtol = 1e-9)
         end
     catch
     end
@@ -242,7 +242,7 @@ model_names = ["ml", "ml_cov", "ls_sym", "ml_sym"]
 for (model, name) in zip(models, model_names)
     try
         @testset "$(name)_gradient_mean" begin
-            @test test_gradient(model, start_test_mean; rtol = 1e-9)
+            test_gradient(model, start_test_mean; rtol = 1e-9)
         end
     catch
     end
@@ -322,11 +322,11 @@ model_ml_sym = Sem(
 ############################################################################################
 
 @testset "fiml_gradient" begin
-    @test test_gradient(model_ml, start_test_mean; atol = 1e-6)
+    test_gradient(model_ml, start_test_mean; atol = 1e-6)
 end
 
 @testset "fiml_gradient_symbolic" begin
-    @test test_gradient(model_ml_sym, start_test_mean; atol = 1e-6)
+    test_gradient(model_ml_sym, start_test_mean; atol = 1e-6)
 end
 
 ############################################################################################

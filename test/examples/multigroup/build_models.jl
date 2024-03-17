@@ -19,7 +19,7 @@ model_ml_multigroup = SemEnsemble(model_g1, model_g2; optimizer = semoptimizer)
 
 # gradients
 @testset "ml_gradients_multigroup" begin
-    @test test_gradient(model_ml_multigroup, start_test; atol = 1e-9)
+    test_gradient(model_ml_multigroup, start_test; atol = 1e-9)
 end
 
 # fit
@@ -74,7 +74,7 @@ model_ml_multigroup = SemEnsemble(model_g1, model_g2; optimizer = semoptimizer)
 
 # gradients
 @testset "ml_gradients_multigroup | sorted" begin
-    @test test_gradient(model_ml_multigroup, start_test; atol = 1e-2)
+    test_gradient(model_ml_multigroup, start_test; atol = 1e-2)
 end
 
 grad = similar(start_test)
@@ -147,7 +147,7 @@ model_g2 = SemFiniteDiff(
 model_ml_multigroup = SemEnsemble(model_g1, model_g2; optimizer = semoptimizer)
 
 @testset "gradients_user_defined_loss" begin
-    @test test_gradient(model_ml_multigroup, start_test; atol = 1e-9)
+    test_gradient(model_ml_multigroup, start_test; atol = 1e-9)
 end
 
 # fit
@@ -181,7 +181,7 @@ model_ls_g2 = Sem(
 model_ls_multigroup = SemEnsemble(model_ls_g1, model_ls_g2; optimizer = semoptimizer)
 
 @testset "ls_gradients_multigroup" begin
-    @test test_gradient(model_ls_multigroup, start_test; atol = 1e-9)
+    test_gradient(model_ls_multigroup, start_test; atol = 1e-9)
 end
 
 @testset "ls_solution_multigroup" begin
@@ -251,7 +251,7 @@ start_test = [
     fill(0.01, 9)]
 
 @testset "fiml_gradients_multigroup" begin
-    @test test_gradient(model_ml_multigroup, start_test; atol = 1e-7)
+    test_gradient(model_ml_multigroup, start_test; atol = 1e-7)
 end
 
 

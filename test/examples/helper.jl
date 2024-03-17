@@ -1,17 +1,16 @@
 function test_gradient(model, parameters; rtol = 1e-10, atol = 0)
-    true_grad = FiniteDiff.finite_difference_gradient(x -> objective!(model, x)[1], parameters)
-    gradient = similar(parameters); gradient .= 1.0
+    true_grad = FiniteDiff.finite_difference_gradient(Base.Fix1(objective!, model), parameters)
+    gradient = similar(parameters)
 
     # F and G
+    fill!(gradient, NaN)
     gradient!(gradient, model, parameters)
-    correct1 = isapprox(gradient, true_grad; rtol = rtol, atol = atol)
+    @test gradient ≈ true_grad rtol = rtol atol = atol
 
     # only G
-    gradient .= 1.0
+    fill!(gradient, NaN)
     objective_gradient!(gradient, model, parameters)
-    correct2 = isapprox(gradient, true_grad; rtol = rtol, atol = atol)
-
-    return correct1 & correct2
+    @test gradient ≈ true_grad rtol = rtol atol = atol
 end
 
 function test_hessian(model, parameters; rtol = 1e-4, atol = 0)
