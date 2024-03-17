@@ -439,7 +439,3 @@ function ==(mat1::RAMMatrices, mat2::RAMMatrices)
     )
     return res
 end
-
-function get_group(d::Dict, group)
-    return d[group]
-end
