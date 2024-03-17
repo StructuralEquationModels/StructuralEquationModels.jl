@@ -23,11 +23,9 @@ end
 constrained_optimizer = SemOptimizerNLopt(;
     algorithm = :AUGLAG,
     local_algorithm = :LD_LBFGS,
-    local_options = Dict(
-        :ftol_rel => 1e-6
-    ),
+    options = Dict(:xtol_rel => 1e-4),
     # equality_constraints = NLoptConstraint(;f = eq_constraint, tol = 1e-14),
-    inequality_constraints = NLoptConstraint(;f = ineq_constraint, tol = 0.0),
+    inequality_constraints = NLoptConstraint(;f = ineq_constraint, tol = 1e-8),
 )
 
 model_ml_constrained = Sem(
@@ -59,7 +57,7 @@ end
 
 @testset "ml_solution_constrained" begin
     solution_constrained = sem_fit(model_ml_constrained)
-    @test solution_constrained.solution[31]*solution_constrained.solution[30] >= 0.6
+    @test solution_constrained.solution[31]*solution_constrained.solution[30] >= (0.6-1e-8)
     @test all(abs.(solution_constrained.solution) .< 10)
     @test solution_constrained.optimization_result.result[3] == :FTOL_REACHED skip=true
     @test abs(solution_constrained.minimum - 21.21) < 0.01
