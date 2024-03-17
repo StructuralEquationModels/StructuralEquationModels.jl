@@ -53,7 +53,7 @@ end
 
 partable_s = sort(partable)
 
-specification_s = RAMMatrices(partable_s)
+specification_s = convert(Dict{Symbol, RAMMatrices}, partable_s)
 
 specification_g1_s = specification_s[:Pasteur]
 specification_g2_s = specification_s[:Grant_White]

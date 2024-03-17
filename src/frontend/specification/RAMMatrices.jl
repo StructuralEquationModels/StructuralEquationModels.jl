@@ -211,24 +211,6 @@ end
 
 
 ############################################################################################
-### get RAMMatrices from EnsembleParameterTable
-############################################################################################
-
-function RAMMatrices(partable::EnsembleParameterTable)
-
-    ram_matrices = Dict{Symbol, RAMMatrices}()
-
-    params = parameters(partable)
-
-    for key in keys(partable.tables)
-        ram_mat = RAMMatrices(partable.tables[key]; params = params)
-        push!(ram_matrices, key => ram_mat)
-    end
-
-    return ram_matrices
-end
-
-############################################################################################
 ### Pretty Printing
 ############################################################################################
 
