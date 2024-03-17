@@ -60,6 +60,29 @@ struct RAMMatrices <: SemSpecification
     size_F::Tuple{Int, Int}
 end
 
+nparams(ram::RAMMatrices) = length(ram.A_ind)
+nvars(ram::RAMMatrices) = ram.size_F[2]
+nobserved_vars(ram::RAMMatrices) = ram.size_F[1]
+nlatent_vars(ram::RAMMatrices) = nvars(ram) - nobserved_vars(ram)
+
+function observed_vars(ram::RAMMatrices)
+    if isnothing(ram.colnames)
+        @warn "Your RAMMatrices do not contain column names. Please make sure the order of variables in your data is correct!"
+        return nothing
+    else
+        return view(ram.colnames, ram.F_ind)
+    end
+end
+
+function latent_vars(ram::RAMMatrices)
+    if isnothing(ram.colnames)
+        @warn "Your RAMMatrices do not contain column names. Please make sure the order of variables in your data is correct!"
+        return nothing
+    else
+        return view(ram.colnames, setdiff(eachindex(ram.colnames), ram.F_ind))
+    end
+end
+
 ############################################################################################
 ### Constructor
 ############################################################################################
