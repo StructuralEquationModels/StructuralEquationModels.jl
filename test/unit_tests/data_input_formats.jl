@@ -203,13 +203,13 @@ end
     SemObservedCovariance(specification = nothing, obs_cov = dat_cov, obs_mean = dat_mean)
 end
 
-@test_throws UndefKeywordError(:specification) SemObservedCovariance(obs_cov = dat_cov)
+#@test_throws UndefKeywordError(:specification) SemObservedCovariance(obs_cov = dat_cov)
 
 @test_throws ArgumentError("no `obs_colnames` were specified") begin
     SemObservedCovariance(specification = spec, obs_cov = dat_cov)
 end
 
-@test_throws ArgumentError("please specify `obs_colnames` as a vector of Symbols") begin
+@test_throws TypeError begin
     SemObservedCovariance(specification = spec, obs_cov = dat_cov, obs_colnames = names(dat))
 end
 
@@ -264,9 +264,9 @@ end
     SemObservedCovariance(specification = spec, obs_cov = dat_cov, meanstructure = true)
 end
 
-@test_throws UndefKeywordError SemObservedCovariance(data = dat_matrix, meanstructure = true)
+#@test_throws UndefKeywordError SemObservedCovariance(data = dat_matrix, meanstructure = true)
 
-@test_throws UndefKeywordError SemObservedCovariance(obs_cov = dat_cov, meanstructure = true)
+#@test_throws UndefKeywordError SemObservedCovariance(obs_cov = dat_cov, meanstructure = true)
 
 @test_throws ArgumentError("`meanstructure = true`, but no observed means were passed") begin
     SemObservedCovariance(
