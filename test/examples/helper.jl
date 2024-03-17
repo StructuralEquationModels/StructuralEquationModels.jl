@@ -66,13 +66,10 @@ function test_fitmeasures(
     atol = 0,
     fitmeasure_names = fitmeasure_names_ml,
 )
-    correct = []
-    for key in keys(fitmeasure_names)
-        measure = measures[key]
-        measure_lav = measures_lav.x[measures_lav[:, 1].==fitmeasure_names[key]][1]
-        push!(correct, isapprox(measure, measure_lav; rtol = rtol, atol = atol))
+    @testset "$name" for (key, name) in pairs(fitmeasure_names)
+        measure_lav = measures_lav.x[findfirst(==(name), measures_lav[!, 1])]
+        @test measures[key] ≈ measure_lav rtol = rtol atol = atol
     end
-    return correct
 end
 
 function compare_estimates(

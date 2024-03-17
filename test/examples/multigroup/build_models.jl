@@ -27,13 +27,11 @@ end
 
 @testset "fitmeasures/se_ml" begin
     solution_ml = sem_fit(model_ml_multigroup)
-    @test all(
-        test_fitmeasures(
-            fit_measures(solution_ml),
-            solution_lav[:fitmeasures_ml];
-            rtol = 1e-2,
-            atol = 1e-7,
-        ),
+    test_fitmeasures(
+        fit_measures(solution_ml),
+        solution_lav[:fitmeasures_ml];
+        rtol = 1e-2,
+        atol = 1e-7,
     )
 
     update_partable!(
@@ -95,13 +93,11 @@ end
 
 @testset "fitmeasures/se_ml | sorted" begin
     solution_ml = sem_fit(model_ml_multigroup)
-    @test all(
-        test_fitmeasures(
-            fit_measures(solution_ml),
-            solution_lav[:fitmeasures_ml];
-            rtol = 1e-2,
-            atol = 1e-7,
-        ),
+    test_fitmeasures(
+        fit_measures(solution_ml),
+        solution_lav[:fitmeasures_ml];
+        rtol = 1e-2,
+        atol = 1e-7,
     )
 
     update_partable!(
@@ -203,14 +199,12 @@ end
 
 @testset "fitmeasures/se_ls" begin
     solution_ls = sem_fit(model_ls_multigroup)
-    @test all(
-        test_fitmeasures(
-            fit_measures(solution_ls),
-            solution_lav[:fitmeasures_ls];
-            fitmeasure_names = fitmeasure_names_ls,
-            rtol = 1e-2,
-            atol = 1e-5,
-        ),
+    test_fitmeasures(
+        fit_measures(solution_ls),
+        solution_lav[:fitmeasures_ls];
+        fitmeasure_names = fitmeasure_names_ls,
+        rtol = 1e-2,
+        atol = 1e-5,
     )
 
     update_partable!(
@@ -297,13 +291,11 @@ if !isnothing(specification_miss_g1)
 
     @testset "fitmeasures/se_fiml" begin
         solution = sem_fit(model_ml_multigroup)
-        @test all(
-            test_fitmeasures(
-                fit_measures(solution),
-                solution_lav[:fitmeasures_fiml];
-                rtol = 1e-3,
-                atol = 0,
-            ),
+        test_fitmeasures(
+            fit_measures(solution),
+            solution_lav[:fitmeasures_fiml];
+            rtol = 1e-3,
+            atol = 0,
         )
 
         update_partable!(
