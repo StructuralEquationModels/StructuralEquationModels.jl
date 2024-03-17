@@ -108,7 +108,8 @@ function RAM(;
 
     # get dimensions of the model
     n_par = nparams(ram_matrices)
-    n_var, n_nod = ram_matrices.size_F
+    n_obs = nobserved_vars(ram_matrices)
+    n_var = nvars(ram_matrices)
     F = zeros(ram_matrices.size_F)
     F[CartesianIndex.(1:n_var, ram_matrices.F_ind)] .= 1.0
 
@@ -118,23 +119,23 @@ function RAM(;
     M_indices = !isnothing(ram_matrices.M_ind) ? copy(ram_matrices.M_ind) : nothing
 
     #preallocate arrays
-    A_pre = zeros(n_nod, n_nod)
-    S_pre = zeros(n_nod, n_nod)
-    !isnothing(M_indices) ? M_pre = zeros(n_nod) : M_pre = nothing
+    A_pre = zeros(n_var, n_var)
+    S_pre = zeros(n_var, n_var)
+    M_pre = !isnothing(M_indices) ? zeros(n_var) : nothing
 
     set_RAMConstants!(A_pre, S_pre, M_pre, ram_matrices.constants)
 
     A_pre = check_acyclic(A_pre, n_par, A_indices)
 
     # pre-allocate some matrices
-    Σ = zeros(n_var, n_var)
-    F⨉I_A⁻¹ = zeros(n_var, n_nod)
-    F⨉I_A⁻¹S = zeros(n_var, n_nod)
+    Σ = zeros(n_obs, n_obs)
+    F⨉I_A⁻¹ = zeros(n_obs, n_var)
+    F⨉I_A⁻¹S = zeros(n_obs, n_var)
     I_A = similar(A_pre)
 
     if gradient
-        ∇A = matrix_gradient(A_indices, n_nod^2)
-        ∇S = matrix_gradient(S_indices, n_nod^2)
+        ∇A = matrix_gradient(A_indices, n_var^2)
+        ∇S = matrix_gradient(S_indices, n_var^2)
     else
         ∇A = nothing
         ∇S = nothing
@@ -144,7 +145,7 @@ function RAM(;
     if meanstructure
         has_meanstructure = Val(true)
         !isnothing(M_indices) || throw(ArgumentError("You set `meanstructure = true`, but your model specification contains no mean parameters."))
-        ∇M = gradient ? matrix_gradient(M_indices, n_nod) : nothing
+        ∇M = gradient ? matrix_gradient(M_indices, n_var) : nothing
         μ = zeros(n_var)
     else
         has_meanstructure = Val(false)
