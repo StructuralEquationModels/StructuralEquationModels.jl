@@ -149,7 +149,7 @@ end
         atol = 1e-3,
         fitmeasure_names = fitmeasure_names_ls,
     )
-    @test (fm[:AIC] === missing) & (fm[:BIC] === missing) & (fm[:minus2ll] === missing)
+    @test ismissing(fm[:AIC]) && ismissing(fm[:BIC]) && ismissing(fm[:minus2ll])
 
     update_partable!(partable, identifier(model_ls_sym), se_hessian(solution_ls), :se)
     @test compare_estimates(
@@ -323,7 +323,7 @@ end
         atol = 1e-3,
         fitmeasure_names = fitmeasure_names_ls,
     )
-    @test (fm[:AIC] === missing) & (fm[:BIC] === missing) & (fm[:minus2ll] === missing)
+    @test ismissing(fm[:AIC]) && ismissing(fm[:BIC]) && ismissing(fm[:minus2ll])
 
     update_partable!(partable_mean, identifier(model_ls), se_hessian(solution_ls), :se)
     @test compare_estimates(
