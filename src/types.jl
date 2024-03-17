@@ -255,3 +255,7 @@ loss(model::AbstractSemSingle) = model.loss
 Returns the optimizer part of a model.
 """
 optimizer(model::AbstractSemSingle) = model.optimizer
+
+abstract type SemSpecification end
+
+abstract type AbstractParameterTable <: SemSpecification end
