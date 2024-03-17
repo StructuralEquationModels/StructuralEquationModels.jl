@@ -26,6 +26,18 @@ function Dict(partable::EnsembleParameterTable)
     return partable.tables
 end
 
+function Base.convert(::Type{Dict{K, RAMMatrices}},
+                      partables::EnsembleParameterTable;
+                      params::Union{AbstractVector{Symbol}, Nothing} = nothing) where K
+
+    isnothing(params) || (params = SEM.params(partables))
+
+    return Dict{K, RAMMatrices}(
+        K(key) => RAMMatrices(partable; params = params)
+        for (key, partable) in pairs(partables.tables)
+    )
+end
+
 #= function DataFrame(
         partable::ParameterTable; 
         columns = nothing)
