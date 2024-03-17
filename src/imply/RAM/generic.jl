@@ -65,7 +65,7 @@ Additional interfaces
 Only available in gradient! calls:
 - `I_A⁻¹(::RAM)` -> ``(I-A)^{-1}``
 """
-mutable struct RAM{A1, A2, A3, A4, A5, A6, V, V2, I1, I2, I3, M1, M2, M3, M4, S1, S2, S3, B, D} <: SemImply
+mutable struct RAM{A1, A2, A3, A4, A5, A6, V2, I1, I2, I3, M1, M2, M3, M4, S1, S2, S3, B, D} <: SemImply
     Σ::A1
     A::A2
     S::A3
@@ -73,7 +73,6 @@ mutable struct RAM{A1, A2, A3, A4, A5, A6, V, V2, I1, I2, I3, M1, M2, M3, M4, S1
     μ::A5
     M::A6
 
-    n_par::V
     ram_matrices::V2
     has_meanstructure::B
 
@@ -111,9 +110,9 @@ function RAM(;
 
 
     # get dimensions of the model
-    n_par = length(ram_matrices.parameters)
-    n_var, n_nod = ram_matrices.size_F
-    parameters = ram_matrices.parameters
+    n_par = nparams(ram_matrices)
+    n_obs = nobserved_vars(ram_matrices)
+    n_var = nvars(ram_matrices)
     F = zeros(ram_matrices.size_F); F[CartesianIndex.(1:n_var, ram_matrices.F_ind)] .= 1.0
 
     # get indices
@@ -122,23 +121,23 @@ function RAM(;
     !isnothing(ram_matrices.M_ind) ? M_indices = copy(ram_matrices.M_ind) : M_indices = nothing
 
     #preallocate arrays
-    A_pre = zeros(n_nod, n_nod)
-    S_pre = zeros(n_nod, n_nod)
-    !isnothing(M_indices) ? M_pre = zeros(n_nod) : M_pre = nothing
+    A_pre = zeros(n_var, n_var)
+    S_pre = zeros(n_var, n_var)
+    M_pre = !isnothing(M_indices) ? zeros(n_var) : nothing
 
     set_RAMConstants!(A_pre, S_pre, M_pre, ram_matrices.constants)
     
     A_pre = check_acyclic(A_pre, n_par, A_indices)
 
     # pre-allocate some matrices
-    Σ = zeros(n_var, n_var)
-    F⨉I_A⁻¹ = zeros(n_var, n_nod)
-    F⨉I_A⁻¹S = zeros(n_var, n_nod)
+    Σ = zeros(n_obs, n_obs)
+    F⨉I_A⁻¹ = zeros(n_obs, n_var)
+    F⨉I_A⁻¹S = zeros(n_obs, n_var)
     I_A = similar(A_pre)
 
     if gradient
-        ∇A = get_matrix_derivative(A_indices, parameters, n_nod^2)
-        ∇S = get_matrix_derivative(S_indices, parameters, n_nod^2)
+        ∇A = get_matrix_derivative(A_indices, parameters, n_var^2)
+        ∇S = get_matrix_derivative(S_indices, parameters, n_var^2)
     else
         ∇A = nothing
         ∇S = nothing
@@ -150,12 +149,12 @@ function RAM(;
         has_meanstructure = Val(true)
 
         if gradient
-            ∇M = get_matrix_derivative(M_indices, parameters, n_nod)
+            ∇M = get_matrix_derivative(M_indices, parameters, n_var)
         else
             ∇M = nothing
         end
 
-        μ = zeros(n_var)
+        μ = zeros(n_obs)
 
     else
         has_meanstructure = Val(false)
@@ -173,7 +172,6 @@ function RAM(;
         μ,
         M_pre,
 
-        n_par,
         ram_matrices,
         has_meanstructure,
 
@@ -285,7 +283,7 @@ objective_gradient_hessian!(imply::RAM, par, model::AbstractSemSingle, has_means
 ############################################################################################
 
 identifier(imply::RAM) = imply.identifier
-n_par(imply::RAM) = imply.n_par
+n_par(imply::RAM) = nparams(imply.ram_matrices)
 
 function update_observed(imply::RAM, observed::SemObserved; kwargs...) 
     if n_man(observed) == size(imply.Σ, 1)
