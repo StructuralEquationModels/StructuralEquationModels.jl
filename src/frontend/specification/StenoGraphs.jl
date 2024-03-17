@@ -47,7 +47,7 @@ function ParameterTable(graph::AbstractStenoGraph;
     free = fill!(resize!(partable.columns.free, n), true)
     value_fixed = fill!(resize!(partable.columns.value_fixed, n), NaN)
     start = fill!(resize!(partable.columns.start, n), NaN)
-    identifier = fill!(resize!(partable.columns.identifier, n), Symbol(""))
+    param = fill!(resize!(partable.columns.param, n), Symbol(""))
     # group = Vector{Symbol}(undef, n)
     # start_partable = zeros(Bool, n)
 
@@ -80,24 +80,24 @@ function ParameterTable(graph::AbstractStenoGraph;
                     if modval == :NaN
                         throw(DomainError(NaN, "NaN is not allowed as a parameter label."))
                     end
-                    identifier[i] = modval
+                    param[i] = modval
                 end
             end
         end
     end
 
-    # make identifiers for parameters that are not labeled
+    # assign identifiers for parameters that are not labeled
     current_id = 1
-    for i in 1:length(identifier)
-        if identifier[i] == Symbol("")
+    for i in 1:length(param)
+        if param[i] == Symbol("")
             if free[i]
-                identifier[i] = Symbol(param_prefix, :_, current_id)
+                param[i] = Symbol(param_prefix, :_, current_id)
                 current_id += 1
             else
-                identifier[i] = :const
+                param[i] = :const
             end
         elseif !free[i]
-            @warn "You labeled a constant ($(identifier[i])=$(value_fixed[i])). Please check if the labels of your graph are correct."
+            @warn "You labeled a constant ($(param[i])=$(value_fixed[i])). Please check if the labels of your graph are correct."
         end
     end
 

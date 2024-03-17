@@ -109,7 +109,7 @@ function Base.show(io::IO, partable::ParameterTable)
         :start,
         :estimate,
         :se,
-        :identifier]
+        :param]
     shown_columns = filter!(col -> haskey(partable.columns, col) && length(partable.columns[col]) > 0,
                             relevant_columns)
 
@@ -138,7 +138,7 @@ ParameterTableRow = @NamedTuple begin
     to::Symbol
     free::Bool
     value_fixed::Any
-    identifier::Symbol
+    param::Symbol
 end
 
 Base.getindex(partable::ParameterTable, i::Integer) =
@@ -147,7 +147,7 @@ Base.getindex(partable::ParameterTable, i::Integer) =
      to = partable.columns.to[i],
      free = partable.columns.free[i],
      value_fixed = partable.columns.value_fixed[i],
-     identifier = partable.columns.identifier[i],
+     param = partable.columns.param[i],
     )
 
 Base.length(partable::ParameterTable) = length(first(partable.columns))
@@ -256,7 +256,7 @@ function update_partable!(partable::ParameterTable,
     fixed_values = partable.columns.value_fixed
     param_index = Dict(zip(params, eachindex(params)))
     resize!(coldata, length(partable))
-    for (i, id) in enumerate(partable.columns.identifier)
+    for (i, id) in enumerate(partable.columns.param)
         coldata[i] = id != :const ?
                 values[param_index[id]] :
                 fixed_values[i]

@@ -28,7 +28,7 @@ function start_parameter_table(ram::RAMMatrices; partable::ParameterTable, kwarg
     
     param_indices = Dict(param => i for (i, param) in enumerate(params(ram)))
 
-    for (i, param) in enumerate(partable.columns.identifier)
+    for (i, param) in enumerate(partable.columns.param)
         par_ind = get(param_indices, param, nothing)
         if !isnothing(par_ind)
             isfinite(partable.start[i]) && (start_val[i] = partable.start[i])

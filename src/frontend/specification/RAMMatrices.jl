@@ -151,7 +151,7 @@ function RAMMatrices(partable::ParameterTable;
                 error("Unsupported parameter type: $(row.parameter_type)")
             end
         else
-            par_ind = params_index[row.identifier]
+            par_ind = params_index[row.param]
             if (row.parameter_type == :→) && (row.from == Symbol("1"))
                 push!(M_inds[par_ind], row_ind)
             elseif row.parameter_type == :→
@@ -285,7 +285,7 @@ function partable_row(val, index, matrix::Symbol,
         value_fixed = free ? 0.0 : val,
         start = 0.0,
         estimate = 0.0,
-        identifier = free ? val : :const)
+        param = free ? val : :const)
 end
 
 function append_rows!(partable::ParameterTable,
@@ -331,7 +331,7 @@ end
 function Base.:(==)(mat1::RAMMatrices, mat2::RAMMatrices)
     res = ( (mat1.A == mat2.A) && (mat1.S == mat2.S) &&
             (mat1.F == mat2.F) && (mat1.M == mat2.M) &&
-            (mat1.parameters == mat2.parameters) &&
+            (mat1.params == mat2.params) &&
             (mat1.colnames == mat2.colnames) )
     return res
 end
