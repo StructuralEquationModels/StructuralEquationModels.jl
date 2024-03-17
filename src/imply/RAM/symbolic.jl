@@ -96,7 +96,7 @@ function RAMSymbolic(;
         approximate_hessian = false,
         kwargs...)
 
-    ram_matrices = RAMMatrices(specification)
+    ram_matrices = convert(RAMMatrices, specification)
     identifier = StructuralEquationModels.identifier(ram_matrices)
 
     n_par = length(ram_matrices.parameters)
