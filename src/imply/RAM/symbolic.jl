@@ -98,15 +98,16 @@ function RAMSymbolic(;
     ram_matrices = convert(RAMMatrices, specification)
 
     n_par = nparams(ram_matrices)
-    n_var, n_nod = ram_matrices.size_F
+    n_obs = nobserved_vars(ram_matrices)
+    n_var = nvars(ram_matrices)
 
     par = (Symbolics.@variables θ[1:n_par])[1]
 
-    A = zeros(Num, n_nod, n_nod)
-    S = zeros(Num, n_nod, n_nod)
-    !isnothing(ram_matrices.M_ind) ? M = zeros(Num, n_nod) : M = nothing
+    A = zeros(Num, n_var, n_var)
+    S = zeros(Num, n_var, n_var)
+    !isnothing(ram_matrices.M_ind) ? M = zeros(Num, n_var) : M = nothing
     F = zeros(ram_matrices.size_F)
-    F[CartesianIndex.(1:n_var, ram_matrices.F_ind)] .= 1.0
+    F[CartesianIndex.(1:n_obs, ram_matrices.F_ind)] .= 1.0
 
     set_RAMConstants!(A, S, M, ram_matrices.constants)
     fill_A_S_M!(A, S, M, ram_matrices.A_ind, ram_matrices.S_ind, ram_matrices.M_ind, par)
