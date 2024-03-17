@@ -1,5 +1,7 @@
 using Test
 
-@testset "multithreading_enabled" begin
-    @test Threads.nthreads() == 8
+if haskey(ENV, "JULIA_ON_CI")
+    @testset "multithreading_enabled" begin
+        @test Threads.nthreads() == 8
+    end
 end
