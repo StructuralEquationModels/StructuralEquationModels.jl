@@ -73,7 +73,7 @@ function SemFIML(; observed, specification, kwargs...)
         meandiff,
         imp_inv,
         mult,
-        CommutationMatrix(get_n_nodes(specification)),
+        CommutationMatrix(nvars(specification)),
         nothing,
     )
 end
@@ -249,7 +249,3 @@ function check_fiml(semfiml, model)
     a = cholesky!(Symmetric(semfiml.imp_inv); check = false)
     return isposdef(a)
 end
-
-get_n_nodes(specification::RAMMatrices) = specification.size_F[2]
-get_n_nodes(specification::ParameterTable) =
-    length(specification.observed_vars) + length(specification.latent_vars)
