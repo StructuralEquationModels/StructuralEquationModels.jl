@@ -102,9 +102,7 @@ end
 
 push!(partable::EnsembleParameterTable, d::Nothing, group) = nothing
 
-# get group --------------------------------------------------------------------------------
-
-get_group(partable::EnsembleParameterTable, group) = get_group(partable.tables, group)
+Base.getindex(partable::EnsembleParameterTable, group) = partable.tables[group]
 
 ############################################################################################
 ### Update Partable from Fitted Model
