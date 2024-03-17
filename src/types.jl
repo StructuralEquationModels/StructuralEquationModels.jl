@@ -258,4 +258,16 @@ optimizer(model::AbstractSemSingle) = model.optimizer
 
 abstract type SemSpecification end
 
+# observed + latent
+vars(spec::SemSpecification) =
+    error("vars(spec::$(typeof(spec))) is not implemented")
+observed_vars(spec::SemSpecification) =
+    error("observed_vars(spec::$(typeof(spec))) is not implemented")
+latent_vars(spec::SemSpecification) =
+    error("latent_vars(spec::$(typeof(spec))) is not implemented")
+
+nvars(spec::SemSpecification) = length(vars(spec))
+nobserved_vars(spec::SemSpecification) = length(observed_vars(spec))
+nlatent_vars(spec::SemSpecification) = length(latent_vars(spec))
+
 abstract type AbstractParameterTable <: SemSpecification end
