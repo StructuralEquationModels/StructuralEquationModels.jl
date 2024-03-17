@@ -106,7 +106,7 @@ function RAM(;
         meanstructure = false,
         kwargs...)
 
-    ram_matrices = RAMMatrices(specification)
+    ram_matrices = convert(RAMMatrices, specification)
     identifier = StructuralEquationModels.identifier(ram_matrices)
 
 

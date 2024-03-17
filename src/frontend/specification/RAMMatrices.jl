@@ -86,8 +86,6 @@ function RAMMatrices(; A::AbstractMatrix, S::AbstractMatrix,
                        parameters, colnames, constants, size(F))
 end
 
-RAMMatrices(a::RAMMatrices) = a
-
 ############################################################################################
 ### get RAMMatrices from parameter table
 ############################################################################################
@@ -176,6 +174,8 @@ function RAMMatrices(partable::ParameterTable;
                        (n_observed, n_node))
 end
 
+Base.convert(::Type{RAMMatrices}, partable::ParameterTable) = RAMMatrices(partable)
+
 ############################################################################################
 ### get parameter table from RAMMatrices
 ############################################################################################
@@ -209,6 +209,7 @@ function ParameterTable(ram_matrices::RAMMatrices)
     return partable
 end
 
+Base.convert(::Type{<:ParameterTable}, ram_matrices::RAMMatrices) = ParameterTable(ram_matrices)
 
 ############################################################################################
 ### Pretty Printing
