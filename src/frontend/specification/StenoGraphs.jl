@@ -4,6 +4,8 @@
 ### Define Modifiers
 ############################################################################################
 
+AbstractStenoGraph = AbstractVector
+
 # fixed parameter values
 struct Fixed{N} <: EdgeModifier
     value::N
@@ -28,91 +30,76 @@ label(args...) = Label(args)
 ### constructor for parameter table from graph
 ############################################################################################
 
-function ParameterTable(;graph, observed_vars, latent_vars, g = 1, parname = :θ)
+function ParameterTable(graph::AbstractStenoGraph;
+                        observed_vars, latent_vars,
+                        group::Integer = 1, param_prefix = :θ)
     graph = unique(graph)
     n = length(graph)
-    from = Vector{Symbol}(undef, n)
-    parameter_type = Vector{Symbol}(undef, n)
-    to = Vector{Symbol}(undef, n)
-    free = ones(Bool, n)
-    value_fixed = zeros(n)
-    start = zeros(n)
-    estimate = zeros(n)
-    identifier = Vector{Symbol}(undef, n); identifier .= Symbol("")
+
+    partable = ParameterTable(
+        latent_vars = latent_vars,
+        observed_vars = observed_vars)
+    from = resize!(partable.columns.from, n)
+    parameter_type = resize!(partable.columns.parameter_type, n)
+    to = resize!(partable.columns.to, n)
+    free = fill!(resize!(partable.columns.free, n), true)
+    value_fixed = fill!(resize!(partable.columns.value_fixed, n), NaN)
+    start = fill!(resize!(partable.columns.start, n), NaN)
+    identifier = fill!(resize!(partable.columns.identifier, n), Symbol(""))
     # group = Vector{Symbol}(undef, n)
     # start_partable = zeros(Bool, n)
 
-    sorted_vars = Vector{Symbol}()
-
     for (i, element) in enumerate(graph)
-        if element isa DirectedEdge
-            from[i] =  element.src.node
-            to[i] =  element.dst.node
+        edge = element isa ModifiedEdge ? element.edge : element
+        from[i] = edge.src.node
+        to[i] = edge.dst.node
+        if edge isa DirectedEdge
             parameter_type[i] = :→
-        elseif element isa UndirectedEdge
-            from[i] =  element.src.node
-            to[i] =  element.dst.node
+        elseif edge isa UndirectedEdge
             parameter_type[i] = :↔
-        elseif element isa ModifiedEdge
-            if element.edge isa DirectedEdge
-                from[i] =  element.edge.src.node
-                to[i] =  element.edge.dst.node
-                parameter_type[i] = :→
-            elseif element.edge isa UndirectedEdge
-                from[i] =  element.edge.src.node
-                to[i] =  element.edge.dst.node
-                parameter_type[i] = :↔
-            end
+        else
+            throw(ArgumentError("The graph contains an unsupported edge of type $(typeof(edge))."))
+        end
+        if element isa ModifiedEdge
             for modifier in values(element.modifiers)
+                modval = modifier.value[group]
                 if modifier isa Fixed
-                    if modifier.value[g] == :NaN
+                    if modval == :NaN
                         free[i] = true
                         value_fixed[i] = 0.0
                     else
                         free[i] = false
-                        value_fixed[i] = modifier.value[g]
+                        value_fixed[i] = modval
                     end
                 elseif modifier isa Start
-                    start_partable[i] = modifier.value[g] == :NaN
-                    start[i] = modifier.value[g]
+                    start_partable[i] = modval == :NaN
+                    start[i] = modval
                 elseif modifier isa Label
-                    if modifier.value[g] == :NaN
+                    if modval == :NaN
                         throw(DomainError(NaN, "NaN is not allowed as a parameter label."))
                     end
-                    identifier[i] = modifier.value[g]
+                    identifier[i] = modval
                 end
             end
-        end 
+        end
     end
 
     # make identifiers for parameters that are not labeled
     current_id = 1
     for i in 1:length(identifier)
-        if (identifier[i] == Symbol("")) & free[i]
-            identifier[i] = Symbol(parname, :_, current_id)
-            current_id += 1
-        elseif (identifier[i] == Symbol("")) & !free[i]
-            identifier[i] = :const
-        elseif (identifier[i] != Symbol("")) & !free[i]
-            @warn "You labeled a constant. Please check if the labels of your graph are correct."
+        if identifier[i] == Symbol("")
+            if free[i]
+                identifier[i] = Symbol(param_prefix, :_, current_id)
+                current_id += 1
+            else
+                identifier[i] = :const
+            end
+        elseif !free[i]
+            @warn "You labeled a constant ($(identifier[i])=$(value_fixed[i])). Please check if the labels of your graph are correct."
         end
     end
 
-    return StructuralEquationModels.ParameterTable(
-        Dict(
-            :from => from,
-            :parameter_type => parameter_type,
-            :to => to,
-            :free => free,
-            :value_fixed => value_fixed,
-            :start => start,
-            :estimate => estimate,
-            :identifier => identifier),
-        Dict(
-            :latent_vars => latent_vars,
-            :observed_vars => observed_vars,
-            :sorted_vars => sorted_vars)
-    )
+    return partable
 end
 
 ############################################################################################
