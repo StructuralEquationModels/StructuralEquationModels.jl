@@ -64,7 +64,7 @@ function SemFIML(;observed, specification, kwargs...)
     ∇ind = vec(CartesianIndices(Array{Float64}(undef, nman, nman)))
     ∇ind = [findall(x -> !(x[1] ∈ ind || x[2] ∈ ind), ∇ind) for ind in patterns_not(observed)]
 
-    commutation_indices = get_commutation_lookup(get_n_nodes(specification)^2)
+    commutation_indices = get_commutation_lookup(nvars(specification)^2)
 
     return SemFIML(
     inverses,
@@ -254,8 +254,3 @@ function check_fiml(semfiml, model)
     a = cholesky!(Symmetric(semfiml.imp_inv); check = false)
     return isposdef(a)
 end
-
-get_n_nodes(specification::RAMMatrices) = specification.size_F[2]
-get_n_nodes(specification::ParameterTable) = 
-    length(specification.variables[:observed_vars]) + 
-    length(specification.variables[:latent_vars])
