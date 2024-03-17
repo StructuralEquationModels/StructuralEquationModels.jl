@@ -62,11 +62,10 @@ function SemRidge(;
             which_ridge = getindex.(Ref(par2ind), which_ridge)
         end
     end
-    which = [CartesianIndex(x) for x in which_ridge]
     which_H = [CartesianIndex(x, x) for x in which_ridge]
     return SemRidge(
         α_ridge,
-        which,
+        which_ridge,
         which_H,
         zeros(parameter_type, nparams),
         zeros(parameter_type, nparams, nparams),
@@ -77,15 +76,15 @@ end
 ### methods
 ############################################################################################
 
-objective!(ridge::SemRidge, par, model) = @views ridge.α * sum(x -> x^2, par[ridge.which])
+objective!(ridge::SemRidge, par, model) = @views ridge.α * sum(abs2, par[ridge.which])
 
 function gradient!(ridge::SemRidge, par, model)
-    @views ridge.gradient[ridge.which] .= 2 * ridge.α * par[ridge.which]
+    @views ridge.gradient[ridge.which] .= (2 * ridge.α) * par[ridge.which]
     return ridge.gradient
 end
 
 function hessian!(ridge::SemRidge, par, model)
-    @views @. ridge.hessian[ridge.which_H] += ridge.α * 2.0
+    @views @. ridge.hessian[ridge.which_H] .= 2 * ridge.α
     return ridge.hessian
 end
 
