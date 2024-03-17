@@ -97,7 +97,7 @@ function RAMSymbolic(;
     approximate_hessian = false,
     kwargs...,
 )
-    ram_matrices = RAMMatrices(specification)
+    ram_matrices = convert(RAMMatrices, specification)
     param_indices = SEM.param_indices(ram_matrices)
 
     n_par = length(ram_matrices.params)

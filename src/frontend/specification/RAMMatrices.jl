@@ -39,8 +39,6 @@ function RAMMatrices(; A, S, F, M = nothing, params, colnames)
     )
 end
 
-RAMMatrices(a::RAMMatrices) = a
-
 ############################################################################################
 ### Constants
 ############################################################################################
@@ -217,6 +215,8 @@ function RAMMatrices(partable::ParameterTable; par_id = nothing)
     )
 end
 
+Base.convert(::Type{RAMMatrices}, partable::ParameterTable) = RAMMatrices(partable)
+
 ############################################################################################
 ### get parameter table from RAMMatrices
 ############################################################################################
@@ -258,6 +258,9 @@ function ParameterTable(ram_matrices::RAMMatrices)
 
     return partable
 end
+
+Base.convert(::Type{<:ParameterTable}, ram_matrices::RAMMatrices) =
+    ParameterTable(ram_matrices)
 
 ############################################################################################
 ### get RAMMatrices from EnsembleParameterTable

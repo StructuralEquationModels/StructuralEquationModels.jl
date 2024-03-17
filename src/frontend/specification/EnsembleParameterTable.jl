@@ -20,10 +20,8 @@ end
 ### Convert to other types
 ############################################################################################
 
-import Base.Dict
-
-function Dict(partable::EnsembleParameterTable)
-    return partable.tables
+function Base.convert(::Type{Dict}, partable::EnsembleParameterTable)
+    return convert(Dict, partable.tables)
 end
 
 #= function DataFrame(

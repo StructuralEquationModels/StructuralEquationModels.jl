@@ -127,7 +127,7 @@ function RAM(;
     meanstructure = false,
     kwargs...,
 )
-    ram_matrices = RAMMatrices(specification)
+    ram_matrices = convert(RAMMatrices, specification)
     param_indices = SEM.param_indices(ram_matrices)
 
     # get dimensions of the model
