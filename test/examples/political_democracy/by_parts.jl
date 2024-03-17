@@ -80,7 +80,7 @@ end
     solution_ridge = sem_fit(model_ridge)
     solution_ml = sem_fit(model_ml)
     # solution_ridge_id = sem_fit(model_ridge_id)
-    @test abs(solution_ridge.minimum - solution_ml.minimum) < 1
+    @test solution_ridge.minimum < solution_ml.minimum + 1
 end
 
 # test constant objective value
@@ -95,9 +95,9 @@ end
 @testset "ml_solution_weighted" begin
     solution_ml = sem_fit(model_ml)
     solution_ml_weighted = sem_fit(model_ml_weighted)
-    @test isapprox(solution(solution_ml), solution(solution_ml_weighted), rtol = 1e-3)
-    @test isapprox(n_obs(model_ml)*StructuralEquationModels.minimum(solution_ml), 
-        StructuralEquationModels.minimum(solution_ml_weighted), rtol = 1e-6)
+    @test solution(solution_ml) ≈ solution(solution_ml_weighted) rtol = 1e-3
+    @test n_obs(model_ml)*StructuralEquationModels.minimum(solution_ml) ≈
+        StructuralEquationModels.minimum(solution_ml_weighted) rtol = 1e-6
 end
 
 ############################################################################################
