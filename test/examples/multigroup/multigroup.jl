@@ -118,7 +118,7 @@ partable = EnsembleParameterTable(
     groups = [:Pasteur, :Grant_White],
 )
 
-specification = RAMMatrices(partable)
+specification = convert(Dict{Symbol, RAMMatrices}, partable)
 
 specification_g1 = specification[:Pasteur]
 specification_g2 = specification[:Grant_White]
@@ -147,7 +147,7 @@ partable_miss = EnsembleParameterTable(
     groups = [:Pasteur, :Grant_White],
 )
 
-specification_miss = RAMMatrices(partable_miss)
+specification_miss = convert(Dict{Symbol, RAMMatrices}, partable_miss)
 
 specification_miss_g1 = specification_miss[:Pasteur]
 specification_miss_g2 = specification_miss[:Grant_White]
