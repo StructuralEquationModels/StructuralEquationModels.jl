@@ -15,7 +15,7 @@ ml = SemML(observed = observed)
 
 wls = SemWLS(observed = observed)
 
-ridge = SemRidge(α_ridge = 0.001, which_ridge = 16:20, n_par = 31)
+ridge = SemRidge(α_ridge = 0.001, which_ridge = 16:20, nparams = 31)
 
 constant = SemConstant(constant_loss = 3.465)
 

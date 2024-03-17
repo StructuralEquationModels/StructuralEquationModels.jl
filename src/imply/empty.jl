@@ -19,8 +19,8 @@ model per group and an additional model with `ImplyEmpty` and `SemRidge` for the
 # Extended help
 
 ## Interfaces
-- `params(::RAMSymbolic) `-> Dict containing the parameter labels and their position
-- `n_par(::RAMSymbolic)` -> Number of parameters
+- `params(::RAMSymbolic) `-> Vector of parameter labels
+- `nparams(::RAMSymbolic)` -> Number of parameters
 
 ## Implementation
 Subtype of `SemImply`.

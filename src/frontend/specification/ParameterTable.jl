@@ -142,7 +142,7 @@ Base.iterate(partable::ParameterTable, i::Integer = 1) =
     i > length(partable) ? nothing : (partable[i], i + 1)
 
 params(partable::ParameterTable) = partable.params
-n_par(partable::ParameterTable) = length(params(partable))
+nparams(partable::ParameterTable) = length(params(partable))
 
 # Sorting ----------------------------------------------------------------------------------
 

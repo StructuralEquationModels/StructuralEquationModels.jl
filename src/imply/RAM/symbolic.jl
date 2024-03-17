@@ -29,8 +29,8 @@ Subtype of `SemImply` that implements the RAM notation with symbolic precomputat
 Subtype of `SemImply`.
 
 ## Interfaces
-- `params(::RAMSymbolic) `-> Dict containing the parameter labels and their position
-- `n_par(::RAMSymbolic)` -> Number of parameters
+- `params(::RAMSymbolic) `-> vector of parameter ids
+- `nparams(::RAMSymbolic)` -> number of parameters
 
 - `Σ(::RAMSymbolic)` -> model implied covariance matrix
 - `μ(::RAMSymbolic)` -> model implied mean vector
@@ -97,7 +97,7 @@ function RAMSymbolic(;
 )
     ram_matrices = convert(RAMMatrices, specification)
 
-    n_par = length(ram_matrices.params)
+    n_par = nparams(ram_matrices)
     n_var, n_nod = ram_matrices.size_F
 
     par = (Symbolics.@variables θ[1:n_par])[1]
@@ -141,7 +141,6 @@ function RAMSymbolic(;
 
     if hessian & !approximate_hessian
         n_sig = length(Σ_symbolic)
-        n_par = size(par, 1)
         ∇²Σ_symbolic_vec = [Symbolics.sparsehessian(σᵢ, [par...]) for σᵢ in vec(Σ_symbolic)]
 
         @variables J[1:n_sig]

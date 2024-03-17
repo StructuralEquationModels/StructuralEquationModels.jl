@@ -63,7 +63,7 @@ struct RAMMatrices <: SemSpecification
     size_F::Tuple{Int, Int}
 end
 
-n_par(ram::RAMMatrices) = length(ram.A_ind)
+nparams(ram::RAMMatrices) = length(ram.A_ind)
 
 ############################################################################################
 ### Constructor

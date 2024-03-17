@@ -34,8 +34,8 @@ and for models with a meanstructure, the model implied means are computed as
 ```
 
 ## Interfaces
-- `params(::RAM) `-> Dict containing the parameter labels and their position
-- `n_par(::RAM)` -> Number of parameters
+- `params(::RAM) `-> vector of parameter labels
+- `nparams(::RAM)` -> number of parameters
 
 - `Σ(::RAM)` -> model implied covariance matrix
 - `μ(::RAM)` -> model implied mean vector
@@ -107,7 +107,7 @@ function RAM(;
     ram_matrices = convert(RAMMatrices, specification)
 
     # get dimensions of the model
-    n_par = length(ram_matrices.params)
+    n_par = nparams(ram_matrices)
     n_var, n_nod = ram_matrices.size_F
     F = zeros(ram_matrices.size_F)
     F[CartesianIndex.(1:n_var, ram_matrices.F_ind)] .= 1.0
