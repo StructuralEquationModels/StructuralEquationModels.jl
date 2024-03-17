@@ -47,7 +47,7 @@ struct SemObservedCovariance{B, C, D, O} <: SemObserved
 end
 using StructuralEquationModels
 function SemObservedCovariance(;
-        specification,
+        specification::Union{SemSpecification, Nothing} = nothing,
         obs_cov,
 
         obs_colnames = nothing,
