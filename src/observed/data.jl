@@ -56,7 +56,7 @@ end
 
 
 function SemObservedData(;
-        specification,
+        specification::Union{SemSpecification, Nothing},
         data,
 
         obs_colnames = nothing,

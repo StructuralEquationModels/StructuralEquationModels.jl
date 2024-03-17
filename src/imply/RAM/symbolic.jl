@@ -87,7 +87,7 @@ end
 ############################################################################################
 
 function RAMSymbolic(;
-        specification,
+        specification::SemSpecification,
         loss_types = nothing,
         vech = false,
         gradient = true,
