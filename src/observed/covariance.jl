@@ -87,7 +87,7 @@ function SemObservedCovariance(;
 
     if !isnothing(spec_colnames)
         obs_cov = reorder_obs_cov(obs_cov, spec_colnames, obs_colnames)
-        obs_mean = reorder_obs_mean(obs_mean, spec_colnames, obs_colnames)
+        isnothing(obs_mean) || (obs_mean = reorder_obs_mean(obs_mean, spec_colnames, obs_colnames))
     end
 
     n_man = Float64(size(obs_cov, 1))
@@ -125,7 +125,6 @@ function reorder_obs_cov(obs_cov, spec_colnames, obs_colnames)
 end
 
 # reorder means ----------------------------------------------------------------------------
-reorder_obs_mean(obs_mean::Nothing, spec_colnames, obs_colnames) = nothing
 
 function reorder_obs_mean(obs_mean, spec_colnames, obs_colnames)
     if spec_colnames == obs_colnames
