@@ -24,7 +24,7 @@ constrained_optimizer = SemOptimizerNLopt(;
     algorithm = :AUGLAG,
     local_algorithm = :LD_LBFGS,
     local_options = Dict(
-        :ftol_rel => 1e-6
+        :xtol_rel => 1e-5
     ),
     # equality_constraints = NLoptConstraint(;f = eq_constraint, tol = 1e-14),
     inequality_constraints = NLoptConstraint(;f = ineq_constraint, tol = 0.0),
