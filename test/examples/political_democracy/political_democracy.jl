@@ -94,6 +94,7 @@ start_test_mean = [fill(1.0, 11); fill(0.05, 3); fill(0.05, 6); fill(0.5, 8); fi
 
 semoptimizer = SemOptimizerOptim
 @testset "RAMMatrices | constructor | Optim" begin include("constructor.jl") end
+
 semoptimizer = SemOptimizerNLopt
 @testset "RAMMatrices | constructor | NLopt" begin include("constructor.jl") end
 
@@ -154,10 +155,9 @@ graph = @StenoGraph begin
     y8 ↔ y4 + y6
 end
 
-spec = ParameterTable(
+spec = ParameterTable(graph,
     latent_vars = latent_vars,
-    observed_vars = observed_vars,
-    graph = graph)
+    observed_vars = observed_vars)
 
 sort!(spec)
 
@@ -188,10 +188,9 @@ graph = @StenoGraph begin
     Symbol("1") → fixed(0)*ind60
 end
 
-spec_mean = ParameterTable(
+spec_mean = ParameterTable(graph,
     latent_vars = latent_vars,
-    observed_vars = observed_vars,
-    graph = graph)
+    observed_vars = observed_vars)
 
 sort!(spec_mean)
 
