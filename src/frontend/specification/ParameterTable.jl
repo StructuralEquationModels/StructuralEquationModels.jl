@@ -148,12 +148,14 @@ function sort_vars!(partable::ParameterTable)
     vars = [partable.variables.latent;
             partable.variables.observed]
 
-    is_regression = [(partype == :→) && (from != Symbol("1"))
-                     for (partype, from) in zip(partable.columns.parameter_type,
-                                                partable.columns.from)]
-
-    to = partable.columns.to[is_regression]
-    from = partable.columns.from[is_regression]
+    # regression edges (excluding intercept)
+    edges = [(from, to)
+             for (reltype, from, to) in
+                    zip(partable.columns.parameter_type,
+                        partable.columns.from,
+                        partable.columns.to)
+             if (reltype == :→) && (from != Symbol("1"))]
+    sort!(edges, by=last) # sort edges by target
 
     sorted_vars = Vector{Symbol}()
 
@@ -162,16 +164,20 @@ function sort_vars!(partable::ParameterTable)
         acyclic = false
 
         for (i, var) in enumerate(vars)
-            if !(var ∈ to)
+            # check if var has any incoming edge
+            eix = searchsortedfirst(edges, (var, var), by=last)
+            if !(eix <= length(edges) && last(edges[eix]) == var)
+                # var is source, no edges to it
                 push!(sorted_vars, var)
                 deleteat!(vars, i)
-                delete_edges = from .!= var
-                to = to[delete_edges]
-                from = from[delete_edges]
+                # remove var outgoing edges
+                filter!(e -> e[1] != var, edges)
                 acyclic = true
+                break
             end
         end
 
+        # if acyclic is false, all vars have incoming edge
         acyclic || throw(CyclicModelError("your model is cyclic and therefore can not be ordered"))
     end
 
