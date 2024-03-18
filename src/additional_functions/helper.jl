@@ -98,11 +98,6 @@ function sparse_outer_mul!(C, A, B::Vector, ind) #computes A*S*B -> C, where ind
     end
 end
 
-function cov_and_mean(rows; corrected = false)
-    obs_mean, obs_cov = StatsBase.mean_and_cov(reduce(hcat, rows), 2, corrected = corrected)
-    return obs_cov, vec(obs_mean)
-end
-
 # n²×(n(n+1)/2) matrix to transform a vector of lower
 # triangular entries into a vectorized form of a n×n symmetric matrix,
 # opposite of elimination_matrix()
