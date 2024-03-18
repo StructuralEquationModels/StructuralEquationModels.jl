@@ -9,31 +9,32 @@ function minus2ll end
 # Single Models
 ############################################################################################
 
-# SemFit splices loss functions ------------------------------------------------------------
-minus2ll(sem_fit::SemFit{Mi, So, St, Mo, O} where {Mi, So, St, Mo <: AbstractSemSingle, O}) = 
-    minus2ll(
-        sem_fit,
-        sem_fit.model.observed,
-        sem_fit.model.imply,
-        sem_fit.model.optimizer,
-        sem_fit.model.loss.functions...
-        )
+minus2ll(fit::SemFit) = minus2ll(fit, fit.model)
 
-minus2ll(sem_fit::SemFit, obs, imp, optimizer, args...) = minus2ll(sem_fit.minimum, obs, imp, optimizer, args...)
+function minus2ll(fit::SemFit, model::AbstractSemSingle)
+    minimum = objective!(model, fit.solution)
+    return minus2ll(minimum, model)
+end
+
+minus2ll(minimum::Number, model::AbstractSemSingle) =
+    sum(loss -> minus2ll(minimum, model, loss), model.loss.functions)
 
 # SemML ------------------------------------------------------------------------------------
-minus2ll(minimum::Number, obs, imp::Union{RAM, RAMSymbolic}, optimizer, loss_ml::SemML) =
-    n_obs(obs)*(minimum + log(2π)*n_man(obs))
+function minus2ll(minimum::Number, model::AbstractSemSingle, loss_ml::SemML)
+    obs = observed(model)
+    return n_obs(obs)*(minimum + log(2π)*n_man(obs))
+end
 
 # WLS --------------------------------------------------------------------------------------
-minus2ll(minimum::Number, obs, imp::Union{RAM, RAMSymbolic}, optimizer, loss_ml::SemWLS) =
+minus2ll(minimum::Number, model::AbstractSemSingle, loss_ml::SemWLS) =
     missing
 
 # compute likelihood for missing data - H0 -------------------------------------------------
 # -2ll = (∑ log(2π)*(nᵢ + mᵢ)) + F*n
-function minus2ll(minimum::Number, observed, imp::Union{RAM, RAMSymbolic}, optimizer, loss_ml::SemFIML)
-    F = minimum * n_obs(observed)
-    F += log(2π)*sum(pat -> n_obs(pat)*nobserved_vars(pat), observed.patterns)
+function minus2ll(minimum::Number, model::AbstractSemSingle, loss_ml::SemFIML)
+    obs = observed(model)::SemObservedMissing
+    F = minimum * n_obs(obs)
+    F += log(2π)*sum(pat -> n_obs(pat)*nobserved_vars(pat), obs.patterns)
     return F
 end
 
@@ -99,14 +100,4 @@ end
 # Collection
 ############################################################################################
 
-minus2ll(minimum, model::AbstractSemSingle) = 
-    minus2ll(minimum, model.observed, model.imply, model.optimizer, model.loss.functions...)
-
-function minus2ll(sem_fit::SemFit{Mi, So, St, Mo, O} where {Mi, So, St, Mo <: SemEnsemble, O})
-    m2ll = 0.0
-    for sem in sem_fit.model.sems
-        minimum = objective!(sem, sem_fit.solution)
-        m2ll += minus2ll(minimum, sem)
-    end
-    return m2ll
-end
+minus2ll(fit::SemFit, model::SemEnsemble) = sum(Base.Fix1(minus2ll, fit), model.sems)
