@@ -1,5 +1,8 @@
 using StructuralEquationModels, Test, FiniteDiff
 using LinearAlgebra: diagind, LowerTriangular
+
+SEM = StructuralEquationModels
+
 # using StructuralEquationModels as SEM
 include(
     joinpath(chop(dirname(pathof(StructuralEquationModels)), tail = 3),
