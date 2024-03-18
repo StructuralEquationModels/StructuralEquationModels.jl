@@ -1,7 +1,7 @@
 module StructuralEquationModels
 
 using LinearAlgebra, Optim,
-    NLSolversBase, Statistics, SparseArrays, Symbolics,
+    NLSolversBase, Statistics, StatsBase, SparseArrays, Symbolics,
     NLopt, FiniteDiff, PrettyTables,
     Distributions, StenoGraphs, LazyArtifacts, DelimitedFiles,
     DataFrames
