@@ -201,7 +201,6 @@ n_man(observed::SemObservedMissing) = observed.n_man
 ### Additional methods
 ############################################################################################
 
-get_data(observed::SemObservedMissing) = observed.data
 patterns(observed::SemObservedMissing) = observed.patterns
 patterns_not(observed::SemObservedMissing) = observed.patterns_not
 rows(observed::SemObservedMissing) = observed.rows

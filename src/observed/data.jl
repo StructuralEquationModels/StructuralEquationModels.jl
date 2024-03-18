@@ -123,7 +123,6 @@ n_man(observed::SemObservedData) = observed.n_man
 ### additional methods
 ############################################################################################
 
-get_data(observed::SemObservedData) = observed.data
 obs_cov(observed::SemObservedData) = observed.obs_cov
 obs_mean(observed::SemObservedData) = observed.obs_mean
 data_rowwise(observed::SemObservedData) = observed.data_rowwise
