@@ -34,6 +34,14 @@ function ParameterTable(; observed_vars::Union{AbstractVector{Symbol}, Nothing}=
 
     return ParameterTable(columns, variables)
 end
+vars(partable::ParameterTable) =
+    !isempty(partable.variables.sorted) ? partable.variables.sorted :
+    vcat(partable.variables.observed, partable.variables.latent)
+observed_vars(partable::ParameterTable) = partable.variables.observed
+latent_vars(partable::ParameterTable) = partable.variables.latent
+
+nvars(partable::ParameterTable) =
+    length(partable.variables.latent) + length(partable.variables.observed)
 
 ############################################################################################
 ### Convert to other types
@@ -158,6 +166,7 @@ function Base.sort!(partable::ParameterTable)
 
     copyto!(resize!(partable.variables.sorted, length(sorted_vars)),
             sorted_vars)
+    @assert length(partable.variables.sorted) == nvars(partable)
 
     return partable
 end
