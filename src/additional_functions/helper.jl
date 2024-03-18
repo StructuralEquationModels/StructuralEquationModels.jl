@@ -110,13 +110,6 @@ function sparse_outer_mul!(C, A, B::Vector, ind) #computes A*S*B -> C, where ind
     end
 end
 
-function cov_and_mean(rows; corrected = false)
-    obs_mean, obs_cov = StatsBase.mean_and_cov(
-    		reduce(hcat, rows), 1,
-            corrected = corrected)
-    return obs_cov, obs_mean
-end
-
 function duplication_matrix(nobs)
     nobs = Int(nobs)
     n1 = Int(nobs*(nobs+1)*0.5)
