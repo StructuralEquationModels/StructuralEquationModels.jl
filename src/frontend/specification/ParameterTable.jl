@@ -38,12 +38,26 @@ function ParameterTable(; observed_vars::Union{AbstractVector{Symbol}, Nothing}=
                           !isnothing(params) ? copy(params) : Vector{Symbol}())
 end
 
-function check_params(params::AbstractVector{Symbol}, partable_ids::AbstractVector{Symbol})
-    all_refs = Set(id for id in partable_ids if id != :const)
-    undecl_params = setdiff(all_refs, params)
+# checks if params vector contain all ids from param_refs
+# and optionally appends missing ones
+function check_params(params::AbstractVector{Symbol},
+                      param_refs::AbstractVector{Symbol};
+                      append::Bool = false)
+    param_refset = Set(id for id in param_refs if id != :const)
+    undecl_params = setdiff(param_refset, params)
     if !isempty(undecl_params)
-        throw(ArgumentError("The following $(length(undecl_params)) parameters present in the table, but are not declared: " *
+        if append # append preserving the order
+            appended_params = Set{Symbol}()
+            for param in param_refs
+                if (param ∈ undecl_params) && (param ∉ appended_params)
+                    push!(params, param)
+                    push!(appended_params, param)
+                end
+            end
+        else
+            throw(ArgumentError("$(length(undecl_params)) parameters present in the table, but are not declared: " *
                             join(sort!(collect(undecl_params)))))
+        end
     end
 end
 
