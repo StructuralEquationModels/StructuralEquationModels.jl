@@ -60,7 +60,7 @@ include("additional_functions/start_val/start_simple.jl")
 include("additional_functions/artifacts.jl")
 include("additional_functions/simulation.jl")
 # identifier
-include("additional_functions/identifier.jl")
+#include("additional_functions/identifier.jl")
 # fit measures
 include("frontend/fit/fitmeasures/AIC.jl")
 include("frontend/fit/fitmeasures/BIC.jl")
@@ -105,10 +105,9 @@ export  AbstractSem,
         ParameterTable,
             EnsembleParameterTable, update_partable!, update_estimate!, update_start!, update_se_hessian!,
             Fixed, fixed, Start, start, Label, label, sort_vars!, sort_vars,
-            get_identifier_indices,
-        RAMMatrices,
+        RAMMatrices, 
             RAMMatrices!,
-        identifier, nparams,
+        params, nparams,
         fit_measures,
             AIC, BIC, χ², df, fit_measures, minus2ll, n_obs, p_value, RMSEA, n_man,
             EmMVNModel,

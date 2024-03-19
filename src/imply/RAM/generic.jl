@@ -34,7 +34,7 @@ and for models with a meanstructure, the model implied means are computed as
 ```
 
 ## Interfaces
-- `identifier(::RAM) `-> Dict containing the parameter labels and their position
+- `params(::RAM) `-> Dict containing the parameter labels and their position
 - `nparams(::RAM)` -> Number of parameters
 
 - `Σ(::RAM)` -> model implied covariance matrix
@@ -65,7 +65,7 @@ Additional interfaces
 Only available in gradient! calls:
 - `I_A⁻¹(::RAM)` -> ``(I-A)^{-1}``
 """
-mutable struct RAM{MS, A1, A2, A3, A4, A5, A6, V2, M1, M2, M3, M4, S1, S2, S3, D} <: SemImply{MS, ExactHessian}
+mutable struct RAM{MS, A1, A2, A3, A4, A5, A6, V2, M1, M2, M3, M4, S1, S2, S3} <: SemImply{MS, ExactHessian}
     Σ::A1
     A::A2
     S::A3
@@ -83,8 +83,6 @@ mutable struct RAM{MS, A1, A2, A3, A4, A5, A6, V2, M1, M2, M3, M4, S1, S2, S3, D
     ∇A::S1
     ∇S::S2
     ∇M::S3
-
-    identifier::D
 end
 
 ############################################################################################
@@ -159,9 +157,7 @@ function RAM(;
 
         ∇A,
         ∇S,
-        ∇M,
-
-        identifier(ram_matrices)
+        ∇M
     )
 end
 
@@ -169,11 +165,11 @@ end
 ### methods
 ############################################################################################
 
-function update!(targets::EvaluationTargets, imply::RAM, model::AbstractSemSingle, parameters)
-    materialize!(imply.A, imply.ram_matrices.A, parameters)
-    materialize!(imply.S, imply.ram_matrices.S, parameters)
+function update!(targets::EvaluationTargets, imply::RAM, model::AbstractSemSingle, params)
+    materialize!(imply.A, imply.ram_matrices.A, params)
+    materialize!(imply.S, imply.ram_matrices.S, params)
     if !isnothing(imply.M)
-        materialize!(imply.M, imply.ram_matrices.M, parameters)
+        materialize!(imply.M, imply.ram_matrices.M, params)
     end
 
     @inbounds for (j, I_Aj, Aj) in zip(axes(imply.A, 2), eachcol(imply.I_A), eachcol(imply.A))
@@ -203,8 +199,7 @@ end
 ### Recommended methods
 ############################################################################################
 
-identifier(imply::RAM) = imply.identifier
-nparams(imply::RAM) = nparams(imply.ram_matrices)
+params(imply::RAM) = params(imply.ram_matrices)
 
 function update_observed(imply::RAM, observed::SemObserved; kwargs...)
     if n_man(observed) == size(imply.Σ, 1)

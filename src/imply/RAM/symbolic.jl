@@ -29,7 +29,7 @@ Subtype of `SemImply` that implements the RAM notation with symbolic precomputat
 Subtype of `SemImply`.
 
 ## Interfaces
-- `identifier(::RAMSymbolic) `-> Dict containing the parameter labels and their position
+- `params(::RAMSymbolic) `-> vector of parameter names
 - `nparams(::RAMSymbolic)` -> number of parameters
 
 - `Σ(::RAMSymbolic)` -> model implied covariance matrix
@@ -62,7 +62,7 @@ and for models with a meanstructure, the model implied means are computed as
     \mu = F(I-A)^{-1}M
 ```
 """
-struct RAMSymbolic{MS, F1, F2, F3, A1, A2, A3, S1, S2, S3, V2, F4, A4, F5, A5, D1} <: SemImplySymbolic{MS,ExactHessian}
+struct RAMSymbolic{MS, F1, F2, F3, A1, A2, A3, S1, S2, S3, V2, F4, A4, F5, A5} <: SemImplySymbolic{MS,ExactHessian}
     Σ_function::F1
     ∇Σ_function::F2
     ∇²Σ_function::F3
@@ -77,7 +77,6 @@ struct RAMSymbolic{MS, F1, F2, F3, A1, A2, A3, S1, S2, S3, V2, F4, A4, F5, A5, D
     μ::A4
     ∇μ_function::F5
     ∇μ::A5
-    identifier::D1
 end
 
 ############################################################################################
@@ -185,7 +184,6 @@ function RAMSymbolic(;
         μ,
         ∇μ_function,
         ∇μ,
-        identifier(ram_matrices),
     )
 end
 
@@ -211,7 +209,7 @@ end
 ### Recommended methods
 ############################################################################################
 
-identifier(imply::RAMSymbolic) = imply.identifier
+params(imply::RAMSymbolic) = params(imply.ram_matrices)
 nparams(imply::RAMSymbolic) = nparams(imply.ram_matrices)
 
 function update_observed(imply::RAMSymbolic, observed::SemObserved; kwargs...)

@@ -14,6 +14,8 @@ model_g2 = Sem(
     imply = RAM
 )
 
+@test SEM.params(model_g1.imply.ram_matrices) == SEM.params(model_g2.imply.ram_matrices)
+
 model_ml_multigroup = SemEnsemble(model_g1, model_g2; optimizer = semoptimizer)
 
 

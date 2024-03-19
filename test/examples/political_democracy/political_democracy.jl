@@ -1,5 +1,7 @@
 using StructuralEquationModels, Test, FiniteDiff
 
+SEM = StructuralEquationModels
+
 include(
     joinpath(chop(dirname(pathof(StructuralEquationModels)), tail = 3),
     "test/examples/helper.jl")
@@ -67,15 +69,15 @@ spec = RAMMatrices(;
     A = A,
     S = S,
     F = F,
-    parameters = x,
+    params = x,
     colnames = [:x1, :x2, :x3, :y1, :y2, :y3, :y4, :y5, :y6, :y7, :y8, :ind60, :dem60, :dem65]
 )
 
 partable = ParameterTable(spec)
 
-# w. meanstructure -------------------------------------------------------------------------
+@test SEM.params(spec) == SEM.params(partable)
 
-x = Symbol.("x".*string.(1:38))
+# w. meanstructure -------------------------------------------------------------------------
 
 M = [:x32; :x33; :x34; :x35; :x36; :x37; :x38; :x35; :x36; :x37; :x38; 0.0; 0.0; 0.0]
 
@@ -84,10 +86,12 @@ spec_mean = RAMMatrices(;
     S = S,
     F = F,
     M = M,
-    parameters = x,
+    params = [SEM.params(spec); Symbol.("x", string.(32:38))],
     colnames = [:x1, :x2, :x3, :y1, :y2, :y3, :y4, :y5, :y6, :y7, :y8, :ind60, :dem60, :dem65])
 
 partable_mean = ParameterTable(spec_mean)
+
+@test SEM.params(partable_mean) == SEM.params(spec_mean)
 
 start_test = [fill(1.0, 11); fill(0.05, 3); fill(0.05, 6); fill(0.5, 8); fill(0.05, 3)]
 start_test_mean = [fill(1.0, 11); fill(0.05, 3); fill(0.05, 6); fill(0.5, 8); fill(0.05, 3); fill(0.1, 7)]
@@ -113,6 +117,8 @@ end
 
 spec = ParameterTable(spec)
 spec_mean = ParameterTable(spec_mean)
+
+@test SEM.params(spec) == SEM.params(partable)
 
 partable = spec
 partable_mean = spec_mean

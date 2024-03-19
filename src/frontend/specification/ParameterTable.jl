@@ -5,6 +5,7 @@
 mutable struct ParameterTable{C, V} <: AbstractParameterTable
     columns::C
     variables::V
+    params::Vector{Symbol}
 end
 
 ############################################################################################
@@ -13,7 +14,8 @@ end
 
 # constuct an empty table
 function ParameterTable(; observed_vars::Union{AbstractVector{Symbol}, Nothing}=nothing,
-                          latent_vars::Union{AbstractVector{Symbol}, Nothing}=nothing)
+                          latent_vars::Union{AbstractVector{Symbol}, Nothing}=nothing,
+                          params::Union{AbstractVector{Symbol}, Nothing}=nothing)
     columns = (
         from = Vector{Symbol}(),
         parameter_type = Vector{Symbol}(),
@@ -23,17 +25,42 @@ function ParameterTable(; observed_vars::Union{AbstractVector{Symbol}, Nothing}=
         start = Vector{Float64}(),
         estimate = Vector{Float64}(),
         se = Vector{Float64}(),
-        identifier = Vector{Symbol}(),
+        param = Vector{Symbol}(),
     )
 
-    variables = (
+    vars = (
         latent = !isnothing(latent_vars) ? copy(latent_vars) : Vector{Symbol}(),
         observed = !isnothing(observed_vars) ? copy(observed_vars) : Vector{Symbol}(),
         sorted = Vector{Symbol}()
     )
 
-    return ParameterTable(columns, variables)
+    return ParameterTable(columns, vars,
+                          !isnothing(params) ? copy(params) : Vector{Symbol}())
 end
+
+function check_params(params::AbstractVector{Symbol}, partable_ids::AbstractVector{Symbol})
+    all_refs = Set(id for id in partable_ids if id != :const)
+    undecl_params = setdiff(all_refs, params)
+    if !isempty(undecl_params)
+        throw(ArgumentError("The following $(length(undecl_params)) parameters present in the table, but are not declared: " *
+                            join(sort!(collect(undecl_params)))))
+    end
+end
+
+# new parameter table with different parameters order
+function ParameterTable(partable::ParameterTable;
+                        params::Union{AbstractVector{Symbol}, Nothing}=nothing)
+    isnothing(params) || check_params(params, partable.columns.param)
+
+    newtable = ParameterTable(observed_vars = observed_vars(partable),
+                              latent_vars = latent_vars(partable),
+                              params = params)
+    newtable.columns = NamedTuple(col => copy(values)
+                                  for (col, values) in pairs(partable.columns))
+
+    return newtable
+end
+
 vars(partable::ParameterTable) =
     !isempty(partable.variables.sorted) ? partable.variables.sorted :
     vcat(partable.variables.observed, partable.variables.latent)
@@ -49,6 +76,12 @@ nvars(partable::ParameterTable) =
 
 function Base.convert(::Type{Dict}, partable::ParameterTable)
     return partable.columns
+end
+
+function Base.convert(::Type{ParameterTable}, partable::ParameterTable;
+                      params::Union{AbstractVector{Symbol}, Nothing}=nothing)
+    return isnothing(params) || partable.params == params ? partable :
+        ParameterTable(partable; params=params)
 end
 
 function DataFrames.DataFrame(
@@ -214,17 +247,19 @@ end
 # update generic ---------------------------------------------------------------------------
 
 function update_partable!(partable::ParameterTable,
-                          model_identifier::AbstractDict,
+                          params::AbstractVector{Symbol},
                           values::AbstractVector,
                           column::Symbol)
+    length(params) == length(values) ||
+        throw(ArgumentError("The length of `params` ($(length(params))) and their `values` ($(length(values))) must be the same"))
     coldata = partable.columns[column]
+    fixed_values = partable.columns.value_fixed
+    param_index = Dict(zip(params, eachindex(params)))
     resize!(coldata, length(partable))
     for (i, id) in enumerate(partable.columns.identifier)
-        if !(id == :const)
-            coldata[i] = values[model_identifier[id]]
-        elseif id == :const
-            coldata[i] = zero(eltype(values))
-        end
+        coldata[i] = id != :const ?
+                values[param_index[id]] :
+                fixed_values[i]
     end
     return partable
 end
@@ -239,7 +274,7 @@ Write `vec` to `column` of `partable`.
 """
 update_partable!(partable::AbstractParameterTable, sem_fit::SemFit,
                  values::AbstractVector, column::Symbol) =
-    update_partable!(partable, identifier(sem_fit), values, column)
+    update_partable!(partable, params(sem_fit), values, column)
 
 # update estimates -------------------------------------------------------------------------
 """
@@ -275,7 +310,7 @@ function update_start!(
     if !(start_val isa Vector)
         start_val = start_val(model; kwargs...)
     end
-    return update_partable!(partable, identifier(model), start_val, :start)
+    return update_partable!(partable, params(model), start_val, :start)
 end
 
 # update partable standard errors ----------------------------------------------------------

@@ -32,13 +32,15 @@ label(args...) = Label(args)
 
 function ParameterTable(graph::AbstractStenoGraph;
                         observed_vars, latent_vars,
-                        group::Integer = 1, param_prefix = :θ)
+                        params::Union{AbstractVector{Symbol}, Nothing} = nothing,
+                        group::Integer = 1, param_prefix::Symbol = :θ)
     graph = unique(graph)
     n = length(graph)
 
     partable = ParameterTable(
         latent_vars = latent_vars,
-        observed_vars = observed_vars)
+        observed_vars = observed_vars,
+        params = params)
     from = resize!(partable.columns.from, n)
     parameter_type = resize!(partable.columns.parameter_type, n)
     to = resize!(partable.columns.to, n)
@@ -99,6 +101,19 @@ function ParameterTable(graph::AbstractStenoGraph;
         end
     end
 
+    if isnothing(params)
+        # collect the unique params in the order of appearance
+        @assert isempty(partable.params)
+        ids = Set{Symbol}()
+        for id in param
+            if (id != :const) && (id ∉ ids)
+                push!(ids, id)
+                push!(partable.params, id)
+            end
+        end
+    end
+    check_params(partable.params, param)
+
     return partable
 end
 
@@ -107,7 +122,8 @@ end
 ############################################################################################
 
 function EnsembleParameterTable(graph::AbstractStenoGraph;
-                                observed_vars, latent_vars, groups)
+                                observed_vars, latent_vars, groups,
+                                params::Union{AbstractVector{Symbol}, Nothing} = nothing)
 
     graph = unique(graph)
 
@@ -115,8 +131,9 @@ function EnsembleParameterTable(graph::AbstractStenoGraph;
             graph;
             observed_vars = observed_vars,
             latent_vars = latent_vars,
+            params = params,
             group = i,
             param_prefix = Symbol(:g, group))
             for (i, group) in enumerate(groups))
-    return EnsembleParameterTable(partables)
+    return EnsembleParameterTable(partables, params = params)
 end

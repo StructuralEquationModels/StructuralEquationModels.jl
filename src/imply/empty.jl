@@ -19,15 +19,14 @@ model per group and an additional model with `ImplyEmpty` and `SemRidge` for the
 # Extended help
 
 ## Interfaces
-- `identifier(::RAMSymbolic) `-> Dict containing the parameter labels and their position
+- `params(::RAMSymbolic) `-> Dict containing the parameter labels and their position
 - `nparams(::RAMSymbolic)` -> Number of parameters
 
 ## Implementation
 Subtype of `SemImply`.
 """
-struct ImplyEmpty{V, V2} <: SemImply{NoMeanStructure,ExactHessian}
-    identifier::V2
-    n_par::V
+struct ImplyEmpty <: SemImply{NoMeanStructure,ExactHessian}
+    params::Vector{Symbol}
 end
 
 ############################################################################################
@@ -35,15 +34,10 @@ end
 ############################################################################################
 
 function ImplyEmpty(;
-        specification,
+        specification::SemSpecification,
         kwargs...)
 
-        ram_matrices = RAMMatrices(specification)
-        identifier = identifier(ram_matrices)
-        
-        n_par = length(ram_matrices.parameters)
-
-        return ImplyEmpty(identifier, n_par)
+        return ImplyEmpty(params(spec))
 end
 
 ############################################################################################
@@ -55,8 +49,5 @@ update!(targets::EvaluationTargets, imply::ImplyEmpty, par, model) = nothing
 ############################################################################################
 ### Recommended methods
 ############################################################################################
-
-identifier(imply::ImplyEmpty) = imply.identifier
-nparams(imply::ImplyEmpty) = imply.nparams
 
 update_observed(imply::ImplyEmpty, observed::SemObserved; kwargs...) = imply

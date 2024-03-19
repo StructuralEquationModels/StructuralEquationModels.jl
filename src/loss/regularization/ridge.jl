@@ -54,7 +54,8 @@ function SemRidge(;
         if isnothing(imply)
             throw(ArgumentError("When referring to parameters by label, `imply = ...` has to be specified"))
         else
-            which_ridge = get_identifier_indices(which_ridge, imply)
+            param_indices = Dict(param => i for (i, param) in enumerate(params(imply)))
+            which_ridge = [param_indices[param] for param in params(imply)]
         end
     end
     which_H = [CartesianIndex(x, x) for x in which_ridge]

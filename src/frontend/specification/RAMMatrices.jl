@@ -8,7 +8,7 @@ struct RAMMatrices <: SemSpecification
     S::ParamsMatrix{Float64}
     F::SparseMatrixCSC{Float64}
     M::Union{ParamsVector{Float64}, Nothing}
-    parameters::Vector{Symbol}
+    params::Vector{Symbol}
     colnames::Union{Vector{Symbol}, Nothing}    # better call it "variables": it's a mixture of observed and latent (and it gets confusing with get_colnames())
 end
 
@@ -55,7 +55,7 @@ end
 
 function RAMMatrices(; A::AbstractMatrix, S::AbstractMatrix,
                        F::AbstractMatrix, M::Union{AbstractVector, Nothing} = nothing,
-                     parameters::AbstractVector{Symbol},
+                     params::AbstractVector{Symbol},
                      colnames::Union{AbstractVector{Symbol}, Nothing} = nothing)
     ncols = size(A, 2)
     if !isnothing(colnames)
@@ -69,14 +69,14 @@ function RAMMatrices(; A::AbstractMatrix, S::AbstractMatrix,
     if !isnothing(M)
         length(M) == ncols || throw(DimensionMismatch("M should have as many elements as colnames length ($ncols), $(length(M)) found"))
     end
-    A = ParamsMatrix{Float64}(A, parameters)
-    S = ParamsMatrix{Float64}(S, parameters)
-    M = !isnothing(M) ? ParamsVector{Float64}(M, parameters) : nothing
+    A = ParamsMatrix{Float64}(A, params)
+    S = ParamsMatrix{Float64}(S, params)
+    M = !isnothing(M) ? ParamsVector{Float64}(M, params) : nothing
     spF = sparse(F)
     if any(!isone, spF.nzval)
         throw(ArgumentError("F should contain only 0s and 1s"))
     end
-    return RAMMatrices(A, S, F, M, parameters, colnames)
+    return RAMMatrices(A, S, F, M, copy(params), colnames)
 end
 
 ############################################################################################
@@ -86,9 +86,7 @@ end
 function RAMMatrices(partable::ParameterTable;
                      params::Union{AbstractVector{Symbol}, Nothing} = nothing)
 
-    if isnothing(params)
-        params = parameters(partable)
-    end
+    params = copy(isnothing(params) ? SEM.params(partable) : params)
     params_index = Dict(param => i for (i, param) in enumerate(params))
     if length(params) != length(params_index)
         params_seen = Set{Symbol}()
@@ -199,29 +197,47 @@ Base.convert(::Type{RAMMatrices}, partable::ParameterTable) = RAMMatrices(partab
 ### get parameter table from RAMMatrices
 ############################################################################################
 
-function ParameterTable(ram_matrices::RAMMatrices)
+function ParameterTable(ram::RAMMatrices;
+                        params::Union{AbstractVector{Symbol}, Nothing} = nothing,
+                        observed_var_prefix::Symbol = :obs,
+                        latent_var_prefix::Symbol = :var)
+    # defer parameter checks until we know which ones are used
 
-    colnames = ram_matrices.colnames
+    if !isnothing(ram.colnames)
+        latent_vars = SEM.latent_vars(ram)
+        observed_vars = SEM.observed_vars(ram)
+        colnames = ram.colnames
+    else
+        observed_vars = [Symbol("$(observed_var_prefix)_$i") for i in 1:nobserved_vars(ram)]
+        latent_vars = [Symbol("$(latent_var_prefix)_$i") for i in 1:nlatent_vars(ram)]
+        colnames = vcat(observed_vars, latent_vars)
+    end
 
-    partable = ParameterTable(observed_vars = colnames[ram_matrices.F.rowval],
-                              latent_vars = colnames[setdiff(eachindex(colnames),
-                                                             ram_matrices.F.rowval)])
+    # construct an empty table
+    partable = ParameterTable(observed_vars = observed_vars,
+                              latent_vars = latent_vars,
+                              params = isnothing(params) ? ram.params : params)
 
+    # fill the table
     position_names = Dict{Int, Symbol}(1:length(colnames) .=> colnames)
 
-    append_rows!(partable, ram_matrices.A, :A,
-                 ram_matrices.parameters, position_names)
-    append_rows!(partable, ram_matrices.S, :S,
-                 ram_matrices.parameters, position_names, skip_symmetric=true)
-    if !isnothing(ram_matrices.M)
-        append_rows!(partable, ram_matrices.M, :M,
-                     ram_matrices.parameters, position_names)
+    append_rows!(partable, ram.S, :S,
+                 ram.params, position_names, skip_symmetric=true)
+    append_rows!(partable, ram.A, :A,
+                 ram.params, position_names)
+    if !isnothing(ram.M)
+        append_rows!(partable, ram.M, :M,
+                     ram.params, position_names)
     end
+
+    check_params(SEM.params(partable), partable.columns.param)
 
     return partable
 end
 
-Base.convert(::Type{<:ParameterTable}, ram_matrices::RAMMatrices) = ParameterTable(ram_matrices)
+Base.convert(::Type{<:ParameterTable}, ram::RAMMatrices;
+             params::Union{AbstractVector{Symbol}, Nothing} = nothing) =
+        ParameterTable(ram; params = params)
 
 ############################################################################################
 ### Pretty Printing
@@ -235,23 +251,6 @@ end
 ############################################################################################
 ### Additional Functions
 ############################################################################################
-
-# get the vector of all parameters in the table
-# the position of the parameter is based on its first appearance in the table (and the ensemble)
-function parameters(partable::Union{EnsembleParameterTable, ParameterTable})
-    if partable isa ParameterTable
-        parameters = partable.columns.identifier
-    else
-        parameters = Vector{Symbol}()
-        for tbl in values(partable.tables)
-            append!(parameters, tbl.columns.identifier)
-        end
-    end
-    parameters = unique(parameters)
-    filter!(!=(:const), parameters) # exclude constants
-
-    return parameters
-end
 
 function matrix_to_parameter_type(matrix::Symbol)
     if matrix == :A
@@ -291,7 +290,7 @@ end
 
 function append_rows!(partable::ParameterTable,
                       arr::ParamsArray, arr_name::Symbol,
-                      parameters::AbstractVector,
+                      params::AbstractVector,
                       position_names;
                       skip_symmetric::Bool = false)
     nparams(arr) == length(params) ||
@@ -300,7 +299,7 @@ function append_rows!(partable::ParameterTable,
 
     # add parameters
     visited_indices = Set{eltype(arr_ixs)}()
-    for (i, par) in enumerate(parameters)
+    for (i, par) in enumerate(params)
         for j in param_occurences_range(arr, i)
             arr_ix = arr_ixs[arr.linear_indices[j]]
             skip_symmetric && (arr_ix ∈ visited_indices) && continue
