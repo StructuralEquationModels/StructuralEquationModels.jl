@@ -29,7 +29,7 @@ Analytic gradients and hessians are available.
 ## Implementation
 Subtype of `SemLossFunction`.
 """
-struct SemRidge{P, W1, W2, GT, HT} <: SemLossFunction
+struct SemRidge{P, W1, W2, GT, HT} <: SemLossFunction{ExactHessian}
     α::P
     which::W1
     which_H::W2

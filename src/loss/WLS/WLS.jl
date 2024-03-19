@@ -38,17 +38,18 @@ Analytic gradients are available, and for models without a meanstructure, also a
 ## Implementation
 Subtype of `SemLossFunction`.
 """
-struct SemWLS{Vt, St, B, C, B2} <: SemLossFunction
+struct SemWLS{HE <: HessianEvaluation, Vt, St, C} <: SemLossFunction{HE}
     V::Vt
     σₒ::St
-    approximate_hessian::B
     V_μ::C
-    has_meanstructure::B2
 end
 
 ############################################################################################
 ### Constructors
 ############################################################################################
+
+SemWLS{HE}(args...) where {HE <: HessianEvaluation} =
+    SemWLS{HE, map(typeof, args)...}(args...)
 
 function SemWLS(;
     observed,
@@ -77,43 +78,16 @@ function SemWLS(;
     else
         wls_weight_matrix_mean = nothing
     end
+    HE = approximate_hessian ? ApproximateHessian : AnalyticHessian
 
-    return SemWLS(
-        wls_weight_matrix,
-        s,
-        approximate_hessian,
-        wls_weight_matrix_mean,
-        Val(meanstructure),
-    )
+    return SemWLS{HE}(wls_weight_matrix, s, wls_weight_matrix_mean)
 end
 
 ############################################################################
 ### methods
 ############################################################################
 
-objective!(semwls::SemWLS, par, model::AbstractSemSingle) =
-    objective!(semwls::SemWLS, par, model, semwls.has_meanstructure)
-gradient!(semwls::SemWLS, par, model::AbstractSemSingle) =
-    gradient!(semwls::SemWLS, par, model, semwls.has_meanstructure)
-hessian!(semwls::SemWLS, par, model::AbstractSemSingle) =
-    hessian!(semwls::SemWLS, par, model, semwls.has_meanstructure)
-
-objective_gradient!(semwls::SemWLS, par, model::AbstractSemSingle) =
-    objective_gradient!(semwls::SemWLS, par, model, semwls.has_meanstructure)
-objective_hessian!(semwls::SemWLS, par, model::AbstractSemSingle) =
-    objective_hessian!(semwls::SemWLS, par, model, semwls.has_meanstructure)
-gradient_hessian!(semwls::SemWLS, par, model::AbstractSemSingle) =
-    gradient_hessian!(semwls::SemWLS, par, model, semwls.has_meanstructure)
-
-objective_gradient_hessian!(semwls::SemWLS, par, model::AbstractSemSingle) =
-    objective_gradient_hessian!(semwls::SemWLS, par, model, semwls.has_meanstructure)
-
-function objective!(
-    semwls::SemWLS,
-    par,
-    model::AbstractSemSingle,
-    has_meanstructure::Val{T},
-) where {T}
+function objective!(semwls::SemWLS, par, model::AbstractSemSingle)
     let σ = Σ(imply(model)),
         μ = μ(imply(model)),
         σₒ = semwls.σₒ,
@@ -123,7 +97,7 @@ function objective!(
 
         σ₋ = σₒ - σ
 
-        if T
+        if MeanStructure(imply(model)) === HasMeanStructure
             μ₋ = μₒ - μ
             return dot(σ₋, V, σ₋) + dot(μ₋, V_μ, μ₋)
         else
@@ -132,12 +106,7 @@ function objective!(
     end
 end
 
-function gradient!(
-    semwls::SemWLS,
-    par,
-    model::AbstractSemSingle,
-    has_meanstructure::Val{T},
-) where {T}
+function gradient!(semwls::SemWLS, par, model::AbstractSemSingle)
     let σ = Σ(imply(model)),
         μ = μ(imply(model)),
         σₒ = semwls.σₒ,
@@ -149,7 +118,7 @@ function gradient!(
 
         σ₋ = σₒ - σ
 
-        if T
+        if MeanStructure(imply(model)) === HasMeanStructure
             μ₋ = μₒ - μ
             return -2 * (σ₋' * V * ∇σ + μ₋' * V_μ * ∇μ)'
         else
@@ -158,12 +127,7 @@ function gradient!(
     end
 end
 
-function hessian!(
-    semwls::SemWLS,
-    par,
-    model::AbstractSemSingle,
-    has_meanstructure::Val{T},
-) where {T}
+function hessian!(semwls::SemWLS, par, model::AbstractSemSingle)
     let σ = Σ(imply(model)),
         σₒ = semwls.σₒ,
         V = semwls.V,
@@ -173,11 +137,11 @@ function hessian!(
 
         σ₋ = σₒ - σ
 
-        if T
+        if MeanStructure(imply(model)) === HasMeanStructure
             throw(DomainError(H, "hessian of WLS with meanstructure is not available"))
         else
             hessian = 2 * ∇σ' * V * ∇σ
-            if !semwls.approximate_hessian
+            if HessianEvaluation(semwls) === ExactHessian
                 J = -2 * (σ₋' * semwls.V)'
                 ∇²Σ_function!(∇²Σ, J, par)
                 hessian .+= ∇²Σ
@@ -187,12 +151,7 @@ function hessian!(
     end
 end
 
-function objective_gradient!(
-    semwls::SemWLS,
-    par,
-    model::AbstractSemSingle,
-    has_meanstructure::Val{T},
-) where {T}
+function objective_gradient!(semwls::SemWLS, par, model::AbstractSemSingle)
     let σ = Σ(imply(model)),
         μ = μ(imply(model)),
         σₒ = semwls.σₒ,
@@ -204,9 +163,9 @@ function objective_gradient!(
 
         σ₋ = σₒ - σ
 
-        if T
+        if MeanStructure(imply(model)) === HasMeanStructure
             μ₋ = μₒ - μ
-            objective = dot(σ₋, V, σ₋) + dot(μ₋', V_μ, μ₋)
+            objective = dot(σ₋, V, σ₋) + dot(μ₋, V_μ, μ₋)
             gradient = -2 * (σ₋' * V * ∇σ + μ₋' * V_μ * ∇μ)'
             return objective, gradient
         else
@@ -217,12 +176,11 @@ function objective_gradient!(
     end
 end
 
-function objective_hessian!(
-    semwls::SemWLS,
-    par,
-    model::AbstractSemSingle,
-    has_meanstructure::Val{T},
-) where {T}
+function objective_hessian!(semwls::SemWLS, par, model::AbstractSemSingle)
+    if MeanStructure(imply(model)) === HasMeanStructure
+        throw(DomainError(H, "hessian of WLS with meanstructure is not available"))
+    end
+
     let σ = Σ(imply(model)),
         σₒ = semwls.σₒ,
         V = semwls.V,
@@ -235,7 +193,7 @@ function objective_hessian!(
         objective = dot(σ₋, V, σ₋)
 
         hessian = 2 * ∇σ' * V * ∇σ
-        if !semwls.approximate_hessian
+        if HessianEvaluation(semwls) === ExactHessian
             J = -2 * (σ₋' * semwls.V)'
             ∇²Σ_function!(∇²Σ, J, par)
             hessian .+= ∇²Σ
@@ -245,19 +203,11 @@ function objective_hessian!(
     end
 end
 
-objective_hessian!(
-    semwls::SemWLS,
-    par,
-    model::AbstractSemSingle,
-    has_meanstructure::Val{true},
-) = throw(DomainError(H, "hessian of WLS with meanstructure is not available"))
+function gradient_hessian!(semwls::SemWLS, par, model::AbstractSemSingle)
+    if MeanStructure(imply(model)) === HasMeanStructure
+        throw(DomainError(H, "hessian of WLS with meanstructure is not available"))
+    end
 
-function gradient_hessian!(
-    semwls::SemWLS,
-    par,
-    model::AbstractSemSingle,
-    has_meanstructure::Val{false},
-)
     let σ = Σ(imply(model)),
         σₒ = semwls.σₒ,
         V = semwls.V,
@@ -270,7 +220,7 @@ function gradient_hessian!(
         gradient = -2 * (σ₋' * V * ∇σ)'
 
         hessian = 2 * ∇σ' * V * ∇σ
-        if !semwls.approximate_hessian
+        if HessianEvaluation(semwls) === ExactHessian
             J = -2 * (σ₋' * semwls.V)'
             ∇²Σ_function!(∇²Σ, J, par)
             hessian .+= ∇²Σ
@@ -280,19 +230,11 @@ function gradient_hessian!(
     end
 end
 
-gradient_hessian!(
-    semwls::SemWLS,
-    par,
-    model::AbstractSemSingle,
-    has_meanstructure::Val{true},
-) = throw(DomainError(H, "hessian of WLS with meanstructure is not available"))
+function objective_gradient_hessian!(semwls::SemWLS, par, model::AbstractSemSingle)
+    if MeanStructure(imply(model)) === HasMeanStructure
+        throw(DomainError(H, "hessian of WLS with meanstructure is not available"))
+    end
 
-function objective_gradient_hessian!(
-    semwls::SemWLS,
-    par,
-    model::AbstractSemSingle,
-    has_meanstructure::Val{false},
-)
     let σ = Σ(imply(model)),
         σₒ = semwls.σₒ,
         V = semwls.V,
@@ -305,7 +247,7 @@ function objective_gradient_hessian!(
         objective = dot(σ₋, V, σ₋)
         gradient = -2 * (σ₋' * V * ∇σ)'
         hessian = 2 * ∇σ' * V * ∇σ
-        if !semwls.approximate_hessian
+        if HessianEvaluation(semwls) === ExactHessian
             J = -2 * (σ₋' * semwls.V)'
             ∇²Σ_function!(∇²Σ, J, par)
             hessian .+= ∇²Σ
@@ -313,13 +255,6 @@ function objective_gradient_hessian!(
         return objective, gradient, hessian
     end
 end
-
-objective_gradient_hessian!(
-    semwls::SemWLS,
-    par,
-    model::AbstractSemSingle,
-    has_meanstructure::Val{true},
-) = throw(DomainError(H, "hessian of WLS with meanstructure is not available"))
 
 ############################################################################################
 ### Recommended methods

@@ -25,7 +25,7 @@ Analytic gradients and hessians are available.
 ## Implementation
 Subtype of `SemLossFunction`.
 """
-struct SemConstant{C} <: SemLossFunction
+struct SemConstant{C} <: SemLossFunction{ExactHessian}
     c::C
 end
 

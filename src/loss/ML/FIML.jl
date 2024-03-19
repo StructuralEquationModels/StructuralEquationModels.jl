@@ -24,7 +24,7 @@ Analytic gradients are available.
 ## Implementation
 Subtype of `SemLossFunction`.
 """
-mutable struct SemFIML{INV, C, L, O, M, IM, I, T, W} <: SemLossFunction
+mutable struct SemFIML{INV, C, L, O, M, IM, I, T, W} <: SemLossFunction{ExactHessian}
     inverses::INV #preallocated inverses of imp_cov
     choleskys::C #preallocated choleskys
     logdets::L #logdets of implied covmats

@@ -65,8 +65,8 @@ Additional interfaces
 Only available in gradient! calls:
 - `I_A⁻¹(::RAM)` -> ``(I-A)^{-1}``
 """
-mutable struct RAM{A1, A2, A3, A4, A5, A6, V2, I1, I2, I3, M1, M2, M3, M4, S1, S2, S3, B} <:
-               SemImply
+mutable struct RAM{MS, A1, A2, A3, A4, A5, A6, V2, I1, I2, I3, M1, M2, M3, M4, S1, S2, S3} <:
+               SemImply{MS, ExactHessian}
     Σ::A1
     A::A2
     S::A3
@@ -75,7 +75,6 @@ mutable struct RAM{A1, A2, A3, A4, A5, A6, V2, I1, I2, I3, M1, M2, M3, M4, S1, S
     M::A6
 
     ram_matrices::V2
-    has_meanstructure::B
 
     A_indices::I1
     S_indices::I2
@@ -89,9 +88,10 @@ mutable struct RAM{A1, A2, A3, A4, A5, A6, V2, I1, I2, I3, M1, M2, M3, M4, S1, S
     ∇A::S1
     ∇S::S2
     ∇M::S3
-end
 
-using StructuralEquationModels
+    RAM{MS}(args...) where {MS <: MeanStructure} =
+        new{MS, map(typeof, args)...}(args...)
+end
 
 ############################################################################################
 ### Constructors
@@ -143,7 +143,7 @@ function RAM(;
 
     # μ
     if meanstructure
-        has_meanstructure = Val(true)
+        MS = HasMeanStructure
         !isnothing(M_indices) || throw(
             ArgumentError(
                 "You set `meanstructure = true`, but your model specification contains no mean parameters.",
@@ -152,14 +152,14 @@ function RAM(;
         ∇M = gradient ? matrix_gradient(M_indices, n_var) : nothing
         μ = zeros(n_obs)
     else
-        has_meanstructure = Val(false)
+        MS = NoMeanStructure
         M_indices = nothing
         M_pre = nothing
         μ = nothing
         ∇M = nothing
     end
 
-    return RAM(
+    return RAM{MS}(
         Σ,
         A_pre,
         S_pre,
@@ -167,7 +167,6 @@ function RAM(;
         μ,
         M_pre,
         ram_matrices,
-        has_meanstructure,
         A_indices,
         S_indices,
         M_indices,
@@ -185,14 +184,8 @@ end
 ### methods
 ############################################################################################
 
-# dispatch on meanstructure
-objective!(imply::RAM, par, model::AbstractSemSingle) =
-    objective!(imply, par, model, imply.has_meanstructure)
-gradient!(imply::RAM, par, model::AbstractSemSingle) =
-    gradient!(imply, par, model, imply.has_meanstructure)
-
 # objective and gradient
-function objective!(imply::RAM, params, model, has_meanstructure::Val{T}) where {T}
+function objective!(imply::RAM, params, model)
     fill_A_S_M!(
         imply.A,
         imply.S,
@@ -211,17 +204,12 @@ function objective!(imply::RAM, params, model, has_meanstructure::Val{T}) where 
 
     Σ_RAM!(imply.Σ, imply.F⨉I_A⁻¹, imply.S, imply.F⨉I_A⁻¹S)
 
-    if T
+    if MeanStructure(imply) === HasMeanStructure
         μ_RAM!(imply.μ, imply.F⨉I_A⁻¹, imply.M)
     end
 end
 
-function gradient!(
-    imply::RAM,
-    params,
-    model::AbstractSemSingle,
-    has_meanstructure::Val{T},
-) where {T}
+function gradient!(imply::RAM, params, model::AbstractSemSingle)
     fill_A_S_M!(
         imply.A,
         imply.S,
@@ -240,21 +228,18 @@ function gradient!(
 
     Σ_RAM!(imply.Σ, imply.F⨉I_A⁻¹, imply.S, imply.F⨉I_A⁻¹S)
 
-    if T
+    if MeanStructure(imply) === HasMeanStructure
         μ_RAM!(imply.μ, imply.F⨉I_A⁻¹, imply.M)
     end
 end
 
-hessian!(imply::RAM, par, model::AbstractSemSingle, has_meanstructure) =
-    gradient!(imply, par, model, has_meanstructure)
-objective_gradient!(imply::RAM, par, model::AbstractSemSingle, has_meanstructure) =
-    gradient!(imply, par, model, has_meanstructure)
-objective_hessian!(imply::RAM, par, model::AbstractSemSingle, has_meanstructure) =
-    gradient!(imply, par, model, has_meanstructure)
-gradient_hessian!(imply::RAM, par, model::AbstractSemSingle, has_meanstructure) =
-    gradient!(imply, par, model, has_meanstructure)
-objective_gradient_hessian!(imply::RAM, par, model::AbstractSemSingle, has_meanstructure) =
-    gradient!(imply, par, model, has_meanstructure)
+hessian!(imply::RAM, par, model::AbstractSemSingle) = gradient!(imply, par, model)
+objective_gradient!(imply::RAM, par, model::AbstractSemSingle) =
+    gradient!(imply, par, model)
+objective_hessian!(imply::RAM, par, model::AbstractSemSingle) = gradient!(imply, par, model)
+gradient_hessian!(imply::RAM, par, model::AbstractSemSingle) = gradient!(imply, par, model)
+objective_gradient_hessian!(imply::RAM, par, model::AbstractSemSingle) =
+    gradient!(imply, par, model)
 
 ############################################################################################
 ### Recommended methods

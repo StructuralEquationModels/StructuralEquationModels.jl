@@ -25,7 +25,7 @@ model per group and an additional model with `ImplyEmpty` and `SemRidge` for the
 ## Implementation
 Subtype of `SemImply`.
 """
-struct ImplyEmpty{V2} <: SemImply
+struct ImplyEmpty{V2} <: SemImply{NoMeanStructure, ExactHessian}
     ram_matrices::V2
 end
 
