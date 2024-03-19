@@ -7,7 +7,8 @@ function RMSEA end
 
 RMSEA(fit::SemFit) = RMSEA(fit, fit.model)
 
-RMSEA(fit::SemFit, model::AbstractSemSingle) = RMSEA(dof(fit), χ²(fit), nsamples(fit))
+RMSEA(fit::SemFit, model::AbstractSemSingle) =
+    RMSEA(dof(fit), χ²(fit), nsamples(fit))
 
 RMSEA(fit::SemFit, model::SemEnsemble) =
     sqrt(length(model.sems)) * RMSEA(dof(fit), χ²(fit), nsamples(fit))
