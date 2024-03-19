@@ -47,7 +47,7 @@ function ParameterTable(graph::AbstractStenoGraph;
     free = fill!(resize!(partable.columns.free, n), true)
     value_fixed = fill!(resize!(partable.columns.value_fixed, n), NaN)
     start = fill!(resize!(partable.columns.start, n), NaN)
-    param = fill!(resize!(partable.columns.param, n), Symbol(""))
+    param_refs = fill!(resize!(partable.columns.param, n), Symbol("")) # params in the graph
     # group = Vector{Symbol}(undef, n)
     # start_partable = zeros(Bool, n)
 
@@ -80,7 +80,7 @@ function ParameterTable(graph::AbstractStenoGraph;
                     if modval == :NaN
                         throw(DomainError(NaN, "NaN is not allowed as a parameter label."))
                     end
-                    param[i] = modval
+                    param_refs[i] = modval
                 end
             end
         end
@@ -88,31 +88,21 @@ function ParameterTable(graph::AbstractStenoGraph;
 
     # assign identifiers for parameters that are not labeled
     current_id = 1
-    for i in 1:length(param)
-        if param[i] == Symbol("")
+    for i in eachindex(param_refs)
+        if param_refs[i] == Symbol("")
             if free[i]
-                param[i] = Symbol(param_prefix, :_, current_id)
+                param_refs[i] = Symbol(param_prefix, :_, current_id)
                 current_id += 1
             else
-                param[i] = :const
+                param_refs[i] = :const
             end
         elseif !free[i]
-            @warn "You labeled a constant ($(param[i])=$(value_fixed[i])). Please check if the labels of your graph are correct."
+            @warn "You labeled a constant ($(param_refs[i])=$(value_fixed[i])). Please check if the labels of your graph are correct."
         end
     end
 
-    if isnothing(params)
-        # collect the unique params in the order of appearance
-        @assert isempty(partable.params)
-        ids = Set{Symbol}()
-        for id in param
-            if (id != :const) && (id ∉ ids)
-                push!(ids, id)
-                push!(partable.params, id)
-            end
-        end
-    end
-    check_params(partable.params, param)
+    # append params referenced in the table if params not explicitly provided
+    check_params(partable.params, param_refs, append=isnothing(params))
 
     return partable
 end
@@ -135,5 +125,6 @@ function EnsembleParameterTable(graph::AbstractStenoGraph;
             group = i,
             param_prefix = Symbol(:g, group))
             for (i, group) in enumerate(groups))
+
     return EnsembleParameterTable(partables, params = params)
 end
