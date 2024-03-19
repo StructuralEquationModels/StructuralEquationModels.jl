@@ -25,12 +25,20 @@ function EnsembleParameterTable(spec_ensemble::AbstractDict{K, V};
         group => convert(ParameterTable, spec; params = params)
         for (group, spec) in pairs(spec_ensemble))
 
-    # collect all SEM parameters in ensemble if not specified
-    params = isnothing(params) ?
-        unique(mapreduce(SEM.params, vcat,
-                         values(partables), init=Vector{Symbol}())) :
-        copy(params)
-
+    if isnothing(params)
+        # collect all SEM parameters in ensemble if not specified
+        # and apply the set to all partables
+        params = unique(mapreduce(SEM.params, vcat,
+                        values(partables), init=Vector{Symbol}()))
+        for partable in values(partables)
+            if partable.params != params
+                copyto!(resize!(partable.params, length(params)), params)
+                #throw(ArgumentError("The parameter sets of the SEM specifications in the ensemble do not match."))
+            end
+        end
+    else
+        params = copy(params)
+    end
     return EnsembleParameterTable{K}(partables, params)
 end
 
