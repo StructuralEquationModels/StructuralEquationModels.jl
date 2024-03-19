@@ -81,6 +81,8 @@ include("frontend/fit/standard_errors/bootstrap.jl")
 export  AbstractSem, 
             AbstractSemSingle, AbstractSemCollection, Sem, SemFiniteDiff, 
             SemEnsemble,
+        MeanStructure, NoMeanStructure, HasMeanStructure,
+        HessianEvaluation, ExactHessian, ApproximateHessian,
         SemImply, 
             RAMSymbolic, RAMSymbolicZ, RAM, ImplyEmpty, imply,
         start_val,

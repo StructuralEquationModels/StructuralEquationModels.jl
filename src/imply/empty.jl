@@ -25,7 +25,7 @@ model per group and an additional model with `ImplyEmpty` and `SemRidge` for the
 ## Implementation
 Subtype of `SemImply`.
 """
-struct ImplyEmpty{V, V2} <: SemImply
+struct ImplyEmpty{V, V2} <: SemImply{NoMeanStructure,ExactHessian}
     identifier::V2
     n_par::V
 end

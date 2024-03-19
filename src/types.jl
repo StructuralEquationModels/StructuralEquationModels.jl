@@ -10,8 +10,30 @@ abstract type AbstractSemSingle{O, I, L, D} <: AbstractSem end
 "Supertype for all collections of multiple SEMs"
 abstract type AbstractSemCollection <: AbstractSem end
 
+"Meanstructure trait for `SemImply` subtypes"
+abstract type MeanStructure end
+"Indicates that `SemImply` subtype supports meanstructure"
+struct HasMeanStructure <: MeanStructure end
+"Indicates that `SemImply` subtype does not support meanstructure"
+struct NoMeanStructure <: MeanStructure end
+
+# fallback implementation
+MeanStructure(::Type{T}) where T = error("Objects of type $T do not support MeanStructure trait")
+MeanStructure(semobj) = MeanStructure(typeof(semobj))
+
+"Hessian Evaluation trait for `SemImply` and `SemLossFunction` subtypes"
+abstract type HessianEvaluation end
+struct ApproximateHessian <: HessianEvaluation end
+struct ExactHessian <: HessianEvaluation end
+
+# fallback implementation
+HessianEvaluation(::Type{T}) where T = error("Objects of type $T do not support HessianEvaluation trait")
+HessianEvaluation(semobj) = HessianEvaluation(typeof(semobj))
+
 "Supertype for all loss functions of SEMs. If you want to implement a custom loss function, it should be a subtype of `SemLossFunction`."
-abstract type SemLossFunction end
+abstract type SemLossFunction{HE <: HessianEvaluation} end
+
+HessianEvaluation(::Type{<:SemLossFunction{HE}}) where HE <: HessianEvaluation = HE
 
 """
     SemLoss(args...; loss_weights = nothing, ...)
@@ -77,10 +99,13 @@ Computed model-implied values that should be compared with the observed data to 
 e. g. the model implied covariance or mean.
 If you would like to implement a different notation, e.g. LISREL, you should implement a subtype of SemImply.
 """
-abstract type SemImply end
+abstract type SemImply{MS <: MeanStructure, HE <: HessianEvaluation} end
+
+MeanStructure(::Type{<:SemImply{MS}}) where MS <: MeanStructure = MS
+HessianEvaluation(::Type{<:SemImply{MS,HE}}) where {MS, HE <: MeanStructure} = HE
 
 "Subtype of SemImply for all objects that can serve as the imply field of a SEM and use some form of symbolic precomputation."
-abstract type SemImplySymbolic <: SemImply end
+abstract type SemImplySymbolic{MS,HE} <: SemImply{MS,HE} end
 
 """
     Sem(;observed = SemObservedData, imply = RAM, loss = SemML, optimizer = SemOptimizerOptim, kwargs...)
