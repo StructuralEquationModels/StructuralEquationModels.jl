@@ -140,7 +140,7 @@ function SemObservedMissing(;
                 throw(ArgumentError("please specify `obs_colnames` as a vector of Symbols"))
             end
 
-            data = reorder_data(data, spec_colnames, obs_colnames)
+            data = data[:, source_to_dest_perm(obs_colnames, spec_colnames)]
         end
     end
 
