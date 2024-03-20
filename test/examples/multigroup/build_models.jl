@@ -86,7 +86,7 @@ grad_fd = FiniteDiff.finite_difference_gradient(
     solution = sem_fit(model_ml_multigroup)
     update_estimate!(partable_s, solution)
     @test compare_estimates(
-        partable,
+        partable_s,
         solution_lav[:parameter_estimates_ml];
         atol = 1e-4,
         lav_groups = Dict(:Pasteur => 1, :Grant_White => 2),
