@@ -28,8 +28,8 @@ function em_mvn(
     max_iter_em = 100,
     rtol_em = 1e-4,
     kwargs...)
-    
-    n_obs, n_man = observed.n_obs, Int(observed.n_man)
+
+    n_man = SEM.n_man(observed)
 
     # preallocate stuff?
     𝔼x_pre = zeros(n_man)
@@ -38,18 +38,18 @@ function em_mvn(
     ### precompute for full cases
     fullpat = observed.patterns[1]
     if nmissed_vars(fullpat) == 0
-        for row in eachrow(fullpat.data)
-            𝔼x_pre += row;
-            𝔼xxᵀ_pre += row*row';
-        end
+        sum!(reshape(𝔼x_pre, 1, n_man), fullpat.data)
+        mul!(𝔼xxᵀ_pre, fullpat.data', fullpat.data)
+    else
+        @warn "No full cases pattern found"
     end
-    
+
     # ess = 𝔼x, 𝔼xxᵀ, ismissing, missingRows, n_obs
     # estepFn = (em_model, data) -> estep(em_model, data, EXsum, EXXsum, ismissing, missingRows, n_obs)
 
     # initialize
     em_model = start_em(observed; kwargs...)
-    em_model_prev = EmMVNModel(zeros(n_man, n_man), zeros(n_man), false)
+        em_model_prev = EmMVNModel(zeros(n_man, n_man), zeros(n_man), false)
     iter = 1
     done = false
     𝔼x = zeros(n_man)
@@ -57,21 +57,22 @@ function em_mvn(
 
     while !done
 
-        em_mvn_Estep!(𝔼x, 𝔼xxᵀ, em_model, observed, 𝔼x_pre, 𝔼xxᵀ_pre)
-        em_mvn_Mstep!(em_model, n_obs, 𝔼x, 𝔼xxᵀ)
+        step!(em_model, observed, 𝔼x, 𝔼xxᵀ, 𝔼x_pre, 𝔼xxᵀ_pre)
 
         if iter > max_iter_em
             done = true
-            @warn "EM Algorithm for MVN missing data did not converge. Likelihood for FIML is not interpretable. 
+            @warn "EM Algorithm for MVN missing data did not converge. Likelihood for FIML is not interpretable.
             Maybe try passing different starting values via 'start_em = ...' "
         elseif iter > 1
             # done = isapprox(ll, ll_prev; rtol = rtol)
-            done = isapprox(em_model_prev.μ, em_model.μ; rtol = rtol_em) & isapprox(em_model_prev.Σ, em_model.Σ; rtol = rtol_em)
+            done = isapprox(em_model_prev.μ, em_model.μ; rtol = rtol_em) &&
+                   isapprox(em_model_prev.Σ, em_model.Σ; rtol = rtol_em)
         end
 
         # print("$iter \n")
-        iter = iter + 1
-        em_model_prev.μ, em_model_prev.Σ = em_model.μ, em_model.Σ
+        iter += 1
+        copyto!(em_model_prev.μ, em_model.μ)
+        copyto!(em_model_prev.Σ, em_model.Σ)
 
     end
 
@@ -81,18 +82,17 @@ function em_mvn(
     observed.em_model.fitted = true
 
     return nothing
-    
+
 end
 
-# E and M step -----------------------------------------------------------------------------
+# E and M steps -----------------------------------------------------------------------------
 
-function em_mvn_Estep!(𝔼x, 𝔼xxᵀ, em_model, observed, 𝔼x_pre, 𝔼xxᵀ_pre)
-
-    𝔼x .= 0.0
-    𝔼xxᵀ .= 0.0
-
-    𝔼xᵢ = copy(𝔼x)
-    𝔼xxᵀᵢ = copy(𝔼xxᵀ)
+# update em_model
+function step!(em_model::EmMVNModel, observed::SemObserved,
+               𝔼x, 𝔼xxᵀ, 𝔼x_pre, 𝔼xxᵀ_pre)
+    # E step, update 𝔼x and 𝔼xxᵀ
+    fill!(𝔼x, 0)
+    fill!(𝔼xxᵀ, 0)
 
     μ = em_model.μ
     Σ = em_model.Σ
@@ -106,46 +106,50 @@ function em_mvn_Estep!(𝔼x, 𝔼xxᵀ, em_model, observed, 𝔼x_pre, 𝔼xx�
         o = pat.obs_mask
 
         # precompute for pattern
-        Σoo = Σ[o, o]
+        Σoo_chol = cholesky(Symmetric(Σ[o, o]))
         Σuo = Σ[u, o]
         μu = μ[u]
         μo = μ[o]
 
-        V = Σ[u, u] - Σuo * (Σoo \ Σ[o, u])
+        𝔼xu = fill!(similar(μu), 0)
+        𝔼xo = fill!(similar(μo), 0)
+        𝔼xᵢu = similar(μu)
+
+        𝔼xxᵀuo = fill!(similar(Σuo), 0)
+        𝔼xxᵀuu = n_obs(pat) * (Σ[u, u] - Σuo * (Σoo_chol \ Σuo'))
 
         # loop trough data
-        for rowdata in eachrow(pat.data)
-            m = μu + Σuo * ( Σoo \ (rowdata-μo) )
-
-            𝔼xᵢ[u] = m
-            𝔼xᵢ[o] = rowdata
-            𝔼xxᵀᵢ[u, u] = 𝔼xᵢ[u] * 𝔼xᵢ[u]' + V
-            𝔼xxᵀᵢ[o, o] = 𝔼xᵢ[o] * 𝔼xᵢ[o]'
-            𝔼xxᵀᵢ[o, u] = 𝔼xᵢ[o] * 𝔼xᵢ[u]'
-            𝔼xxᵀᵢ[u, o] = 𝔼xᵢ[u] * 𝔼xᵢ[o]'
-
-            𝔼x .+= 𝔼xᵢ
-            𝔼xxᵀ .+= 𝔼xxᵀᵢ
+        @inbounds for rowdata in eachrow(pat.data)
+            mul!(𝔼xᵢu, Σuo, Σoo_chol \ (rowdata-μo))
+            𝔼xᵢu .+= μu
+            mul!(𝔼xxᵀuu, 𝔼xᵢu, 𝔼xᵢu', 1, 1)
+            mul!(𝔼xxᵀuo, 𝔼xᵢu, rowdata', 1, 1)
+            𝔼xu .+= 𝔼xᵢu
+            𝔼xo .+= rowdata
         end
 
+        𝔼xxᵀ[o,o] .+= pat.data' * pat.data
+        𝔼xxᵀ[u,o] .+= 𝔼xxᵀuo
+        𝔼xxᵀ[o,u] .+= 𝔼xxᵀuo'
+        𝔼xxᵀ[u,u] .+= 𝔼xxᵀuu
+
+        𝔼x[o] .+= 𝔼xo
+        𝔼x[u] .+= 𝔼xu
     end
 
     𝔼x .+= 𝔼x_pre
     𝔼xxᵀ .+= 𝔼xxᵀ_pre
 
-end
-    
-function em_mvn_Mstep!(em_model, n_obs, 𝔼x, 𝔼xxᵀ)
-    
-    em_model.μ = 𝔼x/n_obs;
-    Σ = Symmetric(𝔼xxᵀ/n_obs - em_model.μ*em_model.μ')
-    
+    # M step, update em_model
+    em_model.μ .= 𝔼x ./ n_obs(observed)
+    em_model.Σ .= 𝔼xxᵀ ./ n_obs(observed)
+    mul!(em_model.Σ, em_model.μ, em_model.μ', -1, 1)
+
+    #Σ = em_model.Σ
     # ridge Σ
     # while !isposdef(Σ)
     #     Σ += 0.5I
     # end
-
-    em_model.Σ = Σ
 
     # diagonalization
     #if !isposdef(Σ)
@@ -156,7 +160,7 @@ function em_mvn_Mstep!(em_model, n_obs, 𝔼x, 𝔼xxᵀ)
         # em_model.Σ = Σ
     #end
 
-    return nothing
+    return em_model
 end
 
 # generate starting values -----------------------------------------------------------------
@@ -167,11 +171,11 @@ function start_em_observed(observed::SemObservedMissing; kwargs...)
     fullpat = observed.patterns[1]
     if (nmissed_vars(fullpat) == 0) && (n_obs(fullpat) > 1)
         μ = copy(fullpat.obs_mean)
-        Σ = copy(Symmetric(fullpat.obs_cov))
+        Σ = copy(fullpat.obs_cov)
         if !isposdef(Σ)
-            Σ = Matrix(Diagonal(Σ))
+            Σ = Diagonal(Σ)
         end
-        return EmMVNModel(Σ, μ, false)
+        return EmMVNModel(convert(Matrix, Σ), μ, false)
     else
         return start_em_simple(observed, kwargs...)
     end
@@ -180,9 +184,9 @@ end
 
 # use μ = O and Σ = I
 function start_em_simple(observed::SemObservedMissing; kwargs...)
-    n_man = Int(observed.n_man)
-    μ = zeros(n_man)
-    Σ = rand(n_man, n_man); Σ = Σ*Σ'
+    μ = zeros(n_man(observed))
+    Σ = rand(n_man(observed), n_man(observed))
+    Σ = Σ*Σ'
     # Σ = Matrix(1.0I, n_man, n_man)
     return EmMVNModel(Σ, μ, false)
 end
