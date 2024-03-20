@@ -91,7 +91,7 @@ function SemObservedData(;
                 throw(ArgumentError("please specify `obs_colnames` as a vector of Symbols"))
             end
 
-            data = reorder_data(data, spec_colnames, obs_colnames)
+            data = data[:, source_to_dest_perm(obs_colnames, spec_colnames)]
         end
     end
 
@@ -126,13 +126,12 @@ obs_mean(observed::SemObservedData) = observed.obs_mean
 ### Additional functions
 ############################################################################################
 
-# reorder data -----------------------------------------------------------------------------
-function reorder_data(data::AbstractArray, spec_colnames, obs_colnames)
-    if spec_colnames == obs_colnames
-        return data
+# permutation that subsets and reorders source to matches the destination order ------------
+function source_to_dest_perm(src::AbstractVector, dest::AbstractVector)
+    if dest == src # exact match
+        return eachindex(dest)
     else
-        obs_positions = Dict(col => i for (i, col) in enumerate(obs_colnames))
-        new_positions = [obs_positions[col] for col in spec_colnames]
-        return data[:, new_positions]
+        src_inds = Dict(el => i for (i, el) in enumerate(src))
+        return [src_inds[el] for el in dest]
     end
 end
