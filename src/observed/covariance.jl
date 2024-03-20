@@ -1,50 +1,7 @@
 """
-For observed covariance matrices and means.
-
-# Constructor
-
-    SemObservedCovariance(;
-        specification,
-        obs_cov,
-        obs_colnames = nothing,
-        meanstructure = false,
-        obs_mean = nothing,
-        n_obs = nothing,
-        kwargs...)
-
-# Arguments
-- `specification`: either a `RAMMatrices` or `ParameterTable` object (1)
-- `obs_cov`: observed covariance matrix
-- `obs_colnames::Vector{Symbol}`: column names of the covariance matrix
-- `meanstructure::Bool`: does the model have a meanstructure?
-- `obs_mean`: observed mean vector
-- `n_obs::Number`: number of observed data points (necessary for fit statistics)
-
-# Extended help
-## Interfaces
-- `n_obs(::SemObservedCovariance)` -> number of observed data points
-- `n_man(::SemObservedCovariance)` -> number of manifest variables
-
-- `obs_cov(::SemObservedCovariance)` -> observed covariance matrix
-- `obs_mean(::SemObservedCovariance)` -> observed means
-
-## Implementation
-Subtype of `SemObserved`
-
-## Remarks
-(1) the `specification` argument can also be `nothing`, but this turns of checking whether
-the observed data/covariance columns are in the correct order! As a result, you should only
-use this if you are sure your covariance matrix is in the right format.
-
-## Additional keyword arguments:
-- `spec_colnames::Vector{Symbol} = nothing`: overwrites column names of the specification object
+Type alias for [SemObservedData](@ref) with no data, but with mean and covariance.
 """
-struct SemObservedCovariance{B, C} <: SemObserved
-    obs_cov::B
-    obs_mean::C
-    n_man::Int
-    n_obs::Int
-end
+SemObservedCovariance{B, C} = SemObservedData{Nothing, B, C}
 
 function SemObservedCovariance(;
         specification::Union{SemSpecification, Nothing} = nothing,
@@ -80,20 +37,5 @@ function SemObservedCovariance(;
         isnothing(obs_mean) || (obs_mean = obs_mean[obs2spec_perm])
     end
 
-    return SemObservedCovariance(Symmetric(obs_cov), obs_mean, size(obs_cov, 1), n_obs)
+    return SemObservedData(nothing, Symmetric(obs_cov), obs_mean, size(obs_cov, 1), n_obs)
 end
-
-############################################################################################
-### Recommended methods
-############################################################################################
-
-n_obs(observed::SemObservedCovariance) = observed.n_obs
-n_man(observed::SemObservedCovariance) = observed.n_man
-
-############################################################################################
-### additional methods
-############################################################################################
-
-obs_cov(observed::SemObservedCovariance) = observed.obs_cov
-obs_mean(observed::SemObservedCovariance) = observed.obs_mean
-
