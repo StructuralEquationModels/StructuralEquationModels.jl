@@ -144,7 +144,7 @@ end
 
 function ∇F_fiml_outer!(G, JΣ, Jμ, imply::SemImplySymbolic, model, semfiml)
     mul!(G, imply.∇Σ', JΣ) # should be transposed
-    G .-= imply.∇μ' * Jμ
+    mul!(G, imply.∇μ', Jμ, -1, 1)
 end
 
 function ∇F_fiml_outer!(G, JΣ, Jμ, imply, model, semfiml)
@@ -158,7 +158,7 @@ function ∇F_fiml_outer!(G, JΣ, Jμ, imply, model, semfiml)
     ∇μ = imply.F⨉I_A⁻¹ * imply.∇M + kron((imply.I_A⁻¹ * imply.M)', imply.F⨉I_A⁻¹) * imply.∇A
 
     mul!(G, ∇Σ', JΣ) # actually transposed
-    G .-= ∇μ' * Jμ
+    mul!(G, ∇μ', Jμ, -1, 1)
 end
 
 function F_FIML(rows, semfiml, model, params)
