@@ -17,6 +17,8 @@ nvars(ram::RAMMatrices) = size(ram.F, 2)
 nobserved_vars(ram::RAMMatrices) = size(ram.F, 1)
 nlatent_vars(ram::RAMMatrices) = nvars(ram) - nobserved_vars(ram)
 
+vars(ram::RAMMatrices) = ram.colnames
+
 isobserved_var(ram::RAMMatrices, i::Integer) =
     ram.F.colptr[i+1] > ram.F.colptr[i]
 islatent_var(ram::RAMMatrices, i::Integer) =
