@@ -75,16 +75,7 @@ For observed data with missing values.
 - `n_man(::SemObservedMissing)` -> number of manifest variables
 
 - `get_data(::SemObservedMissing)` -> observed data
-- `data_rowwise(::SemObservedMissing)` -> observed data as vector per observation, with missing values deleted
-
-- `patterns(::SemObservedMissing)` -> indices of non-missing variables per missing patterns
-- `patterns_not(::SemObservedMissing)` -> indices of missing variables per missing pattern
-- `rows(::SemObservedMissing)` -> row indices of observed data points that belong to each pattern
-- `pattern_n_obs(::SemObservedMissing)` -> number of data points per pattern
-- `pattern_nvar_obs(::SemObservedMissing)` -> number of non-missing observed variables per pattern
-- `obs_mean(::SemObservedMissing)` -> observed mean per pattern
-- `obs_cov(::SemObservedMissing)` -> observed covariance per pattern
-- `em_model(::SemObservedMissing)` -> `EmMVNModel` that contains the covariance matrix and mean vector found via optimization maximization
+- `em_model(::SemObservedMissing)` -> `EmMVNModel` that contains the covariance matrix and mean vector found via expectation maximization
 
 ## Implementation
 Subtype of `SemObserved`
