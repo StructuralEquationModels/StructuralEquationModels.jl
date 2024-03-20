@@ -91,7 +91,7 @@ function SemObservedData(;
                 throw(ArgumentError("please specify `obs_colnames` as a vector of Symbols"))
             end
 
-            data = reorder_data(data, spec_colnames, obs_colnames)
+            data = data[:, source_to_dest_perm(obs_colnames, spec_colnames)]
         end
     end
 
@@ -121,18 +121,3 @@ nobserved_vars(observed::SemObservedData) = observed.nobs_vars
 
 obs_cov(observed::SemObservedData) = observed.obs_cov
 obs_mean(observed::SemObservedData) = observed.obs_mean
-
-############################################################################################
-### Additional functions
-############################################################################################
-
-# reorder data -----------------------------------------------------------------------------
-function reorder_data(data::AbstractArray, spec_colnames, obs_colnames)
-    if spec_colnames == obs_colnames
-        return data
-    else
-        obs_positions = Dict(col => i for (i, col) in enumerate(obs_colnames))
-        new_positions = [obs_positions[col] for col in spec_colnames]
-        return data[:, new_positions]
-    end
-end
