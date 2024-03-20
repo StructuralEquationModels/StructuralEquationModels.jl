@@ -50,33 +50,33 @@ function em_mvn!(
     rtol_em = 1e-4,
     kwargs...,
 )
-    nvars = nobserved_vars(observed)
-    nsamps = nsamples(observed)
+    nobs_vars = nobserved_vars(observed)
 
-    # preallocate stuff
-    𝔼x_pre = zeros(nvars)
-    𝔼xxᵀ_pre = zeros(nvars, nvars)
-
-    ### precompute for full cases
-    fullpat = observed.patterns[1]
-    if nmissed_vars(fullpat) == 0
-        for row in eachrow(fullpat.data)
-            𝔼x_pre += row
-            𝔼xxᵀ_pre += row * row'
+    # precompute for full cases
+    𝔼x_full = zeros(nobs_vars)
+    𝔼xxᵀ_full = zeros(nobs_vars, nobs_vars)
+    nsamples_full = 0
+    for pat in patterns
+        if nmissed_vars(pat) == 0
+            𝔼x_full .+= sum(pat.data, dims = 2)
+            mul!(𝔼xxᵀ_full, pat.data, pat.data', 1, 1)
+            nsamples_full += nsamples(pat)
         end
+    end
+    if nsamples_full == 0
+        @warn "No full cases in data"
     end
 
     # initialize
     em_model = start_em(observed; kwargs...)
-    em_model_prev = EmMVNModel(zeros(nvars, nvars), zeros(nvars), false)
+    em_model_prev = EmMVNModel(zeros(nobs_vars, nobs_vars), zeros(nobs_vars), false)
     iter = 1
     done = false
-    𝔼x = zeros(nvars)
-    𝔼xxᵀ = zeros(nvars, nvars)
+    𝔼x = zeros(nobs_vars)
+    𝔼xxᵀ = zeros(nobs_vars, nobs_vars)
 
     while !done
-        em_mvn_Estep!(𝔼x, 𝔼xxᵀ, em_model, observed, 𝔼x_pre, 𝔼xxᵀ_pre)
-        em_mvn_Mstep!(em_model, nsamps, 𝔼x, 𝔼xxᵀ)
+        step!(em_model, observed, 𝔼x, 𝔼xxᵀ, 𝔼x_pre, 𝔼xxᵀ_pre)
 
         if iter > max_iter_em
             done = true
@@ -84,12 +84,14 @@ function em_mvn!(
             Maybe try passing different starting values via 'start_em = ...' "
         elseif iter > 1
             done =
-                isapprox(em_model_prev.μ, em_model.μ; rtol = rtol_em) &
+                isapprox(em_model_prev.μ, em_model.μ; rtol = rtol_em) &&
                 isapprox(em_model_prev.Σ, em_model.Σ; rtol = rtol_em)
         end
 
-        iter = iter + 1
-        em_model_prev.μ, em_model_prev.Σ = em_model.μ, em_model.Σ
+        # print("$iter \n")
+        iter += 1
+        copyto!(em_model_prev.μ, em_model.μ)
+        copyto!(em_model_prev.Σ, em_model.Σ)
     end
 
     # update EM Mode in observed
@@ -100,17 +102,25 @@ function em_mvn!(
     return nothing
 end
 
-# E and M step -----------------------------------------------------------------------------
-
-function em_mvn_Estep!(𝔼x, 𝔼xxᵀ, em_model, observed, 𝔼x_pre, 𝔼xxᵀ_pre)
-    𝔼x .= 0.0
-    𝔼xxᵀ .= 0.0
-
-    𝔼xᵢ = copy(𝔼x)
-    𝔼xxᵀᵢ = copy(𝔼xxᵀ)
-
-    μ = em_model.μ
-    Σ = em_model.Σ
+# E and M steps combined
+function em_step!(
+    Σ::AbstractMatrix,
+    μ::AbstractVector,
+    Σ₀::AbstractMatrix,
+    μ₀::AbstractVector,
+    patterns::AbstractVector{<:SemObservedMissingPattern},
+    𝔼xxᵀ_full::AbstractMatrix,
+    𝔼x_full::AbstractVector,
+    nsamples_full::Integer;
+    max_nsamples_em::Union{Integer, Nothing} = nothing,
+    min_eigval::Union{Number, Nothing} = nothing,
+)
+    # E step: update 𝔼x and 𝔼xxᵀ
+    copy!(μ, 𝔼x_full)
+    copy!(Σ, 𝔼xxᵀ_full)
+    nsamples_used = nsamples_full
+    mul!(Σ, μ₀, μ₀', -nsamples_used, 1)
+    axpy!(-nsamples_used, μ₀, μ)
 
     # Compute the expected sufficient statistics
     for pat in observed.patterns
@@ -121,38 +131,52 @@ function em_mvn_Estep!(𝔼x, 𝔼xxᵀ, em_model, observed, 𝔼x_pre, 𝔼xx�
         o = pat.measured_mask
 
         # precompute for pattern
-        Σoo = Σ[o, o]
+        Σoo_chol = cholesky(Symmetric(Σ[o, o]))
         Σuo = Σ[u, o]
         μu = μ[u]
         μo = μ[o]
 
-        V = Σ[u, u] - Σuo * (Σoo \ Σ[o, u])
+        𝔼xu = fill!(similar(μu), 0)
+        𝔼xo = fill!(similar(μo), 0)
+        𝔼xᵢu = similar(μu)
 
-        # loop trough data
-        for rowdata in eachrow(pat.data)
-            m = μu + Σuo * (Σoo \ (rowdata - μo))
+        𝔼xxᵀuo = fill!(similar(Σuo), 0)
+        𝔼xxᵀuu = n_obs(pat) * (Σ[u, u] - Σuo * (Σoo_chol \ Σuo'))
 
-            𝔼xᵢ[u] = m
-            𝔼xᵢ[o] = rowdata
-            𝔼xxᵀᵢ[u, u] = 𝔼xᵢ[u] * 𝔼xᵢ[u]' + V
-            𝔼xxᵀᵢ[o, o] = 𝔼xᵢ[o] * 𝔼xᵢ[o]'
-            𝔼xxᵀᵢ[o, u] = 𝔼xᵢ[o] * 𝔼xᵢ[u]'
-            𝔼xxᵀᵢ[u, o] = 𝔼xᵢ[u] * 𝔼xᵢ[o]'
-
-            𝔼x .+= 𝔼xᵢ
-            𝔼xxᵀ .+= 𝔼xxᵀᵢ
+        # loop through observations
+        @inbounds for rowdata in eachcol(pat.data)
+            mul!(𝔼xᵢu, Σuo, Σoo_chol \ (rowdata - μo))
+            𝔼xᵢu .+= μu
+            mul!(𝔼xxᵀuu, 𝔼xᵢu, 𝔼xᵢu', 1, 1)
+            mul!(𝔼xxᵀuo, 𝔼xᵢu, rowdata', 1, 1)
+            𝔼xu .+= 𝔼xᵢu
+            𝔼xo .+= rowdata
         end
+
+        𝔼xxᵀ[o, o] .+= pat.data' * pat.data
+        𝔼xxᵀ[u, o] .+= 𝔼xxᵀuo
+        𝔼xxᵀ[o, u] .+= 𝔼xxᵀuo'
+        𝔼xxᵀ[u, u] .+= 𝔼xxᵀuu
+
+        𝔼x[o] .+= 𝔼xo
+        𝔼x[u] .+= 𝔼xu
     end
 
-    𝔼x .+= 𝔼x_pre
-    𝔼xxᵀ .+= 𝔼xxᵀ_pre
-end
+    # M step: update Σ and μ
+    lmul!(1 / nsamples_used, Σ)
+    lmul!(1 / nsamples_used, μ)
+    # at this point μ = μ - μ₀
+    # and Σ = Σ + (μ - μ₀)×(μ - μ₀)' - μ₀×μ₀'
+    mul!(Σ, μ, μ₀', -1, 1)
+    mul!(Σ, μ₀, μ', -1, 1)
+    mul!(Σ, μ, μ', -1, 1)
+    μ .+= μ₀
 
-function em_mvn_Mstep!(em_model, nsamples, 𝔼x, 𝔼xxᵀ)
-    em_model.μ = 𝔼x / nsamples
-    Σ = Symmetric(𝔼xxᵀ / nsamples - em_model.μ * em_model.μ')
-    em_model.Σ = Σ
-    return nothing
+    em_model.μ .= 𝔼x ./ nsamples(observed)
+    em_model.Σ .= 𝔼xxᵀ ./ nsamples(observed)
+    mul!(em_model.Σ, em_model.μ, em_model.μ', -1, 1)
+
+    return em_model
 end
 
 # generate starting values -----------------------------------------------------------------
@@ -160,13 +184,13 @@ end
 # use μ and Σ of full cases
 function start_em_observed(observed::SemObservedMissing; kwargs...)
     fullpat = observed.patterns[1]
-    if (nmissed_vars(fullpat) == 0) && (nobserved_vars(fullpat) > 1)
+    if (nmissed_vars(fullpat) == 0) && (nsamples(fullpat) > 1)
         μ = copy(fullpat.measured_mean)
-        Σ = copy(Symmetric(fullpat.measured_cov))
+        Σ = copy(fullpat.measured_cov)
         if !isposdef(Σ)
-            Σ = Matrix(Diagonal(Σ))
+            Σ = Diagonal(Σ)
         end
-        return EmMVNModel(Σ, μ, false)
+        return EmMVNModel(convert(Matrix, Σ), μ, false)
     else
         return start_em_simple(observed, kwargs...)
     end
