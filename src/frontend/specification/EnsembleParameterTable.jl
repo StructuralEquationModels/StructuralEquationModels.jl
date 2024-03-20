@@ -37,13 +37,16 @@ function Base.convert(
     )
 end
 
-#= function DataFrame(
-        partable::ParameterTable;
-        columns = nothing)
-    if isnothing(columns) columns = keys(partable.columns) end
-    out = DataFrame([key => partable.columns[key] for key in columns])
-    return DataFrame(out)
-end =#
+function DataFrames.DataFrame(
+    partables::EnsembleParameterTable;
+    columns::Union{AbstractVector{Symbol}, Nothing} = nothing,
+)
+    mapreduce(vcat, pairs(partables.tables)) do (key, partable)
+        df = DataFrame(partable; columns = columns)
+        df[!, :group] .= key
+        return df
+    end
+end
 
 ############################################################################################
 ### get parameter table from RAMMatrices
