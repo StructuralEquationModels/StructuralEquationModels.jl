@@ -107,7 +107,7 @@ function evaluate!(objective, gradient, hessian,
         end
         gradient .*= -2
     end
-    isnothing(hessian) || (mul!(hessian, ∇σ'*V, ∇σ); hessian .*= 2)
+    isnothing(hessian) || (mul!(hessian, ∇σ'*V, ∇σ, 2, 0))
     if !isnothing(hessian) && (HessianEvaluation(semwls) === ExactHessian)
         ∇²Σ_function! = implied.∇²Σ_function
         ∇²Σ = implied.∇²Σ
@@ -124,7 +124,7 @@ function evaluate!(objective, gradient, hessian,
             objective += dot(μ₋, V_μ, μ₋)
         end
         if !isnothing(gradient)
-            gradient .-= 2*(μ₋'*V_μ*implied.∇μ)'
+            mul!(gradient, (V_μ*implied.∇μ)', μ₋, -2, 1)
         end
     end
 
