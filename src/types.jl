@@ -210,7 +210,7 @@ function SemEnsemble(models...; optimizer = SemOptimizerOptim, weights = nothing
     # default weights
 
     if isnothing(weights)
-        nobs_total = sum(n_obs.(models))
+        nobs_total = sum(n_obs, models)
         weights = [n_obs(model)/nobs_total for model in models]
     end
 
