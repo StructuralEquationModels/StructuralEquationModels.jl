@@ -113,7 +113,7 @@ end
     solution_ml = sem_fit(model_ml)
     test_fitmeasures(fit_measures(solution_ml), solution_lav[:fitmeasures_ml]; atol = 1e-3)
 
-    update_partable!(partable, identifier(model_ml), se_hessian(solution_ml), :se)
+    update_se_hessian!(partable, solution_ml)
     @test compare_estimates(
         partable,
         solution_lav[:parameter_estimates_ml];
@@ -134,7 +134,7 @@ end
     )
     @test (fm[:AIC] === missing) & (fm[:BIC] === missing) & (fm[:minus2ll] === missing)
 
-    update_partable!(partable, identifier(model_ls_sym), se_hessian(solution_ls), :se)
+    update_se_hessian!(partable, solution_ls)
     @test compare_estimates(
         partable,
         solution_lav[:parameter_estimates_ls];
@@ -278,7 +278,7 @@ end
         atol = 1e-3,
     )
 
-    update_partable!(partable_mean, identifier(model_ml), se_hessian(solution_ml), :se)
+    update_se_hessian!(partable_mean, solution_ml)
     @test compare_estimates(
         partable_mean,
         solution_lav[:parameter_estimates_ml_mean];
@@ -299,7 +299,7 @@ end
     )
     @test (fm[:AIC] === missing) & (fm[:BIC] === missing) & (fm[:minus2ll] === missing)
 
-    update_partable!(partable_mean, identifier(model_ls), se_hessian(solution_ls), :se)
+    update_se_hessian!(partable_mean, solution_ls)
     @test compare_estimates(
         partable_mean,
         solution_lav[:parameter_estimates_ls_mean];
@@ -371,7 +371,7 @@ end
         atol = 1e-3,
     )
 
-    update_partable!(partable_mean, identifier(model_ml), se_hessian(solution_ml), :se)
+    update_se_hessian!(partable_mean, solution_ml)
     @test compare_estimates(
         partable_mean,
         solution_lav[:parameter_estimates_fiml];

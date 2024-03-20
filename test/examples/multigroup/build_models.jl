@@ -34,12 +34,7 @@ end
         atol = 1e-7,
     )
 
-    update_partable!(
-        partable,
-        identifier(model_ml_multigroup),
-        se_hessian(solution_ml),
-        :se,
-    )
+    update_se_hessian!(partable, solution_ml)
     @test compare_estimates(
         partable,
         solution_lav[:parameter_estimates_ml];
@@ -100,12 +95,7 @@ end
         atol = 1e-7,
     )
 
-    update_partable!(
-        partable_s,
-        identifier(model_ml_multigroup),
-        se_hessian(solution_ml),
-        :se,
-    )
+    update_se_hessian!(partable_s, solution_ml)
     @test compare_estimates(
         partable_s,
         solution_lav[:parameter_estimates_ml];
@@ -207,12 +197,7 @@ end
         atol = 1e-5,
     )
 
-    update_partable!(
-        partable,
-        identifier(model_ls_multigroup),
-        se_hessian(solution_ls),
-        :se,
-    )
+    update_se_hessian!(partable, solution_ls)
     @test compare_estimates(
         partable,
         solution_lav[:parameter_estimates_ls];
@@ -298,12 +283,7 @@ if !isnothing(specification_miss_g1)
             atol = 0,
         )
 
-        update_partable!(
-            partable_miss,
-            identifier(model_ml_multigroup),
-            se_hessian(solution),
-            :se,
-        )
+        update_se_hessian!(partable_miss, solution)
         @test compare_estimates(
             partable_miss,
             solution_lav[:parameter_estimates_fiml];
