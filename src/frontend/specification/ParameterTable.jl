@@ -331,23 +331,23 @@ end
 """
     update_se_hessian!(
         partable::AbstractParameterTable,
-        sem_fit::SemFit;
-        hessian = :finitediff)
+        fit::SemFit;
+        method = :finitediff)
 
 Write hessian standard errors computed for `sem_fit` to the `:se` column of `partable`
 
 # Arguments
-- `hessian::Symbol`: how to compute the hessian, see [se_hessian](@ref) for more information.
+- `method::Symbol`: how to compute the hessian, see [se_hessian](@ref) for more information.
 
 # Examples
 
 """
 function update_se_hessian!(
         partable::AbstractParameterTable,
-        sem_fit::SemFit;
-        hessian = :finitediff)
-    se = se_hessian(sem_fit; hessian = hessian)
-    return update_partable!(partable, sem_fit, se, :se)
+        fit::SemFit;
+        method = :finitediff)
+    se = se_hessian(fit; method = method)
+    return update_partable!(partable, fit, se, :se)
 end
 
 """

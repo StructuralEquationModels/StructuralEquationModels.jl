@@ -1,32 +1,30 @@
 """
-    se_hessian(semfit::SemFit; hessian = :finitediff)
+    se_hessian(fit::SemFit; method = :finitediff)
 
-Return hessian based standard errors.
+Return hessian-based standard errors.
 
 # Arguments
-- `hessian`: how to compute the hessian. Options are
+- `method`: how to compute the hessian. Options are
     - `:analytic`: (only if an analytic hessian for the model can be computed)
     - `:finitediff`: for finite difference approximation
 """
-function se_hessian(sem_fit::SemFit; hessian = :finitediff)
+function se_hessian(fit::SemFit; method = :finitediff)
 
-    c = H_scaling(sem_fit.model)
+    c = H_scaling(fit.model)
+    params = solution(fit)
+    H = similar(params, (length(params), length(params)))
 
-    if hessian == :analytic
-        par = solution(sem_fit)
-        H = zeros(eltype(par), length(par), length(par))
-        hessian!(H, sem_fit.model, sem_fit.solution)
-    elseif hessian == :finitediff
-        H = FiniteDiff.finite_difference_hessian(
-                p -> evaluate!(eltype(sem_fit.solution), nothing, nothing, fit.model, p),
-                sem_fit.solution
-                )
-    elseif hessian == :optimizer
-        throw(ArgumentError("standard errors from the optimizer hessian are not implemented yet"))
-    elseif hessian == :expected
-        throw(ArgumentError("standard errors based on the expected hessian are not implemented yet"))
+    if method == :analytic
+        evaluate!(nothing, nothing, H, fit.model, params)
+    elseif method == :finitediff
+        FiniteDiff.finite_difference_hessian!(H,
+            p -> evaluate!(eltype(H), nothing, nothing, fit.model, p), params)
+    elseif method == :optimizer
+        error("Standard errors from the optimizer hessian are not implemented yet")
+    elseif method == :expected
+        error("Standard errors based on the expected hessian are not implemented yet")
     else
-        throw(ArgumentError("I don't know how to compute `$hessian` standard-errors"))
+        throw(ArgumentError("Unsupported hessian calculation method :$method"))
     end
 
     invH = c*inv(H)
