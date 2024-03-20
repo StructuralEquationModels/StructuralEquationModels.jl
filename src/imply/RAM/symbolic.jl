@@ -201,29 +201,19 @@ end
 ### objective, gradient, hessian
 ############################################################################################
 
-# objective
-function objective!(imply::RAMSymbolic, par, model)
+function update!(targets::EvaluationTargets, imply::RAMSymbolic, model::AbstractSemSingle, par)
     imply.Σ_function(imply.Σ, par)
     if MeanStructure(imply) === HasMeanStructure
         imply.μ_function(imply.μ, par)
     end
-end
 
-# gradient
-function gradient!(imply::RAMSymbolic, par, model)
-    objective!(imply, par, model, imply.has_meanstructure)
-    imply.∇Σ_function(imply.∇Σ, par)
-    if MeanStructure(imply) === HasMeanStructure
-        imply.∇μ_function(imply.∇μ, par)
+    if is_gradient_required(targets) || is_hessian_required(targets)
+        imply.∇Σ_function(imply.∇Σ, par)
+        if MeanStructure(imply) === HasMeanStructure
+            imply.∇μ_function(imply.∇μ, par)
+        end
     end
 end
-
-# other methods
-hessian!(imply::RAMSymbolic, par, model) = gradient!(imply, par, model)
-objective_gradient!(imply::RAMSymbolic, par, model) = gradient!(imply, par, model)
-objective_hessian!(imply::RAMSymbolic, par, model) = gradient!(imply, par, model)
-gradient_hessian!(imply::RAMSymbolic, par, model) = gradient!(imply, par, model)
-objective_gradient_hessian!(imply::RAMSymbolic, par, model) = gradient!(imply, par, model)
 
 ############################################################################################
 ### Recommended methods
@@ -232,32 +222,13 @@ objective_gradient_hessian!(imply::RAMSymbolic, par, model) = gradient!(imply, p
 identifier(imply::RAMSymbolic) = imply.identifier
 nparams(imply::RAMSymbolic) = nparams(imply.ram_matrices)
 
-function update_observed(imply::RAMSymbolic, observed::SemObserved; kwargs...) 
+function update_observed(imply::RAMSymbolic, observed::SemObserved; kwargs...)
     if Int(n_man(observed)) == size(imply.Σ, 1)
         return imply
     else
         return RAMSymbolic(;observed = observed, kwargs...)
     end
 end
-
-############################################################################################
-### additional methods
-############################################################################################
-
-Σ(imply::RAMSymbolic) = imply.Σ
-∇Σ(imply::RAMSymbolic) = imply.∇Σ
-∇²Σ(imply::RAMSymbolic) = imply.∇²Σ
-
-μ(imply::RAMSymbolic) = imply.μ
-∇μ(imply::RAMSymbolic) = imply.∇μ
-
-Σ_function(imply::RAMSymbolic) = imply.Σ_function
-∇Σ_function(imply::RAMSymbolic) = imply.∇Σ_function
-∇²Σ_function(imply::RAMSymbolic) = imply.∇²Σ_function
-
-has_meanstructure(imply::RAMSymbolic) = imply.has_meanstructure
-
-ram_matrices(imply::RAMSymbolic) = imply.ram_matrices
 
 ############################################################################################
 ### additional functions

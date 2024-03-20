@@ -43,11 +43,11 @@ end
 ############################################################################
 
 function SemRidge(;
-        α_ridge, 
-        which_ridge, 
+        α_ridge,
+        which_ridge,
         nparams,
-        parameter_type = Float64, 
-        imply = nothing, 
+        parameter_type = Float64,
+        imply = nothing,
         kwargs...)
 
     if eltype(which_ridge) <: Symbol
@@ -71,14 +71,14 @@ end
 ### methods
 ############################################################################################
 
-objective!(ridge::SemRidge, par, model) = @views ridge.α*sum(abs2, par[ridge.which])
+objective(ridge::SemRidge, model::AbstractSem, par) = @views ridge.α*sum(abs2, par[ridge.which])
 
-function gradient!(ridge::SemRidge, par, model)
+function gradient(ridge::SemRidge, model::AbstractSem, par)
     @views ridge.gradient[ridge.which] .= (2*ridge.α)*par[ridge.which]
     return ridge.gradient
 end
 
-function hessian!(ridge::SemRidge, par, model)
+function hessian(ridge::SemRidge, model::AbstractSem, par)
     @views @. ridge.hessian[ridge.which_H] .= 2*ridge.α
     return ridge.hessian
 end

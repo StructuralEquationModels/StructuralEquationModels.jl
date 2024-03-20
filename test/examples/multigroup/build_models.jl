@@ -79,7 +79,7 @@ end
 
 grad = similar(start_test)
 gradient!(grad, model_ml_multigroup, rand(36))
-grad_fd = FiniteDiff.finite_difference_gradient(x -> objective!(model_ml_multigroup, x), start_test)
+grad_fd = FiniteDiff.finite_difference_gradient(x -> SEM.objective!(model_ml_multigroup, x), start_test)
 
 # fit
 @testset "ml_solution_multigroup | sorted" begin
@@ -114,22 +114,19 @@ end
 # ML estimation - user defined loss function
 ############################################################################################
 
+import LinearAlgebra: isposdef, logdet, tr, inv
+
+SEM = StructuralEquationModels
+
 struct UserSemML <: SemLossFunction{ExactHessian} end
 
-############################################################################################
-### functors
-############################################################################################
-
-import LinearAlgebra: isposdef, logdet, tr, inv
-import StructuralEquationModels: Σ, obs_cov, objective!
-
-function objective!(semml::UserSemML, parameters, model::AbstractSem)
-    let Σ = Σ(imply(model)), Σₒ = obs_cov(observed(model))
-        if !isposdef(Σ)
-            return Inf
-        else
-            return logdet(Σ) + tr(inv(Σ)*Σₒ)
-        end
+function SEM.objective(ml::UserSemML, model::AbstractSem, params)
+    Σ = imply(model).Σ
+    Σₒ = SEM.obs_cov(observed(model))
+    if !isposdef(Σ)
+        return Inf
+    else
+        return logdet(Σ) + tr(inv(Σ)*Σₒ)
     end
 end
 
