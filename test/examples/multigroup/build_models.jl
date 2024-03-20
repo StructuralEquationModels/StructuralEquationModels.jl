@@ -38,8 +38,7 @@ end
         fit_measures(solution_ml),
         solution_lav[:fitmeasures_ml]; rtol = 1e-2, atol = 1e-7)
 
-    update_partable!(
-        partable, identifier(model_ml_multigroup), se_hessian(solution_ml), :se)
+    update_se_hessian!(partable, solution_ml)
     test_estimates(
         partable,
         solution_lav[:parameter_estimates_ml]; atol = 1e-3,
@@ -97,8 +96,7 @@ end
         fit_measures(solution_ml),
         solution_lav[:fitmeasures_ml]; rtol = 1e-2, atol = 1e-7)
 
-    update_partable!(
-        partable_s, identifier(model_ml_multigroup), se_hessian(solution_ml), :se)
+    update_se_hessian!(partable_s, solution_ml)
     test_estimates(
         partable_s,
         solution_lav[:parameter_estimates_ml]; atol = 1e-3,
@@ -200,8 +198,7 @@ end
         solution_lav[:fitmeasures_ls];
         fitmeasure_names = fitmeasure_names_ls, rtol = 1e-2, atol = 1e-5)
 
-    update_partable!(
-        partable, identifier(model_ls_multigroup), se_hessian(solution_ls), :se)
+    update_se_hessian!(partable, solution_ls)
     test_estimates(
         partable,
         solution_lav[:parameter_estimates_ls]; atol = 1e-2,
@@ -270,8 +267,7 @@ end
         fit_measures(solution),
         solution_lav[:fitmeasures_fiml]; rtol = 1e-3, atol = 0)
 
-    update_partable!(
-        partable_miss, identifier(model_ml_multigroup), se_hessian(solution), :se)
+    update_se_hessian!(partable_miss, solution)
     test_estimates(
         partable_miss,
         solution_lav[:parameter_estimates_fiml]; atol = 1e-3,

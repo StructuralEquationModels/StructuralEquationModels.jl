@@ -109,7 +109,7 @@ end
     test_fitmeasures(fit_measures(solution_ml), solution_lav[:fitmeasures_ml];
         atol = 1e-3)
 
-    update_partable!(partable, identifier(model_ml), se_hessian(solution_ml), :se)
+    update_se_hessian!(partable, solution_ml)
     test_estimates(partable, solution_lav[:parameter_estimates_ml];
         atol = 1e-3, col = :se, lav_col = :se)
 end
@@ -121,7 +121,7 @@ end
         fitmeasure_names = fitmeasure_names_ls)
     @test (fm[:AIC] === missing) & (fm[:BIC] === missing) & (fm[:minus2ll] === missing)
 
-    update_partable!(partable, identifier(model_ls_sym), se_hessian(solution_ls), :se)
+    update_se_hessian!(partable, solution_ls)
     test_estimates(partable, solution_lav[:parameter_estimates_ls]; atol = 1e-2,
         col = :se, lav_col = :se)
 end
@@ -135,13 +135,13 @@ if semoptimizer == SemOptimizerOptim
 
     optimizer_obj = SemOptimizerOptim(
         algorithm = Newton(
-            ;linesearch = BackTracking(order=3), 
+            ;linesearch = BackTracking(order=3),
             alphaguess = InitialHagerZhang()
         )
     )
 
     imply_sym_hessian_vech = RAMSymbolic(specification = spec, vech = true, hessian = true)
-    
+
     imply_sym_hessian = RAMSymbolic(specification = spec, hessian = true)
 
 
@@ -201,9 +201,9 @@ optimizer_obj = semoptimizer()
 model_ml = Sem(observed, imply_ram, loss_ml, optimizer_obj)
 
 model_ls = Sem(
-    observed, 
-    RAMSymbolic(specification = spec_mean, meanstructure = true, vech = true), 
-    loss_wls, 
+    observed,
+    RAMSymbolic(specification = spec_mean, meanstructure = true, vech = true),
+    loss_wls,
     optimizer_obj)
 
 model_ml_sym = Sem(observed, imply_ram_sym, loss_ml, optimizer_obj)
@@ -250,7 +250,7 @@ end
     test_fitmeasures(fit_measures(solution_ml), solution_lav[:fitmeasures_ml_mean];
         atol = 1e-3)
 
-    update_partable!(partable_mean, identifier(model_ml), se_hessian(solution_ml), :se)
+    update_se_hessian!(partable_mean, solution_ml)
     test_estimates(partable_mean, solution_lav[:parameter_estimates_ml_mean];
         atol = 0.002, col = :se, lav_col = :se)
 end
@@ -264,7 +264,7 @@ end
         fitmeasure_names = fitmeasure_names_ls)
     @test (fm[:AIC] === missing) & (fm[:BIC] === missing) & (fm[:minus2ll] === missing)
 
-    update_partable!(partable_mean, identifier(model_ls), se_hessian(solution_ls), :se)
+    update_se_hessian!(partable_mean, solution_ls)
     test_estimates(partable_mean, solution_lav[:parameter_estimates_ls_mean]; atol = 1e-2, col = :se, lav_col = :se)
 end
 
@@ -319,7 +319,7 @@ end
     test_fitmeasures(fit_measures(solution_ml), solution_lav[:fitmeasures_fiml];
         atol = 1e-3)
 
-    update_partable!(partable_mean, identifier(model_ml), se_hessian(solution_ml), :se)
+    update_se_hessian!(partable_mean, solution_ml)
     test_estimates(partable_mean, solution_lav[:parameter_estimates_fiml];
         atol = 1e-3, col = :se, lav_col = :se)
 end
