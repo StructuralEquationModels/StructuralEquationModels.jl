@@ -12,26 +12,26 @@ function minus2ll end
 minus2ll(fit::SemFit) = minus2ll(fit, fit.model)
 
 function minus2ll(fit::SemFit, model::AbstractSemSingle)
-    minimum = objective!(model, fit.solution)
+    minimum = objective(model, fit.solution)
     return minus2ll(minimum, model)
 end
 
 minus2ll(minimum::Number, model::AbstractSemSingle) =
-    sum(loss -> minus2ll(minimum, model, loss), model.loss.functions)
+    sum(lossfun -> minus2ll(lossfun, minimum, model), model.loss.functions)
 
 # SemML ------------------------------------------------------------------------------------
-function minus2ll(minimum::Number, model::AbstractSemSingle, loss_ml::SemML)
+function minus2ll(lossfun::SemML, minimum::Number, model::AbstractSemSingle)
     obs = observed(model)
     return n_obs(obs)*(minimum + log(2π)*n_man(obs))
 end
 
 # WLS --------------------------------------------------------------------------------------
-minus2ll(minimum::Number, model::AbstractSemSingle, loss_ml::SemWLS) =
+minus2ll(lossfun::SemWLS, minimum::Number, model::AbstractSemSingle) =
     missing
 
 # compute likelihood for missing data - H0 -------------------------------------------------
 # -2ll = (∑ log(2π)*(nᵢ + mᵢ)) + F*n
-function minus2ll(minimum::Number, model::AbstractSemSingle, loss_ml::SemFIML)
+function minus2ll(lossfun::SemFIML, minimum::Number, model::AbstractSemSingle)
     obs = observed(model)::SemObservedMissing
     F = minimum * n_obs(obs)
     F += log(2π)*sum(pat -> n_obs(pat)*nobserved_vars(pat), obs.patterns)
@@ -41,59 +41,30 @@ end
 # compute likelihood for missing data - H1 -------------------------------------------------
 # -2ll =  ∑ log(2π)*(nᵢ + mᵢ) + ln(Σᵢ) + (mᵢ - μᵢ)ᵀ Σᵢ⁻¹ (mᵢ - μᵢ)) + tr(SᵢΣᵢ)
 function minus2ll(observed::SemObservedMissing)
-    if observed.em_model.fitted
-        minus2ll(
-            observed.em_model.μ,
-            observed.em_model.Σ,
-            observed.n_obs,
-            observed.rows,
-            observed.patterns,
-            observed.obs_mean,
-            observed.obs_cov,
-            observed.pattern_n_obs,
-            observed.pattern_nvar_obs)
-    else
-        em_mvn(observed)
-        minus2ll(
-            observed.em_model.μ,
-            observed.em_model.Σ,
-            observed.n_obs,
-            observed.rows,
-            observed.patterns,
-            observed.obs_mean,
-            observed.obs_cov,
-            observed.pattern_n_obs,
-            observed.pattern_nvar_obs)
-    end
-end
+    observed.em_model.fitted || em_mvn(observed)
 
-function minus2ll(μ, Σ, N, rows, patterns, obs_mean, obs_cov, pattern_n_obs, pattern_nvar_obs)
+    μ = observed.em_model.μ
+    Σ = observed.em_model.Σ
 
     F = 0.0
-
-    for i in 1:length(rows)
-
-        nᵢ = pattern_n_obs[i]
-        # missing pattern
-        pattern = patterns[i]
-        # observed data
-        Sᵢ = obs_cov[i]
-
+    for pat in observed.patterns
+        nᵢ = n_obs(pat)
         # implied covariance/mean
-        Σᵢ = Σ[pattern, pattern]
-        ld = logdet(Σᵢ)
-        Σᵢ⁻¹ = inv(cholesky(Σᵢ))
-        meandiffᵢ = obs_mean[i] - μ[pattern]
+        Σᵢ = Σ[pat.obs_mask, pat.obs_mask]
 
-        F += F_one_pattern(meandiffᵢ, Σᵢ⁻¹, Sᵢ, ld, nᵢ)
-        
+        ld = logdet(Σᵢ)
+        Σᵢ⁻¹ = LinearAlgebra.inv!(cholesky!(Σᵢ))
+        μ_diffᵢ = pat.obs_mean - μ[pat.obs_mask]
+
+        F_pat = ld + dot(μ_diffᵢ, Σᵢ⁻¹, μ_diffᵢ)
+        if n_obs(pat) > 1
+            F_pat += dot(pat.obs_cov, Σᵢ⁻¹)
+        end
+        F += (F_pat + log(2π)*nobserved_vars(pat))*n_obs(pat)
     end
 
-    F += sum(log(2π)*pattern_n_obs.*pattern_nvar_obs)
-    #F *= N
-
+    #F *= n_obs(observed)
     return F
-
 end
 
 ############################################################################################
