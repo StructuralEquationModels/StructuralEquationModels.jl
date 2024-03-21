@@ -58,8 +58,6 @@ include("additional_functions/start_val/start_partable.jl")
 include("additional_functions/start_val/start_simple.jl")
 include("additional_functions/artifacts.jl")
 include("additional_functions/simulation.jl")
-# identifier
-#include("additional_functions/identifier.jl")
 # fit measures
 include("frontend/fit/fitmeasures/AIC.jl")
 include("frontend/fit/fitmeasures/BIC.jl")
