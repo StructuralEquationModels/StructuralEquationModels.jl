@@ -52,7 +52,6 @@ include("optimizer/optim.jl")
 include("optimizer/NLopt.jl")
 # helper functions
 include("additional_functions/helper.jl")
-#include("additional_functions/parameters.jl")
 include("additional_functions/start_val/start_val.jl")
 include("additional_functions/start_val/start_fabin3.jl")
 include("additional_functions/start_val/start_partable.jl")
@@ -105,7 +104,7 @@ export  AbstractSem,
         ParameterTable,
             EnsembleParameterTable, update_partable!, update_estimate!, update_start!, update_se_hessian!,
             Fixed, fixed, Start, start, Label, label, sort_vars!, sort_vars,
-        RAMMatrices, 
+        RAMMatrices,
             RAMMatrices!,
         params, nparams,
         fit_measures,
