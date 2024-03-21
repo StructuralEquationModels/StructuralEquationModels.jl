@@ -2,16 +2,6 @@
 ### connect to NLopt.jl as backend
 ############################################################################################
 
-# wrapper to define the objective
-function sem_wrap_nlopt(par, G, model::AbstractSem)
-    need_gradient = length(G) != 0
-    if need_gradient
-        return objective_gradient!(G, model, par)
-    else
-        return objective!(model, par)
-    end
-end
-
 mutable struct NLoptResult
     result
     problem
@@ -49,7 +39,7 @@ function sem_fit(
         model.optimizer.options, 
         length(start_val))
     set_NLopt_constraints!(opt, model.optimizer)   
-    opt.min_objective = (par, G) -> sem_wrap_nlopt(par, G, model)
+    opt.min_objective = (par, G) -> evaluate!(eltype(par), !isnothing(G) && !isempty(G) ? G : nothing, nothing, model, par)
 
     if !isnothing(model.optimizer.local_algorithm)
         opt_local = construct_NLopt_problem(
