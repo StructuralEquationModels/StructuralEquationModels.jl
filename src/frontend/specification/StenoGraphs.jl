@@ -42,7 +42,7 @@ function ParameterTable(graph::AbstractStenoGraph;
         observed_vars = observed_vars,
         params = params)
     from = resize!(partable.columns.from, n)
-    parameter_type = resize!(partable.columns.parameter_type, n)
+    relation = resize!(partable.columns.relation, n)
     to = resize!(partable.columns.to, n)
     free = fill!(resize!(partable.columns.free, n), true)
     value_fixed = fill!(resize!(partable.columns.value_fixed, n), NaN)
@@ -56,9 +56,9 @@ function ParameterTable(graph::AbstractStenoGraph;
         from[i] = edge.src.node
         to[i] = edge.dst.node
         if edge isa DirectedEdge
-            parameter_type[i] = :→
+            relation[i] = :→
         elseif edge isa UndirectedEdge
-            parameter_type[i] = :↔
+            relation[i] = :↔
         else
             throw(ArgumentError("The graph contains an unsupported edge of type $(typeof(edge))."))
         end

@@ -138,31 +138,31 @@ function RAMMatrices(partable::ParameterTable;
         col_ind = row.from != Symbol("1") ? cols_index[row.from] : nothing
 
         if !row.free
-            if (row.parameter_type == :→) && (row.from == Symbol("1"))
+            if (row.relation == :→) && (row.from == Symbol("1"))
                 push!(M_consts, row_ind => row.value_fixed)
-            elseif (row.parameter_type == :→)
+            elseif (row.relation == :→)
                 push!(A_consts, A_lin_ixs[CartesianIndex(row_ind, col_ind)] => row.value_fixed)
-            elseif (row.parameter_type == :↔)
+            elseif (row.relation == :↔)
                 push!(S_consts, S_lin_ixs[CartesianIndex(row_ind, col_ind)] => row.value_fixed)
                 if row_ind != col_ind # symmetric
                     push!(S_consts, S_lin_ixs[CartesianIndex(col_ind, row_ind)] => row.value_fixed)
                 end
             else
-                error("Unsupported parameter type: $(row.parameter_type)")
+                error("Unsupported relation: $(row.relation)")
             end
         else
             par_ind = params_index[row.param]
-            if (row.parameter_type == :→) && (row.from == Symbol("1"))
+            if (row.relation == :→) && (row.from == Symbol("1"))
                 push!(M_inds[par_ind], row_ind)
-            elseif row.parameter_type == :→
+            elseif row.relation == :→
                 push!(A_inds[par_ind], A_lin_ixs[CartesianIndex(row_ind, col_ind)])
-            elseif row.parameter_type == :↔
+            elseif row.relation == :↔
                 push!(S_inds[par_ind], S_lin_ixs[CartesianIndex(row_ind, col_ind)])
                 if row_ind != col_ind # symmetric
                     push!(S_inds[par_ind], S_lin_ixs[CartesianIndex(col_ind, row_ind)])
                 end
             else
-                error("Unsupported parameter type: $(row.parameter_type)")
+                error("Unsupported relation: $(row.relation)")
             end
         end
     end
@@ -252,7 +252,7 @@ end
 ### Additional Functions
 ############################################################################################
 
-function matrix_to_parameter_type(matrix::Symbol)
+function matrix_to_relation(matrix::Symbol)
     if matrix == :A
         return :→
     elseif matrix == :S
@@ -279,7 +279,7 @@ function partable_row(val, index, matrix::Symbol,
 
     return (
         from = from,
-        parameter_type = matrix_to_parameter_type(matrix),
+        relation = matrix_to_relation(matrix),
         to = to,
         free = free,
         value_fixed = free ? 0.0 : val,

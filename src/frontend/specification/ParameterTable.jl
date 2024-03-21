@@ -18,7 +18,7 @@ function ParameterTable(; observed_vars::Union{AbstractVector{Symbol}, Nothing}=
                           params::Union{AbstractVector{Symbol}, Nothing}=nothing)
     columns = (
         from = Vector{Symbol}(),
-        parameter_type = Vector{Symbol}(),
+        relation = Vector{Symbol}(),
         to = Vector{Symbol}(),
         free = Vector{Bool}(),
         value_fixed = Vector{Float64}(),
@@ -116,7 +116,7 @@ end
 function Base.show(io::IO, partable::ParameterTable)
     relevant_columns = [
         :from,
-        :parameter_type,
+        :relation,
         :to,
         :free,
         :value_fixed,
@@ -148,7 +148,7 @@ end
 # Iteration --------------------------------------------------------------------------------
 ParameterTableRow = @NamedTuple begin
     from::Symbol
-    parameter_type::Symbol
+    relation::Symbol
     to::Symbol
     free::Bool
     value_fixed::Any
@@ -157,7 +157,7 @@ end
 
 Base.getindex(partable::ParameterTable, i::Integer) =
     (from = partable.columns.from[i],
-     parameter_type = partable.columns.parameter_type[i],
+     relation = partable.columns.relation[i],
      to = partable.columns.to[i],
      free = partable.columns.free[i],
      value_fixed = partable.columns.value_fixed[i],
@@ -198,7 +198,7 @@ function sort_vars!(partable::ParameterTable)
     # regression edges (excluding intercept)
     edges = [(from, to)
              for (reltype, from, to) in
-                    zip(partable.columns.parameter_type,
+                    zip(partable.columns.relation,
                         partable.columns.from,
                         partable.columns.to)
              if (reltype == :→) && (from != Symbol("1"))]
@@ -430,7 +430,7 @@ function lavaan_param_values!(out::AbstractVector,
     lav_values = partable_lav[:, lav_col]
     for (from, to, type, id) in
         zip([view(partable.columns[k], partable_mask)
-             for k in [:from, :to, :parameter_type, :param]]...)
+             for k in [:from, :to, :relation, :param]]...)
 
         lav_ind = nothing
 
