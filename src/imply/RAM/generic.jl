@@ -106,18 +106,19 @@ function RAM(;
     n_var = nvars(ram_matrices)
 
     #preallocate arrays
-    nan_params = fill(NaN, n_par)
-    A_pre = materialize(ram_matrices.A, nan_params)
-    S_pre = materialize(ram_matrices.S, nan_params)
+    rand_params = randn(Float64, n_par)
+    A_pre = check_acyclic(materialize(ram_matrices.A, rand_params))
+    S_pre = Symmetric(materialize(ram_matrices.S, rand_params))
     F = copy(ram_matrices.F)
 
-    A_pre = check_acyclic(A_pre, ram_matrices.A)
-
     # pre-allocate some matrices
-    Σ = zeros(n_obs, n_obs)
+    Σ = Symmetric(zeros(n_obs, n_obs))
     F⨉I_A⁻¹ = zeros(n_obs, n_var)
     F⨉I_A⁻¹S = zeros(n_obs, n_var)
-    I_A = similar(A_pre)
+    I_A = convert(Matrix, I - A_pre)
+    I_A = istril(I_A) ? LowerTriangular(I_A) :
+          istriu(I_A) ? UpperTriangular(I_A) :
+          I_A
 
     if gradient_required
         ∇A = sparse_gradient(ram_matrices.A)
@@ -130,7 +131,7 @@ function RAM(;
     # μ
     if meanstructure
         MS = HasMeanStructure
-        M_pre = materialize(ram_matrices.M, nan_params)
+        M_pre = materialize(ram_matrices.M, rand_params)
         ∇M = gradient_required ? sparse_gradient(ram_matrices.M) : nothing
         μ = zeros(n_obs)
     else
@@ -153,7 +154,7 @@ function RAM(;
         F⨉I_A⁻¹,
         F⨉I_A⁻¹S,
         I_A,
-        copy(I_A),
+        similar(parent(I_A)),
 
         ∇A,
         ∇S,
@@ -172,7 +173,7 @@ function update!(targets::EvaluationTargets, imply::RAM, model::AbstractSemSingl
         materialize!(imply.M, imply.ram_matrices.M, params)
     end
 
-    @inbounds for (j, I_Aj, Aj) in zip(axes(imply.A, 2), eachcol(imply.I_A), eachcol(imply.A))
+    @inbounds for (j, I_Aj, Aj) in zip(axes(imply.A, 2), eachcol(parent(imply.I_A)), eachcol(imply.A))
         for i in axes(imply.A, 1)
             I_Aj[i] = ifelse(i == j, 1, 0) - Aj[i]
         end
@@ -187,7 +188,7 @@ function update!(targets::EvaluationTargets, imply::RAM, model::AbstractSemSingl
     end
 
     mul!(imply.F⨉I_A⁻¹S, imply.F⨉I_A⁻¹, imply.S)
-    mul!(imply.Σ, imply.F⨉I_A⁻¹S, imply.F⨉I_A⁻¹')
+    mul!(parent(imply.Σ), imply.F⨉I_A⁻¹S, imply.F⨉I_A⁻¹')
 
     if MeanStructure(imply) === HasMeanStructure
         mul!(imply.μ, imply.F⨉I_A⁻¹, imply.M)
@@ -213,22 +214,21 @@ end
 ### additional functions
 ############################################################################################
 
-function check_acyclic(A_pre::AbstractMatrix, A::ParamsMatrix)
-    # fill copy of A with random parameters
-    A_rand = materialize(A, rand(nparams(A)))
-
+function check_acyclic(A::AbstractMatrix)
     # check if the model is acyclic
-    acyclic = isone(det(I-A_rand))
+    acyclic = isone(det(I-A))
 
     # check if A is lower or upper triangular
-    if istril(A_rand)
+    if istril(A)
         @info "A matrix is lower triangular"
-        return LowerTriangular(A_pre)
-    elseif istriu(A_rand)
+        return LowerTriangular(A)
+    elseif istriu(A)
         @info "A matrix is upper triangular"
-        return UpperTriangular(A_pre)
-    elseif acyclic
-        @info "Your model is acyclic, specifying the A Matrix as either Upper or Lower Triangular can have great performance benefits.\n" maxlog=1
-        return A_pre
+        return UpperTriangular(A)
+    else
+        if acyclic
+            @info "Your model is acyclic, specifying the A Matrix as either Upper or Lower Triangular can have great performance benefits.\n" maxlog=1
+        end
+        return A
     end
 end
