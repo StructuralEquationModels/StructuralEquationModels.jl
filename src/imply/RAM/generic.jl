@@ -109,7 +109,7 @@ function RAM(;
     nan_params = fill(NaN, n_par)
     A_pre = materialize(ram_matrices.A, nan_params)
     S_pre = materialize(ram_matrices.S, nan_params)
-    F = Matrix(ram_matrices.F)
+    F = copy(ram_matrices.F)
 
     A_pre = check_acyclic(A_pre, ram_matrices.A)
 
