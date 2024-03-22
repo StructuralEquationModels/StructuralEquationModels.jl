@@ -135,6 +135,14 @@ materialize(::Type{T}, arr::ParamsArray, param_values::AbstractVector) where {T}
 materialize(arr::ParamsArray, param_values::AbstractVector{T}) where {T} =
     materialize(Union{T, eltype(arr)}, arr, param_values)
 
+# the hack to update the structured matrix (should be fine since the structure is imposed by ParamsMatrix)
+materialize!(
+    dest::Union{Symmetric, LowerTriangular, UpperTriangular},
+    src::ParamsMatrix{<:Any},
+    param_values::AbstractVector;
+    kwargs...,
+) = materialize!(parent(dest), src, param_values; kwargs...)
+
 function sparse_materialize(
     ::Type{T},
     arr::ParamsMatrix,
