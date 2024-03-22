@@ -132,7 +132,18 @@ end
 
 Base.showerror(io::IO, e::CyclicModelError) = print(io, e.msg)
 
-function Base.sort!(partable::ParameterTable)
+"""
+    sort_vars!(partable::ParameterTable)
+    sort_vars!(partables::EnsembleParameterTable)
+
+Sort variables in `partable` so that all independent variables are
+before the dependent variables and store it in `partable.variables.sorted`.
+
+If the relations between the variables are acyclic, sorting will
+make the resulting `A` matrix in the *RAM* model lower triangular
+and allow faster calculations.
+"""
+function sort_vars!(partable::ParameterTable)
 
     vars = [partable.variables.latent;
             partable.variables.observed]
@@ -171,11 +182,16 @@ function Base.sort!(partable::ParameterTable)
     return partable
 end
 
-function Base.sort(partable::ParameterTable)
-    new_partable = deepcopy(partable)
-    sort!(new_partable)
-    return new_partable
-end
+"""
+    sort_vars(partable::ParameterTable)
+    sort_vars(partables::EnsembleParameterTable)
+
+Sort variables in `partable` so that all independent variables are
+before the dependent variables, and return the copy of `partable`.
+
+See [sort_vars!](@ref) for in-place version.
+"""
+sort_vars(partable::ParameterTable) = sort_vars!(deepcopy(partable))
 
 # add a row --------------------------------------------------------------------------------
 

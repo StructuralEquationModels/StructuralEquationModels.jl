@@ -72,24 +72,19 @@ end
 ### Additional Methods
 ############################################################################################
 
-# Sorting ----------------------------------------------------------------------------------
+# Variables Sorting ------------------------------------------------------------------------
 
-# Sorting ----------------------------------------------------------------------------------
+function sort_vars!(partables::EnsembleParameterTable)
 
-function sort!(ensemble_partable::EnsembleParameterTable)
-
-    for partable in values(ensemble_partable.tables)
-        sort!(partable)
+    for partable in values(partables.tables)
+        sort_vars!(partable)
     end
 
-    return ensemble_partable
+    return partables
 end
 
-function sort(partable::EnsembleParameterTable)
-    new_partable = deepcopy(partable)
-    sort!(new_partable)
-    return new_partable
-end
+sort_vars(partables::EnsembleParameterTable) =
+    sort_vars!(deepcopy(partables))
 
 # add a row --------------------------------------------------------------------------------
 

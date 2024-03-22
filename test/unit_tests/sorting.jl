@@ -1,8 +1,8 @@
 ############################################################################
-### test sorting
+### test variables sorting
 ############################################################################
 
-sort!(partable)
+sort_vars!(partable)
 
 model_ml_sorted = Sem(
     specification = partable,

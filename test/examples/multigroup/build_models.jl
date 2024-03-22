@@ -51,7 +51,7 @@ end
 # ML estimation - sorted
 ############################################################################################
 
-partable_s = sort(partable)
+partable_s = sort_vars(partable)
 
 specification_s = convert(Dict{Symbol, RAMMatrices}, partable_s)
 
