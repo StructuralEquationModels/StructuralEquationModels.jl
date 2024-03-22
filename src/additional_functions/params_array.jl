@@ -2,10 +2,14 @@
 Array with partially parameterized elements.
 """
 struct ParamsArray{T, N} <: AbstractArray{T, N}
-    linear_indices::Vector{Int}
-    param_ptr::Vector{Int}
-    constants::Vector{Pair{Int, T}}
-    size::NTuple{N, Int}
+    linear_indices::Vector{Int}     # linear indices of the parameter refs in the destination array
+    nz_indices::Vector{Int}         # indices of the parameters refs in nonzero elements vector
+    # (including the constants) ordered by the linear index
+    param_ptr::Vector{Int}          # i-th element marks the start of the range in linear/nonzero
+    # indices arrays that corresponds to the i-th parameter
+    # (nparams + 1 elements)
+    constants::Vector{Tuple{Int, Int, T}} # linear index, index in nonzero vector, value
+    size::NTuple{N, Int}            # size of the destination array
 end
 
 ParamsVector{T} = ParamsArray{T, 1}
@@ -18,10 +22,16 @@ function ParamsArray{T, N}(
 ) where {T, N}
     params_ptr =
         pushfirst!(accumulate((ptr, inds) -> ptr + length(inds), params_map, init = 1), 1)
+    param_lin_inds = reduce(vcat, params_map, init = Vector{Int}())
+    nz_lin_inds = unique!(sort!([param_lin_inds; first.(constants)]))
+    if length(nz_lin_inds) < length(param_lin_inds) + length(constants)
+        throw(ArgumentError("Duplicate linear indices in the parameterized array"))
+    end
     return ParamsArray{T, N}(
-        reduce(vcat, params_map, init = Vector{Int}()),
+        param_lin_inds,
+        searchsortedfirst.(Ref(nz_lin_inds), param_lin_inds),
         params_ptr,
-        constants,
+        [(c[1], searchsortedfirst(nz_lin_inds, c[1]), c[2]) for c in constants],
         size,
     )
 end
@@ -58,6 +68,7 @@ ParamsArray{T}(
 ) where {T, N} = ParamsArray{T, N}(arr, params; kwargs...)
 
 nparams(arr::ParamsArray) = length(arr.param_ptr) - 1
+SparseArrays.nnz(arr::ParamsArray) = length(arr.linear_indices) + length(arr.constants)
 
 Base.size(arr::ParamsArray) = arr.size
 Base.size(arr::ParamsArray, i::Integer) = arr.size[i]
@@ -110,13 +121,50 @@ function materialize!(
     Z = eltype(dest) <: Number ? eltype(dest) : eltype(src)
     set_zeros && fill!(dest, zero(Z))
     if set_constants
-        @inbounds for (i, val) in src.constants
+        @inbounds for (i, _, val) in src.constants
             dest[i] = val
         end
     end
     @inbounds for (i, val) in enumerate(param_values)
         for j in param_occurences_range(src, i)
             dest[src.linear_indices[j]] = val
+        end
+    end
+    return dest
+end
+
+function materialize!(
+    dest::SparseMatrixCSC,
+    src::ParamsMatrix,
+    param_values::AbstractVector;
+    set_constants::Bool = true,
+    set_zeros::Bool = false,
+)
+    set_zeros && throw(ArgumentError("Cannot set zeros for sparse matrix"))
+    size(dest) == size(src) || throw(
+        DimensionMismatch(
+            "Parameters ($(size(params_arr))) and destination ($(size(dest))) array sizes don't match",
+        ),
+    )
+    nparams(src) == length(param_values) || throw(
+        DimensionMismatch(
+            "Number of values ($(length(param_values))) does not match the number of parameters ($(nparams(src)))",
+        ),
+    )
+
+    nnz(dest) == nnz(src) || throw(
+        DimensionMismatch(
+            "Number of non-zero elements ($(nnz(dest))) does not match the number of parameter references and constants ($(nnz(src)))",
+        ),
+    )
+    if set_constants
+        @inbounds for (_, j, val) in src.constants
+            dest.nzval[j] = val
+        end
+    end
+    @inbounds for (i, val) in enumerate(param_values)
+        for j in param_occurences_range(src, i)
+            dest.nzval[src.nz_indices[j]] = val
         end
     end
     return dest
@@ -150,27 +198,30 @@ function sparse_materialize(
 ) where {T}
     nparams(arr) == length(param_values) || throw(
         DimensionMismatch(
-            "Number of values ($(length(param)values))) does not match the number of parameter ($(nparams(arr)))",
+            "Number of values ($(length(param_values))) does not match the number of parameter ($(nparams(arr)))",
         ),
     )
-    # constant values in sparse matrix
-    cvals = [T(v) for (_, v) in arr.constants]
-    # parameter values in sparse matrix
-    parvals = Vector{T}(undef, length(arr.linear_indices))
+
+    nz_vals = Vector{T}(undef, nnz(arr))
+    nz_lininds = Vector{Int}(undef, nnz(arr))
+    # fill constants
+    @inbounds for (lin_ind, nz_ind, val) in arr.constants
+        nz_vals[nz_ind] = val
+        nz_lininds[nz_ind] = lin_ind
+    end
+    # fill parameters
     @inbounds for (i, val) in enumerate(param_values)
         for j in param_occurences_range(arr, i)
-            parvals[j] = val
+            nz_ind = arr.nz_indices[j]
+            nz_vals[nz_ind] = val
+            nz_lininds[nz_ind] = arr.linear_indices[j]
         end
     end
-    nzixs = [first.(arr.constants); arr.linear_indices]
-    ixorder = sortperm(nzixs)
-    nzixs = nzixs[ixorder]
-    nzvals = [cvals; parvals][ixorder]
     arr_ixs = CartesianIndices(size(arr))
     return sparse(
-        [arr_ixs[i][1] for i in nzixs],
-        [arr_ixs[i][2] for i in nzixs],
-        nzvals,
+        [arr_ixs[i][1] for i in nz_lininds],
+        [arr_ixs[i][2] for i in nz_lininds],
+        nz_vals,
         size(arr)...,
     )
 end

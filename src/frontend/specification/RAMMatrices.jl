@@ -374,7 +374,7 @@ function append_rows!(
     end
 
     # add constants
-    for (i, val) in arr.constants
+    for (i, _, val) in arr.constants
         arr_ix = arr_ixs[i]
         skip_symmetric && (arr_ix ∈ visited_indices) && continue
         push!(partable, partable_row(val, arr_ix, arr_name, varnames, free = false))
