@@ -19,7 +19,7 @@ struct SemObservedMissingPattern{T,S}
     data::Matrix{T}         # non-missing submatrix of data
 
     obs_mean::Vector{S} # means of observed vars
-    obs_cov::Matrix{S}  # covariance of observed vars
+    obs_cov::Symmetric{S, Matrix{S}}  # covariance of observed vars
 end
 
 function SemObservedMissingPattern(
@@ -44,7 +44,7 @@ function SemObservedMissingPattern(
         obs_mask, miss_mask,
         sum(obs_mask), sum(miss_mask),
         rows, pat_data,
-        dropdims(pat_mean, dims=1), pat_cov)
+        dropdims(pat_mean, dims=1), Symmetric(pat_cov))
 end
 
 n_man(pat::SemObservedMissingPattern) = length(pat.obs_mask)

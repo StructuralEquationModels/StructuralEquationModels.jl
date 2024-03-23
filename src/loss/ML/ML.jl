@@ -48,7 +48,7 @@ function SemML(; observed::SemObserved,
     meandiff = isnothing(obsmean) ? nothing : copy(obsmean)
 
     return SemML{approximate_hessian ? ApproximateHessian : ExactHessian}(
-        similar(obscov), similar(obscov),
+        similar(parent(obscov)), similar(parent(obscov)),
         meandiff)
 end
 
@@ -66,7 +66,7 @@ function evaluate!(
     model::AbstractSemSingle,
     par)
 
-    if !isnothing(hessian)
+        if !isnothing(hessian)
         (MeanStructure(implied) === HasMeanStructure) &&
             throw(DomainError(H, "hessian of ML + meanstructure is not available"))
     end

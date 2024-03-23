@@ -50,7 +50,7 @@ end
 
 # error checks
 function check_arguments_SemObservedData(kwargs...)
-    # data is a data frame, 
+    # data is a data frame,
 
 end
 
@@ -105,7 +105,7 @@ function SemObservedData(;
     end
 
     return SemObservedData(data,
-        compute_covariance ? Statistics.cov(data) : nothing,
+        compute_covariance ? Symmetric(cov(data)) : nothing,
         meanstructure ? vec(Statistics.mean(data, dims = 1)) : nothing,
         Float64.(size(data, 2)),
         Float64.(size(data, 1)),

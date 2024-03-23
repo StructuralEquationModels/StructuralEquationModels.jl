@@ -81,7 +81,7 @@ function SemObservedCovariance(;
 
     n_man = Float64(size(obs_cov, 1))
 
-    return SemObservedCovariance(obs_cov, obs_mean, n_man, n_obs)
+    return SemObservedCovariance(Symmetric(obs_cov), obs_mean, n_man, n_obs)
 end
 
 ############################################################################################
