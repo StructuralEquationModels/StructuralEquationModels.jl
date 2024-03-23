@@ -119,12 +119,23 @@ Base.getindex(partable::EnsembleParameterTable, group) = partable.tables[group]
 ### Update Partable from Fitted Model
 ############################################################################################
 
-# update generic ---------------------------------------------------------------------------
+# TODO group-specific values (via dictionary of parameter values?)
+
 function update_partable!(partables::EnsembleParameterTable,
-                          params::AbstractVector, param_values::AbstractVector,
-                          column::Symbol)
+                          column::Symbol,
+                          param_values::AbstractDict{Symbol},
+                          default::Any = nothing)
     for partable in values(partables.tables)
-        update_partable!(partable, params, param_values, column)
+        update_partable!(partable, column, param_values, column, default)
+    end
+    return partables
+end
+
+function update_partable!(partables::EnsembleParameterTable, column::Symbol,
+                          params::AbstractVector, param_values::AbstractVector,
+                          default::Any = nothing)
+    for partable in values(partables.tables)
+        update_partable!(partable, column, params, param_values, default)
     end
     return partables
 end
