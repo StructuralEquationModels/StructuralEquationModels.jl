@@ -184,8 +184,6 @@ function Base.push!(partable::ParameterTable, d::AbstractDict{Symbol})
     end
 end
 
-Base.push!(partable::ParameterTable, d::Nothing) = nothing
-
 ############################################################################################
 ### Update Partable from Fitted Model
 ############################################################################################
