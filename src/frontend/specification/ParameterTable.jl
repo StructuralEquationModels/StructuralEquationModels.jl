@@ -350,3 +350,104 @@ values do not match.
 """
 param_values(partable::ParameterTable, col::Symbol = :estimate) =
     param_values!(fill(NaN, nparams(partable)), partable, col)
+
+"""
+    lavaan_param_values!(out::AbstractVector, partable_lav,
+                         partable::ParameterTable,
+                         lav_col::Symbol = :est, lav_group = nothing)
+
+Extract parameter values from the `partable_lav` lavaan model that
+match the parameters of `partable` into the `out` vector.
+
+The method sets the *i*-th element of the `out` vector to
+the value of *i*-th parameter from `params(partable)`.
+
+Note that the lavaan and `partable` models are matched by the
+the names of variables in the tables (`from` and `to` columns)
+as well as the type of their relationship (`relation` column),
+and not by the names of the model parameters.
+"""
+function lavaan_param_values!(out::AbstractVector,
+                              partable_lav, partable::ParameterTable,
+                              lav_col::Symbol = :est, lav_group = nothing)
+
+    # find indices of all df row where f is true
+    findallrows(f::Function, df) = findall(f(r) for r in eachrow(df))
+
+    (length(out) == nparams(partable)) || throw(DimensionMismatch("The length of parameter values vector ($(length(out))) does not match the number of parameters ($(nparams(partable)))"))
+    partable_mask = findall(partable.columns[:free])
+    param_index = Dict(param => i for (i, param) in enumerate(params(partable)))
+
+    lav_values = partable_lav[:, lav_col]
+    for (from, to, type, id) in
+        zip([view(partable.columns[k], partable_mask)
+             for k in [:from, :to, :parameter_type, :param]]...)
+
+        lav_ind = nothing
+
+        if from == Symbol("1")
+            lav_ind = findallrows(r -> r[:lhs] == String(to) && r[:op] == "~1" &&
+                                  (isnothing(lav_group) || r[:group] == lav_group), partable_lav)
+        else
+            if type == :↔
+                lav_type = "~~"
+            elseif type == :→
+                if (from ∈ partable.variables.latent) && (to ∈ partable.variables.observed)
+                    lav_type = "=~"
+                else
+                    lav_type = "~"
+                    from, to = to, from
+                end
+            end
+
+            if lav_type == "~~"
+                lav_ind = findallrows(r -> ((r[:lhs] == String(from) && r[:rhs] == String(to)) ||
+                                        (r[:lhs] == String(to) && r[:rhs] == String(from))) &&
+                                        r[:op] == lav_type &&
+                                        (isnothing(lav_group) || r[:group] == lav_group),
+                                      partable_lav)
+            else
+                lav_ind = findallrows(r -> r[:lhs] == String(from) && r[:rhs] == String(to) && r[:op] == lav_type &&
+                                      (isnothing(lav_group) || r[:group] == lav_group),
+                                      partable_lav)
+            end
+        end
+
+        if length(lav_ind) == 0
+            throw(ErrorException("Parameter $id ($from $type $to) could not be found in the lavaan solution"))
+        elseif length(lav_ind) > 1
+            throw(ErrorException("At least one parameter was found twice in the lavaan solution"))
+        end
+
+        param_ind = param_index[id]
+        param_val = lav_values[lav_ind[1]]
+        if isnan(out[param_ind])
+            out[param_ind] = param_val
+        else
+            @assert out[param_ind] ≈ param_val atol=1E-10 "Parameter :$id value at row #$lav_ind ($param_val) differs from the earlier encountered value ($(out[param_ind]))"
+        end
+    end
+
+    return out
+end
+
+"""
+    lavaan_param_values(partable_lav, partable::ParameterTable,
+                        lav_col::Symbol = :est, lav_group = nothing)
+
+Extract parameter values from the `partable_lav` lavaan model that
+match the parameters of `partable`.
+
+The `out` vector should be of `nparams(partable)` length.
+The *i*-th element of the `out` vector will contain the
+value of the *i*-th parameter from `params(partable)`.
+
+Note that the lavaan and `partable` models are matched by the
+the names of variables in the tables (`from` and `to` columns),
+and the type of their relationship (`relation` column),
+but not by the ids of the model parameters.
+"""
+lavaan_param_values(partable_lav, partable::ParameterTable,
+                    lav_col::Symbol = :est, lav_group = nothing) =
+    lavaan_param_values!(fill(NaN, nparams(partable)),
+                         partable_lav, partable, lav_col, lav_group)
