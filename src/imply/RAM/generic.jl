@@ -155,7 +155,7 @@ function RAM(;
         F⨉I_A⁻¹,
         F⨉I_A⁻¹S,
         I_A,
-        similar(parent(I_A)),
+        similar(I_A),
 
         ∇A,
         ∇S,
