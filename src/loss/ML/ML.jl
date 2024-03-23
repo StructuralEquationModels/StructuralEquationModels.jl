@@ -102,19 +102,19 @@ function evaluate!(
             ∇Σ = implied.∇Σ
             ∇μ = implied.∇μ
             μ₋ᵀΣ⁻¹ = μ₋' * Σ⁻¹
-            gradient .= (vec(Σ⁻¹ - Σ⁻¹Σₒ * Σ⁻¹ - μ₋ᵀΣ⁻¹'μ₋ᵀΣ⁻¹)' * ∇Σ)'
-            gradient .-= (2 * μ₋ᵀΣ⁻¹ * ∇μ)'
+            mul!(gradient, ∇Σ', vec(Σ⁻¹ - Σ⁻¹Σₒ * Σ⁻¹ - μ₋ᵀΣ⁻¹'μ₋ᵀΣ⁻¹))
+            mul!(gradient, ∇μ', μ₋ᵀΣ⁻¹', -2, 1)
         end
     elseif !isnothing(gradient) || !isnothing(hessian)
         ∇Σ = implied.∇Σ
         Σ⁻¹ΣₒΣ⁻¹ = Σ⁻¹Σₒ * Σ⁻¹
         J = vec(Σ⁻¹ - Σ⁻¹ΣₒΣ⁻¹)'
         if !isnothing(gradient)
-            gradient .= (J * ∇Σ)'
+            mul!(gradient, ∇Σ', J')
         end
         if !isnothing(hessian)
             if HessianEvaluation(semml) === ApproximateHessian
-                mul!(hessian, 2 * ∇Σ' * kron(Σ⁻¹, Σ⁻¹), ∇Σ)
+                mul!(hessian, ∇Σ' * kron(Σ⁻¹, Σ⁻¹), ∇Σ, 2, 0)
             else
                 ∇²Σ_function! = implied.∇²Σ_function
                 ∇²Σ = implied.∇²Σ
@@ -183,7 +183,8 @@ function evaluate!(
         ∇S = implied.∇S
 
         C = F⨉I_A⁻¹' * (I - Σ⁻¹Σₒ) * Σ⁻¹ * F⨉I_A⁻¹
-        gradᵀ = 2vec(C * S * I_A⁻¹')'∇A + vec(C)'∇S
+        mul!(gradient, ∇A', vec(C * S * I_A⁻¹'), 2, 0)
+        mul!(gradient, ∇S', vec(C), 1, 1)
 
         if MeanStructure(implied) === HasMeanStructure
             μ = implied.μ
@@ -193,9 +194,10 @@ function evaluate!(
             μ₋ = μₒ - μ
             μ₋ᵀΣ⁻¹ = μ₋' * Σ⁻¹
             k = μ₋ᵀΣ⁻¹ * F⨉I_A⁻¹
-            gradᵀ .+= -2k * ∇M - 2vec(k' * (M' + k * S) * I_A⁻¹')'∇A - vec(k'k)'∇S
+            mul!(gradient, ∇M', k', -2, 1)
+            mul!(gradient, ∇A', vec(k' * (I_A⁻¹ * (M + S * k'))'), -2, 1)
+            mul!(gradient, ∇S', vec(k'k), -1, 1)
         end
-        copyto!(gradient, gradᵀ')
     end
 
     return objective
