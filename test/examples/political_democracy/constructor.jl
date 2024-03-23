@@ -87,7 +87,7 @@ for (model, name, solution_name) in zip(models, model_names, solution_names)
         @testset "$(name)_solution" begin
             solution = sem_fit(model)
             update_estimate!(partable, solution)
-            @test compare_estimates(partable, solution_lav[solution_name]; atol = 1e-2)
+            test_estimates(partable, solution_lav[solution_name]; atol = 1e-2)
         end
     catch
     end
@@ -127,7 +127,7 @@ end
         atol = 1e-3))
 
     update_partable!(partable, identifier(model_ml), se_hessian(solution_ml), :se)
-    @test compare_estimates(partable, solution_lav[:parameter_estimates_ml];
+    test_estimates(partable, solution_lav[:parameter_estimates_ml];
         atol = 1e-3, col = :se, lav_col = :se)
 end
 
@@ -139,7 +139,7 @@ end
     @test (fm[:AIC] === missing) & (fm[:BIC] === missing) & (fm[:minus2ll] === missing)
 
     update_partable!(partable, identifier(model_ls_sym), se_hessian(solution_ls), :se)
-    @test compare_estimates(partable, solution_lav[:parameter_estimates_ls]; atol = 1e-2,
+    test_estimates(partable, solution_lav[:parameter_estimates_ls]; atol = 1e-2,
         col = :se, lav_col = :se)
 end
 
@@ -180,13 +180,13 @@ if semoptimizer == SemOptimizerOptim
     @testset "ml_solution_hessian" begin
         solution = sem_fit(model_ml)
         update_estimate!(partable, solution)
-        @test compare_estimates(partable, solution_lav[:parameter_estimates_ml]; atol = 1e-3)
+        test_estimates(partable, solution_lav[:parameter_estimates_ml]; atol = 1e-3)
     end
 
     @testset "ls_solution_hessian" begin
         solution = sem_fit(model_ls)
         update_estimate!(partable, solution)
-        @test compare_estimates(partable, solution_lav[:parameter_estimates_ls]; atol = 0.002, rtol = 0.0) skip=true
+        test_estimates(partable, solution_lav[:parameter_estimates_ls]; atol = 0.002, rtol = 0.0, skip=true)
     end
 
 end
@@ -259,7 +259,7 @@ for (model, name, solution_name) in zip(models, model_names, solution_names)
         @testset "$(name)_solution_mean" begin
             solution = sem_fit(model)
             update_estimate!(partable_mean, solution)
-            @test compare_estimates(partable_mean, solution_lav[solution_name]; atol = 1e-2)
+            test_estimates(partable_mean, solution_lav[solution_name]; atol = 1e-2)
         end
     catch
     end
@@ -275,7 +275,7 @@ end
         atol = 0.002))
 
     update_partable!(partable_mean, identifier(model_ml), se_hessian(solution_ml), :se)
-    @test compare_estimates(partable_mean, solution_lav[:parameter_estimates_ml_mean];
+    test_estimates(partable_mean, solution_lav[:parameter_estimates_ml_mean];
         atol = 0.002, col = :se, lav_col = :se)
 end
 
@@ -289,7 +289,7 @@ end
     @test (fm[:AIC] === missing) & (fm[:BIC] === missing) & (fm[:minus2ll] === missing)
 
     update_partable!(partable_mean, identifier(model_ls), se_hessian(solution_ls), :se)
-    @test compare_estimates(partable_mean, solution_lav[:parameter_estimates_ls_mean]; atol = 1e-2, col = :se, lav_col = :se)
+    test_estimates(partable_mean, solution_lav[:parameter_estimates_ls_mean]; atol = 1e-2, col = :se, lav_col = :se)
 end
 
 ############################################################################################
@@ -336,13 +336,13 @@ end
 @testset "fiml_solution" begin
     solution = sem_fit(model_ml)
     update_estimate!(partable_mean, solution)
-    @test compare_estimates(partable_mean, solution_lav[:parameter_estimates_fiml]; atol = 1e-2)
+    test_estimates(partable_mean, solution_lav[:parameter_estimates_fiml]; atol = 1e-2)
 end
 
 @testset "fiml_solution_symbolic" begin
     solution = sem_fit(model_ml_sym)
     update_estimate!(partable_mean, solution)
-    @test compare_estimates(partable_mean, solution_lav[:parameter_estimates_fiml]; atol = 1e-2)
+    test_estimates(partable_mean, solution_lav[:parameter_estimates_fiml]; atol = 1e-2)
 end
 
 ############################################################################################
@@ -355,6 +355,6 @@ end
         atol = 1e-3))
 
     update_partable!(partable_mean, identifier(model_ml), se_hessian(solution_ml), :se)
-    @test compare_estimates(partable_mean, solution_lav[:parameter_estimates_fiml];
+    test_estimates(partable_mean, solution_lav[:parameter_estimates_fiml];
         atol = 0.002, col = :se, lav_col = :se)
 end

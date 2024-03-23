@@ -16,5 +16,5 @@ end
 @testset "ml_solution_sorted" begin
     solution_ml_sorted = sem_fit(model_ml_sorted)
     update_estimate!(partable, solution_ml_sorted)
-    @test SEM.compare_estimates(par_ml, partable, 0.01)
+    @test test_estimates(par_ml, partable, 0.01)
 end
