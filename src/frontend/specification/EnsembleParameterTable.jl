@@ -98,8 +98,6 @@ function Base.push!(partable::EnsembleParameterTable, d::AbstractDict, group)
     push!(partable.tables[group], d)
 end
 
-Base.push!(partable::EnsembleParameterTable, d::Nothing, group) = nothing
-
 Base.getindex(partable::EnsembleParameterTable, group) = partable.tables[group]
 
 ############################################################################################
