@@ -29,10 +29,9 @@ function se_hessian(fit::SemFit; method = :finitediff)
         throw(ArgumentError("Unsupported hessian calculation method :$method"))
     end
 
-    invH = c * inv(H)
-    se = sqrt.(diag(invH))
-
-    return se
+    H_chol = cholesky!(Symmetric(H))
+    H_inv = LinearAlgebra.inv!(H_chol)
+    return [sqrt(c * H_inv[i]) for i in diagind(H_inv)]
 end
 
 # Addition functions -------------------------------------------------------------
