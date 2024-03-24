@@ -1,8 +1,8 @@
 ## connect to Optim.jl as backend
 
 function SemFit(
-        optimization_result::Optim.MultivariateOptimizationResults, 
-        model::AbstractSem, 
+        optimization_result::Optim.MultivariateOptimizationResults,
+        model::AbstractSem,
         start_val)
     return SemFit(
         optimization_result.minimum,
@@ -19,19 +19,15 @@ convergence(res::Optim.MultivariateOptimizationResults) = Optim.converged(res)
 
 function sem_fit(
         optim::SemOptimizerOptim,
-        model::AbstractSem;
-        start_val = start_val,
+        model::AbstractSem,
+        start_params::AbstractVector;
         kwargs...)
-
-    if !isa(start_val, AbstractVector)
-        start_val = start_val(model; kwargs...)
-    end
 
     result = Optim.optimize(
                 Optim.only_fgh!((F, G, H, par) -> evaluate!(F, G, H, model, par)),
-                start_val,
+                start_params,
                 model.optimizer.algorithm,
                 model.optimizer.options)
-    return SemFit(result, model, start_val)
+    return SemFit(result, model, start_params)
 
 end
