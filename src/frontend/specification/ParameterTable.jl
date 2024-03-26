@@ -402,6 +402,18 @@ function update_se_hessian!(
     return update_partable!(partable, :se, param_labels(fit), se)
 end
 
+function variance_params(partable::ParameterTable)
+    res = [
+        param for (param, rel, from, to) in zip(
+            partable.columns.param,
+            partable.columns.relation,
+            partable.columns.from,
+            partable.columns.to,
+        ) if (rel == :↔) && (from == to)
+    ]
+    unique!(res)
+end
+
 """
     lavaan_params!(out::AbstractVector, partable_lav,
                          partable::ParameterTable,
