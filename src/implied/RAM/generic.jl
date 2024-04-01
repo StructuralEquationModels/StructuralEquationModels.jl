@@ -94,6 +94,7 @@ function RAM(;
     specification::SemSpecification,
     gradient_required = true,
     meanstructure = false,
+    sparse_S::Bool = true,
     kwargs...,
 )
     ram_matrices = convert(RAMMatrices, specification)
@@ -108,7 +109,9 @@ function RAM(;
     #preallocate arrays
     rand_params = randn(Float64, n_par)
     A_pre = check_acyclic(materialize(ram_matrices.A, rand_params))
-    S_pre = materialize(ram_matrices.S, rand_params)
+    S_pre = Symmetric(
+        (sparse_S ? sparse_materialize : materialize)(ram_matrices.S, rand_params),
+    )
     F = copy(ram_matrices.F)
 
     # pre-allocate some matrices
