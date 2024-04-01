@@ -109,8 +109,10 @@ function RAMSymbolic(;
         vech = true
     end
 
+    I_A⁻¹ = neumann_series(A)
+
     # Σ
-    Σ_symbolic = get_Σ_symbolic_RAM(S, A, F; vech = vech)
+    Σ_symbolic = eval_Σ_symbolic(S, I_A⁻¹, F; vech = vech)
     #print(Symbolics.build_function(Σ_symbolic)[2])
     Σ_function = Symbolics.build_function(Σ_symbolic, par, expression=Val{false})[2]
     Σ = zeros(size(Σ_symbolic))
@@ -150,7 +152,7 @@ function RAMSymbolic(;
     # μ
     if meanstructure
         MS = HasMeanStructure
-        μ_symbolic = get_μ_symbolic_RAM(M, A, F)
+        μ_symbolic = eval_μ_symbolic(M, I_A⁻¹, F)
         μ_function = Symbolics.build_function(μ_symbolic, par, expression=Val{false})[2]
         μ = zeros(size(μ_symbolic))
         if gradient
@@ -224,24 +226,24 @@ end
 ### additional functions
 ############################################################################################
 
-function get_Σ_symbolic_RAM(S, A, F; vech = false)
-    invia = neumann_series(A)
-    Σ_symbolic = F*invia*S*permutedims(invia)*permutedims(F)
-    Σ_symbolic = Array(Σ_symbolic)
-    # Σ_symbolic = Symbolics.simplify.(Σ_symbolic)
-    if vech Σ_symbolic = Σ_symbolic[tril(trues(size(F, 1), size(F, 1)))] end
-    Threads.@threads for i in eachindex(Σ_symbolic)
-        Σ_symbolic[i] = Symbolics.simplify(Σ_symbolic[i])
+# expected covariations of observed vars
+function eval_Σ_symbolic(S, I_A⁻¹, F; vech = false)
+    Σ = F*I_A⁻¹*S*permutedims(I_A⁻¹)*permutedims(F)
+    Σ = Array(Σ)
+    vech && (Σ = Σ[tril(trues(size(F, 1), size(F, 1)))])
+    # Σ = Symbolics.simplify.(Σ)
+    Threads.@threads for i in eachindex(Σ)
+        Σ[i] = Symbolics.simplify(Σ[i])
     end
-    return Σ_symbolic
+    return Σ
 end
 
-function get_μ_symbolic_RAM(M, A, F)
-    invia = neumann_series(A)
-    μ_symbolic = F*invia*M
-    μ_symbolic = Array(μ_symbolic)
-    Threads.@threads for i in eachindex(μ_symbolic)
-        μ_symbolic[i] = Symbolics.simplify(μ_symbolic[i])
+# expected means of observed vars
+function eval_μ_symbolic(M, I_A⁻¹, F)
+    μ = F*I_A⁻¹*M
+    μ = Array(μ)
+    Threads.@threads for i in eachindex(μ)
+        μ[i] = Symbolics.simplify(μ[i])
     end
-    return μ_symbolic
+    return μ
 end
