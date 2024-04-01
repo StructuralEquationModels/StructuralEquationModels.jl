@@ -39,11 +39,11 @@ use this if you are sure your covariance matrix is in the right format.
 ## Additional keyword arguments:
 - `spec_colnames::Vector{Symbol} = nothing`: overwrites column names of the specification object
 """
-struct SemObservedCovariance{B, C, D, O} <: SemObserved
+struct SemObservedCovariance{B, C} <: SemObserved
     obs_cov::B
     obs_mean::C
-    n_man::D
-    n_obs::O
+    n_man::Int
+    n_obs::Int
 end
 
 function SemObservedCovariance(;
@@ -56,7 +56,7 @@ function SemObservedCovariance(;
         obs_mean::Union{AbstractVector, Nothing} = nothing,
         meanstructure::Bool = false,
 
-        n_obs::Union{Number, Nothing} = nothing,
+        n_obs::Integer,
 
         kwargs...)
 
@@ -80,9 +80,7 @@ function SemObservedCovariance(;
         isnothing(obs_mean) || (obs_mean = obs_mean[obs2spec_perm])
     end
 
-    n_man = Float64(size(obs_cov, 1))
-
-    return SemObservedCovariance(Symmetric(obs_cov), obs_mean, n_man, n_obs)
+    return SemObservedCovariance(Symmetric(obs_cov), obs_mean, size(obs_cov, 1), n_obs)
 end
 
 ############################################################################################

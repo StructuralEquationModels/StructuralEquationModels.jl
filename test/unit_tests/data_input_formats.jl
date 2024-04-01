@@ -200,30 +200,31 @@ end
 # errors
 
 @test_throws ArgumentError("observed means were passed, but `meanstructure = false`") begin
-    SemObservedCovariance(specification = nothing, obs_cov = dat_cov, obs_mean = dat_mean)
+    SemObservedCovariance(specification = nothing, obs_cov = dat_cov, obs_mean = dat_mean, n_obs = 75)
 end
 
 #@test_throws UndefKeywordError(:specification) SemObservedCovariance(obs_cov = dat_cov)
 
 @test_throws ArgumentError("no `obs_colnames` were specified") begin
-    SemObservedCovariance(specification = spec, obs_cov = dat_cov)
+    SemObservedCovariance(specification = spec, obs_cov = dat_cov, n_obs = 75)
 end
 
 @test_throws TypeError begin
-    SemObservedCovariance(specification = spec, obs_cov = dat_cov, obs_colnames = names(dat))
+    SemObservedCovariance(specification = spec, obs_cov = dat_cov, obs_colnames = names(dat), n_obs = 75)
 end
 
 # should work
 observed = SemObservedCovariance(
     specification = spec,
     obs_cov = dat_cov,
-    obs_colnames = obs_colnames = Symbol.(names(dat))
+    obs_colnames = obs_colnames = Symbol.(names(dat)),
+    n_obs = 75
 )
 
 observed_nospec = SemObservedCovariance(
     specification = nothing,
     obs_cov = dat_cov,
-    n_obs = 75.0
+    n_obs = 75
 )
 
 
@@ -231,8 +232,8 @@ all_equal_cov = (obs_cov(observed) == obs_cov(observed_nospec))
 
 @testset "unit tests | SemObservedCovariance | input formats" begin
     @test all_equal_cov
-    @test isnothing(n_obs(observed))
-    @test n_obs(observed_nospec) == 75.0
+    @test n_obs(observed) == 75
+    @test n_obs(observed_nospec) == 75
 end
 
 
@@ -248,7 +249,8 @@ shuffle_dat_cov = Statistics.cov(shuffle_dat_matrix)
 observed_shuffle = SemObservedCovariance(
     specification = spec,
     obs_cov = shuffle_dat_cov,
-    obs_colnames = shuffle_names
+    obs_colnames = shuffle_names,
+    n_obs = 75
 )
 
 all_equal_cov_suffled = (obs_cov(observed) ≈ obs_cov(observed_shuffle))
@@ -261,7 +263,7 @@ end
 
 # errors
 @test_throws ArgumentError("`meanstructure = true`, but no observed means were passed") begin
-    SemObservedCovariance(specification = spec, obs_cov = dat_cov, meanstructure = true)
+    SemObservedCovariance(specification = spec, obs_cov = dat_cov, meanstructure = true, n_obs=75)
 end
 
 #@test_throws UndefKeywordError SemObservedCovariance(data = dat_matrix, meanstructure = true)
@@ -273,7 +275,8 @@ end
         specification = spec,
         obs_cov = dat_cov,
         obs_colnames = Symbol.(names(dat)),
-        meanstructure = true
+        meanstructure = true,
+        n_obs = 75
     )
 end
 
@@ -283,7 +286,7 @@ observed = SemObservedCovariance(
     obs_cov = dat_cov,
     obs_mean = dat_mean,
     obs_colnames = Symbol.(names(dat)),
-    n_obs = 75.0,
+    n_obs = 75,
     meanstructure = true
 )
 
@@ -292,7 +295,7 @@ observed_nospec = SemObservedCovariance(
     obs_cov = dat_cov,
     obs_mean = dat_mean,
     meanstructure = true,
-    n_obs = 75.0
+    n_obs = 75
 )
 
 all_equal_mean = (obs_mean(observed) == obs_mean(observed_nospec))
@@ -318,7 +321,7 @@ observed_shuffle = SemObservedCovariance(
     obs_cov = shuffle_dat_cov,
     obs_mean = shuffle_dat_mean,
     obs_colnames = shuffle_names,
-    n_obs = 75.0,
+    n_obs = 75,
     meanstructure = true
 )
 

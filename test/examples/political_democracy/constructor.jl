@@ -17,7 +17,7 @@ model_ml_cov = Sem(
     obs_cov = cov(Matrix(dat)),
     obs_colnames = Symbol.(names(dat)),
     optimizer = semoptimizer,
-    n_obs = 75.0
+    n_obs = 75
 )
 
 model_ls_sym = Sem(
@@ -221,7 +221,7 @@ model_ml_cov = Sem(
     obs_colnames = Symbol.(names(dat)),
     meanstructure = true,
     optimizer = semoptimizer,
-    n_obs = 75.0
+    n_obs = 75
 )
 
 model_ml_sym = Sem(

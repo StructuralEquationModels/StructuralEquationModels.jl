@@ -37,12 +37,12 @@ use this if you are sure your observed data is in the right format.
 - `spec_colnames::Vector{Symbol} = nothing`: overwrites column names of the specification object
 - `compute_covariance::Bool ) = true`: should the covariance of `data` be computed and stored?
 """
-struct SemObservedData{A, B, C, D, O} <: SemObserved
+struct SemObservedData{A, B, C} <: SemObserved
     data::A
     obs_cov::B
     obs_mean::C
-    n_man::D
-    n_obs::O
+    n_man::Int
+    n_obs::Int
 end
 
 # error checks
@@ -102,8 +102,7 @@ function SemObservedData(;
     return SemObservedData(data,
         compute_covariance ? Symmetric(cov(data)) : nothing,
         meanstructure ? vec(Statistics.mean(data, dims = 1)) : nothing,
-        Float64.(size(data, 2)),
-        Float64.(size(data, 1)))
+        size(data, 2), size(data, 1))
 end
 
 ############################################################################################
