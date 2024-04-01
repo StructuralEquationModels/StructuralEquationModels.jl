@@ -55,3 +55,62 @@ function prepare_start_params(start_val, model::AbstractSem; kwargs...)
     @assert length(start_val) == nparams(model)
     return start_val
 end
+
+# define a vector of parameter lower bounds: use user-specified vector as is
+function lower_bounds(
+    bounds::AbstractVector,
+    model::AbstractSem;
+    default::Number,
+    variance_default::Number,
+)
+    length(bound) == nparams(model) || throw(
+        DimensionMismatch(
+            "The length of `bounds` vector ($(length(bounds))) does not match the number of model parameters ($(nparams(model))).",
+        ),
+    )
+    return bounds
+end
+
+# define a vector of parameter lower bounds given a dictionary and default values
+function lower_bounds(
+    bounds::Union{AbstractDict, Nothing},
+    model::AbstractSem;
+    default::Number,
+    variance_default::Number,
+)
+    varparams = Set(variance_params(model.imply.ram_matrices))
+    res = [
+        begin
+            def = in(p, varparams) ? variance_default : default
+            isnothing(bounds) ? def : get(bounds, p, def)
+        end for p in SEM.params(model)
+    ]
+
+    return res
+end
+
+# define a vector of parameter upper bounds: use user-specified vector as is
+function upper_bounds(bounds::AbstractVector, model::AbstractSem; default::Number)
+    length(bound) == nparams(model) || throw(
+        DimensionMismatch(
+            "The length of `bounds` vector ($(length(bounds))) does not match the number of model parameters ($(nparams(model))).",
+        ),
+    )
+    return bounds
+end
+
+# define a vector of parameter lower bounds given a dictionary and default values
+function upper_bounds(
+    bounds::Union{AbstractDict, Nothing},
+    model::AbstractSem;
+    default::Number,
+)
+    res = [
+        begin
+            def = default
+            isnothing(bounds) ? def : get(bounds, p, def)
+        end for p in SEM.params(model)
+    ]
+
+    return res
+end
