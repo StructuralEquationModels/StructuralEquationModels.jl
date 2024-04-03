@@ -38,7 +38,7 @@ function SEM.sem_fit(
     )
     set_NLopt_constraints!(opt, model.optimizer)
     opt.min_objective =
-        (par, G) -> evaluate!(
+        (par, G) -> SEM.evaluate!(
             eltype(par),
             !isnothing(G) && !isempty(G) ? G : nothing,
             nothing,
@@ -68,19 +68,19 @@ end
 function construct_NLopt_problem(algorithm, options, npar)
     opt = Opt(algorithm, npar)
 
-    for key in keys(options)
-        setproperty!(opt, key, options[key])
+    for (key, val) in pairs(options)
+        setproperty!(opt, key, val)
     end
 
     return opt
 end
 
-function set_NLopt_constraints!(opt, optimizer::SemOptimizerNLopt)
+function set_NLopt_constraints!(opt::Opt, optimizer::SemOptimizerNLopt)
     for con in optimizer.inequality_constraints
-        inequality_constraint!(opt::Opt, con.f, con.tol)
+        inequality_constraint!(opt, con.f, con.tol)
     end
     for con in optimizer.equality_constraints
-        equality_constraint!(opt::Opt, con.f, con.tol)
+        equality_constraint!(opt, con.f, con.tol)
     end
 end
 
