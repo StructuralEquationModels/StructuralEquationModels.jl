@@ -7,7 +7,6 @@ using LinearAlgebra,
     StatsBase,
     SparseArrays,
     Symbolics,
-    NLopt,
     FiniteDiff,
     PrettyTables,
     Distributions,
@@ -62,12 +61,10 @@ include("loss/WLS/WLS.jl")
 include("loss/constant/constant.jl")
 # optimizer
 include("diff/optim.jl")
-include("diff/NLopt.jl")
 include("diff/Empty.jl")
 # optimizer
 include("optimizer/documentation.jl")
 include("optimizer/optim.jl")
-include("optimizer/NLopt.jl")
 # helper functions
 include("additional_functions/helper.jl")
 include("additional_functions/start_val/start_fabin3.jl")
@@ -119,8 +116,6 @@ export AbstractSem,
     SemOptimizer,
     SemOptimizerEmpty,
     SemOptimizerOptim,
-    SemOptimizerNLopt,
-    NLoptConstraint,
     optimizer,
     n_iterations,
     convergence,
