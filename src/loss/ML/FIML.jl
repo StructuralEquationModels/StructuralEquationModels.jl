@@ -57,9 +57,10 @@ function gradient!(JΣ, Jμ, fiml::SemFIMLPattern, pat::SemObservedMissingPatter
     else
         JΣ_pat = Σ⁻¹ * (I - fiml.μ_diff * μ_diff⨉Σ⁻¹)
     end
-    Jμ_pat = ((2*n_obs(pat))*μ_diff⨉Σ⁻¹)'
-    vec(JΣ)[fiml.∇ind] .+= vec(JΣ_pat)
-    Jμ[pat.obs_mask] .+= Jμ_pat
+    @inbounds vec(JΣ)[fiml.∇ind] .+= vec(JΣ_pat)
+
+    lmul!(2*n_obs(pat), μ_diff⨉Σ⁻¹)
+    @inbounds Jμ[pat.obs_mask] .+= μ_diff⨉Σ⁻¹'
     return nothing
 end
 
