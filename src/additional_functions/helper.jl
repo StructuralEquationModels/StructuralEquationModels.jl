@@ -111,23 +111,19 @@ function cov_and_mean(rows; corrected = false)
     return obs_cov, vec(obs_mean)
 end
 
-function duplication_matrix(nobs)
-    nobs = Int(nobs)
-    n1 = Int(nobs * (nobs + 1) * 0.5)
-    n2 = Int(nobs^2)
-    Dt = zeros(n1, n2)
-
-    for j in 1:nobs
-        for i in j:nobs
-            u = zeros(n1)
-            u[Int((j - 1) * nobs + i - 0.5 * j * (j - 1))] = 1
-            T = zeros(nobs, nobs)
-            T[j, i] = 1
-            T[i, j] = 1
-            Dt += u * transpose(vec(T))
+# n²×(n(n+1)/2) matrix to transform a vector of lower
+# triangular entries into a vectorized form of a n×n symmetric matrix,
+# opposite of elimination_matrix()
+function duplication_matrix(n::Integer)
+    ntri = div(n * (n + 1), 2)
+    D = zeros(n^2, ntri)
+    for j in 1:n
+        for i in j:n
+            tri_ix               = (j - 1) * n + i - div(j * (j - 1), 2)
+            D[j+n*(i-1), tri_ix] = 1
+            D[i+n*(j-1), tri_ix] = 1
         end
     end
-    D = transpose(Dt)
     return D
 end
 
