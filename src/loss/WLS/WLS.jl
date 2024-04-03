@@ -22,7 +22,7 @@ Weighted least squares estimation.
 - `approximate_hessian::Bool`: should the hessian be swapped for an approximation
 - `wls_weight_matrix`: the weight matrix for weighted least squares.
     Defaults to GLS estimation (``0.5*(D^T*kron(S,S)*D)`` where D is the duplication matrix
-    and S is the inverse ob the observed covariance matrix)
+    and S is the inverse of the observed covariance matrix)
 - `wls_weight_matrix_mean`: the weight matrix for the mean part of weighted least squares.
     Defaults to GLS estimation (the inverse of the observed covariance matrix)
 
