@@ -51,25 +51,35 @@ end
 SemWLS{HE}(args...) where {HE <: HessianEvaluation} =
     SemWLS{HE, map(typeof, args)...}(args...)
 
-function SemWLS(;observed, wls_weight_matrix = nothing, wls_weight_matrix_mean = nothing,
+function SemWLS(; observed,
+                 wls_weight_matrix = nothing,
+                 wls_weight_matrix_mean = nothing,
                  approximate_hessian = false, meanstructure = false, kwargs...)
-    ind = CartesianIndices(obs_cov(observed))
-    ind = filter(x -> (x[1] >= x[2]), ind)
-    s = obs_cov(observed)[ind]
+    n_obs = n_man(observed)
+    tril_ind = filter(x -> (x[1] >= x[2]), CartesianIndices(obs_cov(observed)))
+    s = obs_cov(observed)[tril_ind]
 
     # compute V here
     if isnothing(wls_weight_matrix)
-        D = duplication_matrix(n_man(observed))
+        D = duplication_matrix(n_obs)
         S = inv(obs_cov(observed))
         S = kron(S, S)
         wls_weight_matrix = 0.5*(D'*S*D)
+    else
+        size(wls_weight_matrix) == (length(tril_ind), length(tril_ind)) ||
+            DimensionMismatch("wls_weight_matrix has to be of size $(length(tril_ind))×$(length(tril_ind))")
     end
 
     if meanstructure
         if isnothing(wls_weight_matrix_mean)
             wls_weight_matrix_mean = inv(obs_cov(observed))
+        else
+            size(wls_weight_matrix_mean) == (n_obs, n_obs) ||
+                DimensionMismatch("wls_weight_matrix_mean has to be of size $(n_obs)×$(n_obs)")
         end
     else
+        isnothing(wls_weight_matrix_mean) ||
+            @warn "Ignoring wls_weight_matrix_mean since meanstructure is disabled"
         wls_weight_matrix_mean = nothing
     end
     HE = approximate_hessian ? ApproximateHessian : ExactHessian
