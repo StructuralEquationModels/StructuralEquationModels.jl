@@ -63,11 +63,11 @@ function start_simple(
     start_means = 0.0,
     kwargs...)
 
-    A_ind, S_ind, F_ind, M_ind, n_par = 
-        ram_matrices.A_ind, 
-        ram_matrices.S_ind, 
-        ram_matrices.F_ind, 
-        ram_matrices.M_ind, 
+    A, S, F_ind, M, n_par =
+        ram_matrices.A,
+        ram_matrices.S,
+        observed_var_indices(ram_matrices),
+        ram_matrices.M,
         nparams(ram_matrices)
 
     start_val = zeros(n_par)
@@ -77,9 +77,11 @@ function start_simple(
     C_indices = CartesianIndices((n_var, n_var))
 
     for i in 1:n_par
-        if length(S_ind[i]) != 0
+        Si_ind = param_occurences(S, i)
+        Ai_ind = param_occurences(A, i)
+        if length(Si_ind) != 0
             # use the first occurence of the parameter to determine starting value
-            c_ind = C_indices[S_ind[i][1]] 
+            c_ind = C_indices[Si_ind[1]]
             if c_ind[1] == c_ind[2]
                 if c_ind[1] ∈ F_ind
                     start_val[i] = start_variances_observed
@@ -97,14 +99,14 @@ function start_simple(
                     start_val[i] = start_covariances_obs_lat
                 end
             end
-        elseif length(A_ind[i]) != 0
-            c_ind = C_indices[A_ind[i][1]]
+        elseif length(Ai_ind) != 0
+            c_ind = C_indices[Ai_ind[1]]
             if (c_ind[1] ∈ F_ind) & !(c_ind[2] ∈ F_ind)
                 start_val[i] = start_loadings
             else
                 start_val[i] = start_regressions
             end
-        elseif !isnothing(M_ind) && (length(M_ind[i]) != 0)
+        elseif !isnothing(M) && (length(param_occurences(M, i)) != 0)
             start_val[i] = start_means
         end
     end

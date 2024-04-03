@@ -16,6 +16,7 @@ include("objective_gradient_hessian.jl")
 # fitted objects
 include("frontend/fit/SemFit.jl")
 # specification of models
+include("additional_functions/params_array.jl")
 include("frontend/specification/ParameterTable.jl")
 include("frontend/specification/RAMMatrices.jl")
 include("frontend/specification/EnsembleParameterTable.jl")
@@ -51,7 +52,7 @@ include("optimizer/optim.jl")
 include("optimizer/NLopt.jl")
 # helper functions
 include("additional_functions/helper.jl")
-include("additional_functions/parameters.jl")
+#include("additional_functions/parameters.jl")
 include("additional_functions/start_val/start_val.jl")
 include("additional_functions/start_val/start_fabin3.jl")
 include("additional_functions/start_val/start_partable.jl")

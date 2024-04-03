@@ -99,23 +99,15 @@ function RAMSymbolic(;
     ram_matrices = convert(RAMMatrices, specification)
 
     n_par = nparams(ram_matrices)
-    n_obs = nobserved_vars(ram_matrices)
-    n_var = nvars(ram_matrices)
-
     par = (Symbolics.@variables θ[1:n_par])[1]
 
-    A = zeros(Num, n_var, n_var)
-    S = zeros(Num, n_var, n_var)
-    !isnothing(ram_matrices.M_ind) ? M = zeros(Num, n_var) : M = nothing
-    F = zeros(ram_matrices.size_F); F[CartesianIndex.(1:n_obs, ram_matrices.F_ind)] .= 1.0
+    A = sparse_materialize(Num, ram_matrices.A, par)
+    S = sparse_materialize(Num, ram_matrices.S, par)
+    M = !isnothing(ram_matrices.M) ? materialize(Num, ram_matrices.M, par) : nothing
+    F = ram_matrices.F
 
-    set_RAMConstants!(A, S, M, ram_matrices.constants)
-    fill_A_S_M!(A, S, M, ram_matrices.A_ind, ram_matrices.S_ind, ram_matrices.M_ind, par)
-
-    A, S, F = sparse(A), sparse(S), sparse(F)
-
-    if !isnothing(loss_types)
-        any(loss_types .<: SemWLS) ? vech = true : nothing
+    if !isnothing(loss_types) && any(T -> T<:SemWLS, loss_types)
+        vech = true
     end
 
     # Σ
