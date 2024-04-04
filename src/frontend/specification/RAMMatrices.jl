@@ -71,6 +71,8 @@ function RAMMatrices(; A::AbstractMatrix, S::AbstractMatrix,
     ncols = size(A, 2)
     if !isnothing(colnames)
         length(colnames) == ncols || throw(DimensionMismatch("colnames length ($(length(colnames))) does not match the number of columns in A ($ncols)"))
+        dup_cols = nonunique(colnames)
+        isempty(dup_cols) || throw(ArgumentError("Duplicate variables detected: $(join(dup_cols, ", "))"))
     end
     size(A, 1) == size(A, 2) || throw(DimensionMismatch("A must be a square matrix"))
     size(S, 1) == size(S, 2) || throw(DimensionMismatch("S must be a square matrix"))
@@ -80,6 +82,9 @@ function RAMMatrices(; A::AbstractMatrix, S::AbstractMatrix,
     if !isnothing(M)
         length(M) == ncols || throw(DimensionMismatch("M should have as many elements as colnames length ($ncols), $(length(M)) found"))
     end
+    dup_params = nonunique(params)
+    isempty(dup_params) || throw(ArgumentError("Duplicate parameters detected: $(join(dup_params, ", "))"))
+
     A = ParamsMatrix{Float64}(A, params)
     S = ParamsMatrix{Float64}(S, params)
     M = !isnothing(M) ? ParamsVector{Float64}(M, params) : nothing
@@ -98,16 +103,10 @@ function RAMMatrices(partable::ParameterTable;
                      params::Union{AbstractVector{Symbol}, Nothing} = nothing)
 
     params = copy(isnothing(params) ? SEM.params(partable) : params)
-    params_index = Dict(param => i for (i, param) in enumerate(params))
-    if length(params) != length(params_index)
-        params_seen = Set{Symbol}()
-        params_nonunique = Vector{Symbol}()
-        for par in params
-            push!(par in params_seen ? params_nonunique : params_seen, par)
-        end
-        throw(ArgumentError("Duplicate names in the parameters vector: $(join(params_nonunique, ", "))"))
-    end
+    dup_params = nonunique(params)
+    isempty(dup_params) || throw(ArgumentError("Duplicate parameters detected: $(join(dup_params, ", "))"))
 
+    params_index = Dict(param => i for (i, param) in enumerate(params))
     n_observed = length(partable.variables.observed)
     n_latent = length(partable.variables.latent)
     n_vars = n_observed + n_latent
