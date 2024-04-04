@@ -252,3 +252,18 @@ function commutation_matrix_pre_square_add_mt!(B, A) # comuptes B + KₙA # 0 al
     return B
 
 end
+
+# returns the vector of non-unique values in the order of appearance
+# each non-unique values is reported once
+function nonunique(values::AbstractVector)
+    value_counts = Dict{eltype(values), Int}()
+    res = similar(values, 0)
+    for v in values
+        n = get!(value_counts, v, 0)
+        if n == 1 # second encounter
+            push!(res, v)
+        end
+        value_counts[v] = n + 1
+    end
+    return res
+end
