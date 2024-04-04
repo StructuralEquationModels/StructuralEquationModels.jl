@@ -290,10 +290,9 @@ function update_partable!(partable::ParameterTable,
                           default::Any = nothing)
     length(params) == length(values) ||
         throw(ArgumentError("The length of `params` ($(length(params))) and their `values` ($(length(values))) must be the same"))
+    dup_params = nonunique(params)
+    isempty(dup_params) || throw(ArgumentError("Duplicate parameters detected: $(join(dup_params, ", "))"))
     params_dict = Dict(zip(params, values))
-    if length(params_dict) != length(params)
-        throw(ArgumentError("Duplicate parameter names in `params`"))
-    end
     update_partable!(partable, column, params_dict, default)
 end
 
