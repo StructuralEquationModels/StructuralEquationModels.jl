@@ -40,9 +40,8 @@ function minus2ll(
     optimizer,
     loss_ml::SemFIML,
 )
-    F = minimum
-    F *= nsamples(observed)
-    F += sum(log(2π) * observed.pattern_nsamples .* observed.pattern_nobs_vars)
+    F = minimum * nsamples(observed)
+    F += log(2π) * sum(pat -> nsamples(pat) * nobserved_vars(pat), observed.patterns)
     return F
 end
 
@@ -54,7 +53,7 @@ function minus2ll(observed::SemObservedMissing)
             observed.em_model.μ,
             observed.em_model.Σ,
             nsamples(observed),
-            pattern_rows(observed),
+            observed.rows,
             observed.patterns,
             observed.obs_mean,
             observed.obs_cov,
