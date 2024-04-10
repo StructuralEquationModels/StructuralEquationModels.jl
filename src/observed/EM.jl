@@ -26,7 +26,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE. =#
 
-# outer function ---------------------------------------------------------------------------
 """
     em_mvn!(;
         observed::SemObservedMissing,
@@ -37,6 +36,12 @@ THE SOFTWARE. =#
 
 Estimates the covariance matrix and mean vector of the normal distribution via expectation maximization for `observed`.
 Overwrites the statistics stored in `observed`.
+
+Uses the EM algorithm for MVN-distributed data with missing values
+adapted from the supplementary material to the book *Machine Learning: A Probabilistic Perspective*,
+copyright (2010) Kevin Murphy and Matt Dunham: see
+[*gaussMissingFitEm.m*](https://github.com/probml/pmtk3/blob/master/toolbox/BasicModels/gauss/sub/gaussMissingFitEm.m) and
+[*emAlgo.m*](https://github.com/probml/pmtk3/blob/master/toolbox/Algorithms/optimization/emAlgo.m) scripts.
 """
 function em_mvn!(
     observed::SemObservedMissing;
