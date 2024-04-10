@@ -19,7 +19,7 @@ function start_fabin3(
 end
 
 function start_fabin3(
-        observed,
+        observed::SemObserved,
         imply,
         optimizer,
         args...;
@@ -29,25 +29,6 @@ function start_fabin3(
         obs_cov(observed),
         obs_mean(observed))
 end
-
-# SemObservedMissing
-function start_fabin3(
-        observed::SemObservedMissing,
-        imply,
-        optimizer,
-        args...;
-        kwargs...)
-
-    if !observed.em_model.fitted
-        em_mvn(observed; kwargs...)
-    end
-
-    return start_fabin3(
-        imply.ram_matrices,
-        observed.em_model.Σ,
-        observed.em_model.μ)
-end
-
 
 function start_fabin3(ram_matrices::RAMMatrices,
                       Σ::AbstractMatrix,

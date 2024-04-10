@@ -33,8 +33,9 @@ include("frontend/pretty_printing.jl")
 # observed
 include("observed/data.jl")
 include("observed/covariance.jl")
-include("observed/missing.jl")
+include("observed/missing_pattern.jl")
 include("observed/EM.jl")
+include("observed/missing.jl")
 # constructor
 include("frontend/specification/Sem.jl")
 include("frontend/specification/documentation.jl")

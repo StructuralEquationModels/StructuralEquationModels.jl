@@ -41,10 +41,7 @@ end
 # compute likelihood for missing data - H1 -------------------------------------------------
 # -2ll =  ∑ log(2π)*(nᵢ + mᵢ) + ln(Σᵢ) + (mᵢ - μᵢ)ᵀ Σᵢ⁻¹ (mᵢ - μᵢ)) + tr(SᵢΣᵢ)
 function minus2ll(observed::SemObservedMissing)
-    observed.em_model.fitted || em_mvn(observed)
-
-    μ = observed.em_model.μ
-    Σ = observed.em_model.Σ
+    Σ, μ = obs_cov(observed), obs_mean(observed)
 
     F = 0.0
     for pat in observed.patterns
