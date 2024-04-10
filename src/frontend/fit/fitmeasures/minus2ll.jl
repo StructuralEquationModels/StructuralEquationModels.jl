@@ -32,9 +32,8 @@ minus2ll(minimum::Number, obs, imp::Union{RAM, RAMSymbolic}, optimizer, loss_ml:
 # compute likelihood for missing data - H0 -------------------------------------------------
 # -2ll = (∑ log(2π)*(nᵢ + mᵢ)) + F*n
 function minus2ll(minimum::Number, observed, imp::Union{RAM, RAMSymbolic}, optimizer, loss_ml::SemFIML)
-    F = minimum
-    F *= n_obs(observed)
-    F += sum(log(2π)*observed.pattern_n_obs.*observed.pattern_nvar_obs)
+    F = minimum * n_obs(observed)
+    F += log(2π)*sum(pat -> n_obs(pat)*nobserved_vars(pat), observed.patterns)
     return F
 end
 

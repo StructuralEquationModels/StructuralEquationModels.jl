@@ -46,25 +46,26 @@ end
 ### Constructors
 ############################################################################################
 
-function SemFIML(;observed, specification, kwargs...)
+function SemFIML(; observed::SemObservedMissing, specification, kwargs...)
 
-    inverses = broadcast(x -> zeros(x, x), Int64.(pattern_nvar_obs(observed)))
+    inverses = [zeros(nobserved_vars(pat), nobserved_vars(pat))
+                for pat in observed.patterns]
     choleskys = Array{Cholesky{Float64,Array{Float64,2}},1}(undef, length(inverses))
 
-    n_patterns = size(rows(observed), 1)
+    n_patterns = length(observed.patterns)
     logdets = zeros(n_patterns)
 
-    imp_mean = zeros.(Int64.(pattern_nvar_obs(observed)))
-    meandiff = zeros.(Int64.(pattern_nvar_obs(observed)))
+    imp_mean = [zeros(nobserved_vars(pat)) for pat in observed.patterns]
+    meandiff = [zeros(nobserved_vars(pat)) for pat in observed.patterns]
 
-    nman = Int64(n_man(observed))
+    nman = n_man(observed)
     imp_inv = zeros(nman, nman)
     mult = similar.(inverses)
 
     # linear indicies of co-observed variable pairs for each pattern
     Σ_linind = LinearIndices((nman, nman))
-    ∇ind = [[Σ_linind[CartesianIndex(x, y)] for x in ind, y in ind]
-            for ind in patterns_not(observed)]
+    ∇ind = [[Σ_linind[CartesianIndex(x, y)] for x in findall(pat.obs_mask), y in findall(pat.obs_mask)]
+            for pat in observed.patterns]
 
     commutation_indices = get_commutation_lookup(nvars(specification)^2)
 
@@ -100,9 +101,8 @@ function evaluate!(objective, gradient, hessian,
     prepare_SemFIML!(semfiml, model)
 
     scale = inv(n_obs(observed(model)))
-    obs_rows = rows(observed(model))
-    isnothing(objective) || (objective = scale*F_FIML(obs_rows, semfiml, model, parameters))
-    isnothing(gradient) || (∇F_FIML!(gradient, obs_rows, semfiml, model); gradient .*= scale)
+    isnothing(objective) || (objective = scale*F_FIML(observed(model), semfiml, model, parameters))
+    isnothing(gradient) || (∇F_FIML!(gradient, observed(model), semfiml, model); gradient .*= scale)
 
     return objective
 end
@@ -111,7 +111,7 @@ end
 ### Recommended methods
 ############################################################################################
 
-update_observed(lossfun::SemFIML, observed::SemObserved; kwargs...) = 
+update_observed(lossfun::SemFIML, observed::SemObserved; kwargs...) =
     SemFIML(;observed = observed, kwargs...)
 
 ############################################################################################
@@ -126,16 +126,16 @@ function F_one_pattern(meandiff, inverse, obs_cov, logdet, N)
     return F*N
 end
 
-function ∇F_one_pattern(μ_diff, Σ⁻¹, S, pattern, ∇ind, N, Jμ, JΣ, model)
+function ∇F_one_pattern(μ_diff, Σ⁻¹, S, obs_mask, ∇ind, N, Jμ, JΣ, model)
     diff⨉inv = μ_diff'*Σ⁻¹
 
     if N > one(N)
         JΣ[∇ind] .+= N*vec(Σ⁻¹*(I - S*Σ⁻¹ - μ_diff*diff⨉inv))
-        @. Jμ[pattern] += (N*2*diff⨉inv)'
+        @. Jμ[obs_mask] += (N*2*diff⨉inv)'
 
     else
         JΣ[∇ind] .+= vec(Σ⁻¹*(I - μ_diff*diff⨉inv))
-        @. Jμ[pattern] += (2*diff⨉inv)'
+        @. Jμ[obs_mask] += (2*diff⨉inv)'
     end
 
 end
@@ -161,31 +161,31 @@ function ∇F_fiml_outer!(G, JΣ, Jμ, imply, model, semfiml)
     G .-= ∇μ' * Jμ
 end
 
-function F_FIML(rows, semfiml, model, parameters)
+function F_FIML(observed::SemObservedMissing, semfiml, model, parameters)
     F = zero(eltype(parameters))
-    for i = 1:size(rows, 1)
+    for (i, pat) in enumerate(observed.patterns)
         F += F_one_pattern(
-            semfiml.meandiff[i], 
+            semfiml.meandiff[i],
             semfiml.inverses[i],
-            obs_cov(observed(model))[i], 
-            semfiml.logdets[i], 
-            pattern_n_obs(observed(model))[i])
+            pat.obs_cov,
+            semfiml.logdets[i],
+            n_obs(pat))
     end
     return F
 end
 
-function ∇F_FIML!(G, rows, semfiml, model)
-    Jμ = zeros(Int64(n_man(model)))
-    JΣ = zeros(Int64(n_man(model)^2))
-    
-    for i = 1:size(rows, 1)
+function ∇F_FIML!(G, observed::SemObservedMissing, semfiml, model)
+    Jμ = zeros(n_man(model))
+    JΣ = zeros(n_man(model)^2)
+
+    for (i, pat) in enumerate(observed.patterns)
         ∇F_one_pattern(
-            semfiml.meandiff[i], 
-            semfiml.inverses[i], 
-            obs_cov(observed(model))[i], 
-            patterns(observed(model))[i],
+            semfiml.meandiff[i],
+            semfiml.inverses[i],
+            pat.obs_cov,
+            pat.obs_mask,
             semfiml.∇ind[i],
-            pattern_n_obs(observed(model))[i],
+            n_obs(pat),
             Jμ,
             JΣ,
             model)
@@ -198,34 +198,20 @@ function prepare_SemFIML!(semfiml, model)
     batch_cholesky!(semfiml, model)
     #batch_sym_inv_update!(semfiml, model)
     batch_inv!(semfiml, model)
-    for i in 1:size(pattern_n_obs(observed(model)), 1)
-        semfiml.meandiff[i] .= obs_mean(observed(model))[i] - semfiml.imp_mean[i]
+    for (i, pat) in enumerate(observed(model).patterns)
+        semfiml.meandiff[i] .= pat.obs_mean .- semfiml.imp_mean[i]
     end
 end
 
-function copy_per_pattern!(inverses, source_inverses, means, source_means, patterns)
-    @views for i = 1:size(patterns, 1)
-        inverses[i] .=
-            source_inverses[
-                patterns[i],
-                patterns[i]]
-    end
-
-    @views for i = 1:size(patterns, 1)
-        means[i] .=
-            source_means[patterns[i]]
+function copy_per_pattern!(fiml::SemFIML, model::AbstractSem)
+    Σ = imply(model).Σ
+    μ = imply(model).μ
+    data = observed(model)
+    @inbounds @views for (i, pat) in enumerate(data.patterns)
+        fiml.inverses[i] .= Σ[pat.obs_mask, pat.obs_mask]
+        fiml.imp_means[i] .= μ[pat.obs_mask]
     end
 end
-
-copy_per_pattern!(
-    semfiml,
-    model::M where {M <: AbstractSem}) =
-    copy_per_pattern!(
-        semfiml.inverses,
-        imply(model).Σ,
-        semfiml.imp_mean,
-        imply(model).μ,
-        patterns(observed(model)))
 
 function batch_cholesky!(semfiml, model)
     for i = 1:size(semfiml.inverses, 1)

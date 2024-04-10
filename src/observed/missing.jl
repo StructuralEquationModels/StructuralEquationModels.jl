@@ -9,6 +9,50 @@ mutable struct EmMVNModel{A, b, B}
     fitted::B
 end
 
+# data associated with the specific pattern of missed variable
+struct SemObservedMissingPattern{T,S}
+    obs_mask::BitVector     # observed vars mask
+    miss_mask::BitVector    # missing vars mask
+    nobserved::Int
+    nmissed::Int
+    rows::Vector{Int}       # rows in original data
+    data::Matrix{T}         # non-missing submatrix of data
+
+    obs_mean::Vector{S} # means of observed vars
+    obs_cov::Matrix{S}  # covariance of observed vars
+end
+
+function SemObservedMissingPattern(
+    obs_mask::BitVector,
+    rows::AbstractVector{<:Integer},
+    data::AbstractMatrix
+)
+    T = nonmissingtype(eltype(data))
+
+    pat_data = convert(Matrix{T}, view(data, rows, obs_mask))
+    if size(pat_data, 1) > 1
+        pat_mean, pat_cov = mean_and_cov(pat_data, 1, corrected=false)
+        @assert size(pat_cov) == (size(pat_data, 2), size(pat_data, 2))
+    else
+        pat_mean = reshape(pat_data[1, :], 1, :)
+        pat_cov = fill(zero(T), 1, 1)
+    end
+
+    miss_mask = .!obs_mask
+
+    return SemObservedMissingPattern{T, eltype(pat_mean)}(
+        obs_mask, miss_mask,
+        sum(obs_mask), sum(miss_mask),
+        rows, pat_data,
+        dropdims(pat_mean, dims=1), pat_cov)
+end
+
+n_man(pat::SemObservedMissingPattern) = length(pat.obs_mask)
+nobserved_vars(pat::SemObservedMissingPattern) = pat.nobserved
+nmissed_vars(pat::SemObservedMissingPattern) = pat.nmissed
+
+n_obs(pat::SemObservedMissingPattern) = length(pat.rows)
+
 """
 For observed data with missing values.
 
@@ -33,7 +77,7 @@ For observed data with missing values.
 - `get_data(::SemObservedMissing)` -> observed data
 - `data_rowwise(::SemObservedMissing)` -> observed data as vector per observation, with missing values deleted
 
-- `patterns(::SemObservedMissing)` -> indices of non-missing variables per missing patterns 
+- `patterns(::SemObservedMissing)` -> indices of non-missing variables per missing patterns
 - `patterns_not(::SemObservedMissing)` -> indices of missing variables per missing pattern
 - `rows(::SemObservedMissing)` -> row indices of observed data points that belong to each pattern
 - `pattern_n_obs(::SemObservedMissing)` -> number of data points per pattern
@@ -53,31 +97,15 @@ use this if you are sure your observed data is in the right format.
 ## Additional keyword arguments:
 - `spec_colnames::Vector{Symbol} = nothing`: overwrites column names of the specification object
 """
-mutable struct SemObservedMissing{
-        A <: AbstractArray,
-        D <: AbstractFloat,
-        O <: AbstractFloat,
-        P <: Vector,
-        P2 <: Vector,
-        R <: Vector,
-        PD <: AbstractArray,
-        PO <: AbstractArray,
-        PVO <: AbstractArray,
-        A2 <: AbstractArray,
-        A3 <: AbstractArray,
+struct SemObservedMissing{
+        A <: AbstractMatrix,
+        P <: SemObservedMissingPattern,
         S <: EmMVNModel
         } <: SemObserved
     data::A
-    n_man::D
-    n_obs::O
-    patterns::P # missing patterns
-    patterns_not::P2
-    rows::R # coresponding rows in data_rowwise
-    data_rowwise::PD # list of data
-    pattern_n_obs::PO # observed rows per pattern
-    pattern_nvar_obs::PVO # number of non-missing variables per pattern
-    obs_mean::A2
-    obs_cov::A3
+    n_man::Int
+    n_obs::Int
+    patterns::Vector{P}
     em_model::S
 end
 
@@ -129,65 +157,26 @@ function SemObservedMissing(;
         data = Matrix(data)
     end
 
-    # remove persons with only missings
-    keep = Vector{Int64}()
-    for i = 1:size(data, 1)
-        if any(.!ismissing.(data[i, :]))
-            push!(keep, i)
-        end
-    end
-    data = data[keep, :]
-
-
-
     n_obs, n_man = size(data)
 
-    # compute and store the different missing patterns with their rowindices
-    missings = ismissing.(data)
-    patterns = [missings[i, :] for i = 1:size(missings, 1)]
-
-    patterns_cart = findall.(!, patterns)
-    data_rowwise = [data[i, patterns_cart[i]] for i = 1:n_obs]
-    data_rowwise = convert.(Array{Float64}, data_rowwise)
-
-    remember = Vector{BitArray{1}}()
-    rows = [Vector{Int64}(undef, 0) for i = 1:size(patterns, 1)]
-    for i = 1:size(patterns, 1)
-        unknown = true
-        for j = 1:size(remember, 1)
-            if patterns[i] == remember[j]
-                push!(rows[j], i)
-                unknown = false
-            end
-        end
-        if unknown
-            push!(remember, patterns[i])
-            push!(rows[size(remember, 1)], i)
+    # detect all different missing patterns with their row indices
+    pattern_to_rows = Dict{BitVector, Vector{Int}}()
+    for (i, datarow) in zip(axes(data, 1), eachrow(data))
+        pattern = BitVector(.!ismissing.(datarow))
+        if sum(pattern) > 0 # skip all-missing rows
+            pattern_rows = get!(() -> Vector{Int}(), pattern_to_rows, pattern)
+            push!(pattern_rows, i)
         end
     end
-    rows = rows[1:length(remember)]
-    n_patterns = size(rows, 1)
+    # process each pattern and sort from most to least number of observed vars
+    patterns = [SemObservedMissingPattern(pat, rows, data)
+                for (pat, rows) in pairs(pattern_to_rows)]
+    sort!(patterns, by=nmissed_vars)
 
-    # sort by number of missings
-    sort_n_miss = sortperm(sum.(remember))
-    remember = remember[sort_n_miss]
-    remember_cart = findall.(!, remember)
-    remember_cart_not = findall.(remember)
-    rows = rows[sort_n_miss]
-
-    pattern_n_obs = size.(rows, 1)
-    pattern_nvar_obs = length.(remember_cart) 
-
-    cov_mean = [cov_and_mean(data_rowwise[rows]) for rows in rows]
-    obs_cov = [cov_mean[1] for cov_mean in cov_mean]
-    obs_mean = [cov_mean[2] for cov_mean in cov_mean]
-
+    # allocate EM model (but don't fit)
     em_model = EmMVNModel(zeros(n_man, n_man), zeros(n_man), false)
 
-    return SemObservedMissing(data, Float64(n_man), Float64(n_obs), remember_cart,
-    remember_cart_not, 
-    rows, data_rowwise, Float64.(pattern_n_obs), Float64.(pattern_nvar_obs),
-    obs_mean, obs_cov, em_model)
+    return SemObservedMissing(data, n_man, n_obs, patterns, em_model)
 end
 
 ############################################################################################
@@ -200,13 +189,3 @@ n_man(observed::SemObservedMissing) = observed.n_man
 ############################################################################################
 ### Additional methods
 ############################################################################################
-
-patterns(observed::SemObservedMissing) = observed.patterns
-patterns_not(observed::SemObservedMissing) = observed.patterns_not
-rows(observed::SemObservedMissing) = observed.rows
-data_rowwise(observed::SemObservedMissing) = observed.data_rowwise
-pattern_n_obs(observed::SemObservedMissing) = observed.pattern_n_obs
-pattern_nvar_obs(observed::SemObservedMissing) = observed.pattern_nvar_obs
-obs_mean(observed::SemObservedMissing) = observed.obs_mean
-obs_cov(observed::SemObservedMissing) = observed.obs_cov
-em_model(observed::SemObservedMissing) = observed.em_model

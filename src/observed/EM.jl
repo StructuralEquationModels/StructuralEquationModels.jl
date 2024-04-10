@@ -36,9 +36,9 @@ function em_mvn(
     𝔼xxᵀ_pre = zeros(n_man, n_man)
 
     ### precompute for full cases
-    if length(observed.patterns[1]) == observed.n_man
-        for row ∈ observed.rows[1]
-            row = observed.data_rowwise[row]
+    fullpat = observed.patterns[1]
+    if nmissed_vars(fullpat) == 0
+        for row in eachrow(fullpat.data)
             𝔼x_pre += row;
             𝔼xxᵀ_pre += row*row';
         end
@@ -98,21 +98,27 @@ function em_mvn_Estep!(𝔼x, 𝔼xxᵀ, em_model, observed, 𝔼x_pre, 𝔼xx�
     Σ = em_model.Σ
 
     # Compute the expected sufficient statistics
-    for i in 2:length(observed.pattern_n_obs)
+    for pat in observed.patterns
+        (nmissed_vars(pat) == 0) && continue # skip full cases
 
         # observed and unobserved vars
-        u = observed.patterns_not[i]
-        o = observed.patterns[i]
+        u = pat.miss_mask
+        o = pat.obs_mask
 
         # precompute for pattern
-        V = Σ[u, u] - Σ[u, o] * (Σ[o, o]\Σ[o, u])
+        Σoo = Σ[o, o]
+        Σuo = Σ[u, o]
+        μu = μ[u]
+        μo = μ[o]
+
+        V = Σ[u, u] - Σuo * (Σoo \ Σ[o, u])
 
         # loop trough data
-        for row in observed.rows[i]
-            m = μ[u] + Σ[u, o] * ( Σ[o, o] \ (observed.data_rowwise[row]-μ[o]) )
+        for rowdata in eachrow(pat.data)
+            m = μu + Σuo * ( Σoo \ (rowdata-μo) )
 
             𝔼xᵢ[u] = m
-            𝔼xᵢ[o] = observed.data_rowwise[row]
+            𝔼xᵢ[o] = rowdata
             𝔼xxᵀᵢ[u, u] = 𝔼xᵢ[u] * 𝔼xᵢ[u]' + V
             𝔼xxᵀᵢ[o, o] = 𝔼xᵢ[o] * 𝔼xᵢ[o]'
             𝔼xxᵀᵢ[o, u] = 𝔼xᵢ[o] * 𝔼xᵢ[u]'
@@ -158,9 +164,10 @@ end
 # use μ and Σ of full cases
 function start_em_observed(observed::SemObservedMissing; kwargs...)
 
-    if (length(observed.patterns[1]) == observed.n_man) & (observed.pattern_n_obs[1] > 1)
-        μ = copy(observed.obs_mean[1])
-        Σ = copy(Symmetric(observed.obs_cov[1]))
+    fullpat = observed.patterns[1]
+    if (nmissed_vars(fullpat) == 0) && (n_obs(fullpat) > 1)
+        μ = copy(fullpat.obs_mean)
+        Σ = copy(Symmetric(fullpat.obs_cov))
         if !isposdef(Σ)
             Σ = Matrix(Diagonal(Σ))
         end
