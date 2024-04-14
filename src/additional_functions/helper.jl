@@ -127,19 +127,17 @@ function duplication_matrix(nobs)
     return D
 end
 
-function elimination_matrix(nobs)
-    nobs = Int(nobs)
-    n1 = Int(nobs*(nobs+1)*0.5)
-    n2 = Int(nobs^2)
-    L = zeros(n1, n2)
-
-    for j in 1:nobs
-        for i in j:nobs
-            u = zeros(n1)
-            u[Int((j-1)*nobs + i-0.5*j*(j-1))] = 1
-            T = zeros(nobs, nobs)
-            T[i, j] = 1
-            L += u*transpose(vec(T))
+# (n(n+1)/2)×n² matrix to transform a
+# vectorized form of a n×n symmetric matrix
+# into vector of its lower triangular entries,
+# opposite of duplication_matrix()
+function elimination_matrix(n::Integer)
+    ntri = div(n*(n+1), 2)
+    L = zeros(ntri, n^2)
+    for j in 1:n
+        for i in j:n
+            tri_ix = (j-1)*n + i - div(j*(j-1), 2)
+            L[tri_ix, i + n*(j-1)] = 1
         end
     end
     return L
