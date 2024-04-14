@@ -1,9 +1,11 @@
 using Statistics: cov, mean
-using Random
+using Random, NLopt
 
 ############################################################################################
 ### models w.o. meanstructure
 ############################################################################################
+
+semoptimizer = SemOptimizer(engine = opt_engine)
 
 model_ml = Sem(specification = spec, data = dat, optimizer = semoptimizer)
 @test SEM.params(model_ml.imply.ram_matrices) == SEM.params(spec)
@@ -205,7 +207,7 @@ end
 ### test hessians
 ############################################################################################
 
-if semoptimizer == SemOptimizerOptim
+if opt_engine == :Optim
     using Optim, LineSearches
 
     model_ls = Sem(

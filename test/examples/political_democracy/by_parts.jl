@@ -25,7 +25,7 @@ loss_ml = SemLoss(ml)
 loss_wls = SemLoss(wls)
 
 # optimizer -------------------------------------------------------------------------------------
-optimizer_obj = semoptimizer()
+optimizer_obj = SemOptimizer(engine = opt_engine)
 
 # models -----------------------------------------------------------------------------------
 
@@ -152,10 +152,11 @@ end
 ### test hessians
 ############################################################################################
 
-if semoptimizer == SemOptimizerOptim
+if opt_engine == :Optim
     using Optim, LineSearches
 
-    optimizer_obj = SemOptimizerOptim(
+    optimizer_obj = SemOptimizer(
+        engine = opt_engine,
         algorithm = Newton(;
             linesearch = BackTracking(order = 3),
             alphaguess = InitialHagerZhang(),
@@ -220,7 +221,7 @@ loss_ml = SemLoss(ml)
 loss_wls = SemLoss(wls)
 
 # optimizer -------------------------------------------------------------------------------------
-optimizer_obj = semoptimizer()
+optimizer_obj = SemOptimizer(engine = opt_engine)
 
 # models -----------------------------------------------------------------------------------
 model_ml = Sem(observed, imply_ram, loss_ml, optimizer_obj)
