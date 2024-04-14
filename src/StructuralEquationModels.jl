@@ -14,6 +14,10 @@ const SEM = StructuralEquationModels
 # type hierarchy
 include("types.jl")
 include("objective_gradient_hessian.jl")
+
+# helper objects and functions
+include("additional_functions/commutation_matrix.jl")
+
 # fitted objects
 include("frontend/fit/SemFit.jl")
 # specification of models

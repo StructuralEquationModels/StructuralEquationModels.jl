@@ -91,7 +91,7 @@ struct SemFIML{T, W} <: SemLossFunction{ExactHessian}
 
     imp_inv::Matrix{T}  # implied inverse
 
-    commutation_indices::Dict{Int, Int}
+    commutator::CommutationMatrix
 
     interaction::W
 end
@@ -103,7 +103,7 @@ end
 function SemFIML(; observed::SemObservedMissing, specification, kwargs...)
     return SemFIML([SemFIMLPattern(pat) for pat in observed.patterns],
                    zeros(n_man(observed), n_man(observed)),
-                   get_commutation_lookup(nvars(specification)^2), nothing)
+                   CommutationMatrix(nvars(specification)), nothing)
 end
 
 ############################################################################################
@@ -148,13 +148,12 @@ end
 
 function ∇F_fiml_outer!(G, JΣ, Jμ, fiml::SemFIML, imply, model)
 
-    Iₙ = sparse(1.0I, size(imply.A)...)
     P = kron(imply.F⨉I_A⁻¹, imply.F⨉I_A⁻¹)
+    Iₙ = sparse(1.0I, size(imply.A)...)
     Q = kron(imply.S*imply.I_A⁻¹', Iₙ)
-    #commutation_matrix_pre_square_add!(Q, Q)
-    Q2 = commutation_matrix_pre_square(Q, fiml.commutation_indices)
+    Q .+= fiml.commutator * Q
 
-    ∇Σ = P*(imply.∇S + (Q+Q2)*imply.∇A)
+    ∇Σ = P*(imply.∇S + Q*imply.∇A)
 
     ∇μ = imply.F⨉I_A⁻¹*imply.∇M + kron((imply.I_A⁻¹*imply.M)', imply.F⨉I_A⁻¹)*imply.∇A
 
