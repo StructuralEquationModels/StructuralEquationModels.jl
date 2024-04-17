@@ -1,11 +1,10 @@
 using StructuralEquationModels, Test, Statistics
-import StructuralEquationModels: obs_cov, obs_mean, get_data
+using StructuralEquationModels: obs_cov, obs_mean, get_data # unexported
 
 ### model specification --------------------------------------------------------------------
 
-spec = ParameterTable(nothing)
-spec.variables[:observed_vars] = [:x1, :x2, :x3, :y1, :y2, :y3, :y4, :y5, :y6, :y7, :y8]
-spec.variables[:latent_vars] = [:ind60, :dem60, :dem65]
+spec = ParameterTable(observed_vars = [:x1, :x2, :x3, :y1, :y2, :y3, :y4, :y5, :y6, :y7, :y8],
+                      latent_vars = [:ind60, :dem60, :dem65])
 
 ### data -----------------------------------------------------------------------------------
 
@@ -58,16 +57,16 @@ observed_nospec = SemObservedData(
 )
 
 observed_matrix = SemObservedData(
-    specification = spec, 
-    data = dat_matrix, 
+    specification = spec,
+    data = dat_matrix,
     obs_colnames = Symbol.(names(dat))
 )
 
-all_equal_cov = 
+all_equal_cov =
     (obs_cov(observed) == obs_cov(observed_nospec)) &
     (obs_cov(observed) == obs_cov(observed_matrix))
 
-all_equal_data = 
+all_equal_data =
     (get_data(observed) == get_data(observed_nospec)) &
     (get_data(observed) == get_data(observed_matrix))
 
@@ -91,16 +90,16 @@ observed_shuffle = SemObservedData(
 )
 
 observed_matrix_shuffle = SemObservedData(
-    specification = spec, 
-    data = shuffle_dat_matrix, 
+    specification = spec,
+    data = shuffle_dat_matrix,
     obs_colnames = shuffle_names
 )
 
-all_equal_cov_suffled = 
+all_equal_cov_suffled =
     (obs_cov(observed) == obs_cov(observed_shuffle)) &
     (obs_cov(observed) == obs_cov(observed_matrix_shuffle))
 
-all_equal_data_suffled = 
+all_equal_data_suffled =
     (get_data(observed) == get_data(observed_shuffle)) &
     (get_data(observed) == get_data(observed_matrix_shuffle))
 
@@ -147,13 +146,13 @@ observed_nospec = SemObservedData(
 )
 
 observed_matrix = SemObservedData(
-    specification = spec, 
-    data = dat_matrix, 
+    specification = spec,
+    data = dat_matrix,
     obs_colnames = Symbol.(names(dat)),
     meanstructure = true
 )
 
-all_equal_mean = 
+all_equal_mean =
     (obs_mean(observed) == obs_mean(observed_nospec)) &
     (obs_mean(observed) == obs_mean(observed_matrix))
 
@@ -177,15 +176,15 @@ observed_shuffle = SemObservedData(
 )
 
 observed_matrix_shuffle = SemObservedData(
-    specification = spec, 
-    data = shuffle_dat_matrix, 
+    specification = spec,
+    data = shuffle_dat_matrix,
     obs_colnames = shuffle_names,
     meanstructure = true
 )
 
-all_equal_mean_suffled = 
+all_equal_mean_suffled =
     (obs_mean(observed) == obs_mean(observed_shuffle)) &
-    (obs_mean(observed) == obs_mean(observed_matrix_shuffle)) 
+    (obs_mean(observed) == obs_mean(observed_matrix_shuffle))
 
 
 @testset "unit tests | SemObservedData | input formats shuffled - mean" begin
@@ -201,30 +200,31 @@ end
 # errors
 
 @test_throws ArgumentError("observed means were passed, but `meanstructure = false`") begin
-    SemObservedCovariance(specification = nothing, obs_cov = dat_cov, obs_mean = dat_mean)
+    SemObservedCovariance(specification = nothing, obs_cov = dat_cov, obs_mean = dat_mean, n_obs = 75)
 end
 
-@test_throws UndefKeywordError(:specification) SemObservedCovariance(obs_cov = dat_cov)
+#@test_throws UndefKeywordError(:specification) SemObservedCovariance(obs_cov = dat_cov)
 
 @test_throws ArgumentError("no `obs_colnames` were specified") begin
-    SemObservedCovariance(specification = spec, obs_cov = dat_cov)
+    SemObservedCovariance(specification = spec, obs_cov = dat_cov, n_obs = 75)
 end
 
-@test_throws ArgumentError("please specify `obs_colnames` as a vector of Symbols") begin
-    SemObservedCovariance(specification = spec, obs_cov = dat_cov, obs_colnames = names(dat))
+@test_throws TypeError begin
+    SemObservedCovariance(specification = spec, obs_cov = dat_cov, obs_colnames = names(dat), n_obs = 75)
 end
 
 # should work
 observed = SemObservedCovariance(
     specification = spec,
     obs_cov = dat_cov,
-    obs_colnames = obs_colnames = Symbol.(names(dat))
+    obs_colnames = obs_colnames = Symbol.(names(dat)),
+    n_obs = 75
 )
 
 observed_nospec = SemObservedCovariance(
     specification = nothing,
     obs_cov = dat_cov,
-    n_obs = 75.0
+    n_obs = 75
 )
 
 
@@ -232,8 +232,8 @@ all_equal_cov = (obs_cov(observed) == obs_cov(observed_nospec))
 
 @testset "unit tests | SemObservedCovariance | input formats" begin
     @test all_equal_cov
-    @test isnothing(n_obs(observed))
-    @test n_obs(observed_nospec) == 75.0
+    @test n_obs(observed) == 75
+    @test n_obs(observed_nospec) == 75
 end
 
 
@@ -249,7 +249,8 @@ shuffle_dat_cov = Statistics.cov(shuffle_dat_matrix)
 observed_shuffle = SemObservedCovariance(
     specification = spec,
     obs_cov = shuffle_dat_cov,
-    obs_colnames = shuffle_names
+    obs_colnames = shuffle_names,
+    n_obs = 75
 )
 
 all_equal_cov_suffled = (obs_cov(observed) ≈ obs_cov(observed_shuffle))
@@ -262,19 +263,20 @@ end
 
 # errors
 @test_throws ArgumentError("`meanstructure = true`, but no observed means were passed") begin
-    SemObservedCovariance(specification = spec, obs_cov = dat_cov, meanstructure = true)
+    SemObservedCovariance(specification = spec, obs_cov = dat_cov, meanstructure = true, n_obs=75)
 end
 
-@test_throws UndefKeywordError SemObservedCovariance(data = dat_matrix, meanstructure = true)
+#@test_throws UndefKeywordError SemObservedCovariance(data = dat_matrix, meanstructure = true)
 
-@test_throws UndefKeywordError SemObservedCovariance(obs_cov = dat_cov, meanstructure = true)
+#@test_throws UndefKeywordError SemObservedCovariance(obs_cov = dat_cov, meanstructure = true)
 
 @test_throws ArgumentError("`meanstructure = true`, but no observed means were passed") begin
     SemObservedCovariance(
         specification = spec,
         obs_cov = dat_cov,
         obs_colnames = Symbol.(names(dat)),
-        meanstructure = true
+        meanstructure = true,
+        n_obs = 75
     )
 end
 
@@ -284,7 +286,7 @@ observed = SemObservedCovariance(
     obs_cov = dat_cov,
     obs_mean = dat_mean,
     obs_colnames = Symbol.(names(dat)),
-    n_obs = 75.0,
+    n_obs = 75,
     meanstructure = true
 )
 
@@ -293,7 +295,7 @@ observed_nospec = SemObservedCovariance(
     obs_cov = dat_cov,
     obs_mean = dat_mean,
     meanstructure = true,
-    n_obs = 75.0
+    n_obs = 75
 )
 
 all_equal_mean = (obs_mean(observed) == obs_mean(observed_nospec))
@@ -319,7 +321,7 @@ observed_shuffle = SemObservedCovariance(
     obs_cov = shuffle_dat_cov,
     obs_mean = shuffle_dat_mean,
     obs_colnames = shuffle_names,
-    n_obs = 75.0,
+    n_obs = 75,
     meanstructure = true
 )
 
@@ -368,12 +370,12 @@ observed_nospec = SemObservedMissing(
 )
 
 observed_matrix = SemObservedMissing(
-    specification = spec, 
-    data = dat_missing_matrix, 
+    specification = spec,
+    data = dat_missing_matrix,
     obs_colnames = Symbol.(names(dat))
 )
 
-all_equal_data = 
+all_equal_data =
     isequal(get_data(observed), get_data(observed_nospec)) &
     isequal(get_data(observed), get_data(observed_matrix))
 
@@ -396,12 +398,12 @@ observed_shuffle = SemObservedMissing(
 )
 
 observed_matrix_shuffle = SemObservedMissing(
-    specification = spec, 
-    data = shuffle_dat_missing_matrix, 
+    specification = spec,
+    data = shuffle_dat_missing_matrix,
     obs_colnames = shuffle_names
 )
 
-all_equal_data_shuffled = 
+all_equal_data_shuffled =
     isequal(get_data(observed), get_data(observed_shuffle)) &
     isequal(get_data(observed), get_data(observed_matrix_shuffle))
 

@@ -9,105 +9,63 @@ function minus2ll end
 # Single Models
 ############################################################################################
 
-# SemFit splices loss functions ------------------------------------------------------------
-minus2ll(sem_fit::SemFit{Mi, So, St, Mo, O} where {Mi, So, St, Mo <: AbstractSemSingle, O}) = 
-    minus2ll(
-        sem_fit,
-        sem_fit.model.observed,
-        sem_fit.model.imply,
-        sem_fit.model.optimizer,
-        sem_fit.model.loss.functions...
-        )
+minus2ll(fit::SemFit) = minus2ll(fit, fit.model)
 
-minus2ll(sem_fit::SemFit, obs, imp, optimizer, args...) = minus2ll(sem_fit.minimum, obs, imp, optimizer, args...)
+function minus2ll(fit::SemFit, model::AbstractSemSingle)
+    minimum = objective(model, fit.solution)
+    return minus2ll(minimum, model)
+end
+
+minus2ll(minimum::Number, model::AbstractSemSingle) =
+    sum(lossfun -> minus2ll(lossfun, minimum, model), model.loss.functions)
 
 # SemML ------------------------------------------------------------------------------------
-minus2ll(minimum::Number, obs, imp::Union{RAM, RAMSymbolic}, optimizer, loss_ml::SemML) =
-    n_obs(obs)*(minimum + log(2π)*n_man(obs))
+function minus2ll(lossfun::SemML, minimum::Number, model::AbstractSemSingle)
+    obs = observed(model)
+    return n_obs(obs)*(minimum + log(2π)*n_man(obs))
+end
 
 # WLS --------------------------------------------------------------------------------------
-minus2ll(minimum::Number, obs, imp::Union{RAM, RAMSymbolic}, optimizer, loss_ml::SemWLS) =
+minus2ll(lossfun::SemWLS, minimum::Number, model::AbstractSemSingle) =
     missing
 
 # compute likelihood for missing data - H0 -------------------------------------------------
 # -2ll = (∑ log(2π)*(nᵢ + mᵢ)) + F*n
-function minus2ll(minimum::Number, observed, imp::Union{RAM, RAMSymbolic}, optimizer, loss_ml::SemFIML)
-    F = minimum
-    F *= n_obs(observed)
-    F += sum(log(2π)*observed.pattern_n_obs.*observed.pattern_nvar_obs)
+function minus2ll(lossfun::SemFIML, minimum::Number, model::AbstractSemSingle)
+    obs = observed(model)::SemObservedMissing
+    F = minimum * n_obs(obs)
+    F += log(2π)*sum(pat -> n_obs(pat)*nobserved_vars(pat), obs.patterns)
     return F
 end
 
 # compute likelihood for missing data - H1 -------------------------------------------------
 # -2ll =  ∑ log(2π)*(nᵢ + mᵢ) + ln(Σᵢ) + (mᵢ - μᵢ)ᵀ Σᵢ⁻¹ (mᵢ - μᵢ)) + tr(SᵢΣᵢ)
 function minus2ll(observed::SemObservedMissing)
-    if observed.em_model.fitted
-        minus2ll(
-            observed.em_model.μ,
-            observed.em_model.Σ,
-            observed.n_obs,
-            observed.rows,
-            observed.patterns,
-            observed.obs_mean,
-            observed.obs_cov,
-            observed.pattern_n_obs,
-            observed.pattern_nvar_obs)
-    else
-        em_mvn(observed)
-        minus2ll(
-            observed.em_model.μ,
-            observed.em_model.Σ,
-            observed.n_obs,
-            observed.rows,
-            observed.patterns,
-            observed.obs_mean,
-            observed.obs_cov,
-            observed.pattern_n_obs,
-            observed.pattern_nvar_obs)
-    end
-end
-
-function minus2ll(μ, Σ, N, rows, patterns, obs_mean, obs_cov, pattern_n_obs, pattern_nvar_obs)
+    Σ, μ = obs_cov(observed), obs_mean(observed)
 
     F = 0.0
-
-    for i in 1:length(rows)
-
-        nᵢ = pattern_n_obs[i]
-        # missing pattern
-        pattern = patterns[i]
-        # observed data
-        Sᵢ = obs_cov[i]
-
+    for pat in observed.patterns
+        nᵢ = n_obs(pat)
         # implied covariance/mean
-        Σᵢ = Σ[pattern, pattern]
-        ld = logdet(Σᵢ)
-        Σᵢ⁻¹ = inv(cholesky(Σᵢ))
-        meandiffᵢ = obs_mean[i] - μ[pattern]
+        Σᵢ = Symmetric(Σ[pat.obs_mask, pat.obs_mask])
 
-        F += F_one_pattern(meandiffᵢ, Σᵢ⁻¹, Sᵢ, ld, nᵢ)
-        
+        ld = logdet(Σᵢ)
+        Σᵢ⁻¹ = LinearAlgebra.inv!(cholesky!(Σᵢ))
+        μ_diffᵢ = pat.obs_mean - μ[pat.obs_mask]
+
+        F_pat = ld + dot(μ_diffᵢ, Σᵢ⁻¹, μ_diffᵢ)
+        if n_obs(pat) > 1
+            F_pat += dot(pat.obs_cov, Σᵢ⁻¹)
+        end
+        F += (F_pat + log(2π)*nobserved_vars(pat))*n_obs(pat)
     end
 
-    F += sum(log(2π)*pattern_n_obs.*pattern_nvar_obs)
-    #F *= N
-
+    #F *= n_obs(observed)
     return F
-
 end
 
 ############################################################################################
 # Collection
 ############################################################################################
 
-minus2ll(minimum, model::AbstractSemSingle) = 
-    minus2ll(minimum, model.observed, model.imply, model.optimizer, model.loss.functions...)
-
-function minus2ll(sem_fit::SemFit{Mi, So, St, Mo, O} where {Mi, So, St, Mo <: SemEnsemble, O})
-    m2ll = 0.0
-    for sem in sem_fit.model.sems
-        minimum = objective!(sem, sem_fit.solution)
-        m2ll += minus2ll(minimum, sem)
-    end
-    return m2ll
-end
+minus2ll(fit::SemFit, model::SemEnsemble) = sum(Base.Fix1(minus2ll, fit), model.sems)

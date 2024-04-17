@@ -1,14 +1,18 @@
-import Statistics: cov, mean
+using Statistics: cov, mean
+using NLopt
 
 ############################################################################################
 ### models w.o. meanstructure
 ############################################################################################
+
+semoptimizer = SemOptimizer(engine = opt_engine)
 
 model_ml = Sem(
     specification = spec,
     data = dat,
     optimizer = semoptimizer
 )
+@test SEM.params(model_ml.imply.ram_matrices) == SEM.params(spec)
 
 model_ml_cov = Sem(
     specification = spec,
@@ -16,7 +20,7 @@ model_ml_cov = Sem(
     obs_cov = cov(Matrix(dat)),
     obs_colnames = Symbol.(names(dat)),
     optimizer = semoptimizer,
-    n_obs = 75.0
+    n_obs = 75
 )
 
 model_ls_sym = Sem(
@@ -68,7 +72,7 @@ model_names = ["ml", "ml_cov", "ls_sym", "ridge", "constant", "ml_sym", "ml_weig
 for (model, name) in zip(models, model_names)
     try
         @testset "$(name)_gradient" begin
-            @test test_gradient(model, start_test; rtol = 1e-9)
+            test_gradient(model, start_test; rtol = 1e-9)
         end
     catch
     end
@@ -87,7 +91,7 @@ for (model, name, solution_name) in zip(models, model_names, solution_names)
         @testset "$(name)_solution" begin
             solution = sem_fit(model)
             update_estimate!(partable, solution)
-            @test compare_estimates(partable, solution_lav[solution_name]; atol = 1e-2)
+            test_estimates(partable, solution_lav[solution_name]; atol = 1e-2)
         end
     catch
     end
@@ -113,7 +117,7 @@ end
     solution_ml = sem_fit(model_ml)
     solution_ml_weighted = sem_fit(model_ml_weighted)
     @test isapprox(solution(solution_ml), solution(solution_ml_weighted), rtol = 1e-3)
-    @test isapprox(n_obs(model_ml)*StructuralEquationModels.minimum(solution_ml), 
+    @test isapprox(n_obs(model_ml)*StructuralEquationModels.minimum(solution_ml),
         StructuralEquationModels.minimum(solution_ml_weighted), rtol = 1e-6)
 end
 
@@ -123,23 +127,23 @@ end
 
 @testset "fitmeasures/se_ml" begin
     solution_ml = sem_fit(model_ml)
-    @test all(test_fitmeasures(fit_measures(solution_ml), solution_lav[:fitmeasures_ml]; 
-        atol = 1e-3))
+    test_fitmeasures(fit_measures(solution_ml), solution_lav[:fitmeasures_ml];
+        atol = 1e-3)
 
-    update_partable!(partable, identifier(model_ml), se_hessian(solution_ml), :se)
-    @test compare_estimates(partable, solution_lav[:parameter_estimates_ml]; 
+    update_se_hessian!(partable, solution_ml)
+    test_estimates(partable, solution_lav[:parameter_estimates_ml];
         atol = 1e-3, col = :se, lav_col = :se)
 end
 
 @testset "fitmeasures/se_ls" begin
     solution_ls = sem_fit(model_ls_sym)
     fm = fit_measures(solution_ls)
-    @test all(test_fitmeasures(fm, solution_lav[:fitmeasures_ls]; atol = 1e-3, 
-        fitmeasure_names = fitmeasure_names_ls))
-    @test (fm[:AIC] === missing) & (fm[:BIC] === missing) & (fm[:minus2ll] === missing)
+    test_fitmeasures(fm, solution_lav[:fitmeasures_ls]; atol = 1e-3,
+        fitmeasure_names = fitmeasure_names_ls)
+    @test ismissing(fm[:AIC]) && ismissing(fm[:BIC]) && ismissing(fm[:minus2ll])
 
-    update_partable!(partable, identifier(model_ls_sym), se_hessian(solution_ls), :se)
-    @test compare_estimates(partable, solution_lav[:parameter_estimates_ls]; atol = 1e-2, 
+    update_se_hessian!(partable, solution_ls)
+    test_estimates(partable, solution_lav[:parameter_estimates_ls]; atol = 1e-2,
         col = :se, lav_col = :se)
 end
 
@@ -147,7 +151,7 @@ end
 ### test hessians
 ############################################################################################
 
-if semoptimizer == SemOptimizerOptim
+if opt_engine == :Optim
     using Optim, LineSearches
 
     model_ls = Sem(
@@ -157,7 +161,7 @@ if semoptimizer == SemOptimizerOptim
         loss = SemWLS,
         hessian = true,
         algorithm = Newton(
-            ;linesearch = BackTracking(order=3), 
+            ;linesearch = BackTracking(order=3),
             alphaguess = InitialHagerZhang())
     )
 
@@ -170,23 +174,23 @@ if semoptimizer == SemOptimizerOptim
     )
 
     @testset "ml_hessians" begin
-        @test test_hessian(model_ml, start_test; atol = 1e-4)
+        test_hessian(model_ml, start_test; atol = 1e-4)
     end
 
     @testset "ls_hessians" begin
-        @test test_hessian(model_ls, start_test; atol = 1e-4)
+        test_hessian(model_ls, start_test; atol = 1e-4)
     end
 
     @testset "ml_solution_hessian" begin
         solution = sem_fit(model_ml)
         update_estimate!(partable, solution)
-        @test compare_estimates(partable, solution_lav[:parameter_estimates_ml]; atol = 1e-3)
+        test_estimates(partable, solution_lav[:parameter_estimates_ml]; atol = 1e-3)
     end
 
     @testset "ls_solution_hessian" begin
         solution = sem_fit(model_ls)
         update_estimate!(partable, solution)
-        @test compare_estimates(partable, solution_lav[:parameter_estimates_ls]; atol = 0.002, rtol = 0.0) skip=true
+        test_estimates(partable, solution_lav[:parameter_estimates_ls]; atol = 0.002, rtol = 0.0, skip=true)
     end
 
 end
@@ -220,7 +224,7 @@ model_ml_cov = Sem(
     obs_colnames = Symbol.(names(dat)),
     meanstructure = true,
     optimizer = semoptimizer,
-    n_obs = 75.0
+    n_obs = 75
 )
 
 model_ml_sym = Sem(
@@ -242,7 +246,7 @@ model_names = ["ml", "ml_cov", "ls_sym", "ml_sym"]
 for (model, name) in zip(models, model_names)
     try
         @testset "$(name)_gradient_mean" begin
-            @test test_gradient(model, start_test_mean; rtol = 1e-9)
+            test_gradient(model, start_test_mean; rtol = 1e-9)
         end
     catch
     end
@@ -259,7 +263,7 @@ for (model, name, solution_name) in zip(models, model_names, solution_names)
         @testset "$(name)_solution_mean" begin
             solution = sem_fit(model)
             update_estimate!(partable_mean, solution)
-            @test compare_estimates(partable_mean, solution_lav[solution_name]; atol = 1e-2)
+            test_estimates(partable_mean, solution_lav[solution_name]; atol = 1e-2)
         end
     catch
     end
@@ -271,25 +275,25 @@ end
 
 @testset "fitmeasures/se_ml_mean" begin
     solution_ml = sem_fit(model_ml)
-    @test all(test_fitmeasures(fit_measures(solution_ml), solution_lav[:fitmeasures_ml_mean]; 
-        atol = 0.002))
+    test_fitmeasures(fit_measures(solution_ml), solution_lav[:fitmeasures_ml_mean];
+        atol = 0.002)
 
-    update_partable!(partable_mean, identifier(model_ml), se_hessian(solution_ml), :se)
-    @test compare_estimates(partable_mean, solution_lav[:parameter_estimates_ml_mean]; 
+    update_se_hessian!(partable_mean, solution_ml)
+    test_estimates(partable_mean, solution_lav[:parameter_estimates_ml_mean];
         atol = 0.002, col = :se, lav_col = :se)
 end
 
 @testset "fitmeasures/se_ls_mean" begin
     solution_ls = sem_fit(model_ls)
     fm = fit_measures(solution_ls)
-    @test all(test_fitmeasures(fm, 
-        solution_lav[:fitmeasures_ls_mean]; 
-        atol = 1e-3, 
-        fitmeasure_names = fitmeasure_names_ls))
-    @test (fm[:AIC] === missing) & (fm[:BIC] === missing) & (fm[:minus2ll] === missing)
+    test_fitmeasures(fm,
+        solution_lav[:fitmeasures_ls_mean];
+        atol = 1e-3,
+        fitmeasure_names = fitmeasure_names_ls)
+    @test ismissing(fm[:AIC]) && ismissing(fm[:BIC]) && ismissing(fm[:minus2ll])
 
-    update_partable!(partable_mean, identifier(model_ls), se_hessian(solution_ls), :se)
-    @test compare_estimates(partable_mean, solution_lav[:parameter_estimates_ls_mean]; atol = 1e-2, col = :se, lav_col = :se)
+    update_se_hessian!(partable_mean, solution_ls)
+    test_estimates(partable_mean, solution_lav[:parameter_estimates_ls_mean]; atol = 1e-2, col = :se, lav_col = :se)
 end
 
 ############################################################################################
@@ -322,11 +326,11 @@ model_ml_sym = Sem(
 ############################################################################################
 
 @testset "fiml_gradient" begin
-    @test test_gradient(model_ml, start_test_mean; atol = 1e-6)
+    test_gradient(model_ml, start_test_mean; atol = 1e-6)
 end
 
 @testset "fiml_gradient_symbolic" begin
-    @test test_gradient(model_ml_sym, start_test_mean; atol = 1e-6)
+    test_gradient(model_ml_sym, start_test_mean; atol = 1e-6)
 end
 
 ############################################################################################
@@ -336,13 +340,13 @@ end
 @testset "fiml_solution" begin
     solution = sem_fit(model_ml)
     update_estimate!(partable_mean, solution)
-    @test compare_estimates(partable_mean, solution_lav[:parameter_estimates_fiml]; atol = 1e-2)
+    test_estimates(partable_mean, solution_lav[:parameter_estimates_fiml]; atol = 1e-2)
 end
 
 @testset "fiml_solution_symbolic" begin
     solution = sem_fit(model_ml_sym)
     update_estimate!(partable_mean, solution)
-    @test compare_estimates(partable_mean, solution_lav[:parameter_estimates_fiml]; atol = 1e-2)
+    test_estimates(partable_mean, solution_lav[:parameter_estimates_fiml]; atol = 1e-2)
 end
 
 ############################################################################################
@@ -351,10 +355,10 @@ end
 
 @testset "fitmeasures/se_fiml" begin
     solution_ml = sem_fit(model_ml)
-    @test all(test_fitmeasures(fit_measures(solution_ml), solution_lav[:fitmeasures_fiml]; 
-        atol = 1e-3))
+    test_fitmeasures(fit_measures(solution_ml), solution_lav[:fitmeasures_fiml];
+        atol = 1e-3)
 
-    update_partable!(partable_mean, identifier(model_ml), se_hessian(solution_ml), :se)
-    @test compare_estimates(partable_mean, solution_lav[:parameter_estimates_fiml]; 
+    update_se_hessian!(partable_mean, solution_ml)
+    test_estimates(partable_mean, solution_lav[:parameter_estimates_fiml];
         atol = 0.002, col = :se, lav_col = :se)
 end

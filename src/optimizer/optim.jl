@@ -1,34 +1,8 @@
 ## connect to Optim.jl as backend
-function sem_wrap_optim(par, F, G, H, model::AbstractSem)
-    if !isnothing(F)
-        if !isnothing(G)
-            if !isnothing(H)
-                return objective_gradient_hessian!(G, H, model, par)
-            else
-                return objective_gradient!(G, model, par)
-            end
-        else
-            if !isnothing(H)
-                return objective_hessian!(H, model, par)
-            else
-                return objective!(model, par)
-            end
-        end
-    else
-        if !isnothing(G)
-            if !isnothing(H)
-                gradient_hessian!(G, H, model, par)
-            else
-                gradient!(G, model, par)
-            end
-        end
-    end
-    return nothing
-end
 
 function SemFit(
-        optimization_result::Optim.MultivariateOptimizationResults, 
-        model::AbstractSem, 
+        optimization_result::Optim.MultivariateOptimizationResults,
+        model::AbstractSem,
         start_val)
     return SemFit(
         optimization_result.minimum,
@@ -44,37 +18,32 @@ n_iterations(res::Optim.MultivariateOptimizationResults) = Optim.iterations(res)
 convergence(res::Optim.MultivariateOptimizationResults) = Optim.converged(res)
 
 function sem_fit(
-        model::AbstractSemSingle{O, I, L, D}; 
-        start_val = start_val, 
-        kwargs...) where {O, I, L, D <: SemOptimizerOptim}
-    
-    if !isa(start_val, Vector)
-        start_val = start_val(model; kwargs...)
-    end
+        optim::SemOptimizerOptim,
+        model::AbstractSem,
+        start_params::AbstractVector;
+        lower_bounds::Union{AbstractVector, AbstractDict, Nothing} = nothing,
+        upper_bounds::Union{AbstractVector, AbstractDict, Nothing} = nothing,
+        variance_lower_bound::Float64 = 0.0,
+        lower_bound = -Inf,
+        upper_bound = Inf,
+        kwargs...)
 
-    result = Optim.optimize(
-                Optim.only_fgh!((F, G, H, par) -> sem_wrap_optim(par, F, G, H, model)),
-                start_val,
+    # setup lower/upper bounds if the algorithm supports it
+    if optim.algorithm isa Optim.Fminbox || optim.algorithm isa Optim.SAMIN
+        lbounds = SEM.lower_bounds(lower_bounds, model, default=lower_bound, variance_default=variance_lower_bound)
+        ubounds = SEM.upper_bounds(upper_bounds, model, default=upper_bound)
+        result = Optim.optimize(
+            Optim.only_fgh!((F, G, H, par) -> evaluate!(F, G, H, model, par)),
+            lbounds, ubounds, start_params,
+            model.optimizer.algorithm,
+            model.optimizer.options)
+    else
+        result = Optim.optimize(
+                Optim.only_fgh!((F, G, H, par) -> evaluate!(F, G, H, model, par)),
+                start_params,
                 model.optimizer.algorithm,
                 model.optimizer.options)
-    return SemFit(result, model, start_val)
-
-end
-
-function sem_fit(
-        model::SemEnsemble{N, T , V, D, S}; 
-        start_val = start_val, 
-        kwargs...) where {N, T, V, D <: SemOptimizerOptim, S}
-
-    if !isa(start_val, Vector)
-        start_val = start_val(model; kwargs...)
     end
-
-    result = Optim.optimize(
-                Optim.only_fgh!((F, G, H, par) -> sem_wrap_optim(par, F, G, H, model)),
-                start_val,
-                model.optimizer.algorithm,
-                model.optimizer.options)
-    return SemFit(result, model, start_val)
+    return SemFit(result, model, start_params)
 
 end

@@ -19,15 +19,14 @@ model per group and an additional model with `ImplyEmpty` and `SemRidge` for the
 # Extended help
 
 ## Interfaces
-- `identifier(::RAMSymbolic) `-> Dict containing the parameter labels and their position
-- `n_par(::RAMSymbolic)` -> Number of parameters
+- `params(::RAMSymbolic) `-> Dict containing the parameter labels and their position
+- `nparams(::RAMSymbolic)` -> Number of parameters
 
 ## Implementation
 Subtype of `SemImply`.
 """
-struct ImplyEmpty{V, V2} <: SemImply
-    identifier::V2
-    n_par::V
+struct ImplyEmpty <: SemImply{NoMeanStructure,ExactHessian}
+    params::Vector{Symbol}
 end
 
 ############################################################################################
@@ -35,30 +34,20 @@ end
 ############################################################################################
 
 function ImplyEmpty(;
-        specification,
+        specification::SemSpecification,
         kwargs...)
 
-        ram_matrices = RAMMatrices(specification)
-        identifier = StructuralEquationModels.identifier(ram_matrices)
-        
-        n_par = length(ram_matrices.parameters)
-
-        return ImplyEmpty(identifier, n_par)
+        return ImplyEmpty(params(spec))
 end
 
 ############################################################################################
 ### methods
 ############################################################################################
 
-objective!(imply::ImplyEmpty, par, model) = nothing
-gradient!(imply::ImplyEmpty, par, model) = nothing
-hessian!(imply::ImplyEmpty, par, model) = nothing
+update!(targets::EvaluationTargets, imply::ImplyEmpty, par, model) = nothing
 
 ############################################################################################
 ### Recommended methods
 ############################################################################################
-
-identifier(imply::ImplyEmpty) = imply.identifier
-n_par(imply::ImplyEmpty) = imply.n_par
 
 update_observed(imply::ImplyEmpty, observed::SemObserved; kwargs...) = imply

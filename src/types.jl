@@ -10,8 +10,30 @@ abstract type AbstractSemSingle{O, I, L, D} <: AbstractSem end
 "Supertype for all collections of multiple SEMs"
 abstract type AbstractSemCollection <: AbstractSem end
 
+"Meanstructure trait for `SemImply` subtypes"
+abstract type MeanStructure end
+"Indicates that `SemImply` subtype supports meanstructure"
+struct HasMeanStructure <: MeanStructure end
+"Indicates that `SemImply` subtype does not support meanstructure"
+struct NoMeanStructure <: MeanStructure end
+
+# fallback implementation
+MeanStructure(::Type{T}) where T = error("Objects of type $T do not support MeanStructure trait")
+MeanStructure(semobj) = MeanStructure(typeof(semobj))
+
+"Hessian Evaluation trait for `SemImply` and `SemLossFunction` subtypes"
+abstract type HessianEvaluation end
+struct ApproximateHessian <: HessianEvaluation end
+struct ExactHessian <: HessianEvaluation end
+
+# fallback implementation
+HessianEvaluation(::Type{T}) where T = error("Objects of type $T do not support HessianEvaluation trait")
+HessianEvaluation(semobj) = HessianEvaluation(typeof(semobj))
+
 "Supertype for all loss functions of SEMs. If you want to implement a custom loss function, it should be a subtype of `SemLossFunction`."
-abstract type SemLossFunction end
+abstract type SemLossFunction{HE <: HessianEvaluation} end
+
+HessianEvaluation(::Type{<:SemLossFunction{HE}}) where HE <: HessianEvaluation = HE
 
 """
     SemLoss(args...; loss_weights = nothing, ...)
@@ -37,7 +59,7 @@ end
 
 function SemLoss(functions...; loss_weights = nothing, kwargs...)
 
-    if !isnothing(loss_weights) 
+    if !isnothing(loss_weights)
         loss_weights = SemWeight.(loss_weights)
     else
         loss_weights = Tuple(SemWeight(nothing) for _ in 1:length(functions))
@@ -49,7 +71,7 @@ function SemLoss(functions...; loss_weights = nothing, kwargs...)
         )
 end
 
-# weights for loss functions or models. If the weight is nothing, multiplication returs second argument
+# weights for loss functions or models. If the weight is nothing, multiplication returns the second argument
 struct SemWeight{T}
     w::T
 end
@@ -62,7 +84,18 @@ Supertype of all objects that can serve as the `optimizer` field of a SEM.
 Connects the SEM to its optimization backend and controls options like the optimization algorithm.
 If you want to connect the SEM package to a new optimization backend, you should implement a subtype of SemOptimizer.
 """
-abstract type SemOptimizer end
+abstract type SemOptimizer{E} end
+
+engine(::Type{SemOptimizer{E}}) where E = E
+engine(optimizer::SemOptimizer) = engine(typeof(optimizer))
+
+SemOptimizer(args...; engine::Symbol = :Optim, kwargs...) =
+    SemOptimizer{engine}(args...; kwargs...)
+
+# fallback optimizer constructor
+function SemOptimizer{E}(args...; kwargs...) where E
+    throw(ErrorException("$E optimizer is not supported."))
+end
 
 """
 Supertype of all objects that can serve as the observed field of a SEM.
@@ -71,16 +104,33 @@ If you have a special kind of data, e.g. ordinal data, you should implement a su
 """
 abstract type SemObserved end
 
+get_data(observed::SemObserved) = observed.data
+
 """
 Supertype of all objects that can serve as the imply field of a SEM.
 Computed model-implied values that should be compared with the observed data to find parameter estimates,
 e. g. the model implied covariance or mean.
 If you would like to implement a different notation, e.g. LISREL, you should implement a subtype of SemImply.
 """
-abstract type SemImply end
+abstract type SemImply{MS <: MeanStructure, HE <: HessianEvaluation} end
+
+MeanStructure(::Type{<:SemImply{MS}}) where MS <: MeanStructure = MS
+HessianEvaluation(::Type{<:SemImply{MS,HE}}) where {MS, HE <: MeanStructure} = HE
 
 "Subtype of SemImply for all objects that can serve as the imply field of a SEM and use some form of symbolic precomputation."
-abstract type SemImplySymbolic <: SemImply end
+abstract type SemImplySymbolic{MS,HE} <: SemImply{MS,HE} end
+
+"""
+State of `SemImply` that corresponds to the specific SEM parameter values.
+
+Contains the necessary vectors and matrices for calculating the SEM
+objective, gradient and hessian (whichever is requested).
+"""
+abstract type SemImplyState end
+
+imply(state::SemImplyState) = state.imply
+MeanStructure(state::SemImplyState) = MeanStructure(imply(state))
+ApproximateHessian(state::SemImplyState) = ApproximateHessian(imply(state))
 
 """
     Sem(;observed = SemObservedData, imply = RAM, loss = SemML, optimizer = SemOptimizerOptim, kwargs...)
@@ -149,38 +199,37 @@ Constructor for ensemble models.
 - `weights::Vector`:  Weights for each model. Defaults to the number of observed data points.
 
 All additional kwargs are passed down to the constructor for the optimizer field.
-    
+
 Returns a SemEnsemble with fields
 - `n::Int`: Number of models.
 - `sems::Tuple`: `AbstractSem`s.
 - `weights::Vector`: Weights for each model.
 - `optimizer::SemOptimizer`: Connects the model to the optimizer. See also [`SemOptimizer`](@ref).
-- `identifier::Dict`: Stores parameter labels and their position.
+- `params::Dict`: Stores parameter labels and their position.
 """
 struct SemEnsemble{N, T <: Tuple, V <: AbstractVector, D, I} <: AbstractSemCollection
     n::N
     sems::T
     weights::V
     optimizer::D
-    identifier::I
+    params::I
 end
 
 function SemEnsemble(models...; optimizer = SemOptimizerOptim, weights = nothing, kwargs...)
     n = length(models)
-    npar = n_par(models[1])
 
     # default weights
-    
+
     if isnothing(weights)
-        nobs_total = sum(n_obs.(models))
+        nobs_total = sum(n_obs, models)
         weights = [n_obs(model)/nobs_total for model in models]
     end
 
-    # check identifier equality
-    id = identifier(models[1])
+    # check param equality
+    params1 = params(models[1])
     for model in models
-        if id != identifier(model)
-            throw(ErrorException("The identifier of your models do not match. \n
+        if params1 != params(model)
+            throw(ErrorException("The parameters of your models do not match. \n
             Maybe you tried to specify models of an ensemble via ParameterTables. \n
             In that case, you may use RAMMatrices instead."))
         end
@@ -196,9 +245,11 @@ function SemEnsemble(models...; optimizer = SemOptimizerOptim, weights = nothing
         models,
         weights,
         optimizer,
-        id
+        params1
         )
 end
+
+params(ensemble::SemEnsemble) = ensemble.params
 
 """
     n_models(ensemble::SemEnsemble) -> Integer
@@ -242,6 +293,8 @@ Returns the imply part of a model.
 """
 imply(model::AbstractSemSingle) = model.imply
 
+params(model::AbstractSemSingle) = params(imply(model))
+
 """
     loss(model::AbstractSemSingle) -> SemLoss
 
@@ -255,3 +308,22 @@ loss(model::AbstractSemSingle) = model.loss
 Returns the optimizer part of a model.
 """
 optimizer(model::AbstractSemSingle) = model.optimizer
+
+abstract type SemSpecification end
+
+params(spec::SemSpecification) = spec.params
+nparams(spec::SemSpecification) = length(params(spec))
+
+# observed + latent
+vars(spec::SemSpecification) =
+    error("vars(spec::$(typeof(spec))) is not implemented")
+observed_vars(spec::SemSpecification) =
+    error("observed_vars(spec::$(typeof(spec))) is not implemented")
+latent_vars(spec::SemSpecification) =
+    error("latent_vars(spec::$(typeof(spec))) is not implemented")
+
+nvars(spec::SemSpecification) = length(vars(spec))
+nobserved_vars(spec::SemSpecification) = length(observed_vars(spec))
+nlatent_vars(spec::SemSpecification) = length(latent_vars(spec))
+
+abstract type AbstractParameterTable <: SemSpecification end

@@ -9,16 +9,24 @@ function Sem(;
         optimizer::D = SemOptimizerOptim,
         kwargs...) where {O, I, L, D}
 
-    kwargs = Dict{Symbol, Any}(kwargs...)
+    kwdict = Dict{Symbol, Any}(kwargs...)
 
-    set_field_type_kwargs!(kwargs, observed, imply, loss, optimizer, O, I, D)
-    
-    observed, imply, loss, optimizer = get_fields!(kwargs, observed, imply, loss, optimizer)
+    set_field_type_kwargs!(kwdict, observed, imply, loss, optimizer, O, I, D)
+
+    observed, imply, loss, optimizer = get_fields!(kwdict, observed, imply, loss, optimizer)
 
     sem = Sem(observed, imply, loss, optimizer)
 
     return sem
 end
+
+nvars(sem::AbstractSemSingle) = nvars(sem.imply.ram_matrices)
+nobserved_vars(sem::AbstractSemSingle) = nobserved_vars(sem.imply.ram_matrices)
+nlatent_vars(sem::AbstractSemSingle) = nlatent_vars(sem.imply.ram_matrices)
+
+vars(sem::AbstractSemSingle) = vars(sem.imply.ram_matrices)
+observed_vars(sem::AbstractSemSingle) = observed_vars(sem.imply.ram_matrices)
+latent_vars(sem::AbstractSemSingle) = latent_vars(sem.imply.ram_matrices)
 
 function SemFiniteDiff(;
         observed::O = SemObservedData,
@@ -27,11 +35,11 @@ function SemFiniteDiff(;
         optimizer::D = SemOptimizerOptim,
         kwargs...) where {O, I, L, D}
 
-    kwargs = Dict{Symbol, Any}(kwargs...)
+    kwdict = Dict{Symbol, Any}(kwargs...)
 
-    set_field_type_kwargs!(kwargs, observed, imply, loss, optimizer, O, I, D)
-    
-    observed, imply, loss, optimizer = get_fields!(kwargs, observed, imply, loss, optimizer)
+    set_field_type_kwargs!(kwdict, observed, imply, loss, optimizer, O, I, D)
+
+    observed, imply, loss, optimizer = get_fields!(kwdict, observed, imply, loss, optimizer)
 
     sem = SemFiniteDiff(observed, imply, loss, optimizer)
 
@@ -69,7 +77,7 @@ function get_fields!(kwargs, observed, imply, loss, optimizer)
     end
 
     kwargs[:imply] = imply
-    kwargs[:n_par] = n_par(imply)
+    kwargs[:nparams] = nparams(imply)
 
     # loss
     loss = get_SemLoss(loss; kwargs...)
@@ -139,7 +147,7 @@ function Base.show(io::IO, sem::SemFiniteDiff{O, I, L, D})  where {O, I, L, D}
     print(io, "- Fields \n")
     print(io, "   observed:    $(nameof(O)) \n")
     print(io, "   imply:       $(nameof(I)) \n")
-    print(io, "   optimizer:   $(nameof(D)) \n") 
+    print(io, "   optimizer:   $(nameof(D)) \n")
 end
 
 function Base.show(io::IO, loss::SemLoss)

@@ -1,8 +1,11 @@
 using StructuralEquationModels, Test, FiniteDiff
-import LinearAlgebra: diagind, LowerTriangular
-# import StructuralEquationModels as SEM
+using LinearAlgebra: diagind, LowerTriangular
+
+SEM = StructuralEquationModels
+
+# using StructuralEquationModels as SEM
 include(
-    joinpath(chop(dirname(pathof(StructuralEquationModels)), tail = 3), 
+    joinpath(chop(dirname(pathof(StructuralEquationModels)), tail = 3),
     "test/examples/helper.jl")
     )
 
@@ -47,26 +50,25 @@ specification_g1 = RAMMatrices(;
     A = A,
     S = S1,
     F = F,
-    parameters = x,
+    params = x,
     colnames = [:x1, :x2, :x3, :x4, :x5, :x6, :x7, :x8, :x9, :visual, :textual, :speed])
 
 specification_g2 = RAMMatrices(;
     A = A,
     S = S2,
     F = F,
-    parameters = x,
+    params = x,
     colnames = [:x1, :x2, :x3, :x4, :x5, :x6, :x7, :x8, :x9, :visual, :textual, :speed])
 
 partable = EnsembleParameterTable(
-    specification_g1, 
-    specification_g2;
-    groups = [:Pasteur, :Grant_White]
+    Dict(:Pasteur => specification_g1,
+         :Grant_White => specification_g2)
     )
 
 specification_miss_g1 = nothing
 specification_miss_g2 = nothing
 
-start_test = [fill(1.0, 9); fill(0.05, 3); fill(0.01, 3); fill(0.5, 6); fill(1.0, 9); 
+start_test = [fill(1.0, 9); fill(0.05, 3); fill(0.01, 3); fill(0.5, 6); fill(1.0, 9);
     fill(0.05, 3); fill(0.01, 3)]
 semoptimizer = SemOptimizerOptim
 
@@ -91,13 +93,12 @@ graph = @StenoGraph begin
     _(latent_vars)   ⇔ _(latent_vars)
 end
 
-partable = EnsembleParameterTable(;
-    graph = graph, 
+partable = EnsembleParameterTable(graph;
     observed_vars = observed_vars,
     latent_vars = latent_vars,
     groups = [:Pasteur, :Grant_White])
 
-specification = RAMMatrices(partable)
+specification = convert(Dict{Symbol, RAMMatrices}, partable)
 
 specification_g1 = specification[:Pasteur]
 specification_g2 = specification[:Grant_White]
@@ -119,23 +120,22 @@ graph = @StenoGraph begin
     Symbol("1") → _(observed_vars)
 end
 
-partable_miss = EnsembleParameterTable(;
-    graph = graph, 
+partable_miss = EnsembleParameterTable(graph;
     observed_vars = observed_vars,
     latent_vars = latent_vars,
     groups = [:Pasteur, :Grant_White])
 
-specification_miss = RAMMatrices(partable_miss)
+specification_miss = convert(Dict{Symbol, RAMMatrices}, partable_miss)
 
 specification_miss_g1 = specification_miss[:Pasteur]
 specification_miss_g2 = specification_miss[:Grant_White]
 
 start_test = [
-    fill(0.5, 6); 
-    fill(1.0, 9); 0.05; 0.01; 0.01; 0.05; 0.01; 0.05; 
+    fill(0.5, 6);
+    fill(1.0, 9); 0.05; 0.01; 0.01; 0.05; 0.01; 0.05;
     fill(1.0, 9); 0.05; 0.01; 0.01; 0.05; 0.01; 0.05]
 semoptimizer = SemOptimizerOptim
 
-@testset "Graph → Partable → RAMMatrices | constructor | Optim" begin 
-    include("build_models.jl") 
+@testset "Graph → Partable → RAMMatrices | constructor | Optim" begin
+    include("build_models.jl")
 end
