@@ -28,6 +28,7 @@ function em_mvn(
     start_em = start_em_observed,
     max_iter_em::Integer = 100,
     rtol_em::Number = 1e-4,
+    max_nobs_em::Union{Integer, Nothing} = nothing,
     kwargs...)
 
     n_man = SEM.n_man(patterns[1])
@@ -58,7 +59,8 @@ function em_mvn(
     Δμ_rel = NaN
     ΔΣ_rel = NaN
     while !converged && (iter < max_iter_em)
-        em_step!(Σ, μ, Σ_prev, μ_prev, patterns, 𝔼x_full, 𝔼xxᵀ_full)
+        em_step!(Σ, μ, Σ_prev, μ_prev, patterns,
+                 𝔼xxᵀ_full, 𝔼x_full, nobs_full; max_nobs_em)
 
         if iter > 0
             Δμ = norm(μ - μ_prev)
@@ -93,14 +95,17 @@ end
 function em_step!(Σ::AbstractMatrix, μ::AbstractVector,
                   Σ₀::AbstractMatrix, μ₀::AbstractVector,
                   patterns::AbstractVector{<:SemObservedMissingPattern},
-                  𝔼x_full, 𝔼xxᵀ_full)
+                  𝔼xxᵀ_full::AbstractMatrix, 𝔼x_full::AbstractVector, nobs_full::Integer;
+                  max_nobs_em::Union{Integer, Nothing} = nothing
+)
     # E step, update 𝔼x and 𝔼xxᵀ
     copy!(μ, 𝔼x_full)
     copy!(Σ, 𝔼xxᵀ_full)
+    nobs_used = nobs_full
 
     # Compute the expected sufficient statistics
     for pat in patterns
-        (nmissed_vars(pat) == 0) && continue # skip full cases
+        (nmissed_vars(pat) == 0) && continue # full cases already accounted for
 
         # observed and unobserved vars
         u = pat.miss_mask
@@ -112,6 +117,12 @@ function em_step!(Σ::AbstractMatrix, μ::AbstractVector,
         μu = μ₀[u]
         μo = μ₀[o]
 
+        # get pattern observations
+        nobs = !isnothing(max_nobs_em) ? min(max_nobs_em, n_obs(pat)) : n_obs(pat)
+        pat_data = nobs < n_obs(pat) ?
+            view(pat.data, :, sort!(sample(1:n_obs(pat), nobs, replace = false))) :
+            pat.data
+
         𝔼xu = fill!(similar(μu), 0)
         𝔼xo = fill!(similar(μo), 0)
         𝔼xᵢu = similar(μu)
@@ -120,28 +131,29 @@ function em_step!(Σ::AbstractMatrix, μ::AbstractVector,
         𝔼xxᵀuu = n_obs(pat) * (Σ₀[u, u] - Σuo * (Σoo_chol \ Σuo'))
 
         # loop through observations
-        @inbounds for rowdata in eachcol(pat.data)
-            mul!(𝔼xᵢu, Σuo, Σoo_chol \ (rowdata-μo))
+        @inbounds for obsdata in eachcol(pat_data)
+            mul!(𝔼xᵢu, Σuo, Σoo_chol \ (obsdata-μo))
             𝔼xᵢu .+= μu
             mul!(𝔼xxᵀuu, 𝔼xᵢu, 𝔼xᵢu', 1, 1)
-            mul!(𝔼xxᵀuo, 𝔼xᵢu, rowdata', 1, 1)
+            mul!(𝔼xxᵀuo, 𝔼xᵢu, obsdata', 1, 1)
             𝔼xu .+= 𝔼xᵢu
-            𝔼xo .+= rowdata
+            𝔼xo .+= obsdata
         end
 
-        Σ[o,o] .+= pat.data' * pat.data
+    Σ[o,o] .+= pat_data * pat_data'
         Σ[u,o] .+= 𝔼xxᵀuo
         Σ[o,u] .+= 𝔼xxᵀuo'
         Σ[u,u] .+= 𝔼xxᵀuu
 
         μ[o] .+= 𝔼xo
         μ[u] .+= 𝔼xu
+
+        nobs_used += nobs
     end
 
     # M step, update em_model
-    k = inv(sum(n_obs, patterns))
-    lmul!(k, Σ)
-    lmul!(k, μ)
+    lmul!(1/nobs_used, Σ)
+    lmul!(1/nobs_used, μ)
     mul!(Σ, μ, μ', -1, 1)
 
     # ridge Σ
