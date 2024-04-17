@@ -28,10 +28,11 @@ THE SOFTWARE. =#
 
 """
     em_mvn(patterns::AbstractVector{SemObservedMissingPattern};
-           start_em = start_em_observed,
            max_iter_em = 100,
            rtol_em = 1e-4,
-           kwargs...)
+           max_nsamples_em = nothing,
+           start_em = start_em_observed,
+           start_kwargs...)
 
 Estimate the covariance and the mean for data with missing values using
 the expectation maximization (EM) algorithm.
@@ -56,7 +57,7 @@ multivariate normal (MVN) distribution.
 
 # References
 
-Uses the EM algorithm for MVN-distributed data with missing values
+Based on the EM algorithm for MVN-distributed data with missing values
 adapted from the supplementary material to the book *Machine Learning: A Probabilistic Perspective*,
 copyright (2010) Kevin Murphy and Matt Dunham: see
 [*gaussMissingFitEm.m*](https://github.com/probml/pmtk3/blob/master/toolbox/BasicModels/gauss/sub/gaussMissingFitEm.m) and
@@ -64,10 +65,11 @@ copyright (2010) Kevin Murphy and Matt Dunham: see
 """
 function em_mvn(
     patterns::AbstractVector{<:SemObservedMissingPattern};
-    start_em = start_em_observed,
     max_iter_em::Integer = 100,
     rtol_em::Number = 1e-4,
-    kwargs...,
+    max_nsamples_em::Union{Integer, Nothing} = nothing,
+    start_em = start_em_observed,
+    start_kwargs...,
 )
     nobs_vars = nobserved_vars(patterns[1])
 
@@ -87,15 +89,27 @@ function em_mvn(
     end
 
     # initialize
-    Σ₀, μ = start_em(patterns; kwargs...)
+    Σ₀, μ = start_em(patterns; start_kwargs...)
     Σ = convert(Matrix, Σ₀)
     @assert all(isfinite, Σ) all(isfinite, μ)
     Σ_prev, μ_prev = copy(Σ), copy(μ)
 
     iter = 0
     converged = false
+    Δμ_rel = NaN
+    ΔΣ_rel = NaN
     while !converged && (iter < max_iter_em)
-        em_step!(Σ, μ, Σ_prev, μ_prev, patterns, 𝔼x_full, 𝔼xxᵀ_full)
+        em_step!(
+            Σ,
+            μ,
+            Σ_prev,
+            μ_prev,
+            patterns,
+            𝔼xxᵀ_full,
+            𝔼x_full,
+            nsamples_full;
+            max_nsamples_em,
+        )
 
         if iter > 0
             Δμ = norm(μ - μ_prev)
@@ -115,12 +129,15 @@ function em_mvn(
     end
 
     if !converged
-        @warn "EM Algorithm for MVN missing data did not converge in $iter iterations.\n" *
+        @warn "EM inference for MVN missing data did not converge in $iter iterations.\n" *
+              "Final tolerances: ΔΣ/Σ=$(ΔΣ_rel), Δμ/μ=$(Δμ_rel).\n" *
               "Likelihood for FIML is not interpretable.\n" *
               "Maybe try passing different starting values via 'start_em = ...' "
     else
-        @info "EM for MVN missing data converged in $iter iterations"
+        verbose && @info "EM for MVN missing data converged in $iter iterations: ΔΣ/Σ=$(ΔΣ_rel), Δμ/μ=$(Δμ_rel)."
     end
+
+    StatsBase._symmetrize!(Σ)
 
     return Σ, μ
 end
@@ -132,58 +149,91 @@ function em_step!(
     Σ₀::AbstractMatrix,
     μ₀::AbstractVector,
     patterns::AbstractVector{<:SemObservedMissingPattern},
-    𝔼x_full,
-    𝔼xxᵀ_full,
+    𝔼xxᵀ_full::AbstractMatrix,
+    𝔼x_full::AbstractVector,
+    nsamples_full::Integer;
+    max_nsamples_em::Union{Integer, Nothing} = nothing,
 )
     # E step: update 𝔼x and 𝔼xxᵀ
     copy!(μ, 𝔼x_full)
     copy!(Σ, 𝔼xxᵀ_full)
+    nsamples_used = nsamples_full
+    mul!(Σ, μ₀, μ₀', -nsamples_used, 1)
+    axpy!(-nsamples_used, μ₀, μ)
 
     # Compute the expected sufficient statistics
     for pat in patterns
-        (nmissed_vars(pat) == 0) && continue # skip full cases
+        (nmissed_vars(pat) == 0) && continue # full cases already accounted for
 
         # observed and unobserved vars
         u = pat.miss_mask
         o = pat.measured_mask
 
-        # precompute for pattern
-        Σoo_chol = cholesky(Symmetric(Σ₀[o, o]))
-        Σuo = Σ₀[u, o]
-        μu = μ₀[u]
-        μo = μ₀[o]
+        # compute cholesky to speed-up ldiv!()
+        Σ₀oo_chol = cholesky(Symmetric(Σ₀[o, o]))
+        Σ₀uo = Σ₀[u, o]
+        μ₀u = μ₀[u]
+        μ₀o = μ₀[o]
 
-        𝔼xu = fill!(similar(μu), 0)
-        𝔼xo = fill!(similar(μo), 0)
-        𝔼xᵢu = similar(μu)
+        # get pattern observations
+        nsamples_pat =
+            !isnothing(max_nsamples_em) ? min(max_nsamples_em, nsamples(pat)) :
+            nsamples(pat)
+        zo =
+            nsamples_pat < nsamples(pat) ?
+            pat.data[:, sort!(sample(1:nsamples(pat), nsamples_pat, replace = false))] :
+            copy(pat.data)
+        zo .-= μ₀o # subtract current mean from observations
 
-        𝔼xxᵀuo = fill!(similar(Σuo), 0)
-        𝔼xxᵀuu = n_obs(pat) * (Σ₀[u, u] - Σuo * (Σoo_chol \ Σuo'))
+        𝔼zo = sum(zo, dims = 2)
+        𝔼zu = fill!(similar(μ₀u), 0)
+
+        𝔼zzᵀuo = fill!(similar(Σ₀uo), 0)
+        𝔼zzᵀuu = nsamples_pat * Σ₀[u, u]
+        mul!(𝔼zzᵀuu, Σ₀uo, Σ₀oo_chol \ Σ₀uo', -nsamples_pat, 1)
 
         # loop through observations
-        @inbounds for rowdata in eachcol(pat.data)
-            mul!(𝔼xᵢu, Σuo, Σoo_chol \ (rowdata - μo))
-            𝔼xᵢu .+= μu
-            mul!(𝔼xxᵀuu, 𝔼xᵢu, 𝔼xᵢu', 1, 1)
-            mul!(𝔼xxᵀuo, 𝔼xᵢu, rowdata', 1, 1)
-            𝔼xu .+= 𝔼xᵢu
-            𝔼xo .+= rowdata
+        yᵢo = similar(μ₀o)
+        𝔼zᵢu = similar(μ₀u)
+        @inbounds for zᵢo in eachcol(zo)
+            ldiv!(yᵢo, Σ₀oo_chol, zᵢo)
+            mul!(𝔼zᵢu, Σ₀uo, yᵢo)
+            mul!(𝔼zzᵀuu, 𝔼zᵢu, 𝔼zᵢu', 1, 1)
+            mul!(𝔼zzᵀuo, 𝔼zᵢu, zᵢo', 1, 1)
+            𝔼zu .+= 𝔼zᵢu
         end
+        # correct 𝔼zzᵀ by adding back μ₀×𝔼z' + 𝔼z'×μ₀
+        mul!(𝔼zzᵀuo, μ₀u, 𝔼zo', 1, 1)
+        mul!(𝔼zzᵀuo, 𝔼zu, μ₀o', 1, 1)
 
-        Σ[o, o] .+= pat.data' * pat.data
-        Σ[u, o] .+= 𝔼xxᵀuo
-        Σ[o, u] .+= 𝔼xxᵀuo'
-        Σ[u, u] .+= 𝔼xxᵀuu
+        mul!(𝔼zzᵀuu, μ₀u, 𝔼zu', 1, 1)
+        mul!(𝔼zzᵀuu, 𝔼zu, μ₀u', 1, 1)
 
-        μ[o] .+= 𝔼xo
-        μ[u] .+= 𝔼xu
+        𝔼zzᵀoo = zo * zo'
+        mul!(𝔼zzᵀoo, μ₀o, 𝔼zo', 1, 1)
+        mul!(𝔼zzᵀoo, 𝔼zo, μ₀o', 1, 1)
+
+        # update Σ and μ
+        Σ[o, o] .+= 𝔼zzᵀoo
+        Σ[u, o] .+= 𝔼zzᵀuo
+        Σ[o, u] .+= 𝔼zzᵀuo'
+        Σ[u, u] .+= 𝔼zzᵀuu
+
+        μ[o] .+= 𝔼zo
+        μ[u] .+= 𝔼zu
+
+        nsamples_used += nsamples_pat
     end
 
     # M step: update Σ and μ
-    k = inv(sum(nsamples, patterns))
-    lmul!(k, Σ)
-    lmul!(k, μ)
+    lmul!(1 / nsamples_used, Σ)
+    lmul!(1 / nsamples_used, μ)
+    # at this point μ = μ - μ₀
+    # and Σ = Σ + (μ - μ₀)×(μ - μ₀)' - μ₀×μ₀'
+    mul!(Σ, μ, μ₀', -1, 1)
+    mul!(Σ, μ₀, μ', -1, 1)
     mul!(Σ, μ, μ', -1, 1)
+    μ .+= μ₀
 
     return Σ, μ
 end
