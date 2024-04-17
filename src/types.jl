@@ -5,7 +5,7 @@
 abstract type AbstractSem end
 
 "Supertype for all single SEMs, e.g. SEMs that have at least the fields `observed`, `imply`, `loss` and `optimizer`"
-abstract type AbstractSemSingle{O, I, L, D} <: AbstractSem end
+abstract type AbstractSemSingle{O,I,L,D} <: AbstractSem end
 
 "Supertype for all collections of multiple SEMs"
 abstract type AbstractSemCollection <: AbstractSem end
@@ -18,7 +18,8 @@ struct HasMeanStructure <: MeanStructure end
 struct NoMeanStructure <: MeanStructure end
 
 # fallback implementation
-MeanStructure(::Type{T}) where T = error("Objects of type $T do not support MeanStructure trait")
+MeanStructure(::Type{T}) where {T} =
+    error("Objects of type $T do not support MeanStructure trait")
 MeanStructure(semobj) = MeanStructure(typeof(semobj))
 
 "Hessian Evaluation trait for `SemImply` and `SemLossFunction` subtypes"
@@ -27,13 +28,14 @@ struct ApproximateHessian <: HessianEvaluation end
 struct ExactHessian <: HessianEvaluation end
 
 # fallback implementation
-HessianEvaluation(::Type{T}) where T = error("Objects of type $T do not support HessianEvaluation trait")
+HessianEvaluation(::Type{T}) where {T} =
+    error("Objects of type $T do not support HessianEvaluation trait")
 HessianEvaluation(semobj) = HessianEvaluation(typeof(semobj))
 
 "Supertype for all loss functions of SEMs. If you want to implement a custom loss function, it should be a subtype of `SemLossFunction`."
-abstract type SemLossFunction{HE <: HessianEvaluation} end
+abstract type SemLossFunction{HE<:HessianEvaluation} end
 
-HessianEvaluation(::Type{<:SemLossFunction{HE}}) where HE <: HessianEvaluation = HE
+HessianEvaluation(::Type{<:SemLossFunction{HE}}) where {HE<:HessianEvaluation} = HE
 
 """
     SemLoss(args...; loss_weights = nothing, ...)
@@ -52,7 +54,7 @@ my_ridge_loss = SemRidge(...)
 my_loss = SemLoss(SemML, SemRidge; loss_weights = [1.0, 2.0])
 ```
 """
-mutable struct SemLoss{F <: Tuple, T}
+mutable struct SemLoss{F<:Tuple,T}
     functions::F
     weights::T
 end
@@ -65,10 +67,7 @@ function SemLoss(functions...; loss_weights = nothing, kwargs...)
         loss_weights = Tuple(SemWeight(nothing) for _ in 1:length(functions))
     end
 
-    return SemLoss(
-        functions,
-        loss_weights
-        )
+    return SemLoss(functions, loss_weights)
 end
 
 # weights for loss functions or models. If the weight is nothing, multiplication returns the second argument
@@ -77,7 +76,7 @@ struct SemWeight{T}
 end
 
 Base.:*(x::SemWeight{Nothing}, y) = y
-Base.:*(x::SemWeight, y) = x.w*y
+Base.:*(x::SemWeight, y) = x.w * y
 
 """
 Supertype of all objects that can serve as the `optimizer` field of a SEM.
@@ -86,14 +85,14 @@ If you want to connect the SEM package to a new optimization backend, you should
 """
 abstract type SemOptimizer{E} end
 
-engine(::Type{SemOptimizer{E}}) where E = E
+engine(::Type{SemOptimizer{E}}) where {E} = E
 engine(optimizer::SemOptimizer) = engine(typeof(optimizer))
 
 SemOptimizer(args...; engine::Symbol = :Optim, kwargs...) =
     SemOptimizer{engine}(args...; kwargs...)
 
 # fallback optimizer constructor
-function SemOptimizer{E}(args...; kwargs...) where E
+function SemOptimizer{E}(args...; kwargs...) where {E}
     throw(ErrorException("$E optimizer is not supported."))
 end
 
@@ -112,10 +111,10 @@ Computed model-implied values that should be compared with the observed data to 
 e. g. the model implied covariance or mean.
 If you would like to implement a different notation, e.g. LISREL, you should implement a subtype of SemImply.
 """
-abstract type SemImply{MS <: MeanStructure, HE <: HessianEvaluation} end
+abstract type SemImply{MS<:MeanStructure,HE<:HessianEvaluation} end
 
-MeanStructure(::Type{<:SemImply{MS}}) where MS <: MeanStructure = MS
-HessianEvaluation(::Type{<:SemImply{MS,HE}}) where {MS, HE <: MeanStructure} = HE
+MeanStructure(::Type{<:SemImply{MS}}) where {MS<:MeanStructure} = MS
+HessianEvaluation(::Type{<:SemImply{MS,HE}}) where {MS,HE<:MeanStructure} = HE
 
 "Subtype of SemImply for all objects that can serve as the imply field of a SEM and use some form of symbolic precomputation."
 abstract type SemImplySymbolic{MS,HE} <: SemImply{MS,HE} end
@@ -150,7 +149,8 @@ Returns a Sem with fields
 - `loss::SemLoss`: Computes the objective and gradient of a sum of loss functions. See also [`SemLoss`](@ref).
 - `optimizer::SemOptimizer`: Connects the model to the optimizer. See also [`SemOptimizer`](@ref).
 """
-mutable struct Sem{O <: SemObserved, I <: SemImply, L <: SemLoss, D <: SemOptimizer} <: AbstractSemSingle{O, I, L, D}
+mutable struct Sem{O<:SemObserved,I<:SemImply,L<:SemLoss,D<:SemOptimizer} <:
+               AbstractSemSingle{O,I,L,D}
     observed::O
     imply::I
     loss::L
@@ -178,7 +178,8 @@ Returns a Sem with fields
 - `loss::SemLoss`: Computes the objective and gradient of a sum of loss functions. See also [`SemLoss`](@ref).
 - `optimizer::SemOptimizer`: Connects the model to the optimizer. See also [`SemOptimizer`](@ref).
 """
-struct SemFiniteDiff{O <: SemObserved, I <: SemImply, L <: SemLoss, D <: SemOptimizer} <: AbstractSemSingle{O, I, L, D}
+struct SemFiniteDiff{O<:SemObserved,I<:SemImply,L<:SemLoss,D<:SemOptimizer} <:
+       AbstractSemSingle{O,I,L,D}
     observed::O
     imply::I
     loss::L
@@ -207,7 +208,7 @@ Returns a SemEnsemble with fields
 - `optimizer::SemOptimizer`: Connects the model to the optimizer. See also [`SemOptimizer`](@ref).
 - `params::Dict`: Stores parameter labels and their position.
 """
-struct SemEnsemble{N, T <: Tuple, V <: AbstractVector, D, I} <: AbstractSemCollection
+struct SemEnsemble{N,T<:Tuple,V<:AbstractVector,D,I} <: AbstractSemCollection
     n::N
     sems::T
     weights::V
@@ -222,7 +223,7 @@ function SemEnsemble(models...; optimizer = SemOptimizerOptim, weights = nothing
 
     if isnothing(weights)
         nobs_total = sum(n_obs, models)
-        weights = [n_obs(model)/nobs_total for model in models]
+        weights = [n_obs(model) / nobs_total for model in models]
     end
 
     # check param equality
@@ -237,16 +238,10 @@ function SemEnsemble(models...; optimizer = SemOptimizerOptim, weights = nothing
 
     # optimizer
     if !isa(optimizer, SemOptimizer)
-        optimizer = optimizer(;kwargs...)
+        optimizer = optimizer(; kwargs...)
     end
 
-    return SemEnsemble(
-        n,
-        models,
-        weights,
-        optimizer,
-        params1
-        )
+    return SemEnsemble(n, models, weights, optimizer, params1)
 end
 
 params(ensemble::SemEnsemble) = ensemble.params
@@ -315,8 +310,7 @@ params(spec::SemSpecification) = spec.params
 nparams(spec::SemSpecification) = length(params(spec))
 
 # observed + latent
-vars(spec::SemSpecification) =
-    error("vars(spec::$(typeof(spec))) is not implemented")
+vars(spec::SemSpecification) = error("vars(spec::$(typeof(spec))) is not implemented")
 observed_vars(spec::SemSpecification) =
     error("observed_vars(spec::$(typeof(spec))) is not implemented")
 latent_vars(spec::SemSpecification) =

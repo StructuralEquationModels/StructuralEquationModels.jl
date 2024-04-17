@@ -29,7 +29,7 @@ Analytic gradients and hessians are available.
 ## Implementation
 Subtype of `SemLossFunction`.
 """
-struct SemRidge{P, W1, W2, GT, HT} <: SemLossFunction{ExactHessian}
+struct SemRidge{P,W1,W2,GT,HT} <: SemLossFunction{ExactHessian}
     α::P
     which::W1
     which_H::W2
@@ -43,16 +43,21 @@ end
 ############################################################################
 
 function SemRidge(;
-        α_ridge,
-        which_ridge,
-        nparams,
-        parameter_type = Float64,
-        imply = nothing,
-        kwargs...)
+    α_ridge,
+    which_ridge,
+    nparams,
+    parameter_type = Float64,
+    imply = nothing,
+    kwargs...,
+)
 
     if eltype(which_ridge) <: Symbol
         if isnothing(imply)
-            throw(ArgumentError("When referring to parameters by label, `imply = ...` has to be specified"))
+            throw(
+                ArgumentError(
+                    "When referring to parameters by label, `imply = ...` has to be specified",
+                ),
+            )
         else
             param_indices = Dict(param => i for (i, param) in enumerate(params(imply)))
             which_ridge = [param_indices[param] for param in params(imply)]
@@ -63,24 +68,25 @@ function SemRidge(;
         α_ridge,
         which_ridge,
         which_H,
-
         zeros(parameter_type, nparams),
-        zeros(parameter_type, nparams, nparams))
+        zeros(parameter_type, nparams, nparams),
+    )
 end
 
 ############################################################################################
 ### methods
 ############################################################################################
 
-objective(ridge::SemRidge, model::AbstractSem, par) = @views ridge.α*sum(abs2, par[ridge.which])
+objective(ridge::SemRidge, model::AbstractSem, par) =
+    @views ridge.α * sum(abs2, par[ridge.which])
 
 function gradient(ridge::SemRidge, model::AbstractSem, par)
-    @views ridge.gradient[ridge.which] .= (2*ridge.α)*par[ridge.which]
+    @views ridge.gradient[ridge.which] .= (2 * ridge.α) * par[ridge.which]
     return ridge.gradient
 end
 
 function hessian(ridge::SemRidge, model::AbstractSem, par)
-    @views @. ridge.hessian[ridge.which_H] .= 2*ridge.α
+    @views @. ridge.hessian[ridge.which_H] .= 2 * ridge.α
     return ridge.hessian
 end
 

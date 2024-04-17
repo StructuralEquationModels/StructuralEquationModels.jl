@@ -17,7 +17,7 @@ Fitted structural equation model.
 - `n_iterations(::SemFit)` -> number of iterations
 - `convergence(::SemFit)` -> convergence properties
 """
-mutable struct SemFit{Mi, So, St, Mo, O}
+mutable struct SemFit{Mi,So,St,Mo,O}
     minimum::Mi
     solution::So
     start_val::St

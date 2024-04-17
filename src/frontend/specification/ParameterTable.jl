@@ -2,7 +2,7 @@
 ### Types
 ############################################################################################
 
-mutable struct ParameterTable{C, V} <: AbstractParameterTable
+mutable struct ParameterTable{C,V} <: AbstractParameterTable
     columns::C
     variables::V
     params::Vector{Symbol}
@@ -13,9 +13,11 @@ end
 ############################################################################################
 
 # constuct an empty table
-function ParameterTable(; observed_vars::Union{AbstractVector{Symbol}, Nothing}=nothing,
-                          latent_vars::Union{AbstractVector{Symbol}, Nothing}=nothing,
-                          params::Union{AbstractVector{Symbol}, Nothing}=nothing)
+function ParameterTable(;
+    observed_vars::Union{AbstractVector{Symbol},Nothing} = nothing,
+    latent_vars::Union{AbstractVector{Symbol},Nothing} = nothing,
+    params::Union{AbstractVector{Symbol},Nothing} = nothing,
+)
     columns = (
         from = Vector{Symbol}(),
         relation = Vector{Symbol}(),
@@ -31,18 +33,23 @@ function ParameterTable(; observed_vars::Union{AbstractVector{Symbol}, Nothing}=
     vars = (
         latent = !isnothing(latent_vars) ? copy(latent_vars) : Vector{Symbol}(),
         observed = !isnothing(observed_vars) ? copy(observed_vars) : Vector{Symbol}(),
-        sorted = Vector{Symbol}()
+        sorted = Vector{Symbol}(),
     )
 
-    return ParameterTable(columns, vars,
-                          !isnothing(params) ? copy(params) : Vector{Symbol}())
+    return ParameterTable(
+        columns,
+        vars,
+        !isnothing(params) ? copy(params) : Vector{Symbol}(),
+    )
 end
 
 # checks if params vector contain all ids from param_refs
 # and optionally appends missing ones
-function check_params(params::AbstractVector{Symbol},
-                      param_refs::AbstractVector{Symbol};
-                      append::Bool = false)
+function check_params(
+    params::AbstractVector{Symbol},
+    param_refs::AbstractVector{Symbol};
+    append::Bool = false,
+)
     param_refset = Set(id for id in param_refs if id != :const)
     undecl_params = setdiff(param_refset, params)
     if !isempty(undecl_params)
@@ -55,22 +62,30 @@ function check_params(params::AbstractVector{Symbol},
                 end
             end
         else
-            throw(ArgumentError("$(length(undecl_params)) parameters present in the table, but are not declared: " *
-                            join(sort!(collect(undecl_params)))))
+            throw(
+                ArgumentError(
+                    "$(length(undecl_params)) parameters present in the table, but are not declared: " *
+                    join(sort!(collect(undecl_params))),
+                ),
+            )
         end
     end
 end
 
 # new parameter table with different parameters order
-function ParameterTable(partable::ParameterTable;
-                        params::Union{AbstractVector{Symbol}, Nothing}=nothing)
+function ParameterTable(
+    partable::ParameterTable;
+    params::Union{AbstractVector{Symbol},Nothing} = nothing,
+)
     isnothing(params) || check_params(params, partable.columns.param)
 
-    newtable = ParameterTable(observed_vars = observed_vars(partable),
-                              latent_vars = latent_vars(partable),
-                              params = params)
-    newtable.columns = NamedTuple(col => copy(values)
-                                  for (col, values) in pairs(partable.columns))
+    newtable = ParameterTable(
+        observed_vars = observed_vars(partable),
+        latent_vars = latent_vars(partable),
+        params = params,
+    )
+    newtable.columns =
+        NamedTuple(col => copy(values) for (col, values) in pairs(partable.columns))
 
     return newtable
 end
@@ -92,21 +107,23 @@ function Base.convert(::Type{Dict}, partable::ParameterTable)
     return partable.columns
 end
 
-function Base.convert(::Type{ParameterTable}, partable::ParameterTable;
-                      params::Union{AbstractVector{Symbol}, Nothing}=nothing)
+function Base.convert(
+    ::Type{ParameterTable},
+    partable::ParameterTable;
+    params::Union{AbstractVector{Symbol},Nothing} = nothing,
+)
     return isnothing(params) || partable.params == params ? partable :
-        ParameterTable(partable; params=params)
+           ParameterTable(partable; params = params)
 end
 
 function DataFrames.DataFrame(
-        partable::ParameterTable;
-        columns::Union{AbstractVector{Symbol}, Nothing} = nothing)
+    partable::ParameterTable;
+    columns::Union{AbstractVector{Symbol},Nothing} = nothing,
+)
     if isnothing(columns)
-        columns = [col for (col, vals) in pairs(partable.columns)
-                   if length(vals) > 0]
+        columns = [col for (col, vals) in pairs(partable.columns) if length(vals) > 0]
     end
-    return DataFrame([col => partable.columns[col]
-                      for col in columns])
+    return DataFrame([col => partable.columns[col] for col in columns])
 end
 
 ############################################################################################
@@ -114,28 +131,20 @@ end
 ############################################################################################
 
 function Base.show(io::IO, partable::ParameterTable)
-    relevant_columns = [
-        :from,
-        :relation,
-        :to,
-        :free,
-        :value_fixed,
-        :start,
-        :estimate,
-        :se,
-        :param]
-    shown_columns = filter!(col -> haskey(partable.columns, col) && length(partable.columns[col]) > 0,
-                            relevant_columns)
+    relevant_columns =
+        [:from, :relation, :to, :free, :value_fixed, :start, :estimate, :se, :param]
+    shown_columns = filter!(
+        col -> haskey(partable.columns, col) && length(partable.columns[col]) > 0,
+        relevant_columns,
+    )
 
     as_matrix = mapreduce(col -> partable.columns[col], hcat, shown_columns)
     pretty_table(
         io,
         as_matrix,
-        header = (
-            shown_columns,
-            [eltype(partable.columns[col]) for col in shown_columns]
-        ),
-        tf = PrettyTables.tf_compact)
+        header = (shown_columns, [eltype(partable.columns[col]) for col in shown_columns]),
+        tf = PrettyTables.tf_compact,
+    )
 
     print(io, "Latent Variables:    $(partable.variables.latent) \n")
     print(io, "Observed Variables:  $(partable.variables.observed) \n")
@@ -155,21 +164,22 @@ ParameterTableRow = @NamedTuple begin
     param::Symbol
 end
 
-Base.getindex(partable::ParameterTable, i::Integer) =
-    (from = partable.columns.from[i],
-     relation = partable.columns.relation[i],
-     to = partable.columns.to[i],
-     free = partable.columns.free[i],
-     value_fixed = partable.columns.value_fixed[i],
-     param = partable.columns.param[i],
-    )
+Base.getindex(partable::ParameterTable, i::Integer) = (
+    from = partable.columns.from[i],
+    relation = partable.columns.relation[i],
+    to = partable.columns.to[i],
+    free = partable.columns.free[i],
+    value_fixed = partable.columns.value_fixed[i],
+    param = partable.columns.param[i],
+)
 
 Base.length(partable::ParameterTable) = length(first(partable.columns))
 Base.eachindex(partable::ParameterTable) = Base.OneTo(length(partable))
 
 Base.eltype(::Type{<:ParameterTable}) = ParameterTableRow
 Base.iterate(partable::ParameterTable) = iterate(partable, 1)
-Base.iterate(partable::ParameterTable, i::Integer) = i > length(partable) ? nothing : (partable[i], i + 1)
+Base.iterate(partable::ParameterTable, i::Integer) =
+    i > length(partable) ? nothing : (partable[i], i + 1)
 
 # Sorting ----------------------------------------------------------------------------------
 
@@ -192,17 +202,18 @@ and allow faster calculations.
 """
 function sort_vars!(partable::ParameterTable)
 
-    vars = [partable.variables.latent;
-            partable.variables.observed]
+    vars = [
+        partable.variables.latent
+        partable.variables.observed
+    ]
 
     # regression edges (excluding intercept)
-    edges = [(from, to)
-             for (reltype, from, to) in
-                    zip(partable.columns.relation,
-                        partable.columns.from,
-                        partable.columns.to)
-             if (reltype == :→) && (from != Symbol("1"))]
-    sort!(edges, by=last) # sort edges by target
+    edges = [
+        (from, to) for (reltype, from, to) in
+        zip(partable.columns.relation, partable.columns.from, partable.columns.to) if
+        (reltype == :→) && (from != Symbol("1"))
+    ]
+    sort!(edges, by = last) # sort edges by target
 
     sorted_vars = Vector{Symbol}()
 
@@ -212,7 +223,7 @@ function sort_vars!(partable::ParameterTable)
 
         for (i, var) in enumerate(vars)
             # check if var has any incoming edge
-            eix = searchsortedfirst(edges, (var, var), by=last)
+            eix = searchsortedfirst(edges, (var, var), by = last)
             if !(eix <= length(edges) && last(edges[eix]) == var)
                 # var is source, no edges to it
                 push!(sorted_vars, var)
@@ -225,11 +236,11 @@ function sort_vars!(partable::ParameterTable)
         end
 
         # if acyclic is false, all vars have incoming edge
-        acyclic || throw(CyclicModelError("your model is cyclic and therefore can not be ordered"))
+        acyclic ||
+            throw(CyclicModelError("your model is cyclic and therefore can not be ordered"))
     end
 
-    copyto!(resize!(partable.variables.sorted, length(sorted_vars)),
-            sorted_vars)
+    copyto!(resize!(partable.variables.sorted, length(sorted_vars)), sorted_vars)
     @assert length(partable.variables.sorted) == nvars(partable)
 
     return partable
@@ -259,10 +270,12 @@ end
 ############################################################################################
 
 # update generic ---------------------------------------------------------------------------
-function update_partable!(partable::ParameterTable,
-                          column::Symbol,
-                          param_values::AbstractDict{Symbol},
-                          default::Any = nothing)
+function update_partable!(
+    partable::ParameterTable,
+    column::Symbol,
+    param_values::AbstractDict{Symbol},
+    default::Any = nothing,
+)
     coldata = partable.columns[column]
     resize!(coldata, length(partable))
     for (i, id) in enumerate(partable.columns.param)
@@ -272,8 +285,7 @@ function update_partable!(partable::ParameterTable,
         else
             if isnothing(default)
                 throw(KeyError(id))
-            elseif (default isa AbstractVector) &&
-               (length(default) == length(partable))
+            elseif (default isa AbstractVector) && (length(default) == length(partable))
                 coldata[i] = default[i]
             else
                 coldata[i] = default
@@ -283,15 +295,21 @@ function update_partable!(partable::ParameterTable,
     return partable
 end
 
-function update_partable!(partable::ParameterTable,
-                          column::Symbol,
-                          params::AbstractVector{Symbol},
-                          values::AbstractVector,
-                          default::Any = nothing)
-    length(params) == length(values) ||
-        throw(ArgumentError("The length of `params` ($(length(params))) and their `values` ($(length(values))) must be the same"))
+function update_partable!(
+    partable::ParameterTable,
+    column::Symbol,
+    params::AbstractVector{Symbol},
+    values::AbstractVector,
+    default::Any = nothing,
+)
+    length(params) == length(values) || throw(
+        ArgumentError(
+            "The length of `params` ($(length(params))) and their `values` ($(length(values))) must be the same",
+        ),
+    )
     dup_params = nonunique(params)
-    isempty(dup_params) || throw(ArgumentError("Duplicate parameters detected: $(join(dup_params, ", "))"))
+    isempty(dup_params) ||
+        throw(ArgumentError("Duplicate parameters detected: $(join(dup_params, ", "))"))
     params_dict = Dict(zip(params, values))
     update_partable!(partable, column, params_dict, default)
 end
@@ -304,9 +322,13 @@ end
 
 Write parameter estimates from `sem_fit` to the `:estimate` column of `partable`
 """
-update_estimate!(partable::ParameterTable, sem_fit::SemFit) =
-    update_partable!(partable, :estimate, params(sem_fit), sem_fit.solution,
-                     partable.columns.value_fixed)
+update_estimate!(partable::ParameterTable, sem_fit::SemFit) = update_partable!(
+    partable,
+    :estimate,
+    params(sem_fit),
+    sem_fit.solution,
+    partable.columns.value_fixed,
+)
 
 # fallback method for ensemble
 update_estimate!(partable::AbstractParameterTable, sem_fit::SemFit) =
@@ -324,15 +346,20 @@ Write starting values from `sem_fit` or `start_val` to the `:estimate` column of
     from `model`
 - `kwargs...`: are passed to `start_val`
 """
-update_start!(partable::AbstractParameterTable, sem_fit::SemFit) =
-    update_partable!(partable, :start, params(sem_fit), sem_fit.start_val,
-                     partable.columns.value_fixed)
+update_start!(partable::AbstractParameterTable, sem_fit::SemFit) = update_partable!(
+    partable,
+    :start,
+    params(sem_fit),
+    sem_fit.start_val,
+    partable.columns.value_fixed,
+)
 
 function update_start!(
-        partable::AbstractParameterTable,
-        model::AbstractSem,
-        start_val;
-        kwargs...)
+    partable::AbstractParameterTable,
+    model::AbstractSem,
+    start_val;
+    kwargs...,
+)
     if !(start_val isa Vector)
         start_val = start_val(model; kwargs...)
     end
@@ -355,18 +382,23 @@ Write hessian standard errors computed for `sem_fit` to the `:se` column of `par
 
 """
 function update_se_hessian!(
-        partable::AbstractParameterTable,
-        fit::SemFit;
-        method = :finitediff)
+    partable::AbstractParameterTable,
+    fit::SemFit;
+    method = :finitediff,
+)
     se = se_hessian(fit; method = method)
     return update_partable!(partable, :se, params(fit), se)
 end
 
 function variance_params(partable::ParameterTable)
-    res = [param for (param, rel, from, to) in
-                zip(partable.columns.param, partable.columns.relation,
-                    partable.columns.from, partable.columns.to)
-           if (rel == :↔) && (from == to)]
+    res = [
+        param for (param, rel, from, to) in zip(
+            partable.columns.param,
+            partable.columns.relation,
+            partable.columns.from,
+            partable.columns.to,
+        ) if (rel == :↔) && (from == to)
+    ]
     unique!(res)
 end
 
@@ -385,10 +417,16 @@ Note that the function combines the duplicate occurences of the
 same parameter in `partable` and will raise an error if the
 values do not match.
 """
-function param_values!(out::AbstractVector, partable::ParameterTable,
-                       col::Symbol = :estimate)
-    (length(out) == nparams(partable)) ||
-        throw(DimensionMismatch("The length of parameter values vector ($(length(out))) does not match the number of parameters ($(nparams(partable)))"))
+function param_values!(
+    out::AbstractVector,
+    partable::ParameterTable,
+    col::Symbol = :estimate,
+)
+    (length(out) == nparams(partable)) || throw(
+        DimensionMismatch(
+            "The length of parameter values vector ($(length(out))) does not match the number of parameters ($(nparams(partable)))",
+        ),
+    )
     param_index = Dict(param => i for (i, param) in enumerate(params(partable)))
     param_values_col = partable.columns[col]
     for (i, param) in enumerate(partable.columns.param)
@@ -397,7 +435,7 @@ function param_values!(out::AbstractVector, partable::ParameterTable,
         @assert !isnothing(param_ind) "Parameter table contains unregistered parameter :$param at row #$i"
         val = param_values_col[i]
         if !isnan(out[param_ind])
-            @assert out[param_ind] ≈ val atol=1E-10 "Parameter :$param value at row #$i ($val) differs from the earlier encountered value ($(out[param_ind]))"
+            @assert out[param_ind] ≈ val atol = 1E-10 "Parameter :$param value at row #$i ($val) differs from the earlier encountered value ($(out[param_ind]))"
         else
             out[param_ind] = val
         end
@@ -436,27 +474,43 @@ the names of variables in the tables (`from` and `to` columns)
 as well as the type of their relationship (`relation` column),
 and not by the names of the model parameters.
 """
-function lavaan_param_values!(out::AbstractVector,
-                              partable_lav, partable::ParameterTable,
-                              lav_col::Symbol = :est, lav_group = nothing)
+function lavaan_param_values!(
+    out::AbstractVector,
+    partable_lav,
+    partable::ParameterTable,
+    lav_col::Symbol = :est,
+    lav_group = nothing,
+)
 
     # find indices of all df row where f is true
     findallrows(f::Function, df) = findall(f(r) for r in eachrow(df))
 
-    (length(out) == nparams(partable)) || throw(DimensionMismatch("The length of parameter values vector ($(length(out))) does not match the number of parameters ($(nparams(partable)))"))
+    (length(out) == nparams(partable)) || throw(
+        DimensionMismatch(
+            "The length of parameter values vector ($(length(out))) does not match the number of parameters ($(nparams(partable)))",
+        ),
+    )
     partable_mask = findall(partable.columns[:free])
     param_index = Dict(param => i for (i, param) in enumerate(params(partable)))
 
     lav_values = partable_lav[:, lav_col]
-    for (from, to, type, id) in
-        zip([view(partable.columns[k], partable_mask)
-             for k in [:from, :to, :relation, :param]]...)
+    for (from, to, type, id) in zip(
+        [
+            view(partable.columns[k], partable_mask) for
+            k in [:from, :to, :relation, :param]
+        ]...,
+    )
 
         lav_ind = nothing
 
         if from == Symbol("1")
-            lav_ind = findallrows(r -> r[:lhs] == String(to) && r[:op] == "~1" &&
-                                  (isnothing(lav_group) || r[:group] == lav_group), partable_lav)
+            lav_ind = findallrows(
+                r ->
+                    r[:lhs] == String(to) &&
+                        r[:op] == "~1" &&
+                        (isnothing(lav_group) || r[:group] == lav_group),
+                partable_lav,
+            )
         else
             if type == :↔
                 lav_type = "~~"
@@ -470,22 +524,40 @@ function lavaan_param_values!(out::AbstractVector,
             end
 
             if lav_type == "~~"
-                lav_ind = findallrows(r -> ((r[:lhs] == String(from) && r[:rhs] == String(to)) ||
-                                        (r[:lhs] == String(to) && r[:rhs] == String(from))) &&
-                                        r[:op] == lav_type &&
-                                        (isnothing(lav_group) || r[:group] == lav_group),
-                                      partable_lav)
+                lav_ind = findallrows(
+                    r ->
+                        (
+                                (r[:lhs] == String(from) && r[:rhs] == String(to)) ||
+                                (r[:lhs] == String(to) && r[:rhs] == String(from))
+                            ) &&
+                            r[:op] == lav_type &&
+                            (isnothing(lav_group) || r[:group] == lav_group),
+                    partable_lav,
+                )
             else
-                lav_ind = findallrows(r -> r[:lhs] == String(from) && r[:rhs] == String(to) && r[:op] == lav_type &&
-                                      (isnothing(lav_group) || r[:group] == lav_group),
-                                      partable_lav)
+                lav_ind = findallrows(
+                    r ->
+                        r[:lhs] == String(from) &&
+                            r[:rhs] == String(to) &&
+                            r[:op] == lav_type &&
+                            (isnothing(lav_group) || r[:group] == lav_group),
+                    partable_lav,
+                )
             end
         end
 
         if length(lav_ind) == 0
-            throw(ErrorException("Parameter $id ($from $type $to) could not be found in the lavaan solution"))
+            throw(
+                ErrorException(
+                    "Parameter $id ($from $type $to) could not be found in the lavaan solution",
+                ),
+            )
         elseif length(lav_ind) > 1
-            throw(ErrorException("At least one parameter was found twice in the lavaan solution"))
+            throw(
+                ErrorException(
+                    "At least one parameter was found twice in the lavaan solution",
+                ),
+            )
         end
 
         param_ind = param_index[id]
@@ -493,7 +565,7 @@ function lavaan_param_values!(out::AbstractVector,
         if isnan(out[param_ind])
             out[param_ind] = param_val
         else
-            @assert out[param_ind] ≈ param_val atol=1E-10 "Parameter :$id value at row #$lav_ind ($param_val) differs from the earlier encountered value ($(out[param_ind]))"
+            @assert out[param_ind] ≈ param_val atol = 1E-10 "Parameter :$id value at row #$lav_ind ($param_val) differs from the earlier encountered value ($(out[param_ind]))"
         end
     end
 
@@ -516,10 +588,18 @@ the names of variables in the tables (`from` and `to` columns),
 and the type of their relationship (`relation` column),
 but not by the ids of the model parameters.
 """
-lavaan_param_values(partable_lav, partable::ParameterTable,
-                    lav_col::Symbol = :est, lav_group = nothing) =
-    lavaan_param_values!(fill(NaN, nparams(partable)),
-                         partable_lav, partable, lav_col, lav_group)
+lavaan_param_values(
+    partable_lav,
+    partable::ParameterTable,
+    lav_col::Symbol = :est,
+    lav_group = nothing,
+) = lavaan_param_values!(
+    fill(NaN, nparams(partable)),
+    partable_lav,
+    partable,
+    lav_col,
+    lav_group,
+)
 
 """
     lavaan_model(partable::ParameterTable)
@@ -530,16 +610,20 @@ function lavaan_model(partable::ParameterTable)
     latent_vars = Set(partable.variables.latent)
     observed_vars = Set(partable.variables.observed)
 
-    variance_defs = Dict{Symbol, IOBuffer}()
-    latent_dep_defs = Dict{Symbol, IOBuffer}()
-    latent_regr_defs = Dict{Symbol, IOBuffer}()
-    observed_regr_defs = Dict{Symbol, IOBuffer}()
+    variance_defs = Dict{Symbol,IOBuffer}()
+    latent_dep_defs = Dict{Symbol,IOBuffer}()
+    latent_regr_defs = Dict{Symbol,IOBuffer}()
+    observed_regr_defs = Dict{Symbol,IOBuffer}()
 
     model = IOBuffer()
-    for (from, to, rel, param, value, free) in
-        zip(partable.columns.from, partable.columns.to,
-            partable.columns.relation, partable.columns.param,
-            partable.columns.value_fixed, partable.columns.free,)
+    for (from, to, rel, param, value, free) in zip(
+        partable.columns.from,
+        partable.columns.to,
+        partable.columns.relation,
+        partable.columns.param,
+        partable.columns.value_fixed,
+        partable.columns.free,
+    )
 
         function append_param(io)
             if free

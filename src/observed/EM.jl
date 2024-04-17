@@ -28,7 +28,8 @@ function em_mvn(
     start_em = start_em_observed,
     max_iter_em::Integer = 100,
     rtol_em::Number = 1e-4,
-    kwargs...)
+    kwargs...,
+)
 
     n_man = SEM.n_man(patterns[1])
 
@@ -87,10 +88,15 @@ end
 
 # E and M steps -----------------------------------------------------------------------------
 
-function em_step!(Σ::AbstractMatrix, μ::AbstractVector,
-                  Σ₀::AbstractMatrix, μ₀::AbstractVector,
-                  patterns::AbstractVector{<:SemObservedMissingPattern},
-                  𝔼x_full, 𝔼xxᵀ_full)
+function em_step!(
+    Σ::AbstractMatrix,
+    μ::AbstractVector,
+    Σ₀::AbstractMatrix,
+    μ₀::AbstractVector,
+    patterns::AbstractVector{<:SemObservedMissingPattern},
+    𝔼x_full,
+    𝔼xxᵀ_full,
+)
     # E step, update 𝔼x and 𝔼xxᵀ
     copy!(μ, 𝔼x_full)
     copy!(Σ, 𝔼xxᵀ_full)
@@ -118,7 +124,7 @@ function em_step!(Σ::AbstractMatrix, μ::AbstractVector,
 
         # loop trough data
         @inbounds for rowdata in eachrow(pat.data)
-            mul!(𝔼xᵢu, Σuo, Σoo_chol \ (rowdata-μo))
+            mul!(𝔼xᵢu, Σuo, Σoo_chol \ (rowdata - μo))
             𝔼xᵢu .+= μu
             mul!(𝔼xxᵀuu, 𝔼xᵢu, 𝔼xᵢu', 1, 1)
             mul!(𝔼xxᵀuo, 𝔼xᵢu, rowdata', 1, 1)
@@ -126,10 +132,10 @@ function em_step!(Σ::AbstractMatrix, μ::AbstractVector,
             𝔼xo .+= rowdata
         end
 
-        Σ[o,o] .+= pat.data' * pat.data
-        Σ[u,o] .+= 𝔼xxᵀuo
-        Σ[o,u] .+= 𝔼xxᵀuo'
-        Σ[u,u] .+= 𝔼xxᵀuu
+        Σ[o, o] .+= pat.data' * pat.data
+        Σ[u, o] .+= 𝔼xxᵀuo
+        Σ[o, u] .+= 𝔼xxᵀuo'
+        Σ[u, u] .+= 𝔼xxᵀuu
 
         μ[o] .+= 𝔼xo
         μ[u] .+= 𝔼xu
@@ -152,7 +158,7 @@ function em_step!(Σ::AbstractMatrix, μ::AbstractVector,
     #    Σ .= 0
     #    Σ[diagind(em_model.Σ)] .= diag(Σ)
     #else
-        # Σ = Σ
+    # Σ = Σ
     #end
 
     return Σ, μ
@@ -182,13 +188,17 @@ function start_em_simple(patterns::AbstractVector{<:SemObservedMissingPattern}; 
     nvars = n_man(first(patterns))
     μ = zeros(nvars)
     Σ = rand(nvars, nvars)
-    Σ = Σ*Σ'
+    Σ = Σ * Σ'
     # Σ = Matrix(1.0I, n_man, n_man)
     return Σ, μ
 end
 
 # set to passed values
-function start_em_set(patterns::AbstractVector{<:SemObservedMissingPattern};
-                      obs_cov::AbstractMatrix, obs_mean::AbstractVector, kwargs...)
+function start_em_set(
+    patterns::AbstractVector{<:SemObservedMissingPattern};
+    obs_cov::AbstractMatrix,
+    obs_mean::AbstractVector,
+    kwargs...,
+)
     return copy(obs_cov), copy(obs_mean)
 end

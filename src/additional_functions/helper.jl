@@ -36,19 +36,18 @@ end
 
 # construct a vector of SemObserved objects
 # for each specified data row
-function observed(::Type{T}, data, rowinds;
-            args = (),
-            kwargs = NamedTuple()) where T <: SemObserved
-    return T[
-        T(args...;
-          data = Matrix(view(data, row, :)),
-          kwargs...)
-        for row in rowinds]
+function observed(
+    ::Type{T},
+    data,
+    rowinds;
+    args = (),
+    kwargs = NamedTuple(),
+) where {T<:SemObserved}
+    return T[T(args...; data = Matrix(view(data, row, :)), kwargs...) for row in rowinds]
 end
 
 function skipmissing_mean(mat::AbstractMatrix)
-    means = [mean(skipmissing(coldata))
-             for coldata in eachcol(mat)]
+    means = [mean(skipmissing(coldata)) for coldata in eachcol(mat)]
     return means
 end
 
@@ -104,7 +103,7 @@ end
 function sparse_outer_mul!(C, A, B::Vector, ind) #computes A*S*B -> C, where ind gives the entries of S that are 1
     fill!(C, 0.0)
     @views @inbounds for i in 1:length(ind)
-        C .+= B[ind[i][2]].*A[:, ind[i][1]]
+        C .+= B[ind[i][2]] .* A[:, ind[i][1]]
     end
 end
 
@@ -112,13 +111,13 @@ end
 # triangular entries into a vectorized form of a n×n symmetric matrix,
 # opposite of elimination_matrix()
 function duplication_matrix(n::Integer)
-    ntri = div(n*(n+1), 2)
+    ntri = div(n * (n + 1), 2)
     D = zeros(n^2, ntri)
     for j in 1:n
         for i in j:n
-            tri_ix = (j-1)*n + i - div(j*(j-1), 2)
-            D[j + n*(i-1), tri_ix] = 1
-            D[i + n*(j-1), tri_ix] = 1
+            tri_ix               = (j - 1) * n + i - div(j * (j - 1), 2)
+            D[j+n*(i-1), tri_ix] = 1
+            D[i+n*(j-1), tri_ix] = 1
         end
     end
     return D
@@ -129,12 +128,12 @@ end
 # into vector of its lower triangular entries,
 # opposite of duplication_matrix()
 function elimination_matrix(n::Integer)
-    ntri = div(n*(n+1), 2)
+    ntri = div(n * (n + 1), 2)
     L = zeros(ntri, n^2)
     for j in 1:n
         for i in j:n
-            tri_ix = (j-1)*n + i - div(j*(j-1), 2)
-            L[tri_ix, i + n*(j-1)] = 1
+            tri_ix = (j - 1) * n + i - div(j * (j - 1), 2)
+            L[tri_ix, i+n*(j-1)] = 1
         end
     end
     return L
@@ -143,7 +142,7 @@ end
 # returns the vector of non-unique values in the order of appearance
 # each non-unique values is reported once
 function nonunique(values::AbstractVector)
-    value_counts = Dict{eltype(values), Int}()
+    value_counts = Dict{eltype(values),Int}()
     res = similar(values, 0)
     for v in values
         n = get!(value_counts, v, 0)

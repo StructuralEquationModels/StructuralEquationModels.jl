@@ -37,11 +37,8 @@ use this if you are sure your observed data is in the right format.
 ## Additional keyword arguments:
 - `spec_colnames::Vector{Symbol} = nothing`: overwrites column names of the specification object
 """
-struct SemObservedMissing{
-        A <: AbstractMatrix,
-        P <: SemObservedMissingPattern,
-        T <: Real
-        } <: SemObserved
+struct SemObservedMissing{A<:AbstractMatrix,P<:SemObservedMissingPattern,T<:Real} <:
+       SemObserved
     data::A
     n_man::Int
     n_obs::Int
@@ -56,13 +53,12 @@ end
 ############################################################################################
 
 function SemObservedMissing(;
-        specification::Union{SemSpecification, Nothing},
-        data,
-
-        obs_colnames = nothing,
-        spec_colnames = nothing,
-
-        kwargs...)
+    specification::Union{SemSpecification,Nothing},
+    data,
+    obs_colnames = nothing,
+    spec_colnames = nothing,
+    kwargs...,
+)
 
     if isnothing(spec_colnames) && !isnothing(specification)
         spec_colnames = observed_vars(specification)
@@ -73,18 +69,22 @@ function SemObservedMissing(;
             try
                 data = data[:, spec_colnames]
             catch
-                throw(ArgumentError(
-                    "Your `data` can not be indexed by symbols. "*
-                    "Maybe you forgot to provide column names via the `obs_colnames = ...` argument.")
-                    )
+                throw(
+                    ArgumentError(
+                        "Your `data` can not be indexed by symbols. " *
+                        "Maybe you forgot to provide column names via the `obs_colnames = ...` argument.",
+                    ),
+                )
             end
         else
             if data isa DataFrame
-                throw(ArgumentError(
-                    "You passed your data as a `DataFrame`, but also specified `obs_colnames`. "*
-                    "Please make sure the column names of your data frame indicate the correct variables "*
-                    "or pass your data in a different format.")
-                    )
+                throw(
+                    ArgumentError(
+                        "You passed your data as a `DataFrame`, but also specified `obs_colnames`. " *
+                        "Please make sure the column names of your data frame indicate the correct variables " *
+                        "or pass your data in a different format.",
+                    ),
+                )
             end
 
             if !(eltype(obs_colnames) <: Symbol)
@@ -102,7 +102,7 @@ function SemObservedMissing(;
     n_obs, n_man = size(data)
 
     # detect all different missing patterns with their row indices
-    pattern_to_rows = Dict{BitVector, Vector{Int}}()
+    pattern_to_rows = Dict{BitVector,Vector{Int}}()
     for (i, datarow) in zip(axes(data, 1), eachrow(data))
         pattern = BitVector(.!ismissing.(datarow))
         if sum(pattern) > 0 # skip all-missing rows
@@ -111,9 +111,10 @@ function SemObservedMissing(;
         end
     end
     # process each pattern and sort from most to least number of observed vars
-    patterns = [SemObservedMissingPattern(pat, rows, data)
-                for (pat, rows) in pairs(pattern_to_rows)]
-    sort!(patterns, by=nmissed_vars)
+    patterns = [
+        SemObservedMissingPattern(pat, rows, data) for (pat, rows) in pairs(pattern_to_rows)
+    ]
+    sort!(patterns, by = nmissed_vars)
 
     em_cov, em_mean = em_mvn(patterns; kwargs...)
 

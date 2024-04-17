@@ -1,5 +1,5 @@
 # mutate by moving in the gradient direction
-mutable struct AdamMutation{M <: AbstractSem, O, S} <: MutationOperator
+mutable struct AdamMutation{M<:AbstractSem,O,S} <: MutationOperator
     model::M
     optim::O
     opt_state::S
@@ -10,12 +10,17 @@ mutable struct AdamMutation{M <: AbstractSem, O, S} <: MutationOperator
         params_fraction = params[:AdamMutation_params_fraction]
         opt_state = Optimisers.init(optim, Vector{Float64}(undef, nparams(model)))
 
-        new{typeof(model), typeof(optim), typeof(opt_state)}(
-            model, optim, opt_state, params_fraction)
+        new{typeof(model),typeof(optim),typeof(opt_state)}(
+            model,
+            optim,
+            opt_state,
+            params_fraction,
+        )
     end
 end
 
-Base.show(io::IO, op::AdamMutation) = print(io, "AdamMutation(", op.optim, " state[3]=", op.opt_state[3], ")")
+Base.show(io::IO, op::AdamMutation) =
+    print(io, "AdamMutation(", op.optim, " state[3]=", op.opt_state[3], ")")
 
 """
 Default parameters for `AdamMutation`.

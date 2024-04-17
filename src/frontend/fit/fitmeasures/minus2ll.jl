@@ -22,19 +22,18 @@ minus2ll(minimum::Number, model::AbstractSemSingle) =
 # SemML ------------------------------------------------------------------------------------
 function minus2ll(lossfun::SemML, minimum::Number, model::AbstractSemSingle)
     obs = observed(model)
-    return n_obs(obs)*(minimum + log(2π)*n_man(obs))
+    return n_obs(obs) * (minimum + log(2π) * n_man(obs))
 end
 
 # WLS --------------------------------------------------------------------------------------
-minus2ll(lossfun::SemWLS, minimum::Number, model::AbstractSemSingle) =
-    missing
+minus2ll(lossfun::SemWLS, minimum::Number, model::AbstractSemSingle) = missing
 
 # compute likelihood for missing data - H0 -------------------------------------------------
 # -2ll = (∑ log(2π)*(nᵢ + mᵢ)) + F*n
 function minus2ll(lossfun::SemFIML, minimum::Number, model::AbstractSemSingle)
     obs = observed(model)::SemObservedMissing
     F = minimum * n_obs(obs)
-    F += log(2π)*sum(pat -> n_obs(pat)*nobserved_vars(pat), obs.patterns)
+    F += log(2π) * sum(pat -> n_obs(pat) * nobserved_vars(pat), obs.patterns)
     return F
 end
 
@@ -57,7 +56,7 @@ function minus2ll(observed::SemObservedMissing)
         if n_obs(pat) > 1
             F_pat += dot(pat.obs_cov, Σᵢ⁻¹)
         end
-        F += (F_pat + log(2π)*nobserved_vars(pat))*n_obs(pat)
+        F += (F_pat + log(2π) * nobserved_vars(pat)) * n_obs(pat)
     end
 
     #F *= n_obs(observed)

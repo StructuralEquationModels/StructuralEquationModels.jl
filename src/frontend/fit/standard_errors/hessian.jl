@@ -17,8 +17,11 @@ function se_hessian(fit::SemFit; method = :finitediff)
     if method == :analytic
         evaluate!(nothing, nothing, H, fit.model, params)
     elseif method == :finitediff
-        FiniteDiff.finite_difference_hessian!(H,
-            p -> evaluate!(eltype(H), nothing, nothing, fit.model, p), params)
+        FiniteDiff.finite_difference_hessian!(
+            H,
+            p -> evaluate!(eltype(H), nothing, nothing, fit.model, p),
+            params,
+        )
     elseif method == :optimizer
         error("Standard errors from the optimizer hessian are not implemented yet")
     elseif method == :expected
@@ -29,7 +32,7 @@ function se_hessian(fit::SemFit; method = :finitediff)
 
     H_chol = cholesky!(Symmetric(H))
     H_inv = LinearAlgebra.inv!(H_chol)
-    return [sqrt(c*H_inv[i]) for i in diagind(H_inv)]
+    return [sqrt(c * H_inv[i]) for i in diagind(H_inv)]
 end
 
 # Addition functions -------------------------------------------------------------
@@ -40,16 +43,13 @@ function H_scaling(model::AbstractSemSingle)
     return H_scaling(model.loss.functions[1], model)
 end
 
-H_scaling(lossfun::SemML, model::AbstractSemSingle) =
-    2/(n_obs(model)-1)
+H_scaling(lossfun::SemML, model::AbstractSemSingle) = 2 / (n_obs(model) - 1)
 
 function H_scaling(lossfun::SemWLS, model::AbstractSemSingle)
     @warn "Standard errors for WLS are only correct if a GLS weight matrix (the default) is used."
-    return 2/(n_obs(model)-1)
+    return 2 / (n_obs(model) - 1)
 end
 
-H_scaling(lossfun::SemFIML, model::AbstractSemSingle) =
-    2/n_obs(model)
+H_scaling(lossfun::SemFIML, model::AbstractSemSingle) = 2 / n_obs(model)
 
-H_scaling(model::SemEnsemble) =
-    2/n_obs(model)
+H_scaling(model::SemEnsemble) = 2 / n_obs(model)

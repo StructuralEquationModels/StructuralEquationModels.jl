@@ -36,13 +36,16 @@ function prepare_start_params(start_val, model::AbstractSem; kwargs...)
     if isnothing(start_val)
         # default function for starting parameters
         # FABIN3 for single models, simple algorithm for ensembles
-        start_val = model isa AbstractSemSingle ?
-            start_fabin3(model; kwargs...) :
+        start_val =
+            model isa AbstractSemSingle ? start_fabin3(model; kwargs...) :
             start_simple(model; kwargs...)
     end
     if start_val isa AbstractVector
-        (length(start_val) == nparams(model)) ||
-            throw(DimensionMismatch("The length of `start_val` vector ($(length(start_val))) does not match the number of model parameters ($(nparams(model)))."))
+        (length(start_val) == nparams(model)) || throw(
+            DimensionMismatch(
+                "The length of `start_val` vector ($(length(start_val))) does not match the number of model parameters ($(nparams(model))).",
+            ),
+        )
     elseif start_val isa AbstractDict
         start_val = [start_val[param] for param in params(model)] # convert to a vector
     else # function
@@ -54,40 +57,60 @@ function prepare_start_params(start_val, model::AbstractSem; kwargs...)
 end
 
 # define a vector of parameter lower bounds: use user-specified vector as is
-function lower_bounds(bounds::AbstractVector, model::AbstractSem;
-                      default::Number, variance_default::Number)
-    length(bound) == nparams(model) ||
-        throw(DimensionMismatch("The length of `bounds` vector ($(length(bounds))) does not match the number of model parameters ($(nparams(model)))."))
+function lower_bounds(
+    bounds::AbstractVector,
+    model::AbstractSem;
+    default::Number,
+    variance_default::Number,
+)
+    length(bound) == nparams(model) || throw(
+        DimensionMismatch(
+            "The length of `bounds` vector ($(length(bounds))) does not match the number of model parameters ($(nparams(model))).",
+        ),
+    )
     return bounds
 end
 
 # define a vector of parameter lower bounds given a dictionary and default values
-function lower_bounds(bounds::Union{AbstractDict, Nothing}, model::AbstractSem;
-                      default::Number, variance_default::Number)
+function lower_bounds(
+    bounds::Union{AbstractDict,Nothing},
+    model::AbstractSem;
+    default::Number,
+    variance_default::Number,
+)
     varparams = Set(variance_params(model.imply.ram_matrices))
-    res = [begin
-        def = in(p, varparams) ? variance_default : default
-        isnothing(bounds) ? def : get(bounds, p, def)
-    end for p in SEM.params(model)]
+    res = [
+        begin
+            def = in(p, varparams) ? variance_default : default
+            isnothing(bounds) ? def : get(bounds, p, def)
+        end for p in SEM.params(model)
+    ]
 
     return res
 end
 
 # define a vector of parameter upper bounds: use user-specified vector as is
-function upper_bounds(bounds::AbstractVector, model::AbstractSem;
-                      default::Number)
-    length(bound) == nparams(model) ||
-        throw(DimensionMismatch("The length of `bounds` vector ($(length(bounds))) does not match the number of model parameters ($(nparams(model)))."))
+function upper_bounds(bounds::AbstractVector, model::AbstractSem; default::Number)
+    length(bound) == nparams(model) || throw(
+        DimensionMismatch(
+            "The length of `bounds` vector ($(length(bounds))) does not match the number of model parameters ($(nparams(model))).",
+        ),
+    )
     return bounds
 end
 
 # define a vector of parameter lower bounds given a dictionary and default values
-function upper_bounds(bounds::Union{AbstractDict, Nothing}, model::AbstractSem;
-                      default::Number)
-    res = [begin
-        def = default
-        isnothing(bounds) ? def : get(bounds, p, def)
-    end for p in SEM.params(model)]
+function upper_bounds(
+    bounds::Union{AbstractDict,Nothing},
+    model::AbstractSem;
+    default::Number,
+)
+    res = [
+        begin
+            def = default
+            isnothing(bounds) ? def : get(bounds, p, def)
+        end for p in SEM.params(model)
+    ]
 
     return res
 end

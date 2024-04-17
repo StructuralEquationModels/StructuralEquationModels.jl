@@ -30,17 +30,22 @@ label(args...) = Label(args)
 ### constructor for parameter table from graph
 ############################################################################################
 
-function ParameterTable(graph::AbstractStenoGraph;
-                        observed_vars, latent_vars,
-                        params::Union{AbstractVector{Symbol}, Nothing} = nothing,
-                        group::Integer = 1, param_prefix::Symbol = :θ)
+function ParameterTable(
+    graph::AbstractStenoGraph;
+    observed_vars,
+    latent_vars,
+    params::Union{AbstractVector{Symbol},Nothing} = nothing,
+    group::Integer = 1,
+    param_prefix::Symbol = :θ,
+)
     graph = unique(graph)
     n = length(graph)
 
     partable = ParameterTable(
         latent_vars = latent_vars,
         observed_vars = observed_vars,
-        params = params)
+        params = params,
+    )
     from = resize!(partable.columns.from, n)
     relation = resize!(partable.columns.relation, n)
     to = resize!(partable.columns.to, n)
@@ -60,7 +65,11 @@ function ParameterTable(graph::AbstractStenoGraph;
         elseif edge isa UndirectedEdge
             relation[i] = :↔
         else
-            throw(ArgumentError("The graph contains an unsupported edge of type $(typeof(edge))."))
+            throw(
+                ArgumentError(
+                    "The graph contains an unsupported edge of type $(typeof(edge)).",
+                ),
+            )
         end
         if element isa ModifiedEdge
             for modifier in values(element.modifiers)
@@ -102,7 +111,7 @@ function ParameterTable(graph::AbstractStenoGraph;
     end
 
     # append params referenced in the table if params not explicitly provided
-    check_params(partable.params, param_refs, append=isnothing(params))
+    check_params(partable.params, param_refs, append = isnothing(params))
 
     return partable
 end
@@ -111,20 +120,26 @@ end
 ### constructor for EnsembleParameterTable from graph
 ############################################################################################
 
-function EnsembleParameterTable(graph::AbstractStenoGraph;
-                                observed_vars, latent_vars, groups,
-                                params::Union{AbstractVector{Symbol}, Nothing} = nothing)
+function EnsembleParameterTable(
+    graph::AbstractStenoGraph;
+    observed_vars,
+    latent_vars,
+    groups,
+    params::Union{AbstractVector{Symbol},Nothing} = nothing,
+)
 
     graph = unique(graph)
 
-    partables = Dict(group => ParameterTable(
+    partables = Dict(
+        group => ParameterTable(
             graph;
             observed_vars = observed_vars,
             latent_vars = latent_vars,
             params = params,
             group = i,
-            param_prefix = Symbol(:g, group))
-            for (i, group) in enumerate(groups))
+            param_prefix = Symbol(:g, group),
+        ) for (i, group) in enumerate(groups)
+    )
 
     return EnsembleParameterTable(partables, params = params)
 end

@@ -42,20 +42,25 @@ end
 ### Constructors
 ############################################################################################
 
-function SemML(; observed::SemObserved,
-                 specification::SemSpecification,
-                 approximate_hessian::Bool = false,
-                 kwargs...)
+function SemML(;
+    observed::SemObserved,
+    specification::SemSpecification,
+    approximate_hessian::Bool = false,
+    kwargs...,
+)
     obsXobs = parent(obs_cov(observed))
     nobs = nobserved_vars(specification)
     nvar = nvars(specification)
 
-    return SemML{approximate_hessian ? ApproximateHessian : ExactHessian,
-                 typeof(obsXobs)}(
-        similar(obsXobs), similar(obsXobs), similar(obsXobs),
+    return SemML{approximate_hessian ? ApproximateHessian : ExactHessian,typeof(obsXobs)}(
+        similar(obsXobs),
+        similar(obsXobs),
+        similar(obsXobs),
         similar(obsXobs, (nobs, nvar)),
-        similar(obsXobs, (nvar, nvar)), similar(obsXobs, (nvar, nvar)),
-        similar(obsXobs, (nvar, nvar)))
+        similar(obsXobs, (nvar, nvar)),
+        similar(obsXobs, (nvar, nvar)),
+        similar(obsXobs, (nvar, nvar)),
+    )
 end
 
 ############################################################################################
@@ -66,13 +71,16 @@ end
 ### Symbolic Imply Types
 
 function evaluate!(
-    objective, gradient, hessian,
+    objective,
+    gradient,
+    hessian,
     semml::SemML,
     implied::SemImplySymbolic,
     model::AbstractSemSingle,
-    par)
+    par,
+)
 
-        if !isnothing(hessian)
+    if !isnothing(hessian)
         (MeanStructure(implied) === HasMeanStructure) &&
             throw(DomainError(H, "hessian of ML + meanstructure is not available"))
     end
@@ -103,8 +111,12 @@ function evaluate!(
         if !isnothing(gradient)
             ∇Σ = implied.∇Σ
             ∇μ = implied.∇μ
-            μ₋ᵀΣ⁻¹ = μ₋'*Σ⁻¹
-            mul!(gradient, ∇Σ', vec(Σ⁻¹*(I - mul!(semml.obsXobs_3, Σₒ, Σ⁻¹) - μ₋*μ₋ᵀΣ⁻¹)))
+            μ₋ᵀΣ⁻¹ = μ₋' * Σ⁻¹
+            mul!(
+                gradient,
+                ∇Σ',
+                vec(Σ⁻¹ * (I - mul!(semml.obsXobs_3, Σₒ, Σ⁻¹) - μ₋ * μ₋ᵀΣ⁻¹)),
+            )
             mul!(gradient, ∇μ', μ₋ᵀΣ⁻¹', -2, 1)
         end
     elseif !isnothing(gradient) || !isnothing(hessian)
@@ -116,7 +128,7 @@ function evaluate!(
         end
         if !isnothing(hessian)
             if HessianEvaluation(semml) === ApproximateHessian
-                mul!(hessian, ∇Σ'*kron(Σ⁻¹, Σ⁻¹), ∇Σ, 2, 0)
+                mul!(hessian, ∇Σ' * kron(Σ⁻¹, Σ⁻¹), ∇Σ, 2, 0)
             else
                 ∇²Σ_function! = implied.∇²Σ_function
                 ∇²Σ = implied.∇²Σ
@@ -124,7 +136,7 @@ function evaluate!(
                 ∇²Σ_function!(∇²Σ, J, par)
                 # outer
                 H_outer = kron(2Σ⁻¹ΣₒΣ⁻¹ - Σ⁻¹, Σ⁻¹)
-                mul!(hessian, ∇Σ'*H_outer, ∇Σ)
+                mul!(hessian, ∇Σ' * H_outer, ∇Σ)
                 hessian .+= ∇²Σ
             end
         end
@@ -136,11 +148,14 @@ end
 ### Non-Symbolic Imply Types
 
 function evaluate!(
-    objective, gradient, hessian,
+    objective,
+    gradient,
+    hessian,
     semml::SemML,
     implied::RAM,
     model::AbstractSemSingle,
-    par)
+    par,
+)
 
     if !isnothing(hessian)
         error("hessian of ML + non-symbolic imply type is not available")
@@ -185,13 +200,22 @@ function evaluate!(
         lmul!(-1, one_Σ⁻¹Σₒ)
         one_Σ⁻¹Σₒ[diagind(one_Σ⁻¹Σₒ)] .+= 1
 
-        C = mul!(semml.varXvar_1, F⨉I_A⁻¹',
-                 mul!(semml.obsXvar_1,
-                      Symmetric(mul!(semml.obsXobs_3, one_Σ⁻¹Σₒ, Σ⁻¹)), F⨉I_A⁻¹))
-        mul!(gradient, ∇A',
-             vec(mul!(semml.varXvar_3,
-                    Symmetric(C),
-                    mul!(semml.varXvar_2, S, I_A⁻¹'))), 2, 0)
+        C = mul!(
+            semml.varXvar_1,
+            F⨉I_A⁻¹',
+            mul!(
+                semml.obsXvar_1,
+                Symmetric(mul!(semml.obsXobs_3, one_Σ⁻¹Σₒ, Σ⁻¹)),
+                F⨉I_A⁻¹,
+            ),
+        )
+        mul!(
+            gradient,
+            ∇A',
+            vec(mul!(semml.varXvar_3, Symmetric(C), mul!(semml.varXvar_2, S, I_A⁻¹'))),
+            2,
+            0,
+        )
         mul!(gradient, ∇S', vec(C), 1, 1)
 
         if MeanStructure(implied) === HasMeanStructure
@@ -200,10 +224,16 @@ function evaluate!(
             ∇M = implied.∇M
             M = implied.M
             μ₋ = μₒ - μ
-            μ₋ᵀΣ⁻¹ = μ₋'*Σ⁻¹
-            k = μ₋ᵀΣ⁻¹*F⨉I_A⁻¹
+            μ₋ᵀΣ⁻¹ = μ₋' * Σ⁻¹
+            k = μ₋ᵀΣ⁻¹ * F⨉I_A⁻¹
             mul!(gradient, ∇M', k', -2, 1)
-            mul!(gradient, ∇A', vec(mul!(semml.varXvar_1, k', (I_A⁻¹*(M + S*k'))')), -2, 1)
+            mul!(
+                gradient,
+                ∇A',
+                vec(mul!(semml.varXvar_1, k', (I_A⁻¹ * (M + S * k'))')),
+                -2,
+                1,
+            )
             mul!(gradient, ∇S', vec(mul!(semml.varXvar_2, k', k)), -1, 1)
         end
     end
@@ -234,6 +264,6 @@ function update_observed(lossfun::SemML, observed::SemObserved; kwargs...)
     if size(lossfun.Σ⁻¹) == size(obs_cov(observed))
         return lossfun
     else
-        return SemML(;observed = observed, kwargs...)
+        return SemML(; observed = observed, kwargs...)
     end
 end

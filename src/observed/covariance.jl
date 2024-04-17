@@ -1,21 +1,18 @@
 """
 Type alias for [SemObservedData](@ref) with no data, but with mean and covariance.
 """
-SemObservedCovariance{B, C} = SemObservedData{Nothing, B, C}
+SemObservedCovariance{B,C} = SemObservedData{Nothing,B,C}
 
 function SemObservedCovariance(;
-        specification::Union{SemSpecification, Nothing} = nothing,
-        obs_cov::AbstractMatrix,
-
-        obs_colnames::Union{AbstractVector{Symbol}, Nothing} = nothing,
-        spec_colnames::Union{AbstractVector{Symbol}, Nothing} = nothing,
-
-        obs_mean::Union{AbstractVector, Nothing} = nothing,
-        meanstructure::Bool = false,
-
-        n_obs::Integer,
-
-        kwargs...)
+    specification::Union{SemSpecification,Nothing} = nothing,
+    obs_cov::AbstractMatrix,
+    obs_colnames::Union{AbstractVector{Symbol},Nothing} = nothing,
+    spec_colnames::Union{AbstractVector{Symbol},Nothing} = nothing,
+    obs_mean::Union{AbstractVector,Nothing} = nothing,
+    meanstructure::Bool = false,
+    n_obs::Integer,
+    kwargs...,
+)
 
     if !meanstructure && !isnothing(obs_mean)
         throw(ArgumentError("observed means were passed, but `meanstructure = false`"))

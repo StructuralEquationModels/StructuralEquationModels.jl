@@ -5,9 +5,9 @@ EvaluationTargets(objective, gradient, hessian) =
     EvaluationTargets{!isnothing(objective),!isnothing(gradient),!isnothing(hessian)}()
 
 # convenience methods to check type params
-is_objective_required(::EvaluationTargets{O}) where O = O
-is_gradient_required(::EvaluationTargets{<:Any,G}) where G = G
-is_hessian_required(::EvaluationTargets{<:Any,<:Any,H}) where H = H
+is_objective_required(::EvaluationTargets{O}) where {O} = O
+is_gradient_required(::EvaluationTargets{<:Any,G}) where {G} = G
+is_hessian_required(::EvaluationTargets{<:Any,<:Any,H}) where {H} = H
 
 # return the tuple of the required results
 (::EvaluationTargets{true,false,false})(objective, gradient, hessian) = objective
@@ -16,7 +16,8 @@ is_hessian_required(::EvaluationTargets{<:Any,<:Any,H}) where H = H
 (::EvaluationTargets{true,true,false})(objective, gradient, hessian) = (objective, gradient)
 (::EvaluationTargets{true,false,true})(objective, gradient, hessian) = (objective, hessian)
 (::EvaluationTargets{false,true,true})(objective, gradient, hessian) = (gradient, hessian)
-(::EvaluationTargets{true,true,true})(objective, gradient, hessian) = (objective, gradient, hessian)
+(::EvaluationTargets{true,true,true})(objective, gradient, hessian) =
+    (objective, gradient, hessian)
 
 (targets::EvaluationTargets)(arg_tuple::Tuple) = targets(arg_tuple...)
 
@@ -46,12 +47,17 @@ end
 
 # guess objective type
 objective_type(model::AbstractSem, params::Any) = Float64
-objective_type(model::AbstractSem, params::AbstractVector{T}) where T <: Number = T
+objective_type(model::AbstractSem, params::AbstractVector{T}) where {T<:Number} = T
 objective_zero(model::AbstractSem, params::Any) = zero(objective_type(model, params))
 
-objective_type(objective::T, gradient, hessian) where T <: Number = T
-objective_type(objective::Nothing, gradient::AbstractArray{T}, hessian) where T <: Number = T
-objective_type(objective::Nothing, gradient::Nothing, hessian::AbstractArray{T}) where T <: Number = T
+objective_type(objective::T, gradient, hessian) where {T<:Number} = T
+objective_type(objective::Nothing, gradient::AbstractArray{T}, hessian) where {T<:Number} =
+    T
+objective_type(
+    objective::Nothing,
+    gradient::Nothing,
+    hessian::AbstractArray{T},
+) where {T<:Number} = T
 objective_zero(objective, gradient, hessian) =
     zero(objective_type(objective, gradient, hessian))
 
@@ -63,8 +69,14 @@ function evaluate!(objective, gradient, hessian, model::AbstractSemSingle, param
     targets = EvaluationTargets(objective, gradient, hessian)
     # update imply state, its gradient and hessian (if required)
     update!(targets, imply(model), model, params)
-    return evaluate!(!isnothing(objective) ? zero(objective) : nothing,
-                     gradient, hessian, loss(model), model, params)
+    return evaluate!(
+        !isnothing(objective) ? zero(objective) : nothing,
+        gradient,
+        hessian,
+        loss(model),
+        model,
+        params,
+    )
 end
 
 ############################################################################################
@@ -75,8 +87,14 @@ function evaluate!(objective, gradient, hessian, model::SemFiniteDiff, params)
     function obj(p)
         # recalculate imply state for p
         update!(EvaluationTargets{true,false,false}(), imply(model), model, p)
-        evaluate!(objective_zero(objective, gradient, hessian),
-                  nothing, nothing, loss(model), model, p)
+        evaluate!(
+            objective_zero(objective, gradient, hessian),
+            nothing,
+            nothing,
+            loss(model),
+            model,
+            p,
+        )
     end
     isnothing(gradient) || FiniteDiff.finite_difference_gradient!(gradient, obj, params)
     isnothing(hessian) || FiniteDiff.finite_difference_hessian!(hessian, obj, params)
@@ -98,9 +116,9 @@ function evaluate!(objective, gradient, hessian, loss::SemLoss, model::AbstractS
     f_hess = isnothing(hessian) ? nothing : similar(hessian)
     for (f, weight) in zip(loss.functions, loss.weights)
         f_obj = evaluate!(objective, f_grad, f_hess, f, model, params)
-        isnothing(objective) || (objective += weight*f_obj)
-        isnothing(gradient) || (gradient .+= weight*f_grad)
-        isnothing(hessian) || (hessian .+= weight*f_hess)
+        isnothing(objective) || (objective += weight * f_obj)
+        isnothing(gradient) || (gradient .+= weight * f_grad)
+        isnothing(hessian) || (hessian .+= weight * f_hess)
     end
     return objective
 end
@@ -117,9 +135,9 @@ function evaluate!(objective, gradient, hessian, ensemble::SemEnsemble, params)
     sem_hess = isnothing(hessian) ? nothing : similar(hessian)
     for (sem, weight) in zip(ensemble.sems, ensemble.weights)
         sem_obj = evaluate!(objective, sem_grad, sem_hess, sem, params)
-        isnothing(objective) || (objective += weight*sem_obj)
-        isnothing(gradient) || (gradient .+= weight*sem_grad)
-        isnothing(hessian) || (hessian .+= weight*sem_hess)
+        isnothing(objective) || (objective += weight * sem_obj)
+        isnothing(gradient) || (gradient .+= weight * sem_grad)
+        isnothing(hessian) || (hessian .+= weight * sem_hess)
     end
     return objective
 end

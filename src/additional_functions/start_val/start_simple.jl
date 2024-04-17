@@ -18,11 +18,12 @@ function start_simple end
 # Single Models ----------------------------------------------------------------------------
 function start_simple(model::AbstractSemSingle; kwargs...)
     return start_simple(
-        model.observed, 
+        model.observed,
         model.imply,
-        model.optimizer, 
+        model.optimizer,
         model.loss.functions...,
-        kwargs...)
+        kwargs...,
+    )
 end
 
 function start_simple(observed, imply, optimizer, args...; kwargs...)
@@ -31,7 +32,7 @@ end
 
 # Ensemble Models --------------------------------------------------------------------------
 function start_simple(model::SemEnsemble; kwargs...)
-    
+
     start_vals = fill(0.0, nparams(model))
 
     for sem in model.sems
@@ -57,14 +58,14 @@ function start_simple(
     start_covariances_latent = 0.0,
     start_covariances_obs_lat = 0.0,
     start_means = 0.0,
-    kwargs...)
+    kwargs...,
+)
 
-    A, S, F_ind, M, n_par =
-        ram_matrices.A,
-        ram_matrices.S,
-        observed_var_indices(ram_matrices),
-        ram_matrices.M,
-        nparams(ram_matrices)
+    A, S, F_ind, M, n_par = ram_matrices.A,
+    ram_matrices.S,
+    observed_var_indices(ram_matrices),
+    ram_matrices.M,
+    nparams(ram_matrices)
 
     start_val = zeros(n_par)
     n_obs = nobserved_vars(ram_matrices)

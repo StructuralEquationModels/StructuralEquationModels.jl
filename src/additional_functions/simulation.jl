@@ -34,27 +34,36 @@ function update_observed end
 ############################################################################################
 
 # use the same observed type as before
-swap_observed(model::AbstractSemSingle; kwargs...) = 
+swap_observed(model::AbstractSemSingle; kwargs...) =
     swap_observed(model, typeof(observed(model)).name.wrapper; kwargs...)
 
 # construct a new observed type
-swap_observed(model::AbstractSemSingle, observed_type; kwargs...) = 
-    swap_observed(model, observed_type(;kwargs...); kwargs...)
+swap_observed(model::AbstractSemSingle, observed_type; kwargs...) =
+    swap_observed(model, observed_type(; kwargs...); kwargs...)
 
 swap_observed(model::AbstractSemSingle, new_observed::SemObserved; kwargs...) =
-    swap_observed(model, observed(model), imply(model), loss(model), optimizer(model), new_observed; kwargs...)
+    swap_observed(
+        model,
+        observed(model),
+        imply(model),
+        loss(model),
+        optimizer(model),
+        new_observed;
+        kwargs...,
+    )
 
 function swap_observed(
-        model::AbstractSemSingle, 
-        old_observed,
-        imply,
-        loss,
-        optimizer,
-        new_observed::SemObserved; 
-        kwargs...)
+    model::AbstractSemSingle,
+    old_observed,
+    imply,
+    loss,
+    optimizer,
+    new_observed::SemObserved;
+    kwargs...,
+)
 
-    kwargs = Dict{Symbol, Any}(kwargs...)
-    
+    kwargs = Dict{Symbol,Any}(kwargs...)
+
     # get field types
     kwargs[:observed_type] = typeof(new_observed)
     kwargs[:old_observed_type] = typeof(old_observed)
@@ -77,16 +86,16 @@ function swap_observed(
     #new_imply = update_observed(model.imply, new_observed; kwargs...)
 
     return Sem(
-        new_observed, 
+        new_observed,
         update_observed(model.imply, new_observed; kwargs...),
         update_observed(model.loss, new_observed; kwargs...),
-        update_observed(model.optimizer, new_observed; kwargs...)
-        )
+        update_observed(model.optimizer, new_observed; kwargs...),
+    )
 end
 
 function update_observed(loss::SemLoss, new_observed; kwargs...)
-    new_functions = Tuple(update_observed(lossfun, new_observed; kwargs...) for lossfun in loss.functions)
-    return SemLoss(
-        new_functions,
-        loss.weights)
+    new_functions = Tuple(
+        update_observed(lossfun, new_observed; kwargs...) for lossfun in loss.functions
+    )
+    return SemLoss(new_functions, loss.weights)
 end

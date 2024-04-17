@@ -37,7 +37,7 @@ use this if you are sure your observed data is in the right format.
 - `spec_colnames::Vector{Symbol} = nothing`: overwrites column names of the specification object
 - `compute_covariance::Bool ) = true`: should the covariance of `data` be computed and stored?
 """
-struct SemObservedData{A, B, C} <: SemObserved
+struct SemObservedData{A,B,C} <: SemObserved
     data::A
     obs_cov::B
     obs_mean::C
@@ -53,16 +53,14 @@ end
 
 
 function SemObservedData(;
-        specification::Union{SemSpecification, Nothing},
-        data,
-
-        obs_colnames = nothing,
-        spec_colnames = nothing,
-
-        meanstructure = false,
-        compute_covariance = true,
-
-        kwargs...)
+    specification::Union{SemSpecification,Nothing},
+    data,
+    obs_colnames = nothing,
+    spec_colnames = nothing,
+    meanstructure = false,
+    compute_covariance = true,
+    kwargs...,
+)
 
     if isnothing(spec_colnames) && !isnothing(specification)
         spec_colnames = observed_vars(specification)
@@ -73,18 +71,22 @@ function SemObservedData(;
             try
                 data = data[:, spec_colnames]
             catch
-                throw(ArgumentError(
-                    "Your `data` can not be indexed by symbols. "*
-                    "Maybe you forgot to provide column names via the `obs_colnames = ...` argument.")
-                    )
+                throw(
+                    ArgumentError(
+                        "Your `data` can not be indexed by symbols. " *
+                        "Maybe you forgot to provide column names via the `obs_colnames = ...` argument.",
+                    ),
+                )
             end
         else
             if data isa DataFrame
-                throw(ArgumentError(
-                    "You passed your data as a `DataFrame`, but also specified `obs_colnames`. "*
-                    "Please make sure the column names of your data frame indicate the correct variables "*
-                    "or pass your data in a different format.")
-                    )
+                throw(
+                    ArgumentError(
+                        "You passed your data as a `DataFrame`, but also specified `obs_colnames`. " *
+                        "Please make sure the column names of your data frame indicate the correct variables " *
+                        "or pass your data in a different format.",
+                    ),
+                )
             end
 
             if !(eltype(obs_colnames) <: Symbol)
@@ -99,10 +101,13 @@ function SemObservedData(;
         data = Matrix(data)
     end
 
-    return SemObservedData(data,
+    return SemObservedData(
+        data,
         compute_covariance ? Symmetric(cov(data)) : nothing,
         meanstructure ? vec(Statistics.mean(data, dims = 1)) : nothing,
-        size(data, 2), size(data, 1))
+        size(data, 2),
+        size(data, 1),
+    )
 end
 
 ############################################################################################

@@ -65,7 +65,8 @@ Additional interfaces
 Only available in gradient! calls:
 - `I_A⁻¹(::RAM)` -> ``(I-A)^{-1}``
 """
-mutable struct RAM{MS, A1, A2, A3, A4, A5, A6, V2, M1, M2, M3, M4, S1, S2, S3} <: SemImply{MS, ExactHessian}
+mutable struct RAM{MS,A1,A2,A3,A4,A5,A6,V2,M1,M2,M3,M4,S1,S2,S3} <:
+               SemImply{MS,ExactHessian}
     Σ::A1
     A::A2
     S::A3
@@ -89,15 +90,16 @@ end
 ### Constructors
 ############################################################################################
 
-RAM{MS}(args...) where MS <: MeanStructure = RAM{MS, map(typeof, args)...}(args...)
+RAM{MS}(args...) where {MS<:MeanStructure} = RAM{MS,map(typeof, args)...}(args...)
 
 function RAM(;
-        specification::SemSpecification,
-        #vech = false,
-        gradient_required = true,
-        meanstructure = false,
-        sparse_S::Bool = true,
-        kwargs...)
+    specification::SemSpecification,
+    #vech = false,
+    gradient_required = true,
+    meanstructure = false,
+    sparse_S::Bool = true,
+    kwargs...,
+)
 
     ram_matrices = convert(RAMMatrices, specification)
 
@@ -109,7 +111,9 @@ function RAM(;
     #preallocate arrays
     rand_params = randn(Float64, n_par)
     A_pre = check_acyclic(materialize(ram_matrices.A, rand_params))
-    S_pre = Symmetric((sparse_S ? sparse_materialize : materialize)(ram_matrices.S, rand_params))
+    S_pre = Symmetric(
+        (sparse_S ? sparse_materialize : materialize)(ram_matrices.S, rand_params),
+    )
     F = copy(ram_matrices.F)
 
     # pre-allocate some matrices
@@ -117,9 +121,7 @@ function RAM(;
     F⨉I_A⁻¹ = zeros(n_obs, n_var)
     F⨉I_A⁻¹S = zeros(n_obs, n_var)
     I_A = convert(Matrix, I - A_pre)
-    I_A = istril(I_A) ? LowerTriangular(I_A) :
-          istriu(I_A) ? UpperTriangular(I_A) :
-          I_A
+    I_A = istril(I_A) ? LowerTriangular(I_A) : istriu(I_A) ? UpperTriangular(I_A) : I_A
 
     if gradient_required
         ∇A = sparse_gradient(ram_matrices.A)
@@ -149,17 +151,14 @@ function RAM(;
         F,
         μ,
         M_pre,
-
         ram_matrices,
-
         F⨉I_A⁻¹,
         F⨉I_A⁻¹S,
         I_A,
         similar(I_A),
-
         ∇A,
         ∇S,
-        ∇M
+        ∇M,
     )
 end
 
@@ -174,7 +173,8 @@ function update!(targets::EvaluationTargets, imply::RAM, model::AbstractSemSingl
         materialize!(imply.M, imply.ram_matrices.M, params)
     end
 
-    @inbounds for (j, I_Aj, Aj) in zip(axes(imply.A, 2), eachcol(parent(imply.I_A)), eachcol(imply.A))
+    @inbounds for (j, I_Aj, Aj) in
+                  zip(axes(imply.A, 2), eachcol(parent(imply.I_A)), eachcol(imply.A))
         for i in axes(imply.A, 1)
             I_Aj[i] = ifelse(i == j, 1, 0) - Aj[i]
         end
@@ -207,7 +207,7 @@ function update_observed(imply::RAM, observed::SemObserved; kwargs...)
     if n_man(observed) == size(imply.Σ, 1)
         return imply
     else
-        return RAM(;observed = observed, kwargs...)
+        return RAM(; observed = observed, kwargs...)
     end
 end
 
@@ -217,7 +217,7 @@ end
 
 function check_acyclic(A::AbstractMatrix)
     # check if the model is acyclic
-    acyclic = isone(det(I-A))
+    acyclic = isone(det(I - A))
 
     # check if A is lower or upper triangular
     if istril(A)
@@ -228,7 +228,8 @@ function check_acyclic(A::AbstractMatrix)
         return UpperTriangular(A)
     else
         if acyclic
-            @info "Your model is acyclic, specifying the A Matrix as either Upper or Lower Triangular can have great performance benefits.\n" maxlog=1
+            @info "Your model is acyclic, specifying the A Matrix as either Upper or Lower Triangular can have great performance benefits.\n" maxlog =
+                1
         end
         return A
     end

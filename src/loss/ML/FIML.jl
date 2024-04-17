@@ -17,20 +17,20 @@ function SemFIMLPattern(pat::SemObservedMissingPattern)
 
     # linear indicies of co-observed variable pairs for each pattern
     Σ_linind = LinearIndices((n_man(pat), n_man(pat)))
-    ∇ind = vec([Σ_linind[CartesianIndex(x, y)]
-               for x in findall(pat.obs_mask), y in findall(pat.obs_mask)])
+    ∇ind = vec([
+        Σ_linind[CartesianIndex(x, y)] for x in findall(pat.obs_mask),
+        y in findall(pat.obs_mask)
+    ])
 
-    return SemFIMLPattern(∇ind,
-                          zeros(nobserved, nobserved),
-                          Ref(NaN), zeros(nobserved))
+    return SemFIMLPattern(∇ind, zeros(nobserved, nobserved), Ref(NaN), zeros(nobserved))
 end
 
 function prepare!(fiml::SemFIMLPattern, pat::SemObservedMissingPattern, implied::SemImply)
     Σ = implied.Σ
     μ = implied.μ
     @inbounds @. @views begin
-    fiml.Σ⁻¹ = Σ[pat.obs_mask, pat.obs_mask]
-    fiml.μ_diff = pat.obs_mean - μ[pat.obs_mask]
+        fiml.Σ⁻¹ = Σ[pat.obs_mask, pat.obs_mask]
+        fiml.μ_diff = pat.obs_mean - μ[pat.obs_mask]
     end
     Σ_chol = cholesky!(Symmetric(fiml.Σ⁻¹))
     fiml.logdet[] = logdet(Σ_chol)
@@ -39,7 +39,7 @@ function prepare!(fiml::SemFIMLPattern, pat::SemObservedMissingPattern, implied:
     return fiml
 end
 
-function objective(fiml::SemFIMLPattern{T}, pat::SemObservedMissingPattern) where T
+function objective(fiml::SemFIMLPattern{T}, pat::SemObservedMissingPattern) where {T}
     F = fiml.logdet[] + dot(fiml.μ_diff, fiml.Σ⁻¹, fiml.μ_diff)
     if n_obs(pat) > 1
         F += dot(pat.obs_cov, fiml.Σ⁻¹)
@@ -59,7 +59,7 @@ function gradient!(JΣ, Jμ, fiml::SemFIMLPattern, pat::SemObservedMissingPatter
     end
     @inbounds vec(JΣ)[fiml.∇ind] .+= vec(JΣ_pat)
 
-    lmul!(2*n_obs(pat), μ_diff⨉Σ⁻¹)
+    lmul!(2 * n_obs(pat), μ_diff⨉Σ⁻¹)
     @inbounds Jμ[pat.obs_mask] .+= μ_diff⨉Σ⁻¹'
     return nothing
 end
@@ -87,7 +87,7 @@ Analytic gradients are available.
 ## Implementation
 Subtype of `SemLossFunction`.
 """
-struct SemFIML{T, W} <: SemLossFunction{ExactHessian}
+struct SemFIML{T,W} <: SemLossFunction{ExactHessian}
     patterns::Vector{SemFIMLPattern{T}}
 
     imp_inv::Matrix{T}  # implied inverse
@@ -102,17 +102,27 @@ end
 ############################################################################################
 
 function SemFIML(; observed::SemObservedMissing, specification, kwargs...)
-    return SemFIML([SemFIMLPattern(pat) for pat in observed.patterns],
-                   zeros(n_man(observed), n_man(observed)),
-                   CommutationMatrix(nvars(specification)), nothing)
+    return SemFIML(
+        [SemFIMLPattern(pat) for pat in observed.patterns],
+        zeros(n_man(observed), n_man(observed)),
+        CommutationMatrix(nvars(specification)),
+        nothing,
+    )
 end
 
 ############################################################################################
 ### methods
 ############################################################################################
 
-function evaluate!(objective, gradient, hessian,
-                   fiml::SemFIML, implied::SemImply, model::AbstractSemSingle, params)
+function evaluate!(
+    objective,
+    gradient,
+    hessian,
+    fiml::SemFIML,
+    implied::SemImply,
+    model::AbstractSemSingle,
+    params,
+)
 
     isnothing(hessian) || error("Hessian not implemented for FIML")
 
@@ -125,8 +135,10 @@ function evaluate!(objective, gradient, hessian,
     prepare!(fiml, model)
 
     scale = inv(n_obs(observed(model)))
-    isnothing(objective) || (objective = scale*F_FIML(eltype(params), fiml, observed(model), model))
-    isnothing(gradient) || (∇F_FIML!(gradient, fiml, observed(model), model); gradient .*= scale)
+    isnothing(objective) ||
+        (objective = scale * F_FIML(eltype(params), fiml, observed(model), model))
+    isnothing(gradient) ||
+        (∇F_FIML!(gradient, fiml, observed(model), model); gradient .*= scale)
 
     return objective
 end
@@ -136,7 +148,7 @@ end
 ############################################################################################
 
 update_observed(lossfun::SemFIML, observed::SemObserved; kwargs...) =
-    SemFIML(;observed = observed, kwargs...)
+    SemFIML(; observed = observed, kwargs...)
 
 ############################################################################################
 ### additional functions
@@ -151,18 +163,23 @@ function ∇F_fiml_outer!(G, JΣ, Jμ, fiml::SemFIML, imply, model)
 
     P = kron(imply.F⨉I_A⁻¹, imply.F⨉I_A⁻¹)
     Iₙ = sparse(1.0I, size(imply.A)...)
-    Q = kron(imply.S*imply.I_A⁻¹', Iₙ)
+    Q = kron(imply.S * imply.I_A⁻¹', Iₙ)
     Q .+= fiml.commutator * Q
 
-    ∇Σ = P*(imply.∇S + Q*imply.∇A)
+    ∇Σ = P * (imply.∇S + Q * imply.∇A)
 
-    ∇μ = imply.F⨉I_A⁻¹*imply.∇M + kron((imply.I_A⁻¹*imply.M)', imply.F⨉I_A⁻¹)*imply.∇A
+    ∇μ = imply.F⨉I_A⁻¹ * imply.∇M + kron((imply.I_A⁻¹ * imply.M)', imply.F⨉I_A⁻¹) * imply.∇A
 
     mul!(G, ∇Σ', JΣ) # actually transposed
     mul!(G, ∇μ', Jμ, -1, 1)
 end
 
-function F_FIML(::Type{T}, fiml::SemFIML, observed::SemObservedMissing, model::AbstractSemSingle) where T
+function F_FIML(
+    ::Type{T},
+    fiml::SemFIML,
+    observed::SemObservedMissing,
+    model::AbstractSemSingle,
+) where {T}
     F = zero(T)
     for (pat_fiml, pat) in zip(fiml.patterns, observed.patterns)
         F += objective(pat_fiml, pat)

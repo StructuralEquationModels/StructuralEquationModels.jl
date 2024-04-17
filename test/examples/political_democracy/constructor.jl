@@ -7,11 +7,7 @@ using NLopt
 
 semoptimizer = SemOptimizer(engine = opt_engine)
 
-model_ml = Sem(
-    specification = spec,
-    data = dat,
-    optimizer = semoptimizer
-)
+model_ml = Sem(specification = spec, data = dat, optimizer = semoptimizer)
 @test SEM.params(model_ml.imply.ram_matrices) == SEM.params(spec)
 
 model_ml_cov = Sem(
@@ -20,7 +16,7 @@ model_ml_cov = Sem(
     obs_cov = cov(Matrix(dat)),
     obs_colnames = Symbol.(names(dat)),
     optimizer = semoptimizer,
-    n_obs = 75
+    n_obs = 75,
 )
 
 model_ls_sym = Sem(
@@ -28,23 +24,19 @@ model_ls_sym = Sem(
     data = dat,
     imply = RAMSymbolic,
     loss = SemWLS,
-    optimizer = semoptimizer
+    optimizer = semoptimizer,
 )
 
-model_ml_sym = Sem(
-    specification = spec,
-    data = dat,
-    imply = RAMSymbolic,
-    optimizer = semoptimizer
-)
+model_ml_sym =
+    Sem(specification = spec, data = dat, imply = RAMSymbolic, optimizer = semoptimizer)
 
 model_ridge = Sem(
     specification = spec,
     data = dat,
     loss = (SemML, SemRidge),
-    α_ridge = .001,
+    α_ridge = 0.001,
     which_ridge = 16:20,
-    optimizer = semoptimizer
+    optimizer = semoptimizer,
 )
 
 model_constant = Sem(
@@ -52,21 +44,29 @@ model_constant = Sem(
     data = dat,
     loss = (SemML, SemConstant),
     constant_loss = 3.465,
-    optimizer = semoptimizer
+    optimizer = semoptimizer,
 )
 
 model_ml_weighted = Sem(
     specification = partable,
     data = dat,
     loss_weights = (n_obs(model_ml),),
-    optimizer = semoptimizer
+    optimizer = semoptimizer,
 )
 
 ############################################################################################
 ### test gradients
 ############################################################################################
 
-models = [model_ml, model_ml_cov, model_ls_sym, model_ridge, model_constant, model_ml_sym, model_ml_weighted]
+models = [
+    model_ml,
+    model_ml_cov,
+    model_ls_sym,
+    model_ridge,
+    model_constant,
+    model_ml_sym,
+    model_ml_weighted,
+]
 model_names = ["ml", "ml_cov", "ls_sym", "ridge", "constant", "ml_sym", "ml_weighted"]
 
 for (model, name) in zip(models, model_names)
@@ -84,7 +84,7 @@ end
 
 models = [model_ml, model_ml_cov, model_ls_sym, model_ml_sym, model_constant]
 model_names = ["ml", "ml_cov", "ls_sym", "ml_sym", "constant"]
-solution_names = Symbol.("parameter_estimates_".*["ml", "ml", "ls", "ml", "ml"])
+solution_names = Symbol.("parameter_estimates_" .* ["ml", "ml", "ls", "ml", "ml"])
 
 for (model, name, solution_name) in zip(models, model_names, solution_names)
     try
@@ -106,8 +106,10 @@ end
 
 # test constant objective value
 @testset "constant_objective_and_gradient" begin
-    @test (objective!(model_constant, start_test) - 3.465) ≈ objective!(model_ml, start_test)
-    grad = similar(start_test); grad2 = similar(start_test)
+    @test (objective!(model_constant, start_test) - 3.465) ≈
+          objective!(model_ml, start_test)
+    grad = similar(start_test)
+    grad2 = similar(start_test)
     gradient!(grad, model_constant, start_test)
     gradient!(grad2, model_ml, start_test)
     @test grad ≈ grad2
@@ -117,8 +119,11 @@ end
     solution_ml = sem_fit(model_ml)
     solution_ml_weighted = sem_fit(model_ml_weighted)
     @test isapprox(solution(solution_ml), solution(solution_ml_weighted), rtol = 1e-3)
-    @test isapprox(n_obs(model_ml)*StructuralEquationModels.minimum(solution_ml),
-        StructuralEquationModels.minimum(solution_ml_weighted), rtol = 1e-6)
+    @test isapprox(
+        n_obs(model_ml) * StructuralEquationModels.minimum(solution_ml),
+        StructuralEquationModels.minimum(solution_ml_weighted),
+        rtol = 1e-6,
+    )
 end
 
 ############################################################################################
@@ -127,24 +132,37 @@ end
 
 @testset "fitmeasures/se_ml" begin
     solution_ml = sem_fit(model_ml)
-    test_fitmeasures(fit_measures(solution_ml), solution_lav[:fitmeasures_ml];
-        atol = 1e-3)
+    test_fitmeasures(fit_measures(solution_ml), solution_lav[:fitmeasures_ml]; atol = 1e-3)
 
     update_se_hessian!(partable, solution_ml)
-    test_estimates(partable, solution_lav[:parameter_estimates_ml];
-        atol = 1e-3, col = :se, lav_col = :se)
+    test_estimates(
+        partable,
+        solution_lav[:parameter_estimates_ml];
+        atol = 1e-3,
+        col = :se,
+        lav_col = :se,
+    )
 end
 
 @testset "fitmeasures/se_ls" begin
     solution_ls = sem_fit(model_ls_sym)
     fm = fit_measures(solution_ls)
-    test_fitmeasures(fm, solution_lav[:fitmeasures_ls]; atol = 1e-3,
-        fitmeasure_names = fitmeasure_names_ls)
+    test_fitmeasures(
+        fm,
+        solution_lav[:fitmeasures_ls];
+        atol = 1e-3,
+        fitmeasure_names = fitmeasure_names_ls,
+    )
     @test ismissing(fm[:AIC]) && ismissing(fm[:BIC]) && ismissing(fm[:minus2ll])
 
     update_se_hessian!(partable, solution_ls)
-    test_estimates(partable, solution_lav[:parameter_estimates_ls]; atol = 1e-2,
-        col = :se, lav_col = :se)
+    test_estimates(
+        partable,
+        solution_lav[:parameter_estimates_ls];
+        atol = 1e-2,
+        col = :se,
+        lav_col = :se,
+    )
 end
 
 ############################################################################################
@@ -160,9 +178,10 @@ if opt_engine == :Optim
         imply = RAMSymbolic,
         loss = SemWLS,
         hessian = true,
-        algorithm = Newton(
-            ;linesearch = BackTracking(order=3),
-            alphaguess = InitialHagerZhang())
+        algorithm = Newton(;
+            linesearch = BackTracking(order = 3),
+            alphaguess = InitialHagerZhang(),
+        ),
     )
 
     model_ml = Sem(
@@ -170,7 +189,7 @@ if opt_engine == :Optim
         data = dat,
         imply = RAMSymbolic,
         hessian = true,
-        algorithm = Newton()
+        algorithm = Newton(),
     )
 
     @testset "ml_hessians" begin
@@ -190,7 +209,13 @@ if opt_engine == :Optim
     @testset "ls_solution_hessian" begin
         solution = sem_fit(model_ls)
         update_estimate!(partable, solution)
-        test_estimates(partable, solution_lav[:parameter_estimates_ls]; atol = 0.002, rtol = 0.0, skip=true)
+        test_estimates(
+            partable,
+            solution_lav[:parameter_estimates_ls];
+            atol = 0.002,
+            rtol = 0.0,
+            skip = true,
+        )
     end
 
 end
@@ -206,14 +231,14 @@ model_ls = Sem(
     imply = RAMSymbolic,
     loss = SemWLS,
     meanstructure = true,
-    optimizer = semoptimizer
+    optimizer = semoptimizer,
 )
 
 model_ml = Sem(
     specification = spec_mean,
     data = dat,
     meanstructure = true,
-    optimizer = semoptimizer
+    optimizer = semoptimizer,
 )
 
 model_ml_cov = Sem(
@@ -224,7 +249,7 @@ model_ml_cov = Sem(
     obs_colnames = Symbol.(names(dat)),
     meanstructure = true,
     optimizer = semoptimizer,
-    n_obs = 75
+    n_obs = 75,
 )
 
 model_ml_sym = Sem(
@@ -233,7 +258,7 @@ model_ml_sym = Sem(
     imply = RAMSymbolic,
     meanstructure = true,
     start_val = start_test_mean,
-    optimizer = semoptimizer
+    optimizer = semoptimizer,
 )
 
 ############################################################################################
@@ -256,7 +281,7 @@ end
 ### test solution
 ############################################################################################
 
-solution_names = Symbol.("parameter_estimates_".*["ml", "ml", "ls", "ml"].*"_mean")
+solution_names = Symbol.("parameter_estimates_" .* ["ml", "ml", "ls", "ml"] .* "_mean")
 
 for (model, name, solution_name) in zip(models, model_names, solution_names)
     try
@@ -275,25 +300,41 @@ end
 
 @testset "fitmeasures/se_ml_mean" begin
     solution_ml = sem_fit(model_ml)
-    test_fitmeasures(fit_measures(solution_ml), solution_lav[:fitmeasures_ml_mean];
-        atol = 0.002)
+    test_fitmeasures(
+        fit_measures(solution_ml),
+        solution_lav[:fitmeasures_ml_mean];
+        atol = 0.002,
+    )
 
     update_se_hessian!(partable_mean, solution_ml)
-    test_estimates(partable_mean, solution_lav[:parameter_estimates_ml_mean];
-        atol = 0.002, col = :se, lav_col = :se)
+    test_estimates(
+        partable_mean,
+        solution_lav[:parameter_estimates_ml_mean];
+        atol = 0.002,
+        col = :se,
+        lav_col = :se,
+    )
 end
 
 @testset "fitmeasures/se_ls_mean" begin
     solution_ls = sem_fit(model_ls)
     fm = fit_measures(solution_ls)
-    test_fitmeasures(fm,
+    test_fitmeasures(
+        fm,
         solution_lav[:fitmeasures_ls_mean];
         atol = 1e-3,
-        fitmeasure_names = fitmeasure_names_ls)
+        fitmeasure_names = fitmeasure_names_ls,
+    )
     @test ismissing(fm[:AIC]) && ismissing(fm[:BIC]) && ismissing(fm[:minus2ll])
 
     update_se_hessian!(partable_mean, solution_ls)
-    test_estimates(partable_mean, solution_lav[:parameter_estimates_ls_mean]; atol = 1e-2, col = :se, lav_col = :se)
+    test_estimates(
+        partable_mean,
+        solution_lav[:parameter_estimates_ls_mean];
+        atol = 1e-2,
+        col = :se,
+        lav_col = :se,
+    )
 end
 
 ############################################################################################
@@ -307,7 +348,7 @@ model_ml = Sem(
     observed = SemObservedMissing,
     loss = SemFIML,
     optimizer = semoptimizer,
-    meanstructure = true
+    meanstructure = true,
 )
 
 model_ml_sym = Sem(
@@ -318,7 +359,7 @@ model_ml_sym = Sem(
     loss = SemFIML,
     start_val = start_test_mean,
     optimizer = semoptimizer,
-    meanstructure = true
+    meanstructure = true,
 )
 
 ############################################################################################
@@ -355,10 +396,18 @@ end
 
 @testset "fitmeasures/se_fiml" begin
     solution_ml = sem_fit(model_ml)
-    test_fitmeasures(fit_measures(solution_ml), solution_lav[:fitmeasures_fiml];
-        atol = 1e-3)
+    test_fitmeasures(
+        fit_measures(solution_ml),
+        solution_lav[:fitmeasures_fiml];
+        atol = 1e-3,
+    )
 
     update_se_hessian!(partable_mean, solution_ml)
-    test_estimates(partable_mean, solution_lav[:parameter_estimates_fiml];
-        atol = 0.002, col = :se, lav_col = :se)
+    test_estimates(
+        partable_mean,
+        solution_lav[:parameter_estimates_fiml];
+        atol = 0.002,
+        col = :se,
+        lav_col = :se,
+    )
 end

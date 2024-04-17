@@ -3,8 +3,8 @@
 ############################################################################################
 
 mutable struct NLoptResult
-    result
-    problem
+    result::Any
+    problem::Any
 end
 
 SEM.optimizer(res::NLoptResult) = res.problem.algorithm
@@ -18,7 +18,7 @@ function SemFit_NLopt(optimization_result, model::AbstractSem, start_val, opt)
         optimization_result[2],
         start_val,
         model,
-        NLoptResult(optimization_result, opt)
+        NLoptResult(optimization_result, opt),
     )
 end
 
@@ -27,21 +27,31 @@ function SEM.sem_fit(
     optimizer::SemOptimizerNLopt,
     model::AbstractSem,
     start_params::AbstractVector;
-    kwargs...)
+    kwargs...,
+)
 
     # construct the NLopt problem
     opt = construct_NLopt_problem(
         model.optimizer.algorithm,
         model.optimizer.options,
-        length(start_params))
+        length(start_params),
+    )
     set_NLopt_constraints!(opt, model.optimizer)
-    opt.min_objective = (par, G) -> SEM.evaluate!(eltype(par), !isnothing(G) && !isempty(G) ? G : nothing, nothing, model, par)
+    opt.min_objective =
+        (par, G) -> SEM.evaluate!(
+            eltype(par),
+            !isnothing(G) && !isempty(G) ? G : nothing,
+            nothing,
+            model,
+            par,
+        )
 
     if !isnothing(model.optimizer.local_algorithm)
         opt_local = construct_NLopt_problem(
             model.optimizer.local_algorithm,
             model.optimizer.local_options,
-            length(start_params))
+            length(start_params),
+        )
         opt.local_optimizer = opt_local
     end
 

@@ -3,13 +3,14 @@
 ############################################################################################
 
 function Sem(;
-        observed::O = SemObservedData,
-        imply::I = RAM,
-        loss::L = SemML,
-        optimizer::D = SemOptimizerOptim,
-        kwargs...) where {O, I, L, D}
+    observed::O = SemObservedData,
+    imply::I = RAM,
+    loss::L = SemML,
+    optimizer::D = SemOptimizerOptim,
+    kwargs...,
+) where {O,I,L,D}
 
-    kwdict = Dict{Symbol, Any}(kwargs...)
+    kwdict = Dict{Symbol,Any}(kwargs...)
 
     set_field_type_kwargs!(kwdict, observed, imply, loss, optimizer, O, I, D)
 
@@ -29,13 +30,14 @@ observed_vars(sem::AbstractSemSingle) = observed_vars(sem.imply.ram_matrices)
 latent_vars(sem::AbstractSemSingle) = latent_vars(sem.imply.ram_matrices)
 
 function SemFiniteDiff(;
-        observed::O = SemObservedData,
-        imply::I = RAM,
-        loss::L = SemML,
-        optimizer::D = SemOptimizerOptim,
-        kwargs...) where {O, I, L, D}
+    observed::O = SemObservedData,
+    imply::I = RAM,
+    loss::L = SemML,
+    optimizer::D = SemOptimizerOptim,
+    kwargs...,
+) where {O,I,L,D}
 
-    kwdict = Dict{Symbol, Any}(kwargs...)
+    kwdict = Dict{Symbol,Any}(kwargs...)
 
     set_field_type_kwargs!(kwdict, observed, imply, loss, optimizer, O, I, D)
 
@@ -54,9 +56,13 @@ function set_field_type_kwargs!(kwargs, observed, imply, loss, optimizer, O, I, 
     kwargs[:observed_type] = O <: Type ? observed : typeof(observed)
     kwargs[:imply_type] = I <: Type ? imply : typeof(imply)
     if loss isa SemLoss
-        kwargs[:loss_types] = [lossfun isa SemLossFunction ? typeof(lossfun) : lossfun for lossfun in loss.functions]
+        kwargs[:loss_types] = [
+            lossfun isa SemLossFunction ? typeof(lossfun) : lossfun for
+            lossfun in loss.functions
+        ]
     elseif applicable(iterate, loss)
-        kwargs[:loss_types] = [lossfun isa SemLossFunction ? typeof(lossfun) : lossfun for lossfun in loss]
+        kwargs[:loss_types] =
+            [lossfun isa SemLossFunction ? typeof(lossfun) : lossfun for lossfun in loss]
     else
         kwargs[:loss_types] = [loss isa SemLossFunction ? typeof(loss) : loss]
     end
@@ -67,13 +73,13 @@ end
 function get_fields!(kwargs, observed, imply, loss, optimizer)
     # observed
     if !isa(observed, SemObserved)
-        observed = observed(;kwargs...)
+        observed = observed(; kwargs...)
     end
     kwargs[:observed] = observed
 
     # imply
     if !isa(imply, SemImply)
-        imply = imply(;kwargs...)
+        imply = imply(; kwargs...)
     end
 
     kwargs[:imply] = imply
@@ -85,7 +91,7 @@ function get_fields!(kwargs, observed, imply, loss, optimizer)
 
     # optimizer
     if !isa(optimizer, SemOptimizer)
-        optimizer = optimizer(;kwargs...)
+        optimizer = optimizer(; kwargs...)
     end
 
     return observed, imply, loss, optimizer
@@ -101,14 +107,14 @@ function get_SemLoss(loss; kwargs...)
             if isa(lossfun, SemLossFunction)
                 push!(loss_out, lossfun)
             else
-                lossfun = lossfun(;kwargs...)
+                lossfun = lossfun(; kwargs...)
                 push!(loss_out, lossfun)
             end
         end
         loss = SemLoss(loss_out...; kwargs...)
     else
         if !isa(loss, SemLossFunction)
-            loss = SemLoss(loss(;kwargs...); kwargs...)
+            loss = SemLoss(loss(; kwargs...); kwargs...)
         else
             loss = SemLoss(loss; kwargs...)
         end
@@ -126,9 +132,9 @@ end
     print(io, "Sem{$(nameof(O)), $(nameof(I)), $lossfuntypes, $(nameof(D))}")
 end =#
 
-function Base.show(io::IO, sem::Sem{O, I, L, D})  where {O, I, L, D}
+function Base.show(io::IO, sem::Sem{O,I,L,D}) where {O,I,L,D}
     lossfuntypes = @. string(nameof(typeof(sem.loss.functions)))
-    lossfuntypes = "   ".*lossfuntypes.*("\n")
+    lossfuntypes = "   " .* lossfuntypes .* ("\n")
     print(io, "Structural Equation Model \n")
     print(io, "- Loss Functions \n")
     print(io, lossfuntypes...)
@@ -138,9 +144,9 @@ function Base.show(io::IO, sem::Sem{O, I, L, D})  where {O, I, L, D}
     print(io, "   optimizer:   $(nameof(D)) \n")
 end
 
-function Base.show(io::IO, sem::SemFiniteDiff{O, I, L, D})  where {O, I, L, D}
+function Base.show(io::IO, sem::SemFiniteDiff{O,I,L,D}) where {O,I,L,D}
     lossfuntypes = @. string(nameof(typeof(sem.loss.functions)))
-    lossfuntypes = "   ".*lossfuntypes.*("\n")
+    lossfuntypes = "   " .* lossfuntypes .* ("\n")
     print(io, "Structural Equation Model : Finite Diff Approximation\n")
     print(io, "- Loss Functions \n")
     print(io, lossfuntypes...)
@@ -152,7 +158,7 @@ end
 
 function Base.show(io::IO, loss::SemLoss)
     lossfuntypes = @. string(nameof(typeof(loss.functions)))
-    lossfuntypes = "   ".*lossfuntypes.*("\n")
+    lossfuntypes = "   " .* lossfuntypes .* ("\n")
     print(io, "SemLoss \n")
     print(io, "- Loss Functions \n")
     print(io, lossfuntypes...)

@@ -1,14 +1,16 @@
 ## connect do ProximalAlgorithms.jl as backend
-ProximalCore.gradient!(grad, model::AbstractSem, parameters) = objective_gradient!(grad, model::AbstractSem, parameters)
+ProximalCore.gradient!(grad, model::AbstractSem, parameters) =
+    objective_gradient!(grad, model::AbstractSem, parameters)
 
 mutable struct ProximalResult
-    result
+    result::Any
 end
 
 function SEM.sem_fit(
-    model::AbstractSemSingle{O, I, L, D};
+    model::AbstractSemSingle{O,I,L,D};
     start_val = start_val,
-    kwargs...) where {O, I, L, D <: SemOptimizerProximal}
+    kwargs...,
+) where {O,I,L,D<:SemOptimizerProximal}
 
     if !isa(start_val, Vector)
         start_val = start_val(model; kwargs...)
@@ -18,14 +20,14 @@ function SEM.sem_fit(
         solution, iterations = model.optimizer.algorithm(
             x0 = start_val,
             f = model,
-            g = model.optimizer.operator_g
+            g = model.optimizer.operator_g,
         )
     else
         solution, iterations = model.optimizer.algorithm(
-            x0=start_val,
-            f=model,
-            g=model.optimizer.operator_g,
-            h=model.optimizer.operator_h
+            x0 = start_val,
+            f = model,
+            g = model.optimizer.operator_g,
+            h = model.optimizer.operator_h,
         )
     end
 
@@ -35,18 +37,13 @@ function SEM.sem_fit(
         :minimum => minimum,
         :iterations => iterations,
         :algorithm => model.optimizer.algorithm,
-        :operator_g => model.optimizer.operator_g)
+        :operator_g => model.optimizer.operator_g,
+    )
 
     isnothing(model.optimizer.operator_h) ||
         push!(optimization_result, :operator_h => model.optimizer.operator_h)
 
-    return SemFit(
-        minimum,
-        solution,
-        start_val,
-        model,
-        ProximalResult(optimization_result)
-        )
+    return SemFit(minimum, solution, start_val, model, ProximalResult(optimization_result))
 
 end
 

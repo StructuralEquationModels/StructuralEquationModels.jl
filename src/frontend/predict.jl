@@ -16,13 +16,17 @@ function SemScoresPredictMethod(method::Symbol)
     end
 end
 
-predict_latent_scores(fit::SemFit, data::SemObserved = fit.model.observed;
-                      method::Symbol = :regression) =
-    predict_latent_scores(SemScoresPredictMethod(method), fit, data)
+predict_latent_scores(
+    fit::SemFit,
+    data::SemObserved = fit.model.observed;
+    method::Symbol = :regression,
+) = predict_latent_scores(SemScoresPredictMethod(method), fit, data)
 
-predict_latent_scores(method::SemScoresPredictMethod, fit::SemFit,
-                      data::SemObserved = fit.model.observed) =
-    predict_latent_scores(method, fit.model, fit.solution, data)
+predict_latent_scores(
+    method::SemScoresPredictMethod,
+    fit::SemFit,
+    data::SemObserved = fit.model.observed,
+) = predict_latent_scores(method, fit.model, fit.solution, data)
 
 function inv_cov!(A::AbstractMatrix)
     if istril(A)
@@ -35,7 +39,11 @@ function inv_cov!(A::AbstractMatrix)
     return inv!(A_chol)
 end
 
-function latent_scores_operator(::SemRegressionScores, model::AbstractSemSingle, params::AbstractVector)
+function latent_scores_operator(
+    ::SemRegressionScores,
+    model::AbstractSemSingle,
+    params::AbstractVector,
+)
     implied = model.imply
     ram = implied.ram_matrices
     lv_inds = latent_var_indices(ram)
@@ -52,7 +60,11 @@ function latent_scores_operator(::SemRegressionScores, model::AbstractSemSingle,
     return cov_lv * lv_FA' * Σ⁻¹
 end
 
-function latent_scores_operator(::SemBartlettScores, model::AbstractSemSingle, params::AbstractVector)
+function latent_scores_operator(
+    ::SemBartlettScores,
+    model::AbstractSemSingle,
+    params::AbstractVector,
+)
     implied = model.imply
     ram = implied.ram_matrices
     lv_inds = latent_var_indices(ram)
@@ -66,11 +78,22 @@ function latent_scores_operator(::SemBartlettScores, model::AbstractSemSingle, p
     return inv(lv_FA' * ov_S⁻¹ * lv_FA) * lv_FA' * ov_S⁻¹
 end
 
-function predict_latent_scores(method::SemScoresPredictMethod, model::AbstractSemSingle, params::AbstractVector, data::SemObserved)
-    n_man(data) == nobserved_vars(model) ||
-        throw(DimensionMismatch("Number of variables in data ($(n_obs(data))) does not match the number of observed variables in the model ($(nobserved_vars(model)))"))
-    length(params) == nparams(model) ||
-        throw(DimensionMismatch("The length of parameters vector ($(length(params))) does not match the number of parameters in the model ($(nparams(model)))"))
+function predict_latent_scores(
+    method::SemScoresPredictMethod,
+    model::AbstractSemSingle,
+    params::AbstractVector,
+    data::SemObserved,
+)
+    n_man(data) == nobserved_vars(model) || throw(
+        DimensionMismatch(
+            "Number of variables in data ($(n_obs(data))) does not match the number of observed variables in the model ($(nobserved_vars(model)))",
+        ),
+    )
+    length(params) == nparams(model) || throw(
+        DimensionMismatch(
+            "The length of parameters vector ($(length(params))) does not match the number of parameters in the model ($(nparams(model)))",
+        ),
+    )
 
     implied = model.imply
     hasmeanstruct = MeanStructure(implied) === HasMeanStructure
@@ -83,7 +106,8 @@ function predict_latent_scores(method::SemScoresPredictMethod, model::AbstractSe
 
     lv_scores_op = latent_scores_operator(method, model, params)
 
-    data = data.data .- (isnothing(data.obs_mean) ? mean(data.data, dims=1) : data.obs_mean')
+    data =
+        data.data .- (isnothing(data.obs_mean) ? mean(data.data, dims = 1) : data.obs_mean')
     lv_scores = data * lv_scores_op'
     if hasmeanstruct
         M = materialize(ram.M, params)

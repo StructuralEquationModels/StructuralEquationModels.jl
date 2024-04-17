@@ -33,11 +33,9 @@ end
 ### Constructors
 ############################################################################################
 
-function ImplyEmpty(;
-        specification::SemSpecification,
-        kwargs...)
+function ImplyEmpty(; specification::SemSpecification, kwargs...)
 
-        return ImplyEmpty(params(spec))
+    return ImplyEmpty(params(spec))
 end
 
 ############################################################################################

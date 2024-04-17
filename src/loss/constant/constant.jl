@@ -33,7 +33,7 @@ end
 ### Constructors
 ############################################################################################
 
-function SemConstant(;constant_loss, kwargs...)
+function SemConstant(; constant_loss, kwargs...)
     return SemConstant(constant_loss)
 end
 
@@ -43,10 +43,12 @@ end
 
 objective(constant::SemConstant, model::AbstractSem, par) = constant.c
 gradient(constant::SemConstant, model::AbstractSem, par) = zero(par)
-hessian(constant::SemConstant, model::AbstractSem, par) = zeros(eltype(par), length(par), length(par))
+hessian(constant::SemConstant, model::AbstractSem, par) =
+    zeros(eltype(par), length(par), length(par))
 
 ############################################################################################
 ### Recommended methods
 ############################################################################################
 
-update_observed(loss_function::SemConstant, observed::SemObserved; kwargs...) = loss_function
+update_observed(loss_function::SemConstant, observed::SemObserved; kwargs...) =
+    loss_function

@@ -7,7 +7,8 @@ end
 function test_gradient(model, parameters; rtol = 1e-10, atol = 0)
     @test nparams(model) == length(parameters)
 
-    true_grad = FiniteDiff.finite_difference_gradient(Base.Fix1(objective!, model), parameters)
+    true_grad =
+        FiniteDiff.finite_difference_gradient(Base.Fix1(objective!, model), parameters)
     gradient = similar(parameters)
 
     # F and G
@@ -22,7 +23,8 @@ function test_gradient(model, parameters; rtol = 1e-10, atol = 0)
 end
 
 function test_hessian(model, parameters; rtol = 1e-4, atol = 0)
-    true_hessian = FiniteDiff.finite_difference_hessian(Base.Fix1(objective!, model), parameters)
+    true_hessian =
+        FiniteDiff.finite_difference_hessian(Base.Fix1(objective!, model), parameters)
     hessian = similar(parameters, size(true_hessian))
     gradient = similar(parameters)
 
@@ -66,22 +68,29 @@ fitmeasure_names_ls = Dict(
 )
 
 function test_fitmeasures(
-        measures,
-        measures_lav;
-        rtol = 1e-4,
-        atol = 0,
-        fitmeasure_names = fitmeasure_names_ml)
+    measures,
+    measures_lav;
+    rtol = 1e-4,
+    atol = 0,
+    fitmeasure_names = fitmeasure_names_ml,
+)
 
     @testset "$name" for (key, name) in pairs(fitmeasure_names)
-            measure_lav = measures_lav.x[findfirst(==(name), measures_lav[!, 1])]
-            @test measures[key] ≈ measure_lav rtol = rtol atol = atol
+        measure_lav = measures_lav.x[findfirst(==(name), measures_lav[!, 1])]
+        @test measures[key] ≈ measure_lav rtol = rtol atol = atol
     end
 end
 
-function test_estimates(partable::ParameterTable, partable_lav;
-        rtol = 1e-10, atol = 0, col = :estimate,
-        lav_col = :est, lav_group = nothing,
-        skip::Bool = false)
+function test_estimates(
+    partable::ParameterTable,
+    partable_lav;
+    rtol = 1e-10,
+    atol = 0,
+    col = :estimate,
+    lav_col = :est,
+    lav_group = nothing,
+    skip::Bool = false,
+)
 
     actual = SEM.param_values(partable, col)
     expected = SEM.lavaan_param_values(partable_lav, partable, lav_col, lav_group)
@@ -89,15 +98,23 @@ function test_estimates(partable::ParameterTable, partable_lav;
     @test !any(isnan, expected)
 
     if skip # workaround skip=false not supported in earlier versions
-        @test actual ≈ expected rtol = rtol atol = atol norm=Base.Fix2(norm, Inf) skip = skip
+        @test actual ≈ expected rtol = rtol atol = atol norm = Base.Fix2(norm, Inf) skip =
+            skip
     else
-        @test actual ≈ expected rtol = rtol atol = atol norm=Base.Fix2(norm, Inf)
+        @test actual ≈ expected rtol = rtol atol = atol norm = Base.Fix2(norm, Inf)
     end
 end
 
-function test_estimates(ens_partable::EnsembleParameterTable, partable_lav;
-    rtol = 1e-10, atol = 0, col = :estimate, lav_col = :est,
-    lav_groups::AbstractDict, skip::Bool = false)
+function test_estimates(
+    ens_partable::EnsembleParameterTable,
+    partable_lav;
+    rtol = 1e-10,
+    atol = 0,
+    col = :estimate,
+    lav_col = :est,
+    lav_groups::AbstractDict,
+    skip::Bool = false,
+)
 
     actual = fill(NaN, nparams(ens_partable))
     expected = fill(NaN, nparams(ens_partable))
@@ -109,8 +126,9 @@ function test_estimates(ens_partable::EnsembleParameterTable, partable_lav;
     @test !any(isnan, expected)
 
     if skip # workaround skip=false not supported in earlier versions
-        @test actual ≈ expected rtol = rtol atol = atol norm=Base.Fix2(norm, Inf) skip = skip
+        @test actual ≈ expected rtol = rtol atol = atol norm = Base.Fix2(norm, Inf) skip =
+            skip
     else
-        @test actual ≈ expected rtol = rtol atol = atol norm=Base.Fix2(norm, Inf)
+        @test actual ≈ expected rtol = rtol atol = atol norm = Base.Fix2(norm, Inf)
     end
 end
