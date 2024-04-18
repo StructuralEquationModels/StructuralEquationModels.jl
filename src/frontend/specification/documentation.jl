@@ -47,7 +47,6 @@ See the online documentation on [Multigroup models](@ref).
 """
 function EnsembleParameterTable end
 
-
 """
 `RAMMatrices` contain the specification of a structural equation model.
 

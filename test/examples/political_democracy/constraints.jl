@@ -17,7 +17,7 @@ function ineq_constraint(x, grad)
         grad[30] = -x[31]
         grad[31] = -x[30]
     end
-    0.6 - x[30]*x[31]
+    0.6 - x[30] * x[31]
 end
 
 constrained_optimizer = SemOptimizerNLopt(;
@@ -25,14 +25,11 @@ constrained_optimizer = SemOptimizerNLopt(;
     local_algorithm = :LD_LBFGS,
     options = Dict(:xtol_rel => 1e-4),
     # equality_constraints = NLoptConstraint(;f = eq_constraint, tol = 1e-14),
-    inequality_constraints = NLoptConstraint(;f = ineq_constraint, tol = 1e-8),
+    inequality_constraints = NLoptConstraint(; f = ineq_constraint, tol = 1e-8),
 )
 
-model_ml_constrained = Sem(
-    specification = spec,
-    data = dat,
-    optimizer = constrained_optimizer
-)
+model_ml_constrained =
+    Sem(specification = spec, data = dat, optimizer = constrained_optimizer)
 
 solution_constrained = sem_fit(model_ml_constrained)
 
@@ -42,7 +39,7 @@ model_ml_maxeval = Sem(
     specification = spec,
     data = dat,
     optimizer = SemOptimizerNLopt,
-    options = Dict(:maxeval => 10)
+    options = Dict(:maxeval => 10),
 )
 
 ############################################################################################
@@ -57,8 +54,9 @@ end
 
 @testset "ml_solution_constrained" begin
     solution_constrained = sem_fit(model_ml_constrained)
-    @test solution_constrained.solution[31]*solution_constrained.solution[30] >= (0.6-1e-8)
+    @test solution_constrained.solution[31] * solution_constrained.solution[30] >=
+          (0.6 - 1e-8)
     @test all(abs.(solution_constrained.solution) .< 10)
-    @test solution_constrained.optimization_result.result[3] == :FTOL_REACHED skip=true
+    @test solution_constrained.optimization_result.result[3] == :FTOL_REACHED skip = true
     @test abs(solution_constrained.minimum - 21.21) < 0.01
 end

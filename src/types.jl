@@ -36,17 +36,13 @@ mutable struct SemLoss{F <: Tuple, T}
 end
 
 function SemLoss(functions...; loss_weights = nothing, kwargs...)
-
-    if !isnothing(loss_weights) 
+    if !isnothing(loss_weights)
         loss_weights = SemWeight.(loss_weights)
     else
         loss_weights = Tuple(SemWeight(nothing) for _ in 1:length(functions))
     end
 
-    return SemLoss(
-        functions,
-        loss_weights
-        )
+    return SemLoss(functions, loss_weights)
 end
 
 # weights for loss functions or models. If the weight is nothing, multiplication returs second argument
@@ -55,7 +51,7 @@ struct SemWeight{T}
 end
 
 Base.:*(x::SemWeight{Nothing}, y) = y
-Base.:*(x::SemWeight, y) = x.w*y
+Base.:*(x::SemWeight, y) = x.w * y
 
 """
 Supertype of all objects that can serve as the `optimizer` field of a SEM.
@@ -100,7 +96,8 @@ Returns a Sem with fields
 - `loss::SemLoss`: Computes the objective and gradient of a sum of loss functions. See also [`SemLoss`](@ref).
 - `optimizer::SemOptimizer`: Connects the model to the optimizer. See also [`SemOptimizer`](@ref).
 """
-mutable struct Sem{O <: SemObserved, I <: SemImply, L <: SemLoss, D <: SemOptimizer} <: AbstractSemSingle{O, I, L, D}
+mutable struct Sem{O <: SemObserved, I <: SemImply, L <: SemLoss, D <: SemOptimizer} <:
+               AbstractSemSingle{O, I, L, D}
     observed::O
     imply::I
     loss::L
@@ -128,7 +125,8 @@ Returns a Sem with fields
 - `loss::SemLoss`: Computes the objective and gradient of a sum of loss functions. See also [`SemLoss`](@ref).
 - `optimizer::SemOptimizer`: Connects the model to the optimizer. See also [`SemOptimizer`](@ref).
 """
-struct SemFiniteDiff{O <: SemObserved, I <: SemImply, L <: SemLoss, D <: SemOptimizer} <: AbstractSemSingle{O, I, L, D}
+struct SemFiniteDiff{O <: SemObserved, I <: SemImply, L <: SemLoss, D <: SemOptimizer} <:
+       AbstractSemSingle{O, I, L, D}
     observed::O
     imply::I
     loss::L
@@ -170,10 +168,10 @@ function SemEnsemble(models...; optimizer = SemOptimizerOptim, weights = nothing
     npar = n_par(models[1])
 
     # default weights
-    
+
     if isnothing(weights)
         nobs_total = sum(n_obs.(models))
-        weights = [n_obs(model)/nobs_total for model in models]
+        weights = [n_obs(model) / nobs_total for model in models]
     end
 
     # check identifier equality
@@ -188,16 +186,10 @@ function SemEnsemble(models...; optimizer = SemOptimizerOptim, weights = nothing
 
     # optimizer
     if !isa(optimizer, SemOptimizer)
-        optimizer = optimizer(;kwargs...)
+        optimizer = optimizer(; kwargs...)
     end
 
-    return SemEnsemble(
-        n,
-        models,
-        weights,
-        optimizer,
-        id
-        )
+    return SemEnsemble(n, models, weights, optimizer, id)
 end
 
 """

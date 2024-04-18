@@ -65,7 +65,28 @@ Additional interfaces
 Only available in gradient! calls:
 - `I_A⁻¹(::RAM)` -> ``(I-A)^{-1}``
 """
-mutable struct RAM{A1, A2, A3, A4, A5, A6, V, V2, I1, I2, I3, M1, M2, M3, M4, S1, S2, S3, B, D} <: SemImply
+mutable struct RAM{
+    A1,
+    A2,
+    A3,
+    A4,
+    A5,
+    A6,
+    V,
+    V2,
+    I1,
+    I2,
+    I3,
+    M1,
+    M2,
+    M3,
+    M4,
+    S1,
+    S2,
+    S3,
+    B,
+    D,
+} <: SemImply
     Σ::A1
     A::A2
     S::A3
@@ -100,26 +121,27 @@ using StructuralEquationModels
 ############################################################################################
 
 function RAM(;
-        specification,
-        #vech = false,
-        gradient = true,
-        meanstructure = false,
-        kwargs...)
-
+    specification,
+    #vech = false,
+    gradient = true,
+    meanstructure = false,
+    kwargs...,
+)
     ram_matrices = RAMMatrices(specification)
     identifier = StructuralEquationModels.identifier(ram_matrices)
-
 
     # get dimensions of the model
     n_par = length(ram_matrices.parameters)
     n_var, n_nod = ram_matrices.size_F
     parameters = ram_matrices.parameters
-    F = zeros(ram_matrices.size_F); F[CartesianIndex.(1:n_var, ram_matrices.F_ind)] .= 1.0
+    F = zeros(ram_matrices.size_F)
+    F[CartesianIndex.(1:n_var, ram_matrices.F_ind)] .= 1.0
 
     # get indices
     A_indices = copy(ram_matrices.A_ind)
     S_indices = copy(ram_matrices.S_ind)
-    !isnothing(ram_matrices.M_ind) ? M_indices = copy(ram_matrices.M_ind) : M_indices = nothing
+    !isnothing(ram_matrices.M_ind) ? M_indices = copy(ram_matrices.M_ind) :
+    M_indices = nothing
 
     #preallocate arrays
     A_pre = zeros(n_nod, n_nod)
@@ -127,7 +149,7 @@ function RAM(;
     !isnothing(M_indices) ? M_pre = zeros(n_nod) : M_pre = nothing
 
     set_RAMConstants!(A_pre, S_pre, M_pre, ram_matrices.constants)
-    
+
     A_pre = check_acyclic(A_pre, n_par, A_indices)
 
     # pre-allocate some matrices
@@ -146,7 +168,6 @@ function RAM(;
 
     # μ
     if meanstructure
-
         has_meanstructure = Val(true)
 
         if gradient
@@ -172,25 +193,20 @@ function RAM(;
         F,
         μ,
         M_pre,
-
         n_par,
         ram_matrices,
         has_meanstructure,
-
         A_indices,
         S_indices,
         M_indices,
-
         F⨉I_A⁻¹,
         F⨉I_A⁻¹S,
         I_A,
         copy(I_A),
-
         ∇A,
         ∇S,
         ∇M,
-
-        identifier
+        identifier,
     )
 end
 
@@ -199,78 +215,73 @@ end
 ############################################################################################
 
 # dispatch on meanstructure
-objective!(imply::RAM, par, model::AbstractSemSingle) = 
+objective!(imply::RAM, par, model::AbstractSemSingle) =
     objective!(imply, par, model, imply.has_meanstructure)
-gradient!(imply::RAM, par, model::AbstractSemSingle) = 
+gradient!(imply::RAM, par, model::AbstractSemSingle) =
     gradient!(imply, par, model, imply.has_meanstructure)
 
 # objective and gradient
-function objective!(imply::RAM, parameters, model, has_meanstructure::Val{T}) where T
-    
+function objective!(imply::RAM, parameters, model, has_meanstructure::Val{T}) where {T}
     fill_A_S_M(
         imply.A,
         imply.S,
         imply.M,
-        imply.A_indices, 
+        imply.A_indices,
         imply.S_indices,
         imply.M_indices,
-        parameters)
+        parameters,
+    )
 
     imply.I_A .= I - imply.A
 
     copyto!(imply.F⨉I_A⁻¹, imply.F)
     rdiv!(imply.F⨉I_A⁻¹, factorize(imply.I_A))
 
-    Σ_RAM!(
-        imply.Σ,
-        imply.F⨉I_A⁻¹,
-        imply.S,
-        imply.F⨉I_A⁻¹S)
+    Σ_RAM!(imply.Σ, imply.F⨉I_A⁻¹, imply.S, imply.F⨉I_A⁻¹S)
 
     if T
         μ_RAM!(imply.μ, imply.F⨉I_A⁻¹, imply.M)
     end
-
 end
 
-function gradient!(imply::RAM, parameters, model::AbstractSemSingle, has_meanstructure::Val{T}) where T
-    
+function gradient!(
+    imply::RAM,
+    parameters,
+    model::AbstractSemSingle,
+    has_meanstructure::Val{T},
+) where {T}
     fill_A_S_M(
-        imply.A, 
+        imply.A,
         imply.S,
         imply.M,
-        imply.A_indices, 
+        imply.A_indices,
         imply.S_indices,
         imply.M_indices,
-        parameters)
+        parameters,
+    )
 
     imply.I_A .= I - imply.A
     copyto!(imply.I_A⁻¹, imply.I_A)
 
     imply.I_A⁻¹ .= LinearAlgebra.inv!(factorize(imply.I_A⁻¹))
-    imply.F⨉I_A⁻¹ .= imply.F*imply.I_A⁻¹
+    imply.F⨉I_A⁻¹ .= imply.F * imply.I_A⁻¹
 
-    Σ_RAM!(
-        imply.Σ,
-        imply.F⨉I_A⁻¹,
-        imply.S,
-        imply.F⨉I_A⁻¹S)
+    Σ_RAM!(imply.Σ, imply.F⨉I_A⁻¹, imply.S, imply.F⨉I_A⁻¹S)
 
     if T
         μ_RAM!(imply.μ, imply.F⨉I_A⁻¹, imply.M)
     end
-
 end
 
-hessian!(imply::RAM, par, model::AbstractSemSingle, has_meanstructure) = 
+hessian!(imply::RAM, par, model::AbstractSemSingle, has_meanstructure) =
     gradient!(imply, par, model, has_meanstructure)
-objective_gradient!(imply::RAM, par, model::AbstractSemSingle, has_meanstructure) = 
+objective_gradient!(imply::RAM, par, model::AbstractSemSingle, has_meanstructure) =
     gradient!(imply, par, model, has_meanstructure)
-objective_hessian!(imply::RAM, par, model::AbstractSemSingle, has_meanstructure) = 
+objective_hessian!(imply::RAM, par, model::AbstractSemSingle, has_meanstructure) =
     gradient!(imply, par, model, has_meanstructure)
-gradient_hessian!(imply::RAM, par, model::AbstractSemSingle, has_meanstructure) = 
+gradient_hessian!(imply::RAM, par, model::AbstractSemSingle, has_meanstructure) =
     gradient!(imply, par, model, has_meanstructure)
-objective_gradient_hessian!(imply::RAM, par, model::AbstractSemSingle, has_meanstructure) = 
+objective_gradient_hessian!(imply::RAM, par, model::AbstractSemSingle, has_meanstructure) =
     gradient!(imply, par, model, has_meanstructure)
 
 ############################################################################################
@@ -280,11 +291,11 @@ objective_gradient_hessian!(imply::RAM, par, model::AbstractSemSingle, has_means
 identifier(imply::RAM) = imply.identifier
 n_par(imply::RAM) = imply.n_par
 
-function update_observed(imply::RAM, observed::SemObserved; kwargs...) 
+function update_observed(imply::RAM, observed::SemObserved; kwargs...)
     if n_man(observed) == size(imply.Σ, 1)
         return imply
     else
-        return RAM(;observed = observed, kwargs...)
+        return RAM(; observed = observed, kwargs...)
     end
 end
 
@@ -335,13 +346,10 @@ function check_acyclic(A_pre, n_par, A_indices)
     A_rand = copy(A_pre)
     randpar = rand(n_par)
 
-    fill_matrix(
-        A_rand,
-        A_indices,
-        randpar)
+    fill_matrix(A_rand, A_indices, randpar)
 
     # check if the model is acyclic
-    acyclic = isone(det(I-A_rand))
+    acyclic = isone(det(I - A_rand))
 
     # check if A is lower or upper triangular
     if iszero(A_rand[.!tril(ones(Bool, size(A_pre)...))])
@@ -349,7 +357,8 @@ function check_acyclic(A_pre, n_par, A_indices)
     elseif iszero(A_rand[.!tril(ones(Bool, size(A_pre)...))'])
         A_pre = UpperTriangular(A_pre)
     elseif acyclic
-        @info "Your model is acyclic, specifying the A Matrix as either Upper or Lower Triangular can have great performance benefits.\n" maxlog=1
+        @info "Your model is acyclic, specifying the A Matrix as either Upper or Lower Triangular can have great performance benefits.\n" maxlog =
+            1
     end
 
     return A_pre
