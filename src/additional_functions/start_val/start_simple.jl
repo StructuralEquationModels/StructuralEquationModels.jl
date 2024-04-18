@@ -18,11 +18,12 @@ function start_simple end
 # Single Models ----------------------------------------------------------------------------
 function start_simple(model::AbstractSemSingle; kwargs...)
     return start_simple(
-        model.observed, 
+        model.observed,
         model.imply,
-        model.optimizer, 
+        model.optimizer,
         model.loss.functions...,
-        kwargs...)
+        kwargs...,
+    )
 end
 
 function start_simple(observed, imply, optimizer, args...; kwargs...)
@@ -31,7 +32,6 @@ end
 
 # Ensemble Models --------------------------------------------------------------------------
 function start_simple(model::SemEnsemble; kwargs...)
-    
     start_vals = []
 
     for sem in model.sems
@@ -48,7 +48,6 @@ function start_simple(model::SemEnsemble; kwargs...)
     end
 
     return start_val
-
 end
 
 function start_simple(
@@ -61,14 +60,13 @@ function start_simple(
     start_covariances_latent = 0.0,
     start_covariances_obs_lat = 0.0,
     start_means = 0.0,
-    kwargs...)
-
-    A_ind, S_ind, F_ind, M_ind, parameters = 
-        ram_matrices.A_ind, 
-        ram_matrices.S_ind, 
-        ram_matrices.F_ind, 
-        ram_matrices.M_ind, 
-        ram_matrices.parameters
+    kwargs...,
+)
+    A_ind, S_ind, F_ind, M_ind, parameters = ram_matrices.A_ind,
+    ram_matrices.S_ind,
+    ram_matrices.F_ind,
+    ram_matrices.M_ind,
+    ram_matrices.parameters
 
     n_par = length(parameters)
     start_val = zeros(n_par)
@@ -79,7 +77,7 @@ function start_simple(
     for i in 1:n_par
         if length(S_ind[i]) != 0
             # use the first occurence of the parameter to determine starting value
-            c_ind = C_indices[S_ind[i][1]] 
+            c_ind = C_indices[S_ind[i][1]]
             if c_ind[1] == c_ind[2]
                 if c_ind[1] ∈ F_ind
                     start_val[i] = start_variances_observed

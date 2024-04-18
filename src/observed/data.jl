@@ -54,40 +54,41 @@ function check_arguments_SemObservedData(kwargs...)
 
 end
 
-
 function SemObservedData(;
-        specification,
-        data,
-
-        obs_colnames = nothing,
-        spec_colnames = nothing,
-
-        meanstructure = false,
-        compute_covariance = true,
-
-        rowwise = false,
-
-        kwargs...)
-
-    if isnothing(spec_colnames) spec_colnames = get_colnames(specification) end
+    specification,
+    data,
+    obs_colnames = nothing,
+    spec_colnames = nothing,
+    meanstructure = false,
+    compute_covariance = true,
+    rowwise = false,
+    kwargs...,
+)
+    if isnothing(spec_colnames)
+        spec_colnames = get_colnames(specification)
+    end
 
     if !isnothing(spec_colnames)
         if isnothing(obs_colnames)
             try
                 data = data[:, spec_colnames]
             catch
-                throw(ArgumentError(
-                    "Your `data` can not be indexed by symbols. "*
-                    "Maybe you forgot to provide column names via the `obs_colnames = ...` argument.")
-                    )
+                throw(
+                    ArgumentError(
+                        "Your `data` can not be indexed by symbols. " *
+                        "Maybe you forgot to provide column names via the `obs_colnames = ...` argument.",
+                    ),
+                )
             end
         else
             if data isa DataFrame
-                throw(ArgumentError(
-                    "You passed your data as a `DataFrame`, but also specified `obs_colnames`. "*
-                    "Please make sure the column names of your data frame indicate the correct variables "*
-                    "or pass your data in a different format.")
-                    )
+                throw(
+                    ArgumentError(
+                        "You passed your data as a `DataFrame`, but also specified `obs_colnames`. " *
+                        "Please make sure the column names of your data frame indicate the correct variables " *
+                        "or pass your data in a different format.",
+                    ),
+                )
             end
 
             if !(eltype(obs_colnames) <: Symbol)
@@ -103,7 +104,7 @@ function SemObservedData(;
     end
 
     n_obs, n_man = Float64.(size(data))
-    
+
     if compute_covariance
         obs_cov = Statistics.cov(data)
     else
@@ -118,7 +119,7 @@ function SemObservedData(;
     end
 
     if rowwise
-        data_rowwise = [data[i, :] for i = 1:convert(Int64, n_obs)]
+        data_rowwise = [data[i, :] for i in 1:convert(Int64, n_obs)]
     else
         data_rowwise = nothing
     end

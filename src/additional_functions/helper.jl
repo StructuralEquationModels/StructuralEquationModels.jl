@@ -18,7 +18,6 @@ end
  =#
 
 function semvec(observed, imply, loss, optimizer)
-
     observed = make_onelement_array(observed)
     imply = make_onelement_array(imply)
     loss = make_onelement_array(loss)
@@ -30,23 +29,18 @@ function semvec(observed, imply, loss, optimizer)
     return sem_vec
 end
 
-function get_observed(rowind, data, semobserved;
-            args = (),
-            kwargs = NamedTuple())
+function get_observed(rowind, data, semobserved; args = (), kwargs = NamedTuple())
     observed_vec = Vector{semobserved}(undef, length(rowind))
     for i in 1:length(rowind)
-        observed_vec[i] = semobserved(
-                            args...;
-                            data = Matrix(data[rowind[i], :]),
-                            kwargs...)
+        observed_vec[i] = semobserved(args...; data = Matrix(data[rowind[i], :]), kwargs...)
     end
     return observed_vec
 end
 
 function skipmissing_mean(mat)
     means = Vector{Float64}(undef, size(mat, 2))
-    for i = 1:size(mat, 2)
-        @views means[i] = mean(skipmissing(mat[:,i]))
+    for i in 1:size(mat, 2)
+        @views means[i] = mean(skipmissing(mat[:, i]))
     end
     return means
 end
@@ -60,7 +54,7 @@ end
 
 function remove_all_missing(data)
     keep = Vector{Int64}()
-    for i = 1:size(data, 1)
+    for i in 1:size(data, 1)
         if any(.!ismissing.(data[i, :]))
             push!(keep, i)
         end
@@ -69,7 +63,7 @@ function remove_all_missing(data)
 end
 
 function batch_inv!(fun, model)
-    for i = 1:size(fun.inverses, 1)
+    for i in 1:size(fun.inverses, 1)
         fun.inverses[i] .= LinearAlgebra.inv!(fun.choleskys[i])
     end
 end
@@ -109,32 +103,32 @@ end
 function sparse_outer_mul!(C, A, B::Vector, ind) #computes A*S*B -> C, where ind gives the entries of S that are 1
     fill!(C, 0.0)
     @views @inbounds for i in 1:length(ind)
-        C .+= B[ind[i][2]].*A[:, ind[i][1]]
+        C .+= B[ind[i][2]] .* A[:, ind[i][1]]
     end
 end
 
 function cov_and_mean(rows; corrected = false)
     data = transpose(reduce(hcat, rows))
-    size(rows, 1) > 1 ?
-        obs_cov = Statistics.cov(data; corrected = corrected) :
-        obs_cov = reshape([0.0],1,1)
+    size(rows, 1) > 1 ? obs_cov = Statistics.cov(data; corrected = corrected) :
+    obs_cov = reshape([0.0], 1, 1)
     obs_mean = vec(Statistics.mean(data, dims = 1))
     return obs_cov, obs_mean
 end
 
 function duplication_matrix(nobs)
     nobs = Int(nobs)
-    n1 = Int(nobs*(nobs+1)*0.5)
+    n1 = Int(nobs * (nobs + 1) * 0.5)
     n2 = Int(nobs^2)
     Dt = zeros(n1, n2)
 
     for j in 1:nobs
         for i in j:nobs
             u = zeros(n1)
-            u[Int((j-1)*nobs + i-0.5*j*(j-1))] = 1
+            u[Int((j - 1) * nobs + i - 0.5 * j * (j - 1))] = 1
             T = zeros(nobs, nobs)
-            T[j,i] = 1; T[i, j] = 1
-            Dt += u*transpose(vec(T)) 
+            T[j, i] = 1
+            T[i, j] = 1
+            Dt += u * transpose(vec(T))
         end
     end
     D = transpose(Dt)
@@ -143,74 +137,75 @@ end
 
 function elimination_matrix(nobs)
     nobs = Int(nobs)
-    n1 = Int(nobs*(nobs+1)*0.5)
+    n1 = Int(nobs * (nobs + 1) * 0.5)
     n2 = Int(nobs^2)
     L = zeros(n1, n2)
 
     for j in 1:nobs
         for i in j:nobs
             u = zeros(n1)
-            u[Int((j-1)*nobs + i-0.5*j*(j-1))] = 1
+            u[Int((j - 1) * nobs + i - 0.5 * j * (j - 1))] = 1
             T = zeros(nobs, nobs)
             T[i, j] = 1
-            L += u*transpose(vec(T)) 
+            L += u * transpose(vec(T))
         end
     end
     return L
 end
 
 function commutation_matrix(n; tosparse = false)
-
     M = zeros(n^2, n^2)
 
-    for i = 1:n
-        for j = 1:n
-            M[i + n*(j - 1), j + n*(i - 1)] = 1.0
+    for i in 1:n
+        for j in 1:n
+            M[i+n*(j-1), j+n*(i-1)] = 1.0
         end
     end
 
-    if tosparse M = sparse(M) end
+    if tosparse
+        M = sparse(M)
+    end
 
     return M
-
 end
 
 function commutation_matrix_pre_square(A)
-
     n2 = size(A, 1)
     n = Int(sqrt(n2))
 
     ind = repeat(1:n, inner = n)
-    indadd = (0:(n-1))*n
-    for i in 1:n ind[((i-1)*n+1):i*n] .+= indadd end
+    indadd = (0:(n-1)) * n
+    for i in 1:n
+        ind[((i-1)*n+1):i*n] .+= indadd
+    end
 
     A_post = A[ind, :]
 
     return A_post
-
 end
 
 function commutation_matrix_pre_square_add!(B, A) # comuptes B + KₙA
-
     n2 = size(A, 1)
     n = Int(sqrt(n2))
 
     ind = repeat(1:n, inner = n)
-    indadd = (0:(n-1))*n
-    for i in 1:n ind[((i-1)*n+1):i*n] .+= indadd end
+    indadd = (0:(n-1)) * n
+    for i in 1:n
+        ind[((i-1)*n+1):i*n] .+= indadd
+    end
 
     @views @inbounds B .+= A[ind, :]
 
     return B
-
 end
 
 function get_commutation_lookup(n2::Int64)
-
     n = Int(sqrt(n2))
     ind = repeat(1:n, inner = n)
-    indadd = (0:(n-1))*n
-    for i in 1:n ind[((i-1)*n+1):i*n] .+= indadd end
+    indadd = (0:(n-1)) * n
+    for i in 1:n
+        ind[((i-1)*n+1):i*n] .+= indadd
+    end
 
     lookup = Dict{Int64, Int64}()
 
@@ -220,15 +215,12 @@ function get_commutation_lookup(n2::Int64)
     end
 
     return lookup
-    
 end
 
 function commutation_matrix_pre_square!(A::SparseMatrixCSC, lookup) # comuptes B + KₙA
-    
     for (i, rowind) in enumerate(A.rowval)
         A.rowval[i] = lookup[rowind]
     end
-
 end
 
 function commutation_matrix_pre_square!(A::SparseMatrixCSC) # computes KₙA
@@ -248,21 +240,18 @@ function commutation_matrix_pre_square(A::SparseMatrixCSC, lookup)
     return B
 end
 
-
 function commutation_matrix_pre_square_add_mt!(B, A) # comuptes B + KₙA # 0 allocations but slower
-
     n2 = size(A, 1)
     n = Int(sqrt(n2))
 
-    indadd = (0:(n-1))*n
+    indadd = (0:(n-1)) * n
 
-    Threads.@threads for i = 1:n
-        for j = 1:n
+    Threads.@threads for i in 1:n
+        for j in 1:n
             row = i + indadd[j]
             @views @inbounds B[row, :] .+= A[row, :]
         end
     end
 
     return B
-
 end

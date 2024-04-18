@@ -54,19 +54,19 @@ use this if you are sure your observed data is in the right format.
 - `spec_colnames::Vector{Symbol} = nothing`: overwrites column names of the specification object
 """
 mutable struct SemObservedMissing{
-        A <: AbstractArray,
-        D <: AbstractFloat,
-        O <: AbstractFloat,
-        P <: Vector,
-        P2 <: Vector,
-        R <: Vector,
-        PD <: AbstractArray,
-        PO <: AbstractArray,
-        PVO <: AbstractArray,
-        A2 <: AbstractArray,
-        A3 <: AbstractArray,
-        S <: EmMVNModel
-        } <: SemObserved
+    A <: AbstractArray,
+    D <: AbstractFloat,
+    O <: AbstractFloat,
+    P <: Vector,
+    P2 <: Vector,
+    R <: Vector,
+    PD <: AbstractArray,
+    PO <: AbstractArray,
+    PVO <: AbstractArray,
+    A2 <: AbstractArray,
+    A3 <: AbstractArray,
+    S <: EmMVNModel,
+} <: SemObserved
     data::A
     n_man::D
     n_obs::O
@@ -86,33 +86,37 @@ end
 ############################################################################################
 
 function SemObservedMissing(;
-        specification,
-        data,
-
-        obs_colnames = nothing,
-        spec_colnames = nothing,
-
-        kwargs...)
-
-    if isnothing(spec_colnames) spec_colnames = get_colnames(specification) end
+    specification,
+    data,
+    obs_colnames = nothing,
+    spec_colnames = nothing,
+    kwargs...,
+)
+    if isnothing(spec_colnames)
+        spec_colnames = get_colnames(specification)
+    end
 
     if !isnothing(spec_colnames)
         if isnothing(obs_colnames)
             try
                 data = data[:, spec_colnames]
             catch
-                throw(ArgumentError(
-                    "Your `data` can not be indexed by symbols. "*
-                    "Maybe you forgot to provide column names via the `obs_colnames = ...` argument.")
-                    )
+                throw(
+                    ArgumentError(
+                        "Your `data` can not be indexed by symbols. " *
+                        "Maybe you forgot to provide column names via the `obs_colnames = ...` argument.",
+                    ),
+                )
             end
         else
             if data isa DataFrame
-                throw(ArgumentError(
-                    "You passed your data as a `DataFrame`, but also specified `obs_colnames`. "*
-                    "Please make sure the column names of your data frame indicate the correct variables "*
-                    "or pass your data in a different format.")
-                    )
+                throw(
+                    ArgumentError(
+                        "You passed your data as a `DataFrame`, but also specified `obs_colnames`. " *
+                        "Please make sure the column names of your data frame indicate the correct variables " *
+                        "or pass your data in a different format.",
+                    ),
+                )
             end
 
             if !(eltype(obs_colnames) <: Symbol)
@@ -129,30 +133,28 @@ function SemObservedMissing(;
 
     # remove persons with only missings
     keep = Vector{Int64}()
-    for i = 1:size(data, 1)
+    for i in 1:size(data, 1)
         if any(.!ismissing.(data[i, :]))
             push!(keep, i)
         end
     end
     data = data[keep, :]
 
-
-
     n_obs, n_man = size(data)
 
     # compute and store the different missing patterns with their rowindices
     missings = ismissing.(data)
-    patterns = [missings[i, :] for i = 1:size(missings, 1)]
+    patterns = [missings[i, :] for i in 1:size(missings, 1)]
 
     patterns_cart = findall.(!, patterns)
-    data_rowwise = [data[i, patterns_cart[i]] for i = 1:n_obs]
+    data_rowwise = [data[i, patterns_cart[i]] for i in 1:n_obs]
     data_rowwise = convert.(Array{Float64}, data_rowwise)
 
     remember = Vector{BitArray{1}}()
-    rows = [Vector{Int64}(undef, 0) for i = 1:size(patterns, 1)]
-    for i = 1:size(patterns, 1)
+    rows = [Vector{Int64}(undef, 0) for i in 1:size(patterns, 1)]
+    for i in 1:size(patterns, 1)
         unknown = true
-        for j = 1:size(remember, 1)
+        for j in 1:size(remember, 1)
             if patterns[i] == remember[j]
                 push!(rows[j], i)
                 unknown = false
@@ -174,7 +176,7 @@ function SemObservedMissing(;
     rows = rows[sort_n_miss]
 
     pattern_n_obs = size.(rows, 1)
-    pattern_nvar_obs = length.(remember_cart) 
+    pattern_nvar_obs = length.(remember_cart)
 
     cov_mean = [cov_and_mean(data_rowwise[rows]) for rows in rows]
     obs_cov = [cov_mean[1] for cov_mean in cov_mean]
@@ -182,10 +184,20 @@ function SemObservedMissing(;
 
     em_model = EmMVNModel(zeros(n_man, n_man), zeros(n_man), false)
 
-    return SemObservedMissing(data, Float64(n_man), Float64(n_obs), remember_cart,
-    remember_cart_not, 
-    rows, data_rowwise, Float64.(pattern_n_obs), Float64.(pattern_nvar_obs),
-    obs_mean, obs_cov, em_model)
+    return SemObservedMissing(
+        data,
+        Float64(n_man),
+        Float64(n_obs),
+        remember_cart,
+        remember_cart_not,
+        rows,
+        data_rowwise,
+        Float64.(pattern_n_obs),
+        Float64.(pattern_nvar_obs),
+        obs_mean,
+        obs_cov,
+        em_model,
+    )
 end
 
 ############################################################################################

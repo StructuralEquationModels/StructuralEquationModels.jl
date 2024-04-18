@@ -47,40 +47,31 @@ struct SemObservedCovariance{B, C, D, O} <: SemObserved
 end
 using StructuralEquationModels
 function SemObservedCovariance(;
-        specification,
-        obs_cov,
-
-        obs_colnames = nothing,
-        spec_colnames = nothing,
-
-        obs_mean = nothing,
-        meanstructure = false,
-
-        n_obs = nothing,
-
-        kwargs...)
-
-
+    specification,
+    obs_cov,
+    obs_colnames = nothing,
+    spec_colnames = nothing,
+    obs_mean = nothing,
+    meanstructure = false,
+    n_obs = nothing,
+    kwargs...,
+)
     if !meanstructure & !isnothing(obs_mean)
-
         throw(ArgumentError("observed means were passed, but `meanstructure = false`"))
 
     elseif meanstructure & isnothing(obs_mean)
-
         throw(ArgumentError("`meanstructure = true`, but no observed means were passed"))
-
     end
 
-    if isnothing(spec_colnames) spec_colnames = get_colnames(specification) end
+    if isnothing(spec_colnames)
+        spec_colnames = get_colnames(specification)
+    end
 
     if !isnothing(spec_colnames) & isnothing(obs_colnames)
-
         throw(ArgumentError("no `obs_colnames` were specified"))
 
     elseif !isnothing(spec_colnames) & !(eltype(obs_colnames) <: Symbol)
-
         throw(ArgumentError("please specify `obs_colnames` as a vector of Symbols"))
-
     end
 
     if !isnothing(spec_colnames)
@@ -117,7 +108,11 @@ function reorder_obs_cov(obs_cov, spec_colnames, obs_colnames)
         return obs_cov
     else
         new_position = [findall(x .== obs_colnames)[1] for x in spec_colnames]
-        indices = reshape([CartesianIndex(i, j) for j in new_position for i in new_position], size(obs_cov, 1), size(obs_cov, 1))
+        indices = reshape(
+            [CartesianIndex(i, j) for j in new_position for i in new_position],
+            size(obs_cov, 1),
+            size(obs_cov, 1),
+        )
         obs_cov = obs_cov[indices]
         return obs_cov
     end

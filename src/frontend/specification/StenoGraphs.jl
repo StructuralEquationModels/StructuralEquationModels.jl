@@ -28,7 +28,7 @@ label(args...) = Label(args)
 ### constructor for parameter table from graph
 ############################################################################################
 
-function ParameterTable(;graph, observed_vars, latent_vars, g = 1, parname = :θ)
+function ParameterTable(; graph, observed_vars, latent_vars, g = 1, parname = :θ)
     graph = unique(graph)
     n = length(graph)
     from = Vector{Symbol}(undef, n)
@@ -38,7 +38,8 @@ function ParameterTable(;graph, observed_vars, latent_vars, g = 1, parname = :θ
     value_fixed = zeros(n)
     start = zeros(n)
     estimate = zeros(n)
-    identifier = Vector{Symbol}(undef, n); identifier .= Symbol("")
+    identifier = Vector{Symbol}(undef, n)
+    identifier .= Symbol("")
     # group = Vector{Symbol}(undef, n)
     # start_partable = zeros(Bool, n)
 
@@ -46,21 +47,21 @@ function ParameterTable(;graph, observed_vars, latent_vars, g = 1, parname = :θ
 
     for (i, element) in enumerate(graph)
         if element isa DirectedEdge
-            from[i] =  element.src.node
-            to[i] =  element.dst.node
+            from[i] = element.src.node
+            to[i] = element.dst.node
             parameter_type[i] = :→
         elseif element isa UndirectedEdge
-            from[i] =  element.src.node
-            to[i] =  element.dst.node
+            from[i] = element.src.node
+            to[i] = element.dst.node
             parameter_type[i] = :↔
         elseif element isa ModifiedEdge
             if element.edge isa DirectedEdge
-                from[i] =  element.edge.src.node
-                to[i] =  element.edge.dst.node
+                from[i] = element.edge.src.node
+                to[i] = element.edge.dst.node
                 parameter_type[i] = :→
             elseif element.edge isa UndirectedEdge
-                from[i] =  element.edge.src.node
-                to[i] =  element.edge.dst.node
+                from[i] = element.edge.src.node
+                to[i] = element.edge.dst.node
                 parameter_type[i] = :↔
             end
             for modifier in values(element.modifiers)
@@ -82,7 +83,7 @@ function ParameterTable(;graph, observed_vars, latent_vars, g = 1, parname = :θ
                     identifier[i] = modifier.value[g]
                 end
             end
-        end 
+        end
     end
 
     # make identifiers for parameters that are not labeled
@@ -107,11 +108,13 @@ function ParameterTable(;graph, observed_vars, latent_vars, g = 1, parname = :θ
             :value_fixed => value_fixed,
             :start => start,
             :estimate => estimate,
-            :identifier => identifier),
+            :identifier => identifier,
+        ),
         Dict(
             :latent_vars => latent_vars,
             :observed_vars => observed_vars,
-            :sorted_vars => sorted_vars)
+            :sorted_vars => sorted_vars,
+        ),
     )
 end
 
@@ -119,23 +122,23 @@ end
 ### constructor for EnsembleParameterTable from graph
 ############################################################################################
 
-function EnsembleParameterTable(;graph, observed_vars, latent_vars, groups)
-
+function EnsembleParameterTable(; graph, observed_vars, latent_vars, groups)
     graph = unique(graph)
 
     partable = EnsembleParameterTable(nothing)
 
     for (i, group) in enumerate(groups)
         push!(
-            partable.tables, 
-            Symbol(group) => 
-                ParameterTable(;
-                graph = graph, 
-                observed_vars = observed_vars, 
-                latent_vars = latent_vars, 
+            partable.tables,
+            Symbol(group) => ParameterTable(;
+                graph = graph,
+                observed_vars = observed_vars,
+                latent_vars = latent_vars,
                 g = i,
-                parname = Symbol(:g, i)))
+                parname = Symbol(:g, i),
+            ),
+        )
     end
 
-        return partable
+    return partable
 end

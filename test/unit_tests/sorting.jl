@@ -4,10 +4,7 @@
 
 sort!(partable)
 
-model_ml_sorted = Sem(
-    specification = partable,
-    data = dat
-)
+model_ml_sorted = Sem(specification = partable, data = dat)
 
 @testset "graph sorting" begin
     @test model_ml_sorted.imply.I_A isa LowerTriangular
