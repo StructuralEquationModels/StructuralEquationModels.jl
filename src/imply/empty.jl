@@ -34,16 +34,13 @@ end
 ### Constructors
 ############################################################################################
 
-function ImplyEmpty(;
-        specification,
-        kwargs...)
+function ImplyEmpty(; specification, kwargs...)
+    ram_matrices = RAMMatrices(specification)
+    identifier = StructuralEquationModels.identifier(ram_matrices)
 
-        ram_matrices = RAMMatrices(specification)
-        identifier = StructuralEquationModels.identifier(ram_matrices)
-        
-        n_par = length(ram_matrices.parameters)
+    n_par = length(ram_matrices.parameters)
 
-        return ImplyEmpty(identifier, n_par)
+    return ImplyEmpty(identifier, n_par)
 end
 
 ############################################################################################

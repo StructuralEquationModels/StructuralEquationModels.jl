@@ -15,7 +15,6 @@ end
 
 # constuct an empty table
 function ParameterTable(::Nothing)
-
     columns = Dict{Symbol, Any}(
         :from => Vector{Symbol}(),
         :parameter_type => Vector{Symbol}(),
@@ -31,7 +30,7 @@ function ParameterTable(::Nothing)
     variables = Dict{Symbol, Any}(
         :latent_vars => Vector{Symbol}(),
         :observed_vars => Vector{Symbol}(),
-        :sorted_vars => Vector{Symbol}()
+        :sorted_vars => Vector{Symbol}(),
     )
 
     return ParameterTable(columns, variables)
@@ -47,10 +46,10 @@ function Dict(partable::ParameterTable)
     return partable.columns
 end
 
-function DataFrame(
-        partable::ParameterTable; 
-        columns = nothing)
-    if isnothing(columns) columns = keys(partable.columns) end
+function DataFrame(partable::ParameterTable; columns = nothing)
+    if isnothing(columns)
+        columns = keys(partable.columns)
+    end
     out = DataFrame([key => partable.columns[key] for key in columns])
     return DataFrame(out)
 end
@@ -69,18 +68,21 @@ function Base.show(io::IO, partable::ParameterTable)
         :start,
         :estimate,
         :se,
-        :identifier]
+        :identifier,
+    ]
     existing_columns = [haskey(partable.columns, key) for key in relevant_columns]
-    
-    as_matrix = hcat([partable.columns[key] for key in relevant_columns[existing_columns]]...)
+
+    as_matrix =
+        hcat([partable.columns[key] for key in relevant_columns[existing_columns]]...)
     pretty_table(
-        io, 
+        io,
         as_matrix,
         header = (
             relevant_columns[existing_columns],
-            eltype.([partable.columns[key] for key in relevant_columns[existing_columns]])
+            eltype.([partable.columns[key] for key in relevant_columns[existing_columns]]),
         ),
-        tf = PrettyTables.tf_compact)
+        tf = PrettyTables.tf_compact,
+    )
 
     if haskey(partable.variables, :latent_vars)
         print(io, "Latent Variables:    $(partable.variables[:latent_vars]) \n")
@@ -96,13 +98,14 @@ end
 
 # Iteration --------------------------------------------------------------------------------
 
-Base.getindex(partable::ParameterTable, i::Int) =
-    (partable.columns[:from][i], 
-    partable.columns[:parameter_type][i], 
-    partable.columns[:to][i], 
-    partable.columns[:free][i], 
-    partable.columns[:value_fixed][i], 
-    partable.columns[:identifier][i])
+Base.getindex(partable::ParameterTable, i::Int) = (
+    partable.columns[:from][i],
+    partable.columns[:parameter_type][i],
+    partable.columns[:to][i],
+    partable.columns[:free][i],
+    partable.columns[:value_fixed][i],
+    partable.columns[:identifier][i],
+)
 
 function Base.length(partable::ParameterTable)
     len = missing
@@ -124,10 +127,11 @@ Base.showerror(io::IO, e::CyclicModelError) = print(io, e.msg)
 import Base.sort!, Base.sort
 
 function sort!(partable::ParameterTable)
-
     variables = [partable.variables[:latent_vars]; partable.variables[:observed_vars]]
 
-    is_regression = (partable.columns[:parameter_type] .== :→) .& (partable.columns[:from] .!= Symbol("1"))
+    is_regression =
+        (partable.columns[:parameter_type] .== :→) .&
+        (partable.columns[:from] .!= Symbol("1"))
 
     to = partable.columns[:to][is_regression]
     from = partable.columns[:from][is_regression]
@@ -136,9 +140,8 @@ function sort!(partable::ParameterTable)
 
     sorted = false
     while !sorted
-        
         acyclic = false
-        
+
         for (i, variable) in enumerate(variables)
             if !(variable ∈ to)
                 push!(sorted_variables, variable)
@@ -149,11 +152,15 @@ function sort!(partable::ParameterTable)
                 acyclic = true
             end
         end
-        
-        if !acyclic throw(CyclicModelError("your model is cyclic and therefore can not be ordered")) end
+
+        if !acyclic
+            throw(CyclicModelError("your model is cyclic and therefore can not be ordered"))
+        end
         acyclic = false
 
-        if length(variables) == 0 sorted = true end
+        if length(variables) == 0
+            sorted = true
+        end
     end
 
     push!(partable.variables, :sorted_vars => sorted_variables)
@@ -185,7 +192,12 @@ push!(partable::ParameterTable, d::Nothing) = nothing
 
 # update generic ---------------------------------------------------------------------------
 
-function update_partable!(partable::ParameterTable, model_identifier::AbstractDict, vec, column)
+function update_partable!(
+    partable::ParameterTable,
+    model_identifier::AbstractDict,
+    vec,
+    column,
+)
     new_col = Vector{eltype(vec)}(undef, length(partable))
     for (i, identifier) in enumerate(partable.columns[:identifier])
         if !(identifier == :const)
@@ -236,10 +248,11 @@ update_start!(partable::AbstractParameterTable, sem_fit::SemFit) =
     update_partable!(partable, sem_fit, sem_fit.start_val, :start)
 
 function update_start!(
-        partable::AbstractParameterTable, 
-        model::AbstractSem, 
-        start_val; 
-        kwargs...)
+    partable::AbstractParameterTable,
+    model::AbstractSem,
+    start_val;
+    kwargs...,
+)
     if !(start_val isa Vector)
         start_val = start_val(model; kwargs...)
     end
@@ -262,9 +275,10 @@ Write hessian standard errors computed for `sem_fit` to the `:se` column of `par
 
 """
 function update_se_hessian!(
-        partable::AbstractParameterTable, 
-        sem_fit::SemFit; 
-        hessian = :finitediff)
+    partable::AbstractParameterTable,
+    sem_fit::SemFit;
+    hessian = :finitediff,
+)
     se = se_hessian(sem_fit; hessian = hessian)
     return update_partable!(partable, sem_fit, se, :se)
 end

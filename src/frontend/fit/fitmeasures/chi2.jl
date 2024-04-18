@@ -10,22 +10,21 @@ function χ² end
 ############################################################################################
 
 # SemFit splices loss functions ------------------------------------------------------------
-χ²(sem_fit::SemFit{Mi, So, St, Mo, O} where {Mi, So, St, Mo <: AbstractSemSingle, O}) = 
-    χ²(
-        sem_fit,
-        sem_fit.model.observed,
-        sem_fit.model.imply,
-        sem_fit.model.optimizer,
-        sem_fit.model.loss.functions...
-        )
+χ²(sem_fit::SemFit{Mi, So, St, Mo, O} where {Mi, So, St, Mo <: AbstractSemSingle, O}) = χ²(
+    sem_fit,
+    sem_fit.model.observed,
+    sem_fit.model.imply,
+    sem_fit.model.optimizer,
+    sem_fit.model.loss.functions...,
+)
 
 # RAM + SemML
-χ²(sem_fit::SemFit, observed, imp::Union{RAM, RAMSymbolic}, optimizer, loss_ml::SemML) = 
-    (n_obs(sem_fit)-1)*(sem_fit.minimum - logdet(observed.obs_cov) - observed.n_man)
+χ²(sem_fit::SemFit, observed, imp::Union{RAM, RAMSymbolic}, optimizer, loss_ml::SemML) =
+    (n_obs(sem_fit) - 1) * (sem_fit.minimum - logdet(observed.obs_cov) - observed.n_man)
 
 # bollen, p. 115, only correct for GLS weight matrix
-χ²(sem_fit::SemFit, observed, imp::Union{RAM, RAMSymbolic}, optimizer, loss_ml::SemWLS) = 
-    (n_obs(sem_fit)-1)*sem_fit.minimum
+χ²(sem_fit::SemFit, observed, imp::Union{RAM, RAMSymbolic}, optimizer, loss_ml::SemWLS) =
+    (n_obs(sem_fit) - 1) * sem_fit.minimum
 
 # FIML
 function χ²(sem_fit::SemFit, observed::SemObservedMissing, imp, optimizer, loss_ml::SemFIML)
@@ -40,25 +39,24 @@ end
 ############################################################################################
 
 # SemFit splices loss functions ------------------------------------------------------------
-χ²(sem_fit::SemFit{Mi, So, St, Mo, O} where {Mi, So, St, Mo <: SemEnsemble, O}) = 
-    χ²(
-        sem_fit,
-        sem_fit.model,
-        sem_fit.model.sems[1].loss.functions[1]
-        )
+χ²(sem_fit::SemFit{Mi, So, St, Mo, O} where {Mi, So, St, Mo <: SemEnsemble, O}) =
+    χ²(sem_fit, sem_fit.model, sem_fit.model.sems[1].loss.functions[1])
 
 function χ²(sem_fit::SemFit, model::SemEnsemble, lossfun::L) where {L <: SemWLS}
     check_ensemble_length(model)
     check_lossfun_types(model, L)
-    return (sum(n_obs.(model.sems))-1)*sem_fit.minimum
+    return (sum(n_obs.(model.sems)) - 1) * sem_fit.minimum
 end
 
 function χ²(sem_fit::SemFit, model::SemEnsemble, lossfun::L) where {L <: SemML}
     check_ensemble_length(model)
     check_lossfun_types(model, L)
     F_G = sem_fit.minimum
-    F_G -= sum([w*(logdet(m.observed.obs_cov) + m.observed.n_man) for (w, m) in zip(model.weights, model.sems)])
-    return (sum(n_obs.(model.sems))-1)*F_G
+    F_G -= sum([
+        w * (logdet(m.observed.obs_cov) + m.observed.n_man) for
+        (w, m) in zip(model.weights, model.sems)
+    ])
+    return (sum(n_obs.(model.sems)) - 1) * F_G
 end
 
 function χ²(sem_fit::SemFit, model::SemEnsemble, lossfun::L) where {L <: SemFIML}

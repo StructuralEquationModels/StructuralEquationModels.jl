@@ -11,5 +11,4 @@ end
 end
 
 if !haskey(ENV, "JULIA_EXTENDED_TESTS") || ENV["JULIA_EXTENDED_TESTS"] == "true"
-    
 end

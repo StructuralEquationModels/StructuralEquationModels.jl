@@ -1,9 +1,18 @@
 module StructuralEquationModels
 
-using LinearAlgebra, Optim,
-    NLSolversBase, Statistics, SparseArrays, Symbolics,
-    NLopt, FiniteDiff, PrettyTables,
-    Distributions, StenoGraphs, LazyArtifacts, DelimitedFiles,
+using LinearAlgebra,
+    Optim,
+    NLSolversBase,
+    Statistics,
+    SparseArrays,
+    Symbolics,
+    NLopt,
+    FiniteDiff,
+    PrettyTables,
+    Distributions,
+    StenoGraphs,
+    LazyArtifacts,
+    DelimitedFiles,
     DataFrames
 
 import DataFrames: DataFrame
@@ -75,8 +84,6 @@ include("frontend/fit/fitmeasures/fit_measures.jl")
 # standard errors
 include("frontend/fit/standard_errors/hessian.jl")
 include("frontend/fit/standard_errors/bootstrap.jl")
-
-
 
 export AbstractSem,
     AbstractSemSingle,

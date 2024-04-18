@@ -26,15 +26,17 @@ dat_mean = vcat(Statistics.mean(dat_matrix, dims = 1)...)
 
 # errors
 @test_throws ArgumentError(
-    "You passed your data as a `DataFrame`, but also specified `obs_colnames`. "*
-    "Please make sure the column names of your data frame indicate the correct variables "*
-    "or pass your data in a different format.") begin
+    "You passed your data as a `DataFrame`, but also specified `obs_colnames`. " *
+    "Please make sure the column names of your data frame indicate the correct variables " *
+    "or pass your data in a different format.",
+) begin
     SemObservedData(specification = spec, data = dat, obs_colnames = Symbol.(names(dat)))
 end
 
 @test_throws ArgumentError(
-    "Your `data` can not be indexed by symbols. "*
-    "Maybe you forgot to provide column names via the `obs_colnames = ...` argument.") begin
+    "Your `data` can not be indexed by symbols. " *
+    "Maybe you forgot to provide column names via the `obs_colnames = ...` argument.",
+) begin
     SemObservedData(specification = spec, data = dat_matrix)
 end
 
@@ -47,27 +49,21 @@ end
 @test_throws UndefKeywordError(:specification) SemObservedData(data = dat_matrix)
 
 # should work
-observed = SemObservedData(
-    specification = spec,
-    data = dat
-)
+observed = SemObservedData(specification = spec, data = dat)
 
-observed_nospec = SemObservedData(
-    specification = nothing,
-    data = dat_matrix
-)
+observed_nospec = SemObservedData(specification = nothing, data = dat_matrix)
 
 observed_matrix = SemObservedData(
-    specification = spec, 
-    data = dat_matrix, 
-    obs_colnames = Symbol.(names(dat))
+    specification = spec,
+    data = dat_matrix,
+    obs_colnames = Symbol.(names(dat)),
 )
 
-all_equal_cov = 
+all_equal_cov =
     (obs_cov(observed) == obs_cov(observed_nospec)) &
     (obs_cov(observed) == obs_cov(observed_matrix))
 
-all_equal_data = 
+all_equal_data =
     (get_data(observed) == get_data(observed_nospec)) &
     (get_data(observed) == get_data(observed_matrix))
 
@@ -77,7 +73,7 @@ all_equal_data =
 end
 
 # shuffle variables
-new_order = [3,2,7,8,5,6,9,11,1,10,4]
+new_order = [3, 2, 7, 8, 5, 6, 9, 11, 1, 10, 4]
 
 shuffle_names = Symbol.(names(dat))[new_order]
 
@@ -85,22 +81,19 @@ shuffle_dat = dat[:, new_order]
 
 shuffle_dat_matrix = dat_matrix[:, new_order]
 
-observed_shuffle = SemObservedData(
-    specification = spec,
-    data = shuffle_dat
-)
+observed_shuffle = SemObservedData(specification = spec, data = shuffle_dat)
 
 observed_matrix_shuffle = SemObservedData(
-    specification = spec, 
-    data = shuffle_dat_matrix, 
-    obs_colnames = shuffle_names
+    specification = spec,
+    data = shuffle_dat_matrix,
+    obs_colnames = shuffle_names,
 )
 
-all_equal_cov_suffled = 
+all_equal_cov_suffled =
     (obs_cov(observed) == obs_cov(observed_shuffle)) &
     (obs_cov(observed) == obs_cov(observed_matrix_shuffle))
 
-all_equal_data_suffled = 
+all_equal_data_suffled =
     (get_data(observed) == get_data(observed_shuffle)) &
     (get_data(observed) == get_data(observed_matrix_shuffle))
 
@@ -113,47 +106,58 @@ end
 
 # errors
 @test_throws ArgumentError(
-    "You passed your data as a `DataFrame`, but also specified `obs_colnames`. "*
-    "Please make sure the column names of your data frame indicate the correct variables "*
-    "or pass your data in a different format.") begin
-    SemObservedData(specification = spec, data = dat, obs_colnames = Symbol.(names(dat)), meanstructure = true)
+    "You passed your data as a `DataFrame`, but also specified `obs_colnames`. " *
+    "Please make sure the column names of your data frame indicate the correct variables " *
+    "or pass your data in a different format.",
+) begin
+    SemObservedData(
+        specification = spec,
+        data = dat,
+        obs_colnames = Symbol.(names(dat)),
+        meanstructure = true,
+    )
 end
 
 @test_throws ArgumentError(
-    "Your `data` can not be indexed by symbols. "*
-    "Maybe you forgot to provide column names via the `obs_colnames = ...` argument.") begin
+    "Your `data` can not be indexed by symbols. " *
+    "Maybe you forgot to provide column names via the `obs_colnames = ...` argument.",
+) begin
     SemObservedData(specification = spec, data = dat_matrix, meanstructure = true)
 end
 
 @test_throws ArgumentError("please specify `obs_colnames` as a vector of Symbols") begin
-    SemObservedData(specification = spec, data = dat_matrix, obs_colnames = names(dat), meanstructure = true)
+    SemObservedData(
+        specification = spec,
+        data = dat_matrix,
+        obs_colnames = names(dat),
+        meanstructure = true,
+    )
 end
 
-@test_throws UndefKeywordError(:data) SemObservedData(specification = spec, meanstructure = true)
+@test_throws UndefKeywordError(:data) SemObservedData(
+    specification = spec,
+    meanstructure = true,
+)
 
-@test_throws UndefKeywordError(:specification) SemObservedData(data = dat_matrix, meanstructure = true)
+@test_throws UndefKeywordError(:specification) SemObservedData(
+    data = dat_matrix,
+    meanstructure = true,
+)
 
 # should work
-observed = SemObservedData(
-    specification = spec,
-    data = dat,
-    meanstructure = true
-)
+observed = SemObservedData(specification = spec, data = dat, meanstructure = true)
 
-observed_nospec = SemObservedData(
-    specification = nothing,
-    data = dat_matrix,
-    meanstructure = true
-)
+observed_nospec =
+    SemObservedData(specification = nothing, data = dat_matrix, meanstructure = true)
 
 observed_matrix = SemObservedData(
-    specification = spec, 
-    data = dat_matrix, 
+    specification = spec,
+    data = dat_matrix,
     obs_colnames = Symbol.(names(dat)),
-    meanstructure = true
+    meanstructure = true,
 )
 
-all_equal_mean = 
+all_equal_mean =
     (obs_mean(observed) == obs_mean(observed_nospec)) &
     (obs_mean(observed) == obs_mean(observed_matrix))
 
@@ -162,7 +166,7 @@ all_equal_mean =
 end
 
 # shuffle variables
-new_order = [3,2,7,8,5,6,9,11,1,10,4]
+new_order = [3, 2, 7, 8, 5, 6, 9, 11, 1, 10, 4]
 
 shuffle_names = Symbol.(names(dat))[new_order]
 
@@ -170,23 +174,19 @@ shuffle_dat = dat[:, new_order]
 
 shuffle_dat_matrix = dat_matrix[:, new_order]
 
-observed_shuffle = SemObservedData(
-    specification = spec,
-    data = shuffle_dat,
-    meanstructure = true
-)
+observed_shuffle =
+    SemObservedData(specification = spec, data = shuffle_dat, meanstructure = true)
 
 observed_matrix_shuffle = SemObservedData(
-    specification = spec, 
-    data = shuffle_dat_matrix, 
+    specification = spec,
+    data = shuffle_dat_matrix,
     obs_colnames = shuffle_names,
-    meanstructure = true
+    meanstructure = true,
 )
 
-all_equal_mean_suffled = 
+all_equal_mean_suffled =
     (obs_mean(observed) == obs_mean(observed_shuffle)) &
-    (obs_mean(observed) == obs_mean(observed_matrix_shuffle)) 
-
+    (obs_mean(observed) == obs_mean(observed_matrix_shuffle))
 
 @testset "unit tests | SemObservedData | input formats shuffled - mean" begin
     @test all_equal_mean_suffled
@@ -211,22 +211,22 @@ end
 end
 
 @test_throws ArgumentError("please specify `obs_colnames` as a vector of Symbols") begin
-    SemObservedCovariance(specification = spec, obs_cov = dat_cov, obs_colnames = names(dat))
+    SemObservedCovariance(
+        specification = spec,
+        obs_cov = dat_cov,
+        obs_colnames = names(dat),
+    )
 end
 
 # should work
 observed = SemObservedCovariance(
     specification = spec,
     obs_cov = dat_cov,
-    obs_colnames = obs_colnames = Symbol.(names(dat))
+    obs_colnames = obs_colnames = Symbol.(names(dat)),
 )
 
-observed_nospec = SemObservedCovariance(
-    specification = nothing,
-    obs_cov = dat_cov,
-    n_obs = 75.0
-)
-
+observed_nospec =
+    SemObservedCovariance(specification = nothing, obs_cov = dat_cov, n_obs = 75.0)
 
 all_equal_cov = (obs_cov(observed) == obs_cov(observed_nospec))
 
@@ -236,9 +236,8 @@ all_equal_cov = (obs_cov(observed) == obs_cov(observed_nospec))
     @test n_obs(observed_nospec) == 75.0
 end
 
-
 # shuffle variables
-new_order = [3,2,7,8,5,6,9,11,1,10,4]
+new_order = [3, 2, 7, 8, 5, 6, 9, 11, 1, 10, 4]
 
 shuffle_names = Symbol.(names(dat))[new_order]
 
@@ -249,7 +248,7 @@ shuffle_dat_cov = Statistics.cov(shuffle_dat_matrix)
 observed_shuffle = SemObservedCovariance(
     specification = spec,
     obs_cov = shuffle_dat_cov,
-    obs_colnames = shuffle_names
+    obs_colnames = shuffle_names,
 )
 
 all_equal_cov_suffled = (obs_cov(observed) ≈ obs_cov(observed_shuffle))
@@ -265,16 +264,22 @@ end
     SemObservedCovariance(specification = spec, obs_cov = dat_cov, meanstructure = true)
 end
 
-@test_throws UndefKeywordError SemObservedCovariance(data = dat_matrix, meanstructure = true)
+@test_throws UndefKeywordError SemObservedCovariance(
+    data = dat_matrix,
+    meanstructure = true,
+)
 
-@test_throws UndefKeywordError SemObservedCovariance(obs_cov = dat_cov, meanstructure = true)
+@test_throws UndefKeywordError SemObservedCovariance(
+    obs_cov = dat_cov,
+    meanstructure = true,
+)
 
 @test_throws ArgumentError("`meanstructure = true`, but no observed means were passed") begin
     SemObservedCovariance(
         specification = spec,
         obs_cov = dat_cov,
         obs_colnames = Symbol.(names(dat)),
-        meanstructure = true
+        meanstructure = true,
     )
 end
 
@@ -285,7 +290,7 @@ observed = SemObservedCovariance(
     obs_mean = dat_mean,
     obs_colnames = Symbol.(names(dat)),
     n_obs = 75.0,
-    meanstructure = true
+    meanstructure = true,
 )
 
 observed_nospec = SemObservedCovariance(
@@ -293,7 +298,7 @@ observed_nospec = SemObservedCovariance(
     obs_cov = dat_cov,
     obs_mean = dat_mean,
     meanstructure = true,
-    n_obs = 75.0
+    n_obs = 75.0,
 )
 
 all_equal_mean = (obs_mean(observed) == obs_mean(observed_nospec))
@@ -303,7 +308,7 @@ all_equal_mean = (obs_mean(observed) == obs_mean(observed_nospec))
 end
 
 # shuffle variables
-new_order = [3,2,7,8,5,6,9,11,1,10,4]
+new_order = [3, 2, 7, 8, 5, 6, 9, 11, 1, 10, 4]
 
 shuffle_names = Symbol.(names(dat))[new_order]
 
@@ -320,9 +325,8 @@ observed_shuffle = SemObservedCovariance(
     obs_mean = shuffle_dat_mean,
     obs_colnames = shuffle_names,
     n_obs = 75.0,
-    meanstructure = true
+    meanstructure = true,
 )
-
 
 all_equal_mean_suffled = (obs_mean(observed) == obs_mean(observed_shuffle))
 
@@ -336,20 +340,30 @@ end
 
 # errors
 @test_throws ArgumentError(
-    "You passed your data as a `DataFrame`, but also specified `obs_colnames`. "*
-    "Please make sure the column names of your data frame indicate the correct variables "*
-    "or pass your data in a different format.") begin
-    SemObservedMissing(specification = spec, data = dat_missing, obs_colnames = Symbol.(names(dat)))
+    "You passed your data as a `DataFrame`, but also specified `obs_colnames`. " *
+    "Please make sure the column names of your data frame indicate the correct variables " *
+    "or pass your data in a different format.",
+) begin
+    SemObservedMissing(
+        specification = spec,
+        data = dat_missing,
+        obs_colnames = Symbol.(names(dat)),
+    )
 end
 
 @test_throws ArgumentError(
-    "Your `data` can not be indexed by symbols. "*
-    "Maybe you forgot to provide column names via the `obs_colnames = ...` argument.") begin
+    "Your `data` can not be indexed by symbols. " *
+    "Maybe you forgot to provide column names via the `obs_colnames = ...` argument.",
+) begin
     SemObservedMissing(specification = spec, data = dat_missing_matrix)
 end
 
 @test_throws ArgumentError("please specify `obs_colnames` as a vector of Symbols") begin
-    SemObservedMissing(specification = spec, data = dat_missing_matrix, obs_colnames = names(dat))
+    SemObservedMissing(
+        specification = spec,
+        data = dat_missing_matrix,
+        obs_colnames = names(dat),
+    )
 end
 
 @test_throws UndefKeywordError(:data) SemObservedMissing(specification = spec)
@@ -357,23 +371,17 @@ end
 @test_throws UndefKeywordError(:specification) SemObservedMissing(data = dat_missing_matrix)
 
 # should work
-observed = SemObservedMissing(
-    specification = spec,
-    data = dat_missing
-)
+observed = SemObservedMissing(specification = spec, data = dat_missing)
 
-observed_nospec = SemObservedMissing(
-    specification = nothing,
-    data = dat_missing_matrix
-)
+observed_nospec = SemObservedMissing(specification = nothing, data = dat_missing_matrix)
 
 observed_matrix = SemObservedMissing(
-    specification = spec, 
-    data = dat_missing_matrix, 
-    obs_colnames = Symbol.(names(dat))
+    specification = spec,
+    data = dat_missing_matrix,
+    obs_colnames = Symbol.(names(dat)),
 )
 
-all_equal_data = 
+all_equal_data =
     isequal(get_data(observed), get_data(observed_nospec)) &
     isequal(get_data(observed), get_data(observed_matrix))
 
@@ -382,7 +390,7 @@ all_equal_data =
 end
 
 # shuffle variables
-new_order = [3,2,7,8,5,6,9,11,1,10,4]
+new_order = [3, 2, 7, 8, 5, 6, 9, 11, 1, 10, 4]
 
 shuffle_names = Symbol.(names(dat))[new_order]
 
@@ -390,18 +398,15 @@ shuffle_dat_missing = dat_missing[:, new_order]
 
 shuffle_dat_missing_matrix = dat_missing_matrix[:, new_order]
 
-observed_shuffle = SemObservedMissing(
-    specification = spec,
-    data = shuffle_dat_missing
-)
+observed_shuffle = SemObservedMissing(specification = spec, data = shuffle_dat_missing)
 
 observed_matrix_shuffle = SemObservedMissing(
-    specification = spec, 
-    data = shuffle_dat_missing_matrix, 
-    obs_colnames = shuffle_names
+    specification = spec,
+    data = shuffle_dat_missing_matrix,
+    obs_colnames = shuffle_names,
 )
 
-all_equal_data_shuffled = 
+all_equal_data_shuffled =
     isequal(get_data(observed), get_data(observed_shuffle)) &
     isequal(get_data(observed), get_data(observed_matrix_shuffle))
 
