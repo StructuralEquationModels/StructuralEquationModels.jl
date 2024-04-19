@@ -244,7 +244,7 @@ identifier(imply::RAMSymbolic) = imply.identifier
 n_par(imply::RAMSymbolic) = imply.n_par
 
 function update_observed(imply::RAMSymbolic, observed::SemObserved; kwargs...)
-    if Int(n_man(observed)) == size(imply.Σ, 1)
+    if n_man(observed) == size(imply.Σ, 1)
         return imply
     else
         return RAMSymbolic(; observed = observed, kwargs...)
