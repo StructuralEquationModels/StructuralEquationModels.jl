@@ -66,7 +66,7 @@ struct SemOptimizerNLopt{A, A2, B, B2, C} <: SemOptimizer
 end
 
 Base.@kwdef mutable struct NLoptConstraint
-    f
+    f::Any
     tol = 0.0
 end
 
@@ -75,24 +75,26 @@ end
 ############################################################################################
 
 function SemOptimizerNLopt(;
-        algorithm = :LD_LBFGS,
-        local_algorithm = nothing, 
-        options = Dict{Symbol, Any}(),
-        local_options = Dict{Symbol, Any}(), 
-        equality_constraints = Vector{NLoptConstraint}(), 
-        inequality_constraints = Vector{NLoptConstraint}(), 
-        kwargs...)
-    applicable(iterate, equality_constraints) || 
+    algorithm = :LD_LBFGS,
+    local_algorithm = nothing,
+    options = Dict{Symbol, Any}(),
+    local_options = Dict{Symbol, Any}(),
+    equality_constraints = Vector{NLoptConstraint}(),
+    inequality_constraints = Vector{NLoptConstraint}(),
+    kwargs...,
+)
+    applicable(iterate, equality_constraints) ||
         (equality_constraints = [equality_constraints])
-    applicable(iterate, inequality_constraints) || 
+    applicable(iterate, inequality_constraints) ||
         (inequality_constraints = [inequality_constraints])
     return SemOptimizerNLopt(
-        algorithm, 
-        local_algorithm, 
-        options, 
-        local_options, 
-        equality_constraints, 
-        inequality_constraints)
+        algorithm,
+        local_algorithm,
+        options,
+        local_options,
+        equality_constraints,
+        inequality_constraints,
+    )
 end
 
 ############################################################################################
@@ -111,4 +113,3 @@ options(optimizer::SemOptimizerNLopt) = optimizer.options
 local_options(optimizer::SemOptimizerNLopt) = optimizer.local_options
 equality_constraints(optimizer::SemOptimizerNLopt) = optimizer.equality_constraints
 inequality_constraints(optimizer::SemOptimizerNLopt) = optimizer.inequality_constraints
-

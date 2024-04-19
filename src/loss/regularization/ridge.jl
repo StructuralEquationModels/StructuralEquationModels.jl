@@ -43,16 +43,20 @@ end
 ############################################################################
 
 function SemRidge(;
-        α_ridge, 
-        which_ridge, 
-        n_par, 
-        parameter_type = Float64, 
-        imply = nothing, 
-        kwargs...)
-
+    α_ridge,
+    which_ridge,
+    n_par,
+    parameter_type = Float64,
+    imply = nothing,
+    kwargs...,
+)
     if eltype(which_ridge) <: Symbol
         if isnothing(imply)
-            throw(ArgumentError("When referring to parameters by label, `imply = ...` has to be specified"))
+            throw(
+                ArgumentError(
+                    "When referring to parameters by label, `imply = ...` has to be specified",
+                ),
+            )
         else
             which_ridge = get_identifier_indices(which_ridge, imply)
         end
@@ -63,24 +67,24 @@ function SemRidge(;
         α_ridge,
         which,
         which_H,
-
         zeros(parameter_type, n_par),
-        zeros(parameter_type, n_par, n_par))
+        zeros(parameter_type, n_par, n_par),
+    )
 end
 
 ############################################################################################
 ### methods
 ############################################################################################
 
-objective!(ridge::SemRidge, par, model) = @views ridge.α*sum(x -> x^2, par[ridge.which])
+objective!(ridge::SemRidge, par, model) = @views ridge.α * sum(x -> x^2, par[ridge.which])
 
 function gradient!(ridge::SemRidge, par, model)
-    @views ridge.gradient[ridge.which] .= 2*ridge.α*par[ridge.which]
+    @views ridge.gradient[ridge.which] .= 2 * ridge.α * par[ridge.which]
     return ridge.gradient
 end
 
 function hessian!(ridge::SemRidge, par, model)
-    @views @. ridge.hessian[ridge.which_H] += ridge.α*2.0
+    @views @. ridge.hessian[ridge.which_H] += ridge.α * 2.0
     return ridge.hessian
 end
 

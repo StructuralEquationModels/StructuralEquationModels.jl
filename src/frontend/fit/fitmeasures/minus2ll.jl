@@ -10,20 +10,22 @@ function minus2ll end
 ############################################################################################
 
 # SemFit splices loss functions ------------------------------------------------------------
-minus2ll(sem_fit::SemFit{Mi, So, St, Mo, O} where {Mi, So, St, Mo <: AbstractSemSingle, O}) = 
-    minus2ll(
-        sem_fit,
-        sem_fit.model.observed,
-        sem_fit.model.imply,
-        sem_fit.model.optimizer,
-        sem_fit.model.loss.functions...
-        )
+minus2ll(
+    sem_fit::SemFit{Mi, So, St, Mo, O} where {Mi, So, St, Mo <: AbstractSemSingle, O},
+) = minus2ll(
+    sem_fit,
+    sem_fit.model.observed,
+    sem_fit.model.imply,
+    sem_fit.model.optimizer,
+    sem_fit.model.loss.functions...,
+)
 
-minus2ll(sem_fit::SemFit, obs, imp, optimizer, args...) = minus2ll(sem_fit.minimum, obs, imp, optimizer, args...)
+minus2ll(sem_fit::SemFit, obs, imp, optimizer, args...) =
+    minus2ll(sem_fit.minimum, obs, imp, optimizer, args...)
 
 # SemML ------------------------------------------------------------------------------------
 minus2ll(minimum::Number, obs, imp::Union{RAM, RAMSymbolic}, optimizer, loss_ml::SemML) =
-    n_obs(obs)*(minimum + log(2π)*n_man(obs))
+    n_obs(obs) * (minimum + log(2π) * n_man(obs))
 
 # WLS --------------------------------------------------------------------------------------
 minus2ll(minimum::Number, obs, imp::Union{RAM, RAMSymbolic}, optimizer, loss_ml::SemWLS) =
@@ -31,10 +33,16 @@ minus2ll(minimum::Number, obs, imp::Union{RAM, RAMSymbolic}, optimizer, loss_ml:
 
 # compute likelihood for missing data - H0 -------------------------------------------------
 # -2ll = (∑ log(2π)*(nᵢ + mᵢ)) + F*n
-function minus2ll(minimum::Number, observed, imp::Union{RAM, RAMSymbolic}, optimizer, loss_ml::SemFIML)
+function minus2ll(
+    minimum::Number,
+    observed,
+    imp::Union{RAM, RAMSymbolic},
+    optimizer,
+    loss_ml::SemFIML,
+)
     F = minimum
     F *= n_obs(observed)
-    F += sum(log(2π)*observed.pattern_n_obs.*observed.pattern_nvar_obs)
+    F += sum(log(2π) * observed.pattern_n_obs .* observed.pattern_nvar_obs)
     return F
 end
 
@@ -51,7 +59,8 @@ function minus2ll(observed::SemObservedMissing)
             observed.obs_mean,
             observed.obs_cov,
             observed.pattern_n_obs,
-            observed.pattern_nvar_obs)
+            observed.pattern_nvar_obs,
+        )
     else
         em_mvn(observed)
         minus2ll(
@@ -63,16 +72,25 @@ function minus2ll(observed::SemObservedMissing)
             observed.obs_mean,
             observed.obs_cov,
             observed.pattern_n_obs,
-            observed.pattern_nvar_obs)
+            observed.pattern_nvar_obs,
+        )
     end
 end
 
-function minus2ll(μ, Σ, N, rows, patterns, obs_mean, obs_cov, pattern_n_obs, pattern_nvar_obs)
-
+function minus2ll(
+    μ,
+    Σ,
+    N,
+    rows,
+    patterns,
+    obs_mean,
+    obs_cov,
+    pattern_n_obs,
+    pattern_nvar_obs,
+)
     F = 0.0
 
     for i in 1:length(rows)
-
         nᵢ = pattern_n_obs[i]
         # missing pattern
         pattern = patterns[i]
@@ -86,24 +104,24 @@ function minus2ll(μ, Σ, N, rows, patterns, obs_mean, obs_cov, pattern_n_obs, p
         meandiffᵢ = obs_mean[i] - μ[pattern]
 
         F += F_one_pattern(meandiffᵢ, Σᵢ⁻¹, Sᵢ, ld, nᵢ)
-        
     end
 
-    F += sum(log(2π)*pattern_n_obs.*pattern_nvar_obs)
+    F += sum(log(2π) * pattern_n_obs .* pattern_nvar_obs)
     #F *= N
 
     return F
-
 end
 
 ############################################################################################
 # Collection
 ############################################################################################
 
-minus2ll(minimum, model::AbstractSemSingle) = 
+minus2ll(minimum, model::AbstractSemSingle) =
     minus2ll(minimum, model.observed, model.imply, model.optimizer, model.loss.functions...)
 
-function minus2ll(sem_fit::SemFit{Mi, So, St, Mo, O} where {Mi, So, St, Mo <: SemEnsemble, O})
+function minus2ll(
+    sem_fit::SemFit{Mi, So, St, Mo, O} where {Mi, So, St, Mo <: SemEnsemble, O},
+)
     m2ll = 0.0
     for sem in sem_fit.model.sems
         minimum = objective!(sem, sem_fit.solution)

@@ -13,8 +13,8 @@ function sem_wrap_nlopt(par, G, model::AbstractSem)
 end
 
 mutable struct NLoptResult
-    result
-    problem
+    result::Any
+    problem::Any
 end
 
 optimizer(res::NLoptResult) = res.problem.algorithm
@@ -28,12 +28,16 @@ function SemFit_NLopt(optimization_result, model::AbstractSem, start_val, opt)
         optimization_result[2],
         start_val,
         model,
-        NLoptResult(optimization_result, opt)
+        NLoptResult(optimization_result, opt),
     )
 end
 
 # sem_fit method
-function sem_fit(model::Sem{O, I, L, D}; start_val = start_val, kwargs...) where {O, I, L, D <: SemOptimizerNLopt}
+function sem_fit(
+    model::Sem{O, I, L, D};
+    start_val = start_val,
+    kwargs...,
+) where {O, I, L, D <: SemOptimizerNLopt}
 
     # starting values
     if !isa(start_val, Vector)
@@ -42,17 +46,19 @@ function sem_fit(model::Sem{O, I, L, D}; start_val = start_val, kwargs...) where
 
     # construct the NLopt problem
     opt = construct_NLopt_problem(
-        model.optimizer.algorithm, 
-        model.optimizer.options, 
-        length(start_val))
-    set_NLopt_constraints!(opt, model.optimizer)   
+        model.optimizer.algorithm,
+        model.optimizer.options,
+        length(start_val),
+    )
+    set_NLopt_constraints!(opt, model.optimizer)
     opt.min_objective = (par, G) -> sem_wrap_nlopt(par, G, model)
 
     if !isnothing(model.optimizer.local_algorithm)
         opt_local = construct_NLopt_problem(
             model.optimizer.local_algorithm,
             model.optimizer.local_options,
-            length(start_val))
+            length(start_val),
+        )
         opt.local_optimizer = opt_local
     end
 
@@ -62,7 +68,11 @@ function sem_fit(model::Sem{O, I, L, D}; start_val = start_val, kwargs...) where
     return SemFit_NLopt(result, model, start_val, opt)
 end
 
-function sem_fit(model::SemEnsemble{N, T , V, D, S}; start_val = start_val, kwargs...) where {N, T, V, D <: SemOptimizerNLopt, S}
+function sem_fit(
+    model::SemEnsemble{N, T, V, D, S};
+    start_val = start_val,
+    kwargs...,
+) where {N, T, V, D <: SemOptimizerNLopt, S}
 
     # starting values
     if !isa(start_val, Vector)
@@ -71,17 +81,19 @@ function sem_fit(model::SemEnsemble{N, T , V, D, S}; start_val = start_val, kwar
 
     # construct the NLopt problem
     opt = construct_NLopt_problem(
-        model.optimizer.algorithm, 
-        model.optimizer.options, 
-        length(start_val))
-    set_NLopt_constraints!(opt, model.optimizer)   
+        model.optimizer.algorithm,
+        model.optimizer.options,
+        length(start_val),
+    )
+    set_NLopt_constraints!(opt, model.optimizer)
     opt.min_objective = (par, G) -> sem_wrap_nlopt(par, G, model)
 
     if !isnothing(model.optimizer.local_algorithm)
         opt_local = construct_NLopt_problem(
             model.optimizer.local_algorithm,
             model.optimizer.local_options,
-            length(start_val))
+            length(start_val),
+        )
         opt.local_optimizer = opt_local
     end
 
@@ -103,7 +115,6 @@ function construct_NLopt_problem(algorithm, options, npar)
     end
 
     return opt
-
 end
 
 function set_NLopt_constraints!(opt, optimizer::SemOptimizerNLopt)

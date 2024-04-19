@@ -19,7 +19,7 @@ function example_data(name)
         data, header = readdlm(path, ',', header = true)
         data_raw = DataFrame(data, vec(header))
         for col in eachcol(data_raw)
-            replace!(col,"NA" => missing)
+            replace!(col, "NA" => missing)
         end
         data = identity.(data_raw)
         return data
@@ -31,7 +31,7 @@ function example_data(name)
             data, header = readdlm(path, ',', header = true)
             data_raw = DataFrame(data, vec(header))
             for col in eachcol(data_raw)
-                replace!(col,"NA" => missing)
+                replace!(col, "NA" => missing)
             end
             data = identity.(data_raw)
             push!(out, key => data)

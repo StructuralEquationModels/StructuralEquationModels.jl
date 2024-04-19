@@ -50,10 +50,10 @@ mutable struct SemOptimizerOptim{A, B} <: SemOptimizer
 end
 
 SemOptimizerOptim(;
-    algorithm = LBFGS(), 
-    options = Optim.Options(;f_tol = 1e-10, x_tol = 1.5e-8), 
-    kwargs...) = 
-    SemOptimizerOptim(algorithm, options)
+    algorithm = LBFGS(),
+    options = Optim.Options(; f_tol = 1e-10, x_tol = 1.5e-8),
+    kwargs...,
+) = SemOptimizerOptim(algorithm, options)
 
 ############################################################################################
 ### Recommended methods

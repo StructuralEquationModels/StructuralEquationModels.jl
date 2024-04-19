@@ -9,10 +9,19 @@ Only works for single models.
 - `data`: data to sample from. Only needed if different than the data from `sem_fit`
 - `kwargs...`: passed down to `swap_observed`
 """
-function se_bootstrap(semfit::SemFit; n_boot = 3000, data = nothing, specification = nothing, kwargs...)
-
+function se_bootstrap(
+    semfit::SemFit;
+    n_boot = 3000,
+    data = nothing,
+    specification = nothing,
+    kwargs...,
+)
     if model(semfit) isa AbstractSemCollection
-        throw(ArgumentError("bootstrap standard errors for ensemble models are not available yet"))
+        throw(
+            ArgumentError(
+                "bootstrap standard errors for ensemble models are not available yet",
+            ),
+        )
     end
 
     if isnothing(data)
@@ -31,14 +40,13 @@ function se_bootstrap(semfit::SemFit; n_boot = 3000, data = nothing, specificati
 
     converged = true
 
-    for _ = 1:n_boot
-
+    for _ in 1:n_boot
         sample_data = bootstrap_sample(data)
         new_model = swap_observed(
-            model(semfit); 
+            model(semfit);
             data = sample_data,
             specification = specification,
-            kwargs...
+            kwargs...,
         )
 
         new_solution .= 0.0
@@ -56,10 +64,9 @@ function se_bootstrap(semfit::SemFit; n_boot = 3000, data = nothing, specificati
     end
 
     n_conv = n_boot - n_failed
-    sd = sqrt.(squared_sum/n_conv - (sum/n_conv).^2)
+    sd = sqrt.(squared_sum / n_conv - (sum / n_conv) .^ 2)
     print("Number of nonconverged models: ", n_failed, "\n")
     return sd
-
 end
 
 function prepare_data_bootstrap(data)

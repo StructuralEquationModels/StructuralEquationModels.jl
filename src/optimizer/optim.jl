@@ -27,15 +27,16 @@ function sem_wrap_optim(par, F, G, H, model::AbstractSem)
 end
 
 function SemFit(
-        optimization_result::Optim.MultivariateOptimizationResults, 
-        model::AbstractSem, 
-        start_val)
+    optimization_result::Optim.MultivariateOptimizationResults,
+    model::AbstractSem,
+    start_val,
+)
     return SemFit(
         optimization_result.minimum,
         optimization_result.minimizer,
         start_val,
         model,
-        optimization_result
+        optimization_result,
     )
 end
 
@@ -44,37 +45,37 @@ n_iterations(res::Optim.MultivariateOptimizationResults) = Optim.iterations(res)
 convergence(res::Optim.MultivariateOptimizationResults) = Optim.converged(res)
 
 function sem_fit(
-        model::AbstractSemSingle{O, I, L, D}; 
-        start_val = start_val, 
-        kwargs...) where {O, I, L, D <: SemOptimizerOptim}
-    
+    model::AbstractSemSingle{O, I, L, D};
+    start_val = start_val,
+    kwargs...,
+) where {O, I, L, D <: SemOptimizerOptim}
     if !isa(start_val, Vector)
         start_val = start_val(model; kwargs...)
     end
 
     result = Optim.optimize(
-                Optim.only_fgh!((F, G, H, par) -> sem_wrap_optim(par, F, G, H, model)),
-                start_val,
-                model.optimizer.algorithm,
-                model.optimizer.options)
+        Optim.only_fgh!((F, G, H, par) -> sem_wrap_optim(par, F, G, H, model)),
+        start_val,
+        model.optimizer.algorithm,
+        model.optimizer.options,
+    )
     return SemFit(result, model, start_val)
-
 end
 
 function sem_fit(
-        model::SemEnsemble{N, T , V, D, S}; 
-        start_val = start_val, 
-        kwargs...) where {N, T, V, D <: SemOptimizerOptim, S}
-
+    model::SemEnsemble{N, T, V, D, S};
+    start_val = start_val,
+    kwargs...,
+) where {N, T, V, D <: SemOptimizerOptim, S}
     if !isa(start_val, Vector)
         start_val = start_val(model; kwargs...)
     end
 
     result = Optim.optimize(
-                Optim.only_fgh!((F, G, H, par) -> sem_wrap_optim(par, F, G, H, model)),
-                start_val,
-                model.optimizer.algorithm,
-                model.optimizer.options)
+        Optim.only_fgh!((F, G, H, par) -> sem_wrap_optim(par, F, G, H, model)),
+        start_val,
+        model.optimizer.algorithm,
+        model.optimizer.options,
+    )
     return SemFit(result, model, start_val)
-
 end
