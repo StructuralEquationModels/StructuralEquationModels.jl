@@ -402,8 +402,7 @@ function objective!(
         semml::SemML, 
         par, 
         model::AbstractSemSingle, 
-        has_meanstructure::Val{T}, 
-        imp::RAM) where T
+        has_meanstructure::Val{T}, imp::RAM) where T
     let Σ = Σ(imply(model)), Σₒ = obs_cov(observed(model)), Σ⁻¹Σₒ =  Σ⁻¹Σₒ(semml), 
         Σ⁻¹ = Σ⁻¹(semml), μ = μ(imply(model)), μₒ = obs_mean(observed(model))
 
