@@ -24,7 +24,6 @@ For observed data without missings.
 - `samples(::SemObservedData)` -> observed data
 - `obs_cov(::SemObservedData)` -> observed.obs_cov
 - `obs_mean(::SemObservedData)` -> observed.obs_mean
-- `data_rowwise(::SemObservedData)` -> observed data, stored as vectors per observation
 
 ## Implementation
 Subtype of `SemObserved`
@@ -37,15 +36,13 @@ use this if you are sure your observed data is in the right format.
 ## Additional keyword arguments:
 - `spec_colnames::Vector{Symbol} = nothing`: overwrites column names of the specification object
 - `compute_covariance::Bool ) = true`: should the covariance of `data` be computed and stored?
-- `rowwise::Bool = false`: should the data be stored also as vectors per observation
 """
-struct SemObservedData{A, B, C, R} <: SemObserved
+struct SemObservedData{A, B, C} <: SemObserved
     data::A
     obs_cov::B
     obs_mean::C
     n_man::Int
     n_obs::Int
-    data_rowwise::R
 end
 
 # error checks
@@ -61,7 +58,6 @@ function SemObservedData(;
     spec_colnames = nothing,
     meanstructure = false,
     compute_covariance = true,
-    rowwise = false,
     kwargs...,
 )
     if isnothing(spec_colnames) && !isnothing(specification)
@@ -109,7 +105,6 @@ function SemObservedData(;
         meanstructure ? vec(Statistics.mean(data, dims = 1)) : nothing,
         size(data, 2),
         size(data, 1),
-        rowwise ? [data[i, :] for i in axes(data, 1)] : nothing,
     )
 end
 
@@ -126,7 +121,6 @@ n_man(observed::SemObservedData) = observed.n_man
 
 obs_cov(observed::SemObservedData) = observed.obs_cov
 obs_mean(observed::SemObservedData) = observed.obs_mean
-data_rowwise(observed::SemObservedData) = observed.data_rowwise
 
 ############################################################################################
 ### Additional functions
