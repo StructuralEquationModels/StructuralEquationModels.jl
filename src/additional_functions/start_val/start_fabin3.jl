@@ -1,6 +1,6 @@
 """
     start_fabin3(model)
-    
+
 Return a vector of FABIN 3 starting values (see Hägglund 1982).
 Not available for ensemble models.
 """
@@ -58,8 +58,8 @@ function start_fabin3(ram_matrices::RAMMatrices, Σ, μ)
         if !isnothing(M)
             in_M = length.(M_ind) .!= 0
             in_any = in_A .| in_S .| in_M
-        else 
-            in_any = in_A .| in_S 
+        else
+            in_any = in_A .| in_S
         end
 
         if !all(in_any)

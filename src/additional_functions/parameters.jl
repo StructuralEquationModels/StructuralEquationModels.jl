@@ -1,5 +1,14 @@
-function fill_A_S_M(A, S, M, A_indices, S_indices, M_indices, parameters)
-    for (iA, iS, par) in zip(A_indices, S_indices, parameters)
+# fill A, S, and M matrices with the parameter values according to the parameters map
+function fill_A_S_M!(
+    A::AbstractMatrix,
+    S::AbstractMatrix,
+    M::Union{AbstractVector, Nothing},
+    A_indices::AbstractArrayParamsMap,
+    S_indices::AbstractArrayParamsMap,
+    M_indices::Union{AbstractArrayParamsMap, Nothing},
+    parameters::AbstractVector,
+)
+    @inbounds for (iA, iS, par) in zip(A_indices, S_indices, parameters)
         for index_A in iA
             A[index_A] = par
         end
@@ -10,7 +19,7 @@ function fill_A_S_M(A, S, M, A_indices, S_indices, M_indices, parameters)
     end
 
     if !isnothing(M)
-        for (iM, par) in zip(M_indices, parameters)
+        @inbounds for (iM, par) in zip(M_indices, parameters)
             for index_M in iM
                 M[index_M] = par
             end
@@ -18,14 +27,20 @@ function fill_A_S_M(A, S, M, A_indices, S_indices, M_indices, parameters)
     end
 end
 
-function get_parameter_indices(parameters, M; linear = true, kwargs...)
-    M_indices = [findall(x -> (x == par), M) for par in parameters]
-
-    if linear
-        M_indices = cartesian2linear.(M_indices, [M])
+# build the map from the index of the parameter to the linear indices
+# of this parameter occurences in M
+# returns ArrayParamsMap object
+function array_parameters_map(parameters::AbstractVector, M::AbstractArray)
+    params_index = Dict(param => i for (i, param) in enumerate(parameters))
+    T = Base.eltype(eachindex(M))
+    res = [Vector{T}() for _ in eachindex(parameters)]
+    for (i, val) in enumerate(M)
+        par_ind = get(params_index, val, nothing)
+        if !isnothing(par_ind)
+            push!(res[par_ind], i)
+        end
     end
-
-    return M_indices
+    return res
 end
 
 function eachindex_lower(M; linear_indices = false, kwargs...)
@@ -48,9 +63,6 @@ function linear2cartesian(ind_lin, dims)
     ind_cart = CartesianIndices(dims)[ind_lin]
     return ind_cart
 end
-
-cartesian2linear(ind_cart, A::AbstractArray) = cartesian2linear(ind_cart, size(A))
-linear2cartesian(ind_linear, A::AbstractArray) = linear2cartesian(ind_linear, size(A))
 
 function set_constants!(M, M_pre)
     for index in eachindex(M)
@@ -85,12 +97,18 @@ function get_matrix_derivative(M_indices, parameters, n_long)
     return ∇M
 end
 
-function fill_matrix(M, M_indices, parameters)
+# fill M with parameters
+function fill_matrix!(
+    M::AbstractMatrix,
+    M_indices::AbstractArrayParamsMap,
+    parameters::AbstractVector,
+)
     for (iM, par) in zip(M_indices, parameters)
         for index_M in iM
             M[index_M] = par
         end
     end
+    return M
 end
 
 function get_partition(A_indices, S_indices)

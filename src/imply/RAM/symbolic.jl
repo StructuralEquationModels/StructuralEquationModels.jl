@@ -112,7 +112,7 @@ function RAMSymbolic(;
     F[CartesianIndex.(1:n_var, ram_matrices.F_ind)] .= 1.0
 
     set_RAMConstants!(A, S, M, ram_matrices.constants)
-    fill_A_S_M(A, S, M, ram_matrices.A_ind, ram_matrices.S_ind, ram_matrices.M_ind, par)
+    fill_A_S_M!(A, S, M, ram_matrices.A_ind, ram_matrices.S_ind, ram_matrices.M_ind, par)
 
     A, S, F = sparse(A), sparse(S), sparse(F)
 

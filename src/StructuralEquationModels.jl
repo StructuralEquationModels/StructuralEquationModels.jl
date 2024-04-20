@@ -4,6 +4,7 @@ using LinearAlgebra,
     Optim,
     NLSolversBase,
     Statistics,
+    StatsBase,
     SparseArrays,
     Symbolics,
     NLopt,
@@ -17,6 +18,8 @@ using LinearAlgebra,
 
 import DataFrames: DataFrame
 export StenoGraphs, @StenoGraph, meld
+
+const SEM = StructuralEquationModels
 
 # type hierarchy
 include("types.jl")

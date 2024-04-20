@@ -45,7 +45,7 @@ function SemLoss(functions...; loss_weights = nothing, kwargs...)
     return SemLoss(functions, loss_weights)
 end
 
-# weights for loss functions or models. If the weight is nothing, multiplication returs second argument
+# weights for loss functions or models. If the weight is nothing, multiplication returns the second argument
 struct SemWeight{T}
     w::T
 end
@@ -147,7 +147,7 @@ Constructor for ensemble models.
 - `weights::Vector`:  Weights for each model. Defaults to the number of observed data points.
 
 All additional kwargs are passed down to the constructor for the optimizer field.
-    
+
 Returns a SemEnsemble with fields
 - `n::Int`: Number of models.
 - `sems::Tuple`: `AbstractSem`s.
@@ -170,7 +170,7 @@ function SemEnsemble(models...; optimizer = SemOptimizerOptim, weights = nothing
     # default weights
 
     if isnothing(weights)
-        nobs_total = sum(n_obs.(models))
+        nobs_total = sum(n_obs, models)
         weights = [n_obs(model) / nobs_total for model in models]
     end
 

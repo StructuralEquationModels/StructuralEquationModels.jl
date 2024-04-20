@@ -1,5 +1,5 @@
 using StructuralEquationModels, Distributions, Random, Optim, LineSearches
-import StructuralEquationModels as SEM
+
 include(
     joinpath(
         chop(dirname(pathof(StructuralEquationModels)), tail = 3),
@@ -63,10 +63,10 @@ Random.seed!(1234)
 x = transpose(rand(true_dist, 100000))
 semobserved = SemObservedData(data = x, specification = nothing)
 
-loss_ml = SemLoss(SEM.SemML(; observed = semobserved, n_par = length(start)))
+loss_ml = SemLoss(SemML(; observed = semobserved, n_par = length(start)))
 
 optimizer = SemOptimizerOptim(
-    BFGS(; linesearch = BackTracking(order = 3), alphaguess = InitialHagerZhang()),# m = 100), 
+    BFGS(; linesearch = BackTracking(order = 3), alphaguess = InitialHagerZhang()),# m = 100),
     Optim.Options(; f_tol = 1e-10, x_tol = 1.5e-8),
 )
 

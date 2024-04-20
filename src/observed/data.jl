@@ -103,28 +103,14 @@ function SemObservedData(;
         data = Matrix(data)
     end
 
-    n_obs, n_man = Float64.(size(data))
-
-    if compute_covariance
-        obs_cov = Statistics.cov(data)
-    else
-        obs_cov = nothing
-    end
-
-    # if a meanstructure is needed, compute observed means
-    if meanstructure
-        obs_mean = vcat(Statistics.mean(data, dims = 1)...)
-    else
-        obs_mean = nothing
-    end
-
-    if rowwise
-        data_rowwise = [data[i, :] for i in 1:convert(Int64, n_obs)]
-    else
-        data_rowwise = nothing
-    end
-
-    return SemObservedData(data, obs_cov, obs_mean, n_man, n_obs, data_rowwise)
+    return SemObservedData(
+        data,
+        compute_covariance ? Statistics.cov(data) : nothing,
+        meanstructure ? vec(Statistics.mean(data, dims = 1)) : nothing,
+        Float64.(size(data, 2)),
+        Float64.(size(data, 1)),
+        rowwise ? [data[i, :] for i in axes(data, 1)] : nothing,
+    )
 end
 
 ############################################################################################
@@ -152,8 +138,8 @@ function reorder_data(data::AbstractArray, spec_colnames, obs_colnames)
     if spec_colnames == obs_colnames
         return data
     else
-        new_position = [findall(x .== obs_colnames)[1] for x in spec_colnames]
-        data = data[:, new_position]
-        return data
+        obs_positions = Dict(col => i for (i, col) in enumerate(obs_colnames))
+        new_positions = [obs_positions[col] for col in spec_colnames]
+        return data[:, new_positions]
     end
 end

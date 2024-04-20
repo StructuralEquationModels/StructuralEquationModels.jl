@@ -10,7 +10,7 @@ function neumann_series(mat::SparseMatrixCSC)
     return inverse
 end
 
-#= 
+#=
 function make_onelement_array(A)
     isa(A, Array) ? nothing : (A = [A])
     return A
@@ -108,11 +108,8 @@ function sparse_outer_mul!(C, A, B::Vector, ind) #computes A*S*B -> C, where ind
 end
 
 function cov_and_mean(rows; corrected = false)
-    data = transpose(reduce(hcat, rows))
-    size(rows, 1) > 1 ? obs_cov = Statistics.cov(data; corrected = corrected) :
-    obs_cov = reshape([0.0], 1, 1)
-    obs_mean = vec(Statistics.mean(data, dims = 1))
-    return obs_cov, obs_mean
+    obs_mean, obs_cov = StatsBase.mean_and_cov(reduce(hcat, rows), 2, corrected = corrected)
+    return obs_cov, vec(obs_mean)
 end
 
 function duplication_matrix(nobs)

@@ -9,11 +9,11 @@ function Sem(;
     optimizer::D = SemOptimizerOptim,
     kwargs...,
 ) where {O, I, L, D}
-    kwargs = Dict{Symbol, Any}(kwargs...)
+    kwdict = Dict{Symbol, Any}(kwargs...)
 
-    set_field_type_kwargs!(kwargs, observed, imply, loss, optimizer, O, I, D)
+    set_field_type_kwargs!(kwdict, observed, imply, loss, optimizer, O, I, D)
 
-    observed, imply, loss, optimizer = get_fields!(kwargs, observed, imply, loss, optimizer)
+    observed, imply, loss, optimizer = get_fields!(kwdict, observed, imply, loss, optimizer)
 
     sem = Sem(observed, imply, loss, optimizer)
 
@@ -27,11 +27,11 @@ function SemFiniteDiff(;
     optimizer::D = SemOptimizerOptim,
     kwargs...,
 ) where {O, I, L, D}
-    kwargs = Dict{Symbol, Any}(kwargs...)
+    kwdict = Dict{Symbol, Any}(kwargs...)
 
-    set_field_type_kwargs!(kwargs, observed, imply, loss, optimizer, O, I, D)
+    set_field_type_kwargs!(kwdict, observed, imply, loss, optimizer, O, I, D)
 
-    observed, imply, loss, optimizer = get_fields!(kwargs, observed, imply, loss, optimizer)
+    observed, imply, loss, optimizer = get_fields!(kwdict, observed, imply, loss, optimizer)
 
     sem = SemFiniteDiff(observed, imply, loss, optimizer)
 
