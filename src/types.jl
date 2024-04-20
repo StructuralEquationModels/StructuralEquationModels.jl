@@ -147,7 +147,7 @@ Constructor for ensemble models.
 - `weights::Vector`:  Weights for each model. Defaults to the number of observed data points.
 
 All additional kwargs are passed down to the constructor for the optimizer field.
-    
+
 Returns a SemEnsemble with fields
 - `n::Int`: Number of models.
 - `sems::Tuple`: `AbstractSem`s.

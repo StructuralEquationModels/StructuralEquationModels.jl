@@ -10,7 +10,7 @@ function neumann_series(mat::SparseMatrixCSC)
     return inverse
 end
 
-#= 
+#=
 function make_onelement_array(A)
     isa(A, Array) ? nothing : (A = [A])
     return A

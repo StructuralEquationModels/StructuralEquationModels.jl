@@ -27,7 +27,7 @@ function Dict(partable::EnsembleParameterTable)
 end
 
 #= function DataFrame(
-        partable::ParameterTable; 
+        partable::ParameterTable;
         columns = nothing)
     if isnothing(columns) columns = keys(partable.columns) end
     out = DataFrame([key => partable.columns[key] for key in columns])
