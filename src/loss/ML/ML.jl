@@ -174,7 +174,7 @@ function hessian!(
             # outer
             H_outer = 2 * kron(Σ⁻¹ΣₒΣ⁻¹, Σ⁻¹) - kron(Σ⁻¹, Σ⁻¹)
             hessian = ∇Σ' * H_outer * ∇Σ
-            hessian += ∇²Σ
+            hessian .+= ∇²Σ
         end
 
         return hessian
@@ -268,7 +268,7 @@ function objective_hessian!(
                 # outer
                 H_outer = 2 * kron(Σ⁻¹ΣₒΣ⁻¹, Σ⁻¹) - kron(Σ⁻¹, Σ⁻¹)
                 hessian = ∇Σ' * H_outer * ∇Σ
-                hessian += ∇²Σ
+                hessian .+= ∇²Σ
             end
 
             return objective, hessian
@@ -322,7 +322,7 @@ function gradient_hessian!(
             # outer
             H_outer = 2 * kron(Σ⁻¹ΣₒΣ⁻¹, Σ⁻¹) - kron(Σ⁻¹, Σ⁻¹)
             hessian = ∇Σ' * H_outer * ∇Σ
-            hessian += ∇²Σ
+            hessian .+= ∇²Σ
         end
 
         return gradient', hessian
@@ -381,7 +381,7 @@ function objective_gradient_hessian!(
             # outer
             H_outer = 2 * kron(Σ⁻¹ΣₒΣ⁻¹, Σ⁻¹) - kron(Σ⁻¹, Σ⁻¹)
             hessian = ∇Σ' * H_outer * ∇Σ
-            hessian += ∇²Σ
+            hessian .+= ∇²Σ
         end
 
         return objective, gradient', hessian

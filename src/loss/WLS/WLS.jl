@@ -180,7 +180,7 @@ function hessian!(
             if !semwls.approximate_hessian
                 J = -2 * (σ₋' * semwls.V)'
                 ∇²Σ_function!(∇²Σ, J, par)
-                hessian += ∇²Σ
+                hessian .+= ∇²Σ
             end
             return hessian
         end
@@ -238,7 +238,7 @@ function objective_hessian!(
         if !semwls.approximate_hessian
             J = -2 * (σ₋' * semwls.V)'
             ∇²Σ_function!(∇²Σ, J, par)
-            hessian += ∇²Σ
+            hessian .+= ∇²Σ
         end
 
         return objective, hessian
@@ -273,7 +273,7 @@ function gradient_hessian!(
         if !semwls.approximate_hessian
             J = -2 * (σ₋' * semwls.V)'
             ∇²Σ_function!(∇²Σ, J, par)
-            hessian += ∇²Σ
+            hessian .+= ∇²Σ
         end
 
         return gradient, hessian
@@ -308,7 +308,7 @@ function objective_gradient_hessian!(
         if !semwls.approximate_hessian
             J = -2 * (σ₋' * semwls.V)'
             ∇²Σ_function!(∇²Σ, J, par)
-            hessian += ∇²Σ
+            hessian .+= ∇²Σ
         end
         return objective, gradient, hessian
     end
