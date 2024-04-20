@@ -18,14 +18,20 @@ function fill_A_S_M(A, S, M, A_indices, S_indices, M_indices, parameters)
     end
 end
 
-function get_parameter_indices(parameters, M; linear = true, kwargs...)
-    M_indices = [findall(x -> (x == par), M) for par in parameters]
-
-    if linear
-        M_indices = cartesian2linear.(M_indices, [M])
+# build the map from the index of the parameter to the linear indices
+# of this parameter occurences in M
+# returns ArrayParamsMap object
+function array_parameters_map(parameters::AbstractVector, M::AbstractArray)
+    params_index = Dict(param => i for (i, param) in enumerate(parameters))
+    T = Base.eltype(eachindex(M))
+    res = [Vector{T}() for _ in eachindex(parameters)]
+    for (i, val) in enumerate(M)
+        par_ind = get(params_index, val, nothing)
+        if !isnothing(par_ind)
+            push!(res[par_ind], i)
+        end
     end
-
-    return M_indices
+    return res
 end
 
 function eachindex_lower(M; linear_indices = false, kwargs...)
@@ -48,9 +54,6 @@ function linear2cartesian(ind_lin, dims)
     ind_cart = CartesianIndices(dims)[ind_lin]
     return ind_cart
 end
-
-cartesian2linear(ind_cart, A::AbstractArray) = cartesian2linear(ind_cart, size(A))
-linear2cartesian(ind_linear, A::AbstractArray) = linear2cartesian(ind_linear, size(A))
 
 function set_constants!(M, M_pre)
     for index in eachindex(M)
