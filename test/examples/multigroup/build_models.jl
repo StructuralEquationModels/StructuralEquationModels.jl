@@ -134,16 +134,15 @@ struct UserSemML <: SemLossFunction end
 ### functors
 ############################################################################################
 
-import LinearAlgebra: isposdef, logdet, tr, inv
-import StructuralEquationModels: Σ, obs_cov, objective!
+using LinearAlgebra: isposdef, logdet, tr, inv
 
-function objective!(semml::UserSemML, parameters, model::AbstractSem)
-    let Σ = Σ(imply(model)), Σₒ = obs_cov(observed(model))
-        if !isposdef(Σ)
-            return Inf
-        else
-            return logdet(Σ) + tr(inv(Σ) * Σₒ)
-        end
+function SEM.objective!(semml::UserSemML, parameters, model::AbstractSem)
+    Σ = imply(model).Σ
+    Σₒ = SEM.obs_cov(observed(model))
+    if !isposdef(Σ)
+        return Inf
+    else
+        return logdet(Σ) + tr(inv(Σ) * Σₒ)
     end
 end
 

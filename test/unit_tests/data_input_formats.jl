@@ -1,6 +1,5 @@
 using StructuralEquationModels, Test, Statistics
-import StructuralEquationModels: obs_cov, obs_mean, get_data
-
+using StructuralEquationModels: obs_cov, obs_mean, get_data
 ### model specification --------------------------------------------------------------------
 
 spec = ParameterTable(nothing)

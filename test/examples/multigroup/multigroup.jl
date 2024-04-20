@@ -1,12 +1,9 @@
 using StructuralEquationModels, Test, FiniteDiff
-import LinearAlgebra: diagind, LowerTriangular
-# import StructuralEquationModels as SEM
-include(
-    joinpath(
-        chop(dirname(pathof(StructuralEquationModels)), tail = 3),
-        "test/examples/helper.jl",
-    ),
-)
+using LinearAlgebra: diagind, LowerTriangular
+
+const SEM = StructuralEquationModels
+
+include(joinpath(chop(dirname(pathof(SEM)), tail = 3), "test/examples/helper.jl"))
 
 dat = example_data("holzinger_swineford")
 dat_missing = example_data("holzinger_swineford_missing")
