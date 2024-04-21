@@ -37,13 +37,8 @@ function get_observed(rowind, data, semobserved; args = (), kwargs = NamedTuple(
     return observed_vec
 end
 
-function skipmissing_mean(mat)
-    means = Vector{Float64}(undef, size(mat, 2))
-    for i in 1:size(mat, 2)
-        @views means[i] = mean(skipmissing(mat[:, i]))
-    end
-    return means
-end
+skipmissing_mean(mat::AbstractMatrix) = 
+    [mean(skipmissing(coldata)) for coldata in eachcol(mat)]
 
 function F_one_person(imp_mean, meandiff, inverse, data, logdet)
     F = logdet
