@@ -1,10 +1,14 @@
-function neumann_series(mat::SparseMatrixCSC)
+# Neumann series representation of (I - mat)⁻¹
+function neumann_series(mat::SparseMatrixCSC; maxiter::Integer = size(mat, 1))
     inverse = I + mat
     next_term = mat^2
 
+    n = 1
     while nnz(next_term) != 0
+        (n <= maxiter) || error("Neumann series did not converge in $maxiter steps")
         inverse += next_term
         next_term *= mat
+        n += 1
     end
 
     return inverse
