@@ -232,7 +232,8 @@ function objective!(imply::RAM, parameters, model, has_meanstructure::Val{T}) wh
         parameters,
     )
 
-    imply.I_A .= I - imply.A
+    @. imply.I_A = -imply.A
+    @view(imply.I_A[diagind(imply.I_A)]) .+= 1
 
     copyto!(imply.F⨉I_A⁻¹, imply.F)
     rdiv!(imply.F⨉I_A⁻¹, factorize(imply.I_A))
@@ -260,8 +261,8 @@ function gradient!(
         parameters,
     )
 
-    imply.I_A .= I - imply.A
-    copyto!(imply.I_A⁻¹, imply.I_A)
+    @. imply.I_A = -imply.A
+    @view(imply.I_A[diagind(imply.I_A)]) .+= 1
 
     imply.I_A⁻¹ .= LinearAlgebra.inv!(factorize(imply.I_A⁻¹))
     imply.F⨉I_A⁻¹ .= imply.F * imply.I_A⁻¹
