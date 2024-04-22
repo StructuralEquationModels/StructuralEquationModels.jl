@@ -39,18 +39,18 @@ use this if you are sure your observed data is in the right format.
 - `compute_covariance::Bool ) = true`: should the covariance of `data` be computed and stored?
 - `rowwise::Bool = false`: should the data be stored also as vectors per observation
 """
-struct SemObservedData{A, B, C, D, O, R} <: SemObserved
+struct SemObservedData{A, B, C, R} <: SemObserved
     data::A
     obs_cov::B
     obs_mean::C
-    n_man::D
-    n_obs::O
+    n_man::Int
+    n_obs::Int
     data_rowwise::R
 end
 
 # error checks
 function check_arguments_SemObservedData(kwargs...)
-    # data is a data frame, 
+    # data is a data frame,
 
 end
 
@@ -107,8 +107,8 @@ function SemObservedData(;
         data,
         compute_covariance ? Statistics.cov(data) : nothing,
         meanstructure ? vec(Statistics.mean(data, dims = 1)) : nothing,
-        Float64.(size(data, 2)),
-        Float64.(size(data, 1)),
+        size(data, 2),
+        size(data, 1),
         rowwise ? [data[i, :] for i in axes(data, 1)] : nothing,
     )
 end

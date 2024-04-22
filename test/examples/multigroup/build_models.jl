@@ -10,7 +10,7 @@ model_ml_multigroup = SemEnsemble(model_g1, model_g2; optimizer = semoptimizer)
 
 # gradients
 @testset "ml_gradients_multigroup" begin
-    @test test_gradient(model_ml_multigroup, start_test; atol = 1e-9)
+    test_gradient(model_ml_multigroup, start_test; atol = 1e-9)
 end
 
 # fit
@@ -27,21 +27,14 @@ end
 
 @testset "fitmeasures/se_ml" begin
     solution_ml = sem_fit(model_ml_multigroup)
-    @test all(
-        test_fitmeasures(
-            fit_measures(solution_ml),
-            solution_lav[:fitmeasures_ml];
-            rtol = 1e-2,
-            atol = 1e-7,
-        ),
+    test_fitmeasures(
+        fit_measures(solution_ml),
+        solution_lav[:fitmeasures_ml];
+        rtol = 1e-2,
+        atol = 1e-7,
     )
 
-    update_partable!(
-        partable,
-        identifier(model_ml_multigroup),
-        se_hessian(solution_ml),
-        :se,
-    )
+    update_se_hessian!(partable, solution_ml)
     @test compare_estimates(
         partable,
         solution_lav[:parameter_estimates_ml];
@@ -71,7 +64,7 @@ model_ml_multigroup = SemEnsemble(model_g1, model_g2; optimizer = semoptimizer)
 
 # gradients
 @testset "ml_gradients_multigroup | sorted" begin
-    @test test_gradient(model_ml_multigroup, start_test; atol = 1e-2)
+    test_gradient(model_ml_multigroup, start_test; atol = 1e-2)
 end
 
 grad = similar(start_test)
@@ -95,21 +88,14 @@ end
 
 @testset "fitmeasures/se_ml | sorted" begin
     solution_ml = sem_fit(model_ml_multigroup)
-    @test all(
-        test_fitmeasures(
-            fit_measures(solution_ml),
-            solution_lav[:fitmeasures_ml];
-            rtol = 1e-2,
-            atol = 1e-7,
-        ),
+    test_fitmeasures(
+        fit_measures(solution_ml),
+        solution_lav[:fitmeasures_ml];
+        rtol = 1e-2,
+        atol = 1e-7,
     )
 
-    update_partable!(
-        partable_s,
-        identifier(model_ml_multigroup),
-        se_hessian(solution_ml),
-        :se,
-    )
+    update_se_hessian!(partable_s, solution_ml)
     @test compare_estimates(
         partable_s,
         solution_lav[:parameter_estimates_ml];
@@ -159,7 +145,7 @@ model_g2 = SemFiniteDiff(
 model_ml_multigroup = SemEnsemble(model_g1, model_g2; optimizer = semoptimizer)
 
 @testset "gradients_user_defined_loss" begin
-    @test test_gradient(model_ml_multigroup, start_test; atol = 1e-9)
+    test_gradient(model_ml_multigroup, start_test; atol = 1e-9)
 end
 
 # fit
@@ -187,7 +173,7 @@ model_ls_g2 =
 model_ls_multigroup = SemEnsemble(model_ls_g1, model_ls_g2; optimizer = semoptimizer)
 
 @testset "ls_gradients_multigroup" begin
-    @test test_gradient(model_ls_multigroup, start_test; atol = 1e-9)
+    test_gradient(model_ls_multigroup, start_test; atol = 1e-9)
 end
 
 @testset "ls_solution_multigroup" begin
@@ -203,22 +189,15 @@ end
 
 @testset "fitmeasures/se_ls" begin
     solution_ls = sem_fit(model_ls_multigroup)
-    @test all(
-        test_fitmeasures(
-            fit_measures(solution_ls),
-            solution_lav[:fitmeasures_ls];
-            fitmeasure_names = fitmeasure_names_ls,
-            rtol = 1e-2,
-            atol = 1e-5,
-        ),
+    test_fitmeasures(
+        fit_measures(solution_ls),
+        solution_lav[:fitmeasures_ls];
+        fitmeasure_names = fitmeasure_names_ls,
+        rtol = 1e-2,
+        atol = 1e-5,
     )
 
-    update_partable!(
-        partable,
-        identifier(model_ls_multigroup),
-        se_hessian(solution_ls),
-        :se,
-    )
+    update_se_hessian!(partable, solution_ls)
     @test compare_estimates(
         partable,
         solution_lav[:parameter_estimates_ls];
@@ -281,7 +260,7 @@ if !isnothing(specification_miss_g1)
     ]
 
     @testset "fiml_gradients_multigroup" begin
-        @test test_gradient(model_ml_multigroup, start_test; atol = 1e-7)
+        test_gradient(model_ml_multigroup, start_test; atol = 1e-7)
     end
 
     @testset "fiml_solution_multigroup" begin
@@ -297,21 +276,14 @@ if !isnothing(specification_miss_g1)
 
     @testset "fitmeasures/se_fiml" begin
         solution = sem_fit(model_ml_multigroup)
-        @test all(
-            test_fitmeasures(
-                fit_measures(solution),
-                solution_lav[:fitmeasures_fiml];
-                rtol = 1e-3,
-                atol = 0,
-            ),
+        test_fitmeasures(
+            fit_measures(solution),
+            solution_lav[:fitmeasures_fiml];
+            rtol = 1e-3,
+            atol = 0,
         )
 
-        update_partable!(
-            partable_miss,
-            identifier(model_ml_multigroup),
-            se_hessian(solution),
-            :se,
-        )
+        update_se_hessian!(partable_miss, solution)
         @test compare_estimates(
             partable_miss,
             solution_lav[:parameter_estimates_fiml];

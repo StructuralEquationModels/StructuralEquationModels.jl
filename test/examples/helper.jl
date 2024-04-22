@@ -1,48 +1,44 @@
 function test_gradient(model, parameters; rtol = 1e-10, atol = 0)
     true_grad =
-        FiniteDiff.finite_difference_gradient(x -> objective!(model, x)[1], parameters)
+        FiniteDiff.finite_difference_gradient(Base.Fix1(objective!, model), parameters)
     gradient = similar(parameters)
-    gradient .= 1.0
 
     # F and G
+    fill!(gradient, NaN)
     gradient!(gradient, model, parameters)
-    correct1 = isapprox(gradient, true_grad; rtol = rtol, atol = atol)
+    @test gradient ≈ true_grad rtol = rtol atol = atol
 
     # only G
-    gradient .= 1.0
+    fill!(gradient, NaN)
     objective_gradient!(gradient, model, parameters)
-    correct2 = isapprox(gradient, true_grad; rtol = rtol, atol = atol)
-
-    return correct1 & correct2
+    @test gradient ≈ true_grad rtol = rtol atol = atol
 end
 
 function test_hessian(model, parameters; rtol = 1e-4, atol = 0)
     true_hessian =
-        FiniteDiff.finite_difference_hessian(x -> objective!(model, x)[1], parameters)
-    hessian = zeros(size(true_hessian))
-    hessian .= 1.0
+        FiniteDiff.finite_difference_hessian(Base.Fix1(objective!, model), parameters)
+    hessian = similar(parameters, size(true_hessian))
     gradient = similar(parameters)
 
     # H
+    fill!(hessian, NaN)
     hessian!(hessian, model, parameters)
-    correct1 = isapprox(hessian, true_hessian; rtol = rtol, atol = atol)
+    @test hessian ≈ true_hessian rtol = rtol atol = atol
 
     # F and H
-    hessian .= 1.0
+    fill!(hessian, NaN)
     objective_hessian!(hessian, model, parameters)
-    correct2 = isapprox(hessian, true_hessian; rtol = rtol, atol = atol)
+    @test hessian ≈ true_hessian rtol = rtol atol = atol
 
     # G and H
-    hessian .= 1.0
+    fill!(hessian, NaN)
     gradient_hessian!(gradient, hessian, model, parameters)
-    correct3 = isapprox(hessian, true_hessian; rtol = rtol, atol = atol)
+    @test hessian ≈ true_hessian rtol = rtol atol = atol
 
     # F, G and H
-    hessian .= 1.0
+    fill!(hessian, NaN)
     objective_gradient_hessian!(gradient, hessian, model, parameters)
-    correct4 = isapprox(hessian, true_hessian; rtol = rtol, atol = atol)
-
-    return correct1 & correct2 & correct3 & correct4
+    @test hessian ≈ true_hessian rtol = rtol atol = atol
 end
 
 fitmeasure_names_ml = Dict(
@@ -70,13 +66,10 @@ function test_fitmeasures(
     atol = 0,
     fitmeasure_names = fitmeasure_names_ml,
 )
-    correct = []
-    for key in keys(fitmeasure_names)
-        measure = measures[key]
-        measure_lav = measures_lav.x[measures_lav[:, 1].==fitmeasure_names[key]][1]
-        push!(correct, isapprox(measure, measure_lav; rtol = rtol, atol = atol))
+    @testset "$name" for (key, name) in pairs(fitmeasure_names)
+        measure_lav = measures_lav.x[findfirst(==(name), measures_lav[!, 1])]
+        @test measures[key] ≈ measure_lav rtol = rtol atol = atol
     end
-    return correct
 end
 
 function compare_estimates(
