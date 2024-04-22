@@ -34,5 +34,5 @@ update_observed(optimizer::SemOptimizerEmpty, observed::SemObserved; kwargs...) 
 ############################################################################################
 
 function Base.show(io::IO, struct_inst::SemOptimizerEmpty)
-    StructuralEquationModels.print_type_name(io, struct_inst)
+    print_type_name(io, struct_inst)
 end

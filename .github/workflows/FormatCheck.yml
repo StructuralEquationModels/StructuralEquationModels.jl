@@ -1,6 +1,6 @@
 name: Format suggestions
 on:
-  pull_request:
+  pull_request_target:
     # this argument is not required if you don't use the `suggestion-label` input
     types: [ opened, reopened, synchronize, labeled, unlabeled ]
 jobs:

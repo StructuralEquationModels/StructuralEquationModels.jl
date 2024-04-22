@@ -33,7 +33,7 @@ For observed data with missing values.
 - `get_data(::SemObservedMissing)` -> observed data
 - `data_rowwise(::SemObservedMissing)` -> observed data as vector per observation, with missing values deleted
 
-- `patterns(::SemObservedMissing)` -> indices of non-missing variables per missing patterns 
+- `patterns(::SemObservedMissing)` -> indices of non-missing variables per missing patterns
 - `patterns_not(::SemObservedMissing)` -> indices of missing variables per missing pattern
 - `rows(::SemObservedMissing)` -> row indices of observed data points that belong to each pattern
 - `pattern_n_obs(::SemObservedMissing)` -> number of data points per pattern

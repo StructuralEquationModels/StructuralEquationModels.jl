@@ -140,8 +140,7 @@ function RAM(;
     # get indices
     A_indices = copy(ram_matrices.A_ind)
     S_indices = copy(ram_matrices.S_ind)
-    !isnothing(ram_matrices.M_ind) ? M_indices = copy(ram_matrices.M_ind) :
-    M_indices = nothing
+    M_indices = !isnothing(ram_matrices.M_ind) ? copy(ram_matrices.M_ind) : nothing
 
     #preallocate arrays
     A_pre = zeros(n_nod, n_nod)
@@ -159,8 +158,8 @@ function RAM(;
     I_A = similar(A_pre)
 
     if gradient
-        ∇A = get_matrix_derivative(A_indices, parameters, n_nod^2)
-        ∇S = get_matrix_derivative(S_indices, parameters, n_nod^2)
+        ∇A = matrix_gradient(A_indices, n_nod^2)
+        ∇S = matrix_gradient(S_indices, n_nod^2)
     else
         ∇A = nothing
         ∇S = nothing
@@ -169,15 +168,8 @@ function RAM(;
     # μ
     if meanstructure
         has_meanstructure = Val(true)
-
-        if gradient
-            ∇M = get_matrix_derivative(M_indices, parameters, n_nod)
-        else
-            ∇M = nothing
-        end
-
+        ∇M = gradient ? matrix_gradient(M_indices, n_nod) : nothing
         μ = zeros(n_var)
-
     else
         has_meanstructure = Val(false)
         M_indices = nothing
@@ -222,7 +214,7 @@ gradient!(imply::RAM, par, model::AbstractSemSingle) =
 
 # objective and gradient
 function objective!(imply::RAM, parameters, model, has_meanstructure::Val{T}) where {T}
-    fill_A_S_M(
+    fill_A_S_M!(
         imply.A,
         imply.S,
         imply.M,
@@ -232,7 +224,8 @@ function objective!(imply::RAM, parameters, model, has_meanstructure::Val{T}) wh
         parameters,
     )
 
-    imply.I_A .= I - imply.A
+    @. imply.I_A = -imply.A
+    @view(imply.I_A[diagind(imply.I_A)]) .+= 1
 
     copyto!(imply.F⨉I_A⁻¹, imply.F)
     rdiv!(imply.F⨉I_A⁻¹, factorize(imply.I_A))
@@ -250,7 +243,7 @@ function gradient!(
     model::AbstractSemSingle,
     has_meanstructure::Val{T},
 ) where {T}
-    fill_A_S_M(
+    fill_A_S_M!(
         imply.A,
         imply.S,
         imply.M,
@@ -260,11 +253,11 @@ function gradient!(
         parameters,
     )
 
-    imply.I_A .= I - imply.A
-    copyto!(imply.I_A⁻¹, imply.I_A)
+    @. imply.I_A = -imply.A
+    @view(imply.I_A[diagind(imply.I_A)]) .+= 1
 
-    imply.I_A⁻¹ .= LinearAlgebra.inv!(factorize(imply.I_A⁻¹))
-    imply.F⨉I_A⁻¹ .= imply.F * imply.I_A⁻¹
+    imply.I_A⁻¹ = LinearAlgebra.inv!(factorize(imply.I_A))
+    mul!(imply.F⨉I_A⁻¹, imply.F, imply.I_A⁻¹)
 
     Σ_RAM!(imply.Σ, imply.F⨉I_A⁻¹, imply.S, imply.F⨉I_A⁻¹S)
 
@@ -346,15 +339,15 @@ function check_acyclic(A_pre, n_par, A_indices)
     A_rand = copy(A_pre)
     randpar = rand(n_par)
 
-    fill_matrix(A_rand, A_indices, randpar)
+    fill_matrix!(A_rand, A_indices, randpar)
 
     # check if the model is acyclic
     acyclic = isone(det(I - A_rand))
 
     # check if A is lower or upper triangular
-    if iszero(A_rand[.!tril(ones(Bool, size(A_pre)...))])
+    if istril(A_rand)
         A_pre = LowerTriangular(A_pre)
-    elseif iszero(A_rand[.!tril(ones(Bool, size(A_pre)...))'])
+    elseif istriu(A_rand)
         A_pre = UpperTriangular(A_pre)
     elseif acyclic
         @info "Your model is acyclic, specifying the A Matrix as either Upper or Lower Triangular can have great performance benefits.\n" maxlog =

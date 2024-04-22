@@ -224,9 +224,9 @@ update_partable!(partable::AbstractParameterTable, sem_fit::SemFit, vec, column)
 # update estimates -------------------------------------------------------------------------
 """
     update_estimate!(
-        partable::AbstractParameterTable, 
+        partable::AbstractParameterTable,
         sem_fit::SemFit)
-    
+
 Write parameter estimates from `sem_fit` to the `:estimate` column of `partable`
 """
 update_estimate!(partable::AbstractParameterTable, sem_fit::SemFit) =
@@ -236,7 +236,7 @@ update_estimate!(partable::AbstractParameterTable, sem_fit::SemFit) =
 """
     update_start!(partable::AbstractParameterTable, sem_fit::SemFit)
     update_start!(partable::AbstractParameterTable, model::AbstractSem, start_val; kwargs...)
-    
+
 Write starting values from `sem_fit` or `start_val` to the `:estimate` column of `partable`.
 
 # Arguments
@@ -262,10 +262,10 @@ end
 # update partable standard errors ----------------------------------------------------------
 """
     update_se_hessian!(
-        partable::AbstractParameterTable, 
-        sem_fit::SemFit; 
+        partable::AbstractParameterTable,
+        sem_fit::SemFit;
         hessian = :finitediff)
-    
+
 Write hessian standard errors computed for `sem_fit` to the `:se` column of `partable`
 
 # Arguments

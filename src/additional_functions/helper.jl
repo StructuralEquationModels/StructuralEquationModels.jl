@@ -1,16 +1,20 @@
-function neumann_series(mat::SparseMatrixCSC)
+# Neumann series representation of (I - mat)⁻¹
+function neumann_series(mat::SparseMatrixCSC; maxiter::Integer = size(mat, 1))
     inverse = I + mat
     next_term = mat^2
 
+    n = 1
     while nnz(next_term) != 0
+        (n <= maxiter) || error("Neumann series did not converge in $maxiter steps")
         inverse += next_term
         next_term *= mat
+        n += 1
     end
 
     return inverse
 end
 
-#= 
+#=
 function make_onelement_array(A)
     isa(A, Array) ? nothing : (A = [A])
     return A
@@ -37,13 +41,8 @@ function get_observed(rowind, data, semobserved; args = (), kwargs = NamedTuple(
     return observed_vec
 end
 
-function skipmissing_mean(mat)
-    means = Vector{Float64}(undef, size(mat, 2))
-    for i in 1:size(mat, 2)
-        @views means[i] = mean(skipmissing(mat[:, i]))
-    end
-    return means
-end
+skipmissing_mean(mat::AbstractMatrix) = 
+    [mean(skipmissing(coldata)) for coldata in eachcol(mat)]
 
 function F_one_person(imp_mean, meandiff, inverse, data, logdet)
     F = logdet
@@ -52,10 +51,10 @@ function F_one_person(imp_mean, meandiff, inverse, data, logdet)
     return F
 end
 
-function remove_all_missing(data)
+function remove_all_missing(data::AbstractMatrix)
     keep = Vector{Int64}()
-    for i in 1:size(data, 1)
-        if any(.!ismissing.(data[i, :]))
+    for (i, coldata) in zip(axes(data, 1), eachrow(data))
+        if any(!ismissing, coldata)
             push!(keep, i)
         end
     end
@@ -108,11 +107,8 @@ function sparse_outer_mul!(C, A, B::Vector, ind) #computes A*S*B -> C, where ind
 end
 
 function cov_and_mean(rows; corrected = false)
-    data = transpose(reduce(hcat, rows))
-    size(rows, 1) > 1 ? obs_cov = Statistics.cov(data; corrected = corrected) :
-    obs_cov = reshape([0.0], 1, 1)
-    obs_mean = vec(Statistics.mean(data, dims = 1))
-    return obs_cov, obs_mean
+    obs_mean, obs_cov = StatsBase.mean_and_cov(reduce(hcat, rows), 2, corrected = corrected)
+    return obs_cov, vec(obs_mean)
 end
 
 function duplication_matrix(nobs)
