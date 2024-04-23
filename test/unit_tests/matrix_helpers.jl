@@ -13,6 +13,14 @@ m = 5
     @test reshape(A[transpose_linear_indices(n, m)], m, n) == A'
     # commutation matrix multiplication
     K = CommutationMatrix(n)
+    # test K array interface methods
+    @test size(K) == (n^2, n^2)
+    @test size(K, 1) == n^2
+    @test length(K) == n^4
+    nn_linind = LinearIndices((n, n))
+    @test K[nn_linind[3, 2], nn_linind[2, 3]] == 1
+    @test K[nn_linind[3, 2], nn_linind[3, 2]] == 0
+
     B = rand(n, n)
     @test_throws DimensionMismatch K * rand(n, m)
     @test K * vec(B) == vec(B')
