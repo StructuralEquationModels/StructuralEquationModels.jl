@@ -7,3 +7,7 @@ end
 @safetestset "SemObs" begin
     include("data_input_formats.jl")
 end
+
+@safetestset "Matrix algebra helper functions" begin
+    include("matrix_helpers.jl")
+end
