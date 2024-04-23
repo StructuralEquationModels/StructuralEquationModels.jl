@@ -36,6 +36,13 @@ Base.size(A::CommutationMatrix, dim::Integer) =
 Base.length(A::CommutationMatrix) = A.n²^2
 Base.getindex(A::CommutationMatrix, i::Int, j::Int) = j == A.transpose_inds[i] ? 1 : 0
 
+function Base.:(*)(A::CommutationMatrix, B::AbstractVector)
+    size(A, 2) == size(B, 1) || throw(
+        DimensionMismatch("A has $(size(A, 2)) columns, but B has $(size(B, 1)) elements"),
+    )
+    return B[A.transpose_inds]
+end
+
 function Base.:(*)(A::CommutationMatrix, B::AbstractMatrix)
     size(A, 2) == size(B, 1) || throw(
         DimensionMismatch("A has $(size(A, 2)) columns, but B has $(size(B, 1)) rows"),

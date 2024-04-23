@@ -21,8 +21,10 @@ m = 5
     # lmul!
     D = sprand(n^2, n^2, 0.1)
     E = copy(D)
+    F = Matrix(E)
     lmul!(K, D)
     @test D == K * E
+    @test Matrix(D) == K * F
 end
 
 @testset "Duplication / elimination matrix" begin
