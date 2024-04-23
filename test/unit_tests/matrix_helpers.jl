@@ -14,6 +14,7 @@ m = 5
     # commutation matrix multiplication
     K = CommutationMatrix(n)
     B = rand(n, n)
+    @test_throws DimensionMismatch K * rand(n, m)
     @test K * vec(B) == vec(B')
     C = sprand(n, n, 0.5)
     @test K * vec(C) == vec(C')
@@ -27,10 +28,12 @@ end
 @testset "Duplication / elimination matrix" begin
     A = rand(m, m)
     A = A * A'
+
     # dupication
     D = duplication_matrix(m)
     @test D * A[tril(trues(size(A)))] == vec(A)
+
     # elimination
-    D = elimination_matrix(m)
-    @test D * vec(A) == A[tril(trues(size(A)))]
+    E = elimination_matrix(m)
+    @test E * vec(A) == A[tril(trues(size(A)))]
 end
