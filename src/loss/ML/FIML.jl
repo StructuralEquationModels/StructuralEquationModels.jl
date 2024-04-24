@@ -24,7 +24,7 @@ Analytic gradients are available.
 ## Implementation
 Subtype of `SemLossFunction`.
 """
-mutable struct SemFIML{INV, C, L, O, M, IM, I, T, U, W} <: SemLossFunction
+mutable struct SemFIML{INV, C, L, O, M, IM, I, T, W} <: SemLossFunction
     inverses::INV #preallocated inverses of imp_cov
     choleskys::C #preallocated choleskys
     logdets::L #logdets of implied covmats
@@ -37,7 +37,7 @@ mutable struct SemFIML{INV, C, L, O, M, IM, I, T, U, W} <: SemLossFunction
 
     mult::T
 
-    commutation_indices::U
+    commutator::CommutationMatrix
 
     interaction::W
 end
@@ -64,8 +64,6 @@ function SemFIML(; observed, specification, kwargs...)
     ∇ind =
         [findall(x -> !(x[1] ∈ ind || x[2] ∈ ind), ∇ind) for ind in patterns_not(observed)]
 
-    commutation_indices = get_commutation_lookup(get_n_nodes(specification)^2)
-
     return SemFIML(
         inverses,
         choleskys,
@@ -75,7 +73,7 @@ function SemFIML(; observed, specification, kwargs...)
         meandiff,
         imp_inv,
         mult,
-        commutation_indices,
+        CommutationMatrix(get_n_nodes(specification)),
         nothing,
     )
 end
@@ -163,10 +161,9 @@ function ∇F_fiml_outer(JΣ, Jμ, imply, model, semfiml)
     Iₙ = sparse(1.0I, size(A(imply))...)
     P = kron(F⨉I_A⁻¹(imply), F⨉I_A⁻¹(imply))
     Q = kron(S(imply) * I_A⁻¹(imply)', Iₙ)
-    #commutation_matrix_pre_square_add!(Q, Q)
-    Q2 = commutation_matrix_pre_square(Q, semfiml.commutation_indices)
+    Q .+= semfiml.commutator * Q
 
-    ∇Σ = P * (∇S(imply) + (Q + Q2) * ∇A(imply))
+    ∇Σ = P * (∇S(imply) + Q * ∇A(imply))
 
     ∇μ =
         F⨉I_A⁻¹(imply) * ∇M(imply) +
