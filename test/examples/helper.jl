@@ -1,43 +1,43 @@
-function test_gradient(model, parameters; rtol = 1e-10, atol = 0)
+function test_gradient(model, params; rtol = 1e-10, atol = 0)
     true_grad =
-        FiniteDiff.finite_difference_gradient(Base.Fix1(objective!, model), parameters)
-    gradient = similar(parameters)
+        FiniteDiff.finite_difference_gradient(Base.Fix1(objective!, model), params)
+    gradient = similar(params)
 
     # F and G
     fill!(gradient, NaN)
-    gradient!(gradient, model, parameters)
+    gradient!(gradient, model, params)
     @test gradient ≈ true_grad rtol = rtol atol = atol
 
     # only G
     fill!(gradient, NaN)
-    objective_gradient!(gradient, model, parameters)
+    objective_gradient!(gradient, model, params)
     @test gradient ≈ true_grad rtol = rtol atol = atol
 end
 
-function test_hessian(model, parameters; rtol = 1e-4, atol = 0)
+function test_hessian(model, params; rtol = 1e-4, atol = 0)
     true_hessian =
-        FiniteDiff.finite_difference_hessian(Base.Fix1(objective!, model), parameters)
-    hessian = similar(parameters, size(true_hessian))
-    gradient = similar(parameters)
+        FiniteDiff.finite_difference_hessian(Base.Fix1(objective!, model), params)
+    hessian = similar(params, size(true_hessian))
+    gradient = similar(params)
 
     # H
     fill!(hessian, NaN)
-    hessian!(hessian, model, parameters)
+    hessian!(hessian, model, params)
     @test hessian ≈ true_hessian rtol = rtol atol = atol
 
     # F and H
     fill!(hessian, NaN)
-    objective_hessian!(hessian, model, parameters)
+    objective_hessian!(hessian, model, params)
     @test hessian ≈ true_hessian rtol = rtol atol = atol
 
     # G and H
     fill!(hessian, NaN)
-    gradient_hessian!(gradient, hessian, model, parameters)
+    gradient_hessian!(gradient, hessian, model, params)
     @test hessian ≈ true_hessian rtol = rtol atol = atol
 
     # F, G and H
     fill!(hessian, NaN)
-    objective_gradient_hessian!(gradient, hessian, model, parameters)
+    objective_gradient_hessian!(gradient, hessian, model, params)
     @test hessian ≈ true_hessian rtol = rtol atol = atol
 end
 

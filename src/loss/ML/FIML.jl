@@ -82,20 +82,20 @@ end
 ### methods
 ############################################################################################
 
-function objective!(semfiml::SemFIML, parameters, model)
+function objective!(semfiml::SemFIML, params, model)
     if !check_fiml(semfiml, model)
-        return non_posdef_return(parameters)
+        return non_posdef_return(params)
     end
 
     prepare_SemFIML!(semfiml, model)
 
-    objective = F_FIML(rows(observed(model)), semfiml, model, parameters)
+    objective = F_FIML(rows(observed(model)), semfiml, model, params)
     return objective / n_obs(observed(model))
 end
 
-function gradient!(semfiml::SemFIML, parameters, model)
+function gradient!(semfiml::SemFIML, params, model)
     if !check_fiml(semfiml, model)
-        return ones(eltype(parameters), size(parameters))
+        return ones(eltype(params), size(params))
     end
 
     prepare_SemFIML!(semfiml, model)
@@ -104,15 +104,15 @@ function gradient!(semfiml::SemFIML, parameters, model)
     return gradient
 end
 
-function objective_gradient!(semfiml::SemFIML, parameters, model)
+function objective_gradient!(semfiml::SemFIML, params, model)
     if !check_fiml(semfiml, model)
-        return non_posdef_return(parameters), ones(eltype(parameters), size(parameters))
+        return non_posdef_return(params), ones(eltype(params), size(params))
     end
 
     prepare_SemFIML!(semfiml, model)
 
     objective =
-        F_FIML(rows(observed(model)), semfiml, model, parameters) / n_obs(observed(model))
+        F_FIML(rows(observed(model)), semfiml, model, params) / n_obs(observed(model))
     gradient = ∇F_FIML(rows(observed(model)), semfiml, model) / n_obs(observed(model))
 
     return objective, gradient
@@ -174,8 +174,8 @@ function ∇F_fiml_outer(JΣ, Jμ, imply, model, semfiml)
     return G
 end
 
-function F_FIML(rows, semfiml, model, parameters)
-    F = zero(eltype(parameters))
+function F_FIML(rows, semfiml, model, params)
+    F = zero(eltype(params))
     for i in 1:size(rows, 1)
         F += F_one_pattern(
             semfiml.meandiff[i],

@@ -10,7 +10,7 @@
         start_covariances_obs_lat = 0.0,
         start_means = 0.0,
         kwargs...)
-    
+
 Return a vector of simple starting values.
 """
 function start_simple end
@@ -62,13 +62,13 @@ function start_simple(
     start_means = 0.0,
     kwargs...,
 )
-    A_ind, S_ind, F_ind, M_ind, parameters = ram_matrices.A_ind,
+    A_ind, S_ind, F_ind, M_ind, params = ram_matrices.A_ind,
     ram_matrices.S_ind,
     ram_matrices.F_ind,
     ram_matrices.M_ind,
-    ram_matrices.parameters
+    ram_matrices.params
 
-    n_par = length(parameters)
+    n_par = length(params)
     start_val = zeros(n_par)
     n_var, n_nod = ram_matrices.size_F
 

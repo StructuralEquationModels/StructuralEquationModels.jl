@@ -122,7 +122,7 @@ struct UserSemML <: SemLossFunction end
 
 using LinearAlgebra: isposdef, logdet, tr, inv
 
-function SEM.objective!(semml::UserSemML, parameters, model::AbstractSem)
+function SEM.objective!(semml::UserSemML, params, model::AbstractSem)
     Σ = imply(model).Σ
     Σₒ = SEM.obs_cov(observed(model))
     if !isposdef(Σ)

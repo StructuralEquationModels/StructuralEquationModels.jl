@@ -1,59 +1,59 @@
 ############################################################################################
-# get parameter identifier
+# get a map from parameters to their indices
 ############################################################################################
 
-identifier(sem_fit::SemFit) = identifier(sem_fit.model)
-identifier(model::AbstractSemSingle) = identifier(model.imply)
-identifier(model::SemEnsemble) = model.identifier
+param_indices(sem_fit::SemFit) = param_indices(sem_fit.model)
+param_indices(model::AbstractSemSingle) = param_indices(model.imply)
+param_indices(model::SemEnsemble) = model.param_indices
 
 ############################################################################################
-# construct identifier
+# construct a map from parameters to indices
 ############################################################################################
 
-identifier(ram_matrices::RAMMatrices) =
-    Dict{Symbol, Int64}(ram_matrices.parameters .=> 1:length(ram_matrices.parameters))
-function identifier(partable::ParameterTable)
-    _, _, identifier = get_par_npar_identifier(partable)
-    return identifier
+param_indices(ram_matrices::RAMMatrices) =
+    Dict(par => i for (i, par) in enumerate(ram_matrices.params))
+function param_indices(partable::ParameterTable)
+    _, _, param_indices = get_par_npar_indices(partable)
+    return param_indices
 end
 
 ############################################################################################
 # get indices of a Vector of parameter labels
 ############################################################################################
 
-get_identifier_indices(parameters, identifier::Dict{Symbol, Int}) =
-    [identifier[par] for par in parameters]
+params_to_indices(params, param_indices::Dict{Symbol, Int}) =
+    [param_indices[par] for par in params]
 
-get_identifier_indices(
-    parameters,
+params_to_indices(
+    params,
     obj::Union{SemFit, AbstractSemSingle, SemEnsemble, SemImply},
-) = get_identifier_indices(parameters, identifier(obj))
+) = params_to_indices(params, params(obj))
 
-function get_identifier_indices(parameters, obj::Union{ParameterTable, RAMMatrices})
+function params_to_indices(params, obj::Union{ParameterTable, RAMMatrices})
     @warn "You are trying to find parameter indices from a ParameterTable or RAMMatrices object. \n
            If your model contains user-defined types, this may lead to wrong results. \n
-           To be on the safe side, try to reference parameters by labels or query the indices from 
-           the constructed model (`get_identifier_indices(parameters, model)`)." maxlog = 1
-    return get_identifier_indices(parameters, identifier(obj))
+           To be on the safe side, try to reference parameters by labels or query the indices from
+           the constructed model (`params_to_indices(params, model)`)." maxlog = 1
+    return params_to_indices(params, params(obj))
 end
 
 ############################################################################################
 # documentation
 ############################################################################################
 """
-    get_identifier_indices(parameters, model)
+    params_to_indices(params, model)
 
-Returns the indices of `parameters`.
+Returns the indices of `params`.
 
 # Arguments
-- `parameters::Vector{Symbol}`: parameter labels
+- `params::Vector{Symbol}`: parameter labels
 - `model`: either a SEM or a fitted SEM
 
 # Examples
 ```julia
-parameter_indices = get_identifier_indices([:λ₁, λ₂], my_fitted_sem)
+parameter_indices = params_to_indices([:λ₁, λ₂], my_fitted_sem)
 
 values = solution(my_fitted_sem)[parameter_indices]
 ```
 """
-function get_identifier_indices end
+function params_to_indices end

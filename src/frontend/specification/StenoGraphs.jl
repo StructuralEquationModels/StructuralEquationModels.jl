@@ -38,8 +38,8 @@ function ParameterTable(; graph, observed_vars, latent_vars, g = 1, parname = :Î
     value_fixed = zeros(n)
     start = zeros(n)
     estimate = zeros(n)
-    identifier = Vector{Symbol}(undef, n)
-    identifier .= Symbol("")
+    params = Vector{Symbol}(undef, n)
+    params .= Symbol("")
     # group = Vector{Symbol}(undef, n)
     # start_partable = zeros(Bool, n)
 
@@ -80,7 +80,7 @@ function ParameterTable(; graph, observed_vars, latent_vars, g = 1, parname = :Î
                     if modifier.value[g] == :NaN
                         throw(DomainError(NaN, "NaN is not allowed as a parameter label."))
                     end
-                    identifier[i] = modifier.value[g]
+                    params[i] = modifier.value[g]
                 end
             end
         end
@@ -88,13 +88,13 @@ function ParameterTable(; graph, observed_vars, latent_vars, g = 1, parname = :Î
 
     # make identifiers for parameters that are not labeled
     current_id = 1
-    for i in 1:length(identifier)
-        if (identifier[i] == Symbol("")) & free[i]
-            identifier[i] = Symbol(parname, :_, current_id)
+    for i in 1:length(params)
+        if (params[i] == Symbol("")) & free[i]
+            params[i] = Symbol(parname, :_, current_id)
             current_id += 1
-        elseif (identifier[i] == Symbol("")) & !free[i]
-            identifier[i] = :const
-        elseif (identifier[i] != Symbol("")) & !free[i]
+        elseif (params[i] == Symbol("")) & !free[i]
+            params[i] = :const
+        elseif (params[i] != Symbol("")) & !free[i]
             @warn "You labeled a constant. Please check if the labels of your graph are correct."
         end
     end
@@ -108,7 +108,7 @@ function ParameterTable(; graph, observed_vars, latent_vars, g = 1, parname = :Î
             :value_fixed => value_fixed,
             :start => start,
             :estimate => estimate,
-            :identifier => identifier,
+            :identifier => params,
         ),
         Dict(
             :latent_vars => latent_vars,

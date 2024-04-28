@@ -153,14 +153,14 @@ Returns a SemEnsemble with fields
 - `sems::Tuple`: `AbstractSem`s.
 - `weights::Vector`: Weights for each model.
 - `optimizer::SemOptimizer`: Connects the model to the optimizer. See also [`SemOptimizer`](@ref).
-- `identifier::Dict`: Stores parameter labels and their position.
+- `param_indices::Dict`: Stores parameter labels and their position.
 """
 struct SemEnsemble{N, T <: Tuple, V <: AbstractVector, D, I} <: AbstractSemCollection
     n::N
     sems::T
     weights::V
     optimizer::D
-    identifier::I
+    param_indices::I
 end
 
 function SemEnsemble(models...; optimizer = SemOptimizerOptim, weights = nothing, kwargs...)
@@ -174,11 +174,11 @@ function SemEnsemble(models...; optimizer = SemOptimizerOptim, weights = nothing
         weights = [n_obs(model) / nobs_total for model in models]
     end
 
-    # check identifier equality
-    id = identifier(models[1])
+    # check parameters equality
+    par_indices = param_indices(models[1])
     for model in models
-        if id != identifier(model)
-            throw(ErrorException("The identifier of your models do not match. \n
+        if par_indices != param_indices(model)
+            throw(ErrorException("The parameters of your models do not match. \n
             Maybe you tried to specify models of an ensemble via ParameterTables. \n
             In that case, you may use RAMMatrices instead."))
         end
@@ -189,7 +189,7 @@ function SemEnsemble(models...; optimizer = SemOptimizerOptim, weights = nothing
         optimizer = optimizer(; kwargs...)
     end
 
-    return SemEnsemble(n, models, weights, optimizer, id)
+    return SemEnsemble(n, models, weights, optimizer, par_indices)
 end
 
 """

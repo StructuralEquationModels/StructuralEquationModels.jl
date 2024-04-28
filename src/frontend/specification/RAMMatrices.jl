@@ -11,7 +11,7 @@ struct RAMMatrices <: SemSpecification
     S_ind::ArrayParamsMap
     F_ind::Vector{Int}
     M_ind::Union{ArrayParamsMap, Nothing}
-    parameters::Any
+    params::Any
     colnames::Any
     constants::Any
     size_F::Any
@@ -21,10 +21,10 @@ end
 ### Constructor
 ############################################################################################
 
-function RAMMatrices(; A, S, F, M = nothing, parameters, colnames)
-    A_indices = array_parameters_map(parameters, A)
-    S_indices = array_parameters_map(parameters, S)
-    M_indices = !isnothing(M) ? array_parameters_map(parameters, M) : nothing
+function RAMMatrices(; A, S, F, M = nothing, params, colnames)
+    A_indices = array_params_map(params, A)
+    S_indices = array_params_map(params, S)
+    M_indices = !isnothing(M) ? array_params_map(params, M) : nothing
     F_indices = findall([any(isone.(col)) for col in eachcol(F)])
     constants = get_RAMConstants(A, S, M)
     return RAMMatrices(
@@ -32,7 +32,7 @@ function RAMMatrices(; A, S, F, M = nothing, parameters, colnames)
         S_indices,
         F_indices,
         M_indices,
-        parameters,
+        params,
         colnames,
         constants,
         size(F),
@@ -107,10 +107,10 @@ end
 
 function RAMMatrices(partable::ParameterTable; par_id = nothing)
     if isnothing(par_id)
-        parameters, n_par, par_positions = get_par_npar_identifier(partable)
+        params, n_par, par_positions = get_par_npar_indices(partable)
     else
-        parameters, n_par, par_positions =
-            par_id[:parameters], par_id[:n_par], par_id[:par_positions]
+        params, n_par, par_positions =
+            par_id[:params], par_id[:n_par], par_id[:par_positions]
     end
 
     n_observed = size(partable.variables[:observed_vars], 1)
@@ -169,7 +169,7 @@ function RAMMatrices(partable::ParameterTable; par_id = nothing)
     constants = Vector{RAMConstant}()
 
     for i in 1:length(partable)
-        from, parameter_type, to, free, value_fixed, identifier = partable[i]
+        from, parameter_type, to, free, value_fixed, param = partable[i]
 
         row_ind = positions[to]
         if from != Symbol("1")
@@ -191,7 +191,7 @@ function RAMMatrices(partable::ParameterTable; par_id = nothing)
                 )
             end
         else
-            par_ind = par_positions[identifier]
+            par_ind = par_positions[param]
             if (parameter_type == :→) && (from == Symbol("1"))
                 push!(M_ind[par_ind], row_ind)
             elseif parameter_type == :→
@@ -210,7 +210,7 @@ function RAMMatrices(partable::ParameterTable; par_id = nothing)
         S_ind,
         F_ind,
         M_ind,
-        parameters,
+        params,
         colnames,
         constants,
         (n_observed, n_node),
@@ -243,7 +243,7 @@ function ParameterTable(ram_matrices::RAMMatrices)
     end
 
     # parameters
-    for (i, par) in enumerate(ram_matrices.parameters)
+    for (i, par) in enumerate(ram_matrices.params)
         push_partable_rows!(
             partable,
             position_names,
@@ -266,9 +266,9 @@ end
 function RAMMatrices(partable::EnsembleParameterTable)
     ram_matrices = Dict{Symbol, RAMMatrices}()
 
-    parameters, n_par, par_positions = get_par_npar_identifier(partable)
+    params, n_par, par_positions = get_par_npar_indices(partable)
     par_id =
-        Dict(:parameters => parameters, :n_par => n_par, :par_positions => par_positions)
+        Dict(:params => params, :n_par => n_par, :par_positions => par_positions)
 
     for key in keys(partable.tables)
         ram_mat = RAMMatrices(partable.tables[key]; par_id = par_id)
@@ -291,27 +291,27 @@ end
 ### Additional Functions
 ############################################################################################
 
-function get_par_npar_identifier(partable::ParameterTable)
-    parameters = unique(partable.columns[:identifier])
-    filter!(x -> x != :const, parameters)
-    n_par = length(parameters)
-    par_positions = Dict(parameters .=> 1:n_par)
-    return parameters, n_par, par_positions
+function get_par_npar_indices(partable::ParameterTable)
+    params = unique(partable.columns[:identifier])
+    filter!(x -> x != :const, params)
+    n_par = length(params)
+    par_positions = Dict(params .=> 1:n_par)
+    return params, n_par, par_positions
 end
 
-function get_par_npar_identifier(partable::EnsembleParameterTable)
-    parameters = Vector{Symbol}()
+function get_par_npar_indices(partable::EnsembleParameterTable)
+    params = Vector{Symbol}()
     for key in keys(partable.tables)
-        append!(parameters, partable.tables[key].columns[:identifier])
+        append!(params, partable.tables[key].columns[:identifier])
     end
-    parameters = unique(parameters)
-    filter!(x -> x != :const, parameters)
+    params = unique(params)
+    filter!(x -> x != :const, params)
 
-    n_par = length(parameters)
+    n_par = length(params)
 
-    par_positions = Dict(parameters .=> 1:n_par)
+    par_positions = Dict(params .=> 1:n_par)
 
-    return parameters, n_par, par_positions
+    return params, n_par, par_positions
 end
 
 function get_partable_row(c::RAMConstant, position_names)
@@ -330,7 +330,7 @@ function get_partable_row(c::RAMConstant, position_names)
     value_fixed = c.value
     start = 0.0
     estimate = 0.0
-    identifier = :const
+
     return Dict(
         :from => from,
         :parameter_type => parameter_type,
@@ -339,7 +339,7 @@ function get_partable_row(c::RAMConstant, position_names)
         :value_fixed => value_fixed,
         :start => start,
         :estimate => estimate,
-        :identifier => identifier,
+        :identifier => :const,
     )
 end
 
@@ -355,7 +355,7 @@ end
 
 cartesian_is_known(index, known_indices::Nothing) = false
 
-function get_partable_row(par, position_names, index, matrix, n_nod, known_indices)
+function get_partable_row(param, position_names, index, matrix, n_nod, known_indices)
 
     # variable names
     if matrix == :M
@@ -387,7 +387,6 @@ function get_partable_row(par, position_names, index, matrix, n_nod, known_indic
     value_fixed = 0.0
     start = 0.0
     estimate = 0.0
-    identifier = par
 
     return Dict(
         :from => from,
@@ -397,7 +396,7 @@ function get_partable_row(par, position_names, index, matrix, n_nod, known_indic
         :value_fixed => value_fixed,
         :start => start,
         :estimate => estimate,
-        :identifier => identifier,
+        :identifier => param,
     )
 end
 
@@ -433,7 +432,7 @@ function ==(mat1::RAMMatrices, mat2::RAMMatrices)
         (mat1.S_ind == mat2.S_ind) &&
         (mat1.F_ind == mat2.F_ind) &&
         (mat1.M_ind == mat2.M_ind) &&
-        (mat1.parameters == mat2.parameters) &&
+        (mat1.params == mat2.params) &&
         (mat1.colnames == mat2.colnames) &&
         (mat1.size_F == mat2.size_F) &&
         (mat1.constants == mat2.constants)

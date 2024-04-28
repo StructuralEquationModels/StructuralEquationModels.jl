@@ -58,7 +58,7 @@ function SemRidge(;
                 ),
             )
         else
-            which_ridge = get_identifier_indices(which_ridge, imply)
+            which_ridge = params_to_indices(which_ridge, imply)
         end
     end
     which = [CartesianIndex(x) for x in which_ridge]

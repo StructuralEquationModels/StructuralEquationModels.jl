@@ -29,7 +29,7 @@ Subtype of `SemImply` that implements the RAM notation with symbolic precomputat
 Subtype of `SemImply`.
 
 ## Interfaces
-- `identifier(::RAMSymbolic) `-> Dict containing the parameter labels and their position
+- `params(::RAMSymbolic) `-> Dict containing the parameter labels and their position
 - `n_par(::RAMSymbolic)` -> Number of parameters
 
 - `Σ(::RAMSymbolic)` -> model implied covariance matrix
@@ -79,7 +79,7 @@ struct RAMSymbolic{F1, F2, F3, A1, A2, A3, S1, S2, S3, V, V2, F4, A4, F5, A5, D1
     μ::A4
     ∇μ_function::F5
     ∇μ::A5
-    identifier::D1
+    param_indices::D1
     has_meanstructure::B
 end
 
@@ -98,9 +98,9 @@ function RAMSymbolic(;
     kwargs...,
 )
     ram_matrices = RAMMatrices(specification)
-    identifier = StructuralEquationModels.identifier(ram_matrices)
+    param_indices = SEM.param_indices(ram_matrices)
 
-    n_par = length(ram_matrices.parameters)
+    n_par = length(ram_matrices.params)
     n_var, n_nod = ram_matrices.size_F
 
     par = (Symbolics.@variables θ[1:n_par])[1]
@@ -201,7 +201,7 @@ function RAMSymbolic(;
         μ,
         ∇μ_function,
         ∇μ,
-        identifier,
+        param_indices,
         has_meanstructure,
     )
 end
@@ -240,7 +240,7 @@ objective_gradient_hessian!(imply::RAMSymbolic, par, model) = gradient!(imply, p
 ### Recommended methods
 ############################################################################################
 
-identifier(imply::RAMSymbolic) = imply.identifier
+param_indices(imply::RAMSymbolic) = imply.param_indices
 n_par(imply::RAMSymbolic) = imply.n_par
 
 function update_observed(imply::RAMSymbolic, observed::SemObserved; kwargs...)

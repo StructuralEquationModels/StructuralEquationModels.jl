@@ -34,7 +34,7 @@ and for models with a meanstructure, the model implied means are computed as
 ```
 
 ## Interfaces
-- `identifier(::RAM) `-> Dict containing the parameter labels and their position
+- `params(::RAM) `-> Dict containing the parameter labels and their position
 - `n_par(::RAM)` -> Number of parameters
 
 - `Σ(::RAM)` -> model implied covariance matrix
@@ -111,7 +111,7 @@ mutable struct RAM{
     ∇S::S2
     ∇M::S3
 
-    identifier::D
+    param_indices::D
 end
 
 using StructuralEquationModels
@@ -128,12 +128,11 @@ function RAM(;
     kwargs...,
 )
     ram_matrices = RAMMatrices(specification)
-    identifier = StructuralEquationModels.identifier(ram_matrices)
+    param_indices = SEM.param_indices(ram_matrices)
 
     # get dimensions of the model
-    n_par = length(ram_matrices.parameters)
+    n_par = length(ram_matrices.params)
     n_var, n_nod = ram_matrices.size_F
-    parameters = ram_matrices.parameters
     F = zeros(ram_matrices.size_F)
     F[CartesianIndex.(1:n_var, ram_matrices.F_ind)] .= 1.0
 
@@ -198,7 +197,7 @@ function RAM(;
         ∇A,
         ∇S,
         ∇M,
-        identifier,
+        param_indices,
     )
 end
 
@@ -213,7 +212,7 @@ gradient!(imply::RAM, par, model::AbstractSemSingle) =
     gradient!(imply, par, model, imply.has_meanstructure)
 
 # objective and gradient
-function objective!(imply::RAM, parameters, model, has_meanstructure::Val{T}) where {T}
+function objective!(imply::RAM, params, model, has_meanstructure::Val{T}) where {T}
     fill_A_S_M!(
         imply.A,
         imply.S,
@@ -221,7 +220,7 @@ function objective!(imply::RAM, parameters, model, has_meanstructure::Val{T}) wh
         imply.A_indices,
         imply.S_indices,
         imply.M_indices,
-        parameters,
+        params,
     )
 
     @. imply.I_A = -imply.A
@@ -239,7 +238,7 @@ end
 
 function gradient!(
     imply::RAM,
-    parameters,
+    params,
     model::AbstractSemSingle,
     has_meanstructure::Val{T},
 ) where {T}
@@ -250,7 +249,7 @@ function gradient!(
         imply.A_indices,
         imply.S_indices,
         imply.M_indices,
-        parameters,
+        params,
     )
 
     @. imply.I_A = -imply.A
@@ -281,7 +280,7 @@ objective_gradient_hessian!(imply::RAM, par, model::AbstractSemSingle, has_means
 ### Recommended methods
 ############################################################################################
 
-identifier(imply::RAM) = imply.identifier
+param_indices(imply::RAM) = imply.param_indices
 n_par(imply::RAM) = imply.n_par
 
 function update_observed(imply::RAM, observed::SemObserved; kwargs...)
