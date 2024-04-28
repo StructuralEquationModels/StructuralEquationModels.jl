@@ -6,7 +6,7 @@
 AbstractArrayParamsMap = AbstractVector{<:AbstractVector{<:Integer}}
 ArrayParamsMap = Vector{Vector{Int}}
 
-struct RAMMatrices
+struct RAMMatrices <: SemSpecification
     A_ind::ArrayParamsMap
     S_ind::ArrayParamsMap
     F_ind::Vector{Int}
