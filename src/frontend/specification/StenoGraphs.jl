@@ -108,7 +108,7 @@ function ParameterTable(; graph, observed_vars, latent_vars, g = 1, parname = :Î
             :value_fixed => value_fixed,
             :start => start,
             :estimate => estimate,
-            :identifier => params,
+            :param => params,
         ),
         Dict(
             :latent_vars => latent_vars,

@@ -21,7 +21,7 @@ function ParameterTable(::Nothing)
         :value_fixed => Vector{Float64}(),
         :start => Vector{Float64}(),
         :estimate => Vector{Float64}(),
-        :identifier => Vector{Symbol}(),
+        :param => Vector{Symbol}(),
         :start => Vector{Float64}(),
     )
 
@@ -66,7 +66,7 @@ function Base.show(io::IO, partable::ParameterTable)
         :start,
         :estimate,
         :se,
-        :identifier,
+        :param,
     ]
     existing_columns = [haskey(partable.columns, key) for key in relevant_columns]
 
@@ -102,7 +102,7 @@ Base.getindex(partable::ParameterTable, i::Int) = (
     partable.columns[:to][i],
     partable.columns[:free][i],
     partable.columns[:value_fixed][i],
-    partable.columns[:identifier][i],
+    partable.columns[:param][i],
 )
 
 function Base.length(partable::ParameterTable)
@@ -197,7 +197,7 @@ function update_partable!(
     column,
 )
     new_col = Vector{eltype(vec)}(undef, length(partable))
-    for (i, param) in enumerate(partable.columns[:identifier])
+    for (i, param) in enumerate(partable.columns[:param])
         if !(param == :const)
             new_col[i] = values[param_indices[param]]
         elseif param == :const

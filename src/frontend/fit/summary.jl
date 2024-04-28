@@ -91,7 +91,7 @@ function sem_summary(
     printstyled("Loadings: \n"; color = color)
     print("\n")
 
-    sorted_columns = [:to, :estimate, :identifier, :value_fixed, :start]
+    sorted_columns = [:to, :estimate, :param, :value_fixed, :start]
     loading_columns = sort_partially(sorted_columns, columns)
     header_cols = copy(loading_columns)
     replace!(header_cols, :parameter_type => :type)
@@ -140,7 +140,7 @@ function sem_summary(
     )
 
     sorted_columns =
-        [:from, :parameter_type, :to, :estimate, :identifier, :value_fixed, :start]
+        [:from, :parameter_type, :to, :estimate, :param, :value_fixed, :start]
     regression_columns = sort_partially(sorted_columns, columns)
 
     regression_array = reduce(
@@ -168,7 +168,7 @@ function sem_summary(
     )
 
     sorted_columns =
-        [:from, :parameter_type, :to, :estimate, :identifier, :value_fixed, :start]
+        [:from, :parameter_type, :to, :estimate, :param, :value_fixed, :start]
     variance_columns = sort_partially(sorted_columns, columns)
 
     variance_array = reduce(
@@ -196,7 +196,7 @@ function sem_summary(
     )
 
     sorted_columns =
-        [:from, :parameter_type, :to, :estimate, :identifier, :value_fixed, :start]
+        [:from, :parameter_type, :to, :estimate, :param, :value_fixed, :start]
     variance_columns = sort_partially(sorted_columns, columns)
 
     variance_array = reduce(
@@ -225,7 +225,7 @@ function sem_summary(
         printstyled("Means: \n"; color = color)
 
         sorted_columns =
-            [:from, :parameter_type, :to, :estimate, :identifier, :value_fixed, :start]
+            [:from, :parameter_type, :to, :estimate, :param, :value_fixed, :start]
         variance_columns = sort_partially(sorted_columns, columns)
 
         variance_array = reduce(

@@ -292,7 +292,7 @@ end
 ############################################################################################
 
 function get_par_npar_indices(partable::ParameterTable)
-    params = unique(partable.columns[:identifier])
+    params = unique(partable.columns[:param])
     filter!(x -> x != :const, params)
     n_par = length(params)
     par_positions = Dict(params .=> 1:n_par)
@@ -302,7 +302,7 @@ end
 function get_par_npar_indices(partable::EnsembleParameterTable)
     params = Vector{Symbol}()
     for key in keys(partable.tables)
-        append!(params, partable.tables[key].columns[:identifier])
+        append!(params, partable.tables[key].columns[:param])
     end
     params = unique(params)
     filter!(x -> x != :const, params)
@@ -339,7 +339,7 @@ function get_partable_row(c::RAMConstant, position_names)
         :value_fixed => value_fixed,
         :start => start,
         :estimate => estimate,
-        :identifier => :const,
+        :param => :const,
     )
 end
 
@@ -396,7 +396,7 @@ function get_partable_row(param, position_names, index, matrix, n_nod, known_ind
         :value_fixed => value_fixed,
         :start => start,
         :estimate => estimate,
-        :identifier => param,
+        :param => param,
     )
 end
 
