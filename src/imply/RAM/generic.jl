@@ -121,7 +121,7 @@ using StructuralEquationModels
 ############################################################################################
 
 function RAM(;
-    specification,
+    specification::SemSpecification,
     #vech = false,
     gradient = true,
     meanstructure = false,
