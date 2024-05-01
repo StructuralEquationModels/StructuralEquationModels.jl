@@ -14,6 +14,23 @@ abstract type AbstractSemCollection <: AbstractSem end
 abstract type SemLossFunction end
 
 """
+    params(semobj)
+
+Return the vector of SEM model parameters.
+"""
+params(model::AbstractSem) = model.params
+
+"""
+    n_par(semobj)
+
+Return the number of SEM model parameters.
+"""
+n_par(model::AbstractSem) = length(params(model))
+
+params(model::AbstractSemSingle) = params(model.imply)
+n_par(model::AbstractSemSingle) = n_par(model.imply)
+
+"""
     SemLoss(args...; loss_weights = nothing, ...)
 
 Constructs the loss field of a SEM. Can contain multiple `SemLossFunction`s, the model is optimized over their sum.
@@ -74,6 +91,9 @@ e. g. the model implied covariance or mean.
 If you would like to implement a different notation, e.g. LISREL, you should implement a subtype of SemImply.
 """
 abstract type SemImply end
+
+params(imply::SemImply) = params(imply.ram_matrices)
+n_par(imply::SemImply) = n_par(imply.ram_matrices)
 
 "Subtype of SemImply for all objects that can serve as the imply field of a SEM and use some form of symbolic precomputation."
 abstract type SemImplySymbolic <: SemImply end
@@ -153,14 +173,14 @@ Returns a SemEnsemble with fields
 - `sems::Tuple`: `AbstractSem`s.
 - `weights::Vector`: Weights for each model.
 - `optimizer::SemOptimizer`: Connects the model to the optimizer. See also [`SemOptimizer`](@ref).
-- `param_indices::Dict`: Stores parameter labels and their position.
+- `params::Vector`: Stores parameter labels and their position.
 """
 struct SemEnsemble{N, T <: Tuple, V <: AbstractVector, D, I} <: AbstractSemCollection
     n::N
     sems::T
     weights::V
     optimizer::D
-    param_indices::I
+    params::I
 end
 
 function SemEnsemble(models...; optimizer = SemOptimizerOptim, weights = nothing, kwargs...)
@@ -175,9 +195,9 @@ function SemEnsemble(models...; optimizer = SemOptimizerOptim, weights = nothing
     end
 
     # check parameters equality
-    par_indices = param_indices(models[1])
+    params = SEM.params(models[1])
     for model in models
-        if par_indices != param_indices(model)
+        if params != SEM.params(model)
             throw(ErrorException("The parameters of your models do not match. \n
             Maybe you tried to specify models of an ensemble via ParameterTables. \n
             In that case, you may use RAMMatrices instead."))
@@ -189,8 +209,11 @@ function SemEnsemble(models...; optimizer = SemOptimizerOptim, weights = nothing
         optimizer = optimizer(; kwargs...)
     end
 
-    return SemEnsemble(n, models, weights, optimizer, par_indices)
+    return SemEnsemble(n, models, weights, optimizer, params)
 end
+
+params(ensemble::SemEnsemble) = ensemble.params
+n_par(ensemble::SemEnsemble) = length(ensemble.params)
 
 """
     n_models(ensemble::SemEnsemble) -> Integer
@@ -252,5 +275,8 @@ optimizer(model::AbstractSemSingle) = model.optimizer
 Base type for all SEM specifications.
 """
 abstract type SemSpecification end
+
+params(spec::SemSpecification) = spec.params
+n_par(spec::SemSpecification) = length(params(spec))
 
 abstract type AbstractParameterTable <: SemSpecification end

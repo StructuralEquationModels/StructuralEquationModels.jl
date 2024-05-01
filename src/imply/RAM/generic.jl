@@ -72,7 +72,6 @@ mutable struct RAM{
     A4,
     A5,
     A6,
-    V,
     V2,
     I1,
     I2,
@@ -85,7 +84,6 @@ mutable struct RAM{
     S2,
     S3,
     B,
-    D,
 } <: SemImply
     Σ::A1
     A::A2
@@ -94,7 +92,6 @@ mutable struct RAM{
     μ::A5
     M::A6
 
-    n_par::V
     ram_matrices::V2
     has_meanstructure::B
 
@@ -110,8 +107,6 @@ mutable struct RAM{
     ∇A::S1
     ∇S::S2
     ∇M::S3
-
-    param_indices::D
 end
 
 using StructuralEquationModels
@@ -128,7 +123,6 @@ function RAM(;
     kwargs...,
 )
     ram_matrices = convert(RAMMatrices, specification)
-    param_indices = SEM.param_indices(ram_matrices)
 
     # get dimensions of the model
     n_par = length(ram_matrices.params)
@@ -184,7 +178,6 @@ function RAM(;
         F,
         μ,
         M_pre,
-        n_par,
         ram_matrices,
         has_meanstructure,
         A_indices,
@@ -197,7 +190,6 @@ function RAM(;
         ∇A,
         ∇S,
         ∇M,
-        param_indices,
     )
 end
 
@@ -279,9 +271,6 @@ objective_gradient_hessian!(imply::RAM, par, model::AbstractSemSingle, has_means
 ############################################################################################
 ### Recommended methods
 ############################################################################################
-
-param_indices(imply::RAM) = imply.param_indices
-n_par(imply::RAM) = imply.n_par
 
 function update_observed(imply::RAM, observed::SemObserved; kwargs...)
     if n_man(observed) == size(imply.Σ, 1)

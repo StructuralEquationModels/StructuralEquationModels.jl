@@ -58,7 +58,8 @@ function SemRidge(;
                 ),
             )
         else
-            which_ridge = params_to_indices(which_ridge, imply)
+            par2ind = Dict(par => ind for (ind, par) in enumerate(params(imply)))
+            which_ridge = getindex.(Ref(par2ind), which_ridge)
         end
     end
     which = [CartesianIndex(x) for x in which_ridge]

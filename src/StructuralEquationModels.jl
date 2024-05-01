@@ -74,15 +74,12 @@ include("additional_functions/start_val/start_partable.jl")
 include("additional_functions/start_val/start_simple.jl")
 include("additional_functions/artifacts.jl")
 include("additional_functions/simulation.jl")
-# identifier
-include("additional_functions/identifier.jl")
 # fit measures
 include("frontend/fit/fitmeasures/AIC.jl")
 include("frontend/fit/fitmeasures/BIC.jl")
 include("frontend/fit/fitmeasures/chi2.jl")
 include("frontend/fit/fitmeasures/df.jl")
 include("frontend/fit/fitmeasures/minus2ll.jl")
-include("frontend/fit/fitmeasures/n_par.jl")
 include("frontend/fit/fitmeasures/n_obs.jl")
 include("frontend/fit/fitmeasures/p.jl")
 include("frontend/fit/fitmeasures/RMSEA.jl")
@@ -153,11 +150,10 @@ export AbstractSem,
     start,
     Label,
     label,
-    params_to_indices,
     sort_vars!,
     sort_vars,
     RAMMatrices,
-    param_indices,
+    params,
     fit_measures,
     AIC,
     BIC,

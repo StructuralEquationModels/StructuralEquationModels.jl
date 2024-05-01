@@ -3,18 +3,11 @@
     @test ram_matrices == RAMMatrices(partable)
 end
 
-@test params_to_indices([:x2, :x10, :x28], model_ml) == [2, 10, 28]
-
-@testset "params_to_indices" begin
-    pars = [:θ_1, :θ_7, :θ_21]
-    @test params_to_indices(pars, model_ml) == params_to_indices(pars, partable)
-    @test params_to_indices(pars, model_ml) ==
-          params_to_indices(pars, RAMMatrices(partable))
+@testset "params()" begin
+    @test params(model_ml)[2, 10, 28] == [:x2, :x10, :x28]
+    @test params(model_ml) == params(partable)
+    @test params(model_ml) == params(RAMMatrices(partable))
 end
-
-# from docstrings:
-param_indices = params_to_indices([:λ₁, λ₂], my_fitted_sem)
-values = solution(my_fitted_sem)[param_indices]
 
 graph = @StenoGraph begin
     # measurement model

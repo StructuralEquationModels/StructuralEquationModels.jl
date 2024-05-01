@@ -25,9 +25,8 @@ model per group and an additional model with `ImplyEmpty` and `SemRidge` for the
 ## Implementation
 Subtype of `SemImply`.
 """
-struct ImplyEmpty{V, V2} <: SemImply
-    param_indices::V2
-    n_par::V
+struct ImplyEmpty{V2} <: SemImply
+    ram_matrices::V2
 end
 
 ############################################################################################
@@ -35,11 +34,7 @@ end
 ############################################################################################
 
 function ImplyEmpty(; specification, kwargs...)
-    ram_matrices = RAMMatrices(specification)
-
-    n_par = length(ram_matrices.params)
-
-    return ImplyEmpty(param_indices(ram_matrices), n_par)
+    return ImplyEmpty(convert(RAMMatrices, specification))
 end
 
 ############################################################################################
@@ -53,8 +48,5 @@ hessian!(imply::ImplyEmpty, par, model) = nothing
 ############################################################################################
 ### Recommended methods
 ############################################################################################
-
-param_indices(imply::ImplyEmpty) = imply.param_indices
-n_par(imply::ImplyEmpty) = imply.n_par
 
 update_observed(imply::ImplyEmpty, observed::SemObserved; kwargs...) = imply

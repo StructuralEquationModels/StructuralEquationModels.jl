@@ -120,12 +120,12 @@ Base.getindex(partable::EnsembleParameterTable, group) = partable.tables[group]
 # update generic ---------------------------------------------------------------------------
 function update_partable!(
     partable::EnsembleParameterTable,
-    param_indices::AbstractDict,
-    vec,
+    params::AbstractVector{Symbol},
+    values::AbstractVector,
     column,
 )
     for k in keys(partable.tables)
-        update_partable!(partable.tables[k], param_indices, vec, column)
+        update_partable!(partable.tables[k], params, values, column)
     end
     return partable
 end

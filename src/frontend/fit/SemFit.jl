@@ -46,6 +46,9 @@ end
 # additional methods
 ############################################################################################
 
+params(fit::SemFit) = params(fit.model)
+n_par(fit::SemFit) = n_par(fit.model)
+
 # access fields
 minimum(sem_fit::SemFit) = sem_fit.minimum
 solution(sem_fit::SemFit) = sem_fit.solution

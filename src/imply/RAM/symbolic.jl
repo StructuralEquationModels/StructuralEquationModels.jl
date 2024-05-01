@@ -62,7 +62,7 @@ and for models with a meanstructure, the model implied means are computed as
     \mu = F(I-A)^{-1}M
 ```
 """
-struct RAMSymbolic{F1, F2, F3, A1, A2, A3, S1, S2, S3, V, V2, F4, A4, F5, A5, D1, B} <:
+struct RAMSymbolic{F1, F2, F3, A1, A2, A3, S1, S2, S3, V2, F4, A4, F5, A5, B} <:
        SemImplySymbolic
     Σ_function::F1
     ∇Σ_function::F2
@@ -73,13 +73,11 @@ struct RAMSymbolic{F1, F2, F3, A1, A2, A3, S1, S2, S3, V, V2, F4, A4, F5, A5, D1
     Σ_symbolic::S1
     ∇Σ_symbolic::S2
     ∇²Σ_symbolic::S3
-    n_par::V
     ram_matrices::V2
     μ_function::F4
     μ::A4
     ∇μ_function::F5
     ∇μ::A5
-    param_indices::D1
     has_meanstructure::B
 end
 
@@ -98,7 +96,6 @@ function RAMSymbolic(;
     kwargs...,
 )
     ram_matrices = convert(RAMMatrices, specification)
-    param_indices = SEM.param_indices(ram_matrices)
 
     n_par = length(ram_matrices.params)
     n_var, n_nod = ram_matrices.size_F
@@ -195,13 +192,11 @@ function RAMSymbolic(;
         Σ_symbolic,
         ∇Σ_symbolic,
         ∇²Σ_symbolic,
-        n_par,
         ram_matrices,
         μ_function,
         μ,
         ∇μ_function,
         ∇μ,
-        param_indices,
         has_meanstructure,
     )
 end
@@ -239,9 +234,6 @@ objective_gradient_hessian!(imply::RAMSymbolic, par, model) = gradient!(imply, p
 ############################################################################################
 ### Recommended methods
 ############################################################################################
-
-param_indices(imply::RAMSymbolic) = imply.param_indices
-n_par(imply::RAMSymbolic) = imply.n_par
 
 function update_observed(imply::RAMSymbolic, observed::SemObserved; kwargs...)
     if n_man(observed) == size(imply.Σ, 1)

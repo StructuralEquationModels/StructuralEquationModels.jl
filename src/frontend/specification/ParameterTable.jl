@@ -209,14 +209,15 @@ end
 
 function update_partable!(
     partable::ParameterTable,
-    param_indices::AbstractDict,
+    params::AbstractVector{Symbol},
     values::AbstractVector,
     column,
 )
     new_col = Vector{eltype(vec)}(undef, length(partable))
+    params_index = Dict(param => i for (i, param) in enumerate(params))
     for (i, param) in enumerate(partable.columns[:param])
         if !(param == :const)
-            new_col[i] = values[param_indices[param]]
+            new_col[i] = values[params_index[param]]
         elseif param == :const
             new_col[i] = zero(eltype(values))
         end
@@ -233,8 +234,8 @@ Write `vec` to `column` of `partable`.
 # Arguments
 - `vec::Vector`: has to be in the same order as the `model` parameters
 """
-update_partable!(partable::AbstractParameterTable, sem_fit::SemFit, vec, column) =
-    update_partable!(partable, param_indices(sem_fit), vec, column)
+update_partable!(partable::AbstractParameterTable, sem_fit::SemFit, values, column) =
+    update_partable!(partable, params(sem_fit), values, column)
 
 # update estimates -------------------------------------------------------------------------
 """
@@ -271,7 +272,7 @@ function update_start!(
     if !(start_val isa Vector)
         start_val = start_val(model; kwargs...)
     end
-    return update_partable!(partable, param_indices(model), start_val, :start)
+    return update_partable!(partable, params(model), start_val, :start)
 end
 
 # update partable standard errors ----------------------------------------------------------
