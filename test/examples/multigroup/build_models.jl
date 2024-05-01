@@ -17,7 +17,7 @@ end
 @testset "ml_solution_multigroup" begin
     solution = sem_fit(model_ml_multigroup)
     update_estimate!(partable, solution)
-    @test compare_estimates(
+    test_estimates(
         partable,
         solution_lav[:parameter_estimates_ml];
         atol = 1e-4,
@@ -35,7 +35,7 @@ end
     )
 
     update_se_hessian!(partable, solution_ml)
-    @test compare_estimates(
+    test_estimates(
         partable,
         solution_lav[:parameter_estimates_ml];
         atol = 1e-3,
@@ -78,7 +78,7 @@ grad_fd = FiniteDiff.finite_difference_gradient(
 @testset "ml_solution_multigroup | sorted" begin
     solution = sem_fit(model_ml_multigroup)
     update_estimate!(partable_s, solution)
-    @test compare_estimates(
+    test_estimates(
         partable_s,
         solution_lav[:parameter_estimates_ml];
         atol = 1e-4,
@@ -96,7 +96,7 @@ end
     )
 
     update_se_hessian!(partable_s, solution_ml)
-    @test compare_estimates(
+    test_estimates(
         partable_s,
         solution_lav[:parameter_estimates_ml];
         atol = 1e-3,
@@ -152,7 +152,7 @@ end
 @testset "solution_user_defined_loss" begin
     solution = sem_fit(model_ml_multigroup)
     update_estimate!(partable, solution)
-    @test compare_estimates(
+    test_estimates(
         partable,
         solution_lav[:parameter_estimates_ml];
         atol = 1e-4,
@@ -179,7 +179,7 @@ end
 @testset "ls_solution_multigroup" begin
     solution = sem_fit(model_ls_multigroup)
     update_estimate!(partable, solution)
-    @test compare_estimates(
+    test_estimates(
         partable,
         solution_lav[:parameter_estimates_ls];
         atol = 1e-4,
@@ -198,7 +198,7 @@ end
     )
 
     update_se_hessian!(partable, solution_ls)
-    @test compare_estimates(
+    test_estimates(
         partable,
         solution_lav[:parameter_estimates_ls];
         atol = 1e-2,
@@ -266,7 +266,7 @@ if !isnothing(specification_miss_g1)
     @testset "fiml_solution_multigroup" begin
         solution = sem_fit(model_ml_multigroup)
         update_estimate!(partable_miss, solution)
-        @test compare_estimates(
+        test_estimates(
             partable_miss,
             solution_lav[:parameter_estimates_fiml];
             atol = 1e-4,
@@ -284,7 +284,7 @@ if !isnothing(specification_miss_g1)
         )
 
         update_se_hessian!(partable_miss, solution)
-        @test compare_estimates(
+        test_estimates(
             partable_miss,
             solution_lav[:parameter_estimates_fiml];
             atol = 1e-3,
