@@ -41,14 +41,14 @@ function ParameterTable(
     graph = unique(graph)
     n = length(graph)
 
-    partable = ParameterTable(latent_vars = latent_vars, observed_vars = observed_vars)
-    from = resize!(partable.columns[:from], n)
-    parameter_type = resize!(partable.columns[:parameter_type], n)
-    to = resize!(partable.columns[:to], n)
-    free = fill!(resize!(partable.columns[:free], n), true)
-    value_fixed = fill!(resize!(partable.columns[:value_fixed], n), NaN)
-    start = fill!(resize!(partable.columns[:start], n), NaN)
-    param_refs = fill!(resize!(partable.columns[:param], n), Symbol(""))
+    columns = empty_partable_columns(n)
+    from = columns[:from]
+    parameter_type = columns[:parameter_type]
+    to = columns[:to]
+    free = columns[:free]
+    value_fixed = columns[:value_fixed]
+    start = columns[:start]
+    param_refs = columns[:param]
     # group = Vector{Symbol}(undef, n)
 
     for (i, element) in enumerate(graph)
@@ -104,7 +104,7 @@ function ParameterTable(
         end
     end
 
-    return partable
+    return ParameterTable(columns; latent_vars, observed_vars)
 end
 
 ############################################################################################

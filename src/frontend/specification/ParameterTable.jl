@@ -13,23 +13,25 @@ end
 ### Constructors
 ############################################################################################
 
-# constuct an empty table
-function ParameterTable(;
+# construct a dictionary with the default partable columns
+# optionally pre-allocate data for nrows
+empty_partable_columns(nrows::Integer = 0) = Dict{Symbol, Vector}(
+    :from => fill(Symbol(), nrows),
+    :parameter_type => fill(Symbol(), nrows),
+    :to => fill(Symbol(), nrows),
+    :free => fill(true, nrows),
+    :value_fixed => fill(NaN, nrows),
+    :start => fill(NaN, nrows),
+    :estimate => fill(NaN, nrows),
+    :param => fill(Symbol(), nrows),
+)
+
+# construct using the provided columns data or create and empty table
+function ParameterTable(
+    columns::Dict{Symbol, Vector} = empty_partable_columns();
     observed_vars::Union{AbstractVector{Symbol}, Nothing} = nothing,
     latent_vars::Union{AbstractVector{Symbol}, Nothing} = nothing,
 )
-    columns = Dict{Symbol, Any}(
-        :from => Vector{Symbol}(),
-        :parameter_type => Vector{Symbol}(),
-        :to => Vector{Symbol}(),
-        :free => Vector{Bool}(),
-        :value_fixed => Vector{Float64}(),
-        :start => Vector{Float64}(),
-        :estimate => Vector{Float64}(),
-        :param => Vector{Symbol}(),
-        :start => Vector{Float64}(),
-    )
-
     return ParameterTable(columns,
         !isnothing(observed_vars) ? copy(observed_vars) : Vector{Symbol}(),
         !isnothing(latent_vars) ? copy(latent_vars) : Vector{Symbol}(),
