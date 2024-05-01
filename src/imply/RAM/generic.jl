@@ -65,26 +65,8 @@ Additional interfaces
 Only available in gradient! calls:
 - `I_A⁻¹(::RAM)` -> ``(I-A)^{-1}``
 """
-mutable struct RAM{
-    A1,
-    A2,
-    A3,
-    A4,
-    A5,
-    A6,
-    V2,
-    I1,
-    I2,
-    I3,
-    M1,
-    M2,
-    M3,
-    M4,
-    S1,
-    S2,
-    S3,
-    B,
-} <: SemImply
+mutable struct RAM{A1, A2, A3, A4, A5, A6, V2, I1, I2, I3, M1, M2, M3, M4, S1, S2, S3, B} <:
+               SemImply
     Σ::A1
     A::A2
     S::A3

@@ -138,8 +138,7 @@ function sem_summary(
         ),
     )
 
-    sorted_columns =
-        [:from, :parameter_type, :to, :estimate, :param, :value_fixed, :start]
+    sorted_columns = [:from, :parameter_type, :to, :estimate, :param, :value_fixed, :start]
     regression_columns = sort_partially(sorted_columns, columns)
 
     regression_array = reduce(
@@ -166,8 +165,7 @@ function sem_summary(
         (partable.columns[:to] .== partable.columns[:from]),
     )
 
-    sorted_columns =
-        [:from, :parameter_type, :to, :estimate, :param, :value_fixed, :start]
+    sorted_columns = [:from, :parameter_type, :to, :estimate, :param, :value_fixed, :start]
     variance_columns = sort_partially(sorted_columns, columns)
 
     variance_array = reduce(
@@ -194,8 +192,7 @@ function sem_summary(
         (partable.columns[:to] .!= partable.columns[:from]),
     )
 
-    sorted_columns =
-        [:from, :parameter_type, :to, :estimate, :param, :value_fixed, :start]
+    sorted_columns = [:from, :parameter_type, :to, :estimate, :param, :value_fixed, :start]
     variance_columns = sort_partially(sorted_columns, columns)
 
     variance_array = reduce(

@@ -59,17 +59,8 @@ end
 ############################################################################################
 
 function Base.show(io::IO, partable::ParameterTable)
-    relevant_columns = [
-        :from,
-        :parameter_type,
-        :to,
-        :free,
-        :value_fixed,
-        :start,
-        :estimate,
-        :se,
-        :param,
-    ]
+    relevant_columns =
+        [:from, :parameter_type, :to, :free, :value_fixed, :start, :estimate, :se, :param]
     shown_columns = filter!(
         col -> haskey(partable.columns, col) && length(partable.columns[col]) > 0,
         relevant_columns,
@@ -125,6 +116,7 @@ params(partable::ParameterTable) =
 
 
 # Sorting ----------------------------------------------------------------------------------
+
 struct CyclicModelError <: Exception
     msg::AbstractString
 end
@@ -149,8 +141,8 @@ function sort_vars!(partable::ParameterTable)
     ]
 
     is_regression = [
-        (partype == :→) && (from != Symbol("1")) for
-        (partype, from) in zip(partable.columns[:parameter_type], partable.columns[:from])
+        (partype == :→) && (from != Symbol("1")) for (partype, from) in
+        zip(partable.columns[:parameter_type], partable.columns[:from])
     ]
 
     to = partable.columns[:to][is_regression]

@@ -1,6 +1,5 @@
 function test_gradient(model, params; rtol = 1e-10, atol = 0)
-    true_grad =
-        FiniteDiff.finite_difference_gradient(Base.Fix1(objective!, model), params)
+    true_grad = FiniteDiff.finite_difference_gradient(Base.Fix1(objective!, model), params)
     gradient = similar(params)
 
     # F and G
@@ -250,8 +249,7 @@ function compare_estimates(
                 if type == :↔
                     type = "~~"
                 elseif type == :→
-                    if (from ∈ partable.latent_vars) &&
-                       (to ∈ partable.observed_vars)
+                    if (from ∈ partable.latent_vars) && (to ∈ partable.observed_vars)
                         type = "=~"
                     else
                         type = "~"

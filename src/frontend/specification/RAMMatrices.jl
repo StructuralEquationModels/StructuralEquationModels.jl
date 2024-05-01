@@ -146,8 +146,7 @@ function RAMMatrices(
     # F indices
     F_ind =
         length(partable.sorted_vars) != 0 ?
-        findall(∈(Set(partable.observed_vars)), partable.sorted_vars) :
-        1:n_observed
+        findall(∈(Set(partable.observed_vars)), partable.sorted_vars) : 1:n_observed
 
     # indices of the colnames
     colnames =

@@ -38,12 +38,7 @@ function gradient_hessian!(gradient, hessian, model::AbstractSemSingle, params)
     gradient_hessian!(gradient, hessian, loss(model), params, model)
 end
 
-function objective_gradient_hessian!(
-    gradient,
-    hessian,
-    model::AbstractSemSingle,
-    params,
-)
+function objective_gradient_hessian!(gradient, hessian, model::AbstractSemSingle, params)
     fill!(gradient, zero(eltype(gradient)))
     fill!(hessian, zero(eltype(hessian)))
     objective_gradient_hessian!(imply(model), params, model)
