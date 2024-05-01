@@ -201,35 +201,34 @@ end
 
 # update generic ---------------------------------------------------------------------------
 
+"""
+    update_partable!(partable::AbstractParameterTable, params::Vector{Symbol}, values, column)
+
+Write parameter `values` into `column` of `partable`.
+
+The `params` and `values` vectors define the pairs of value
+parameters, which are being matched to the `:param` column
+of the `partable`.
+"""
 function update_partable!(
     partable::ParameterTable,
     params::AbstractVector{Symbol},
     values::AbstractVector,
-    column,
+    column::Symbol,
 )
-    new_col = Vector{eltype(vec)}(undef, length(partable))
-    params_index = Dict(param => i for (i, param) in enumerate(params))
+    length(params) == length(values) || throw(
+        ArgumentError(
+            "The length of `params` ($(length(params))) and their `values` ($(length(values))) must be the same",
+        ),
+    )
+    coldata = get!(() -> Vector{eltype(values)}(), partable.columns, column)
+    resize!(coldata, length(partable))
+    params_index = Dict(zip(params, eachindex(params)))
     for (i, param) in enumerate(partable.columns[:param])
-        if !(param == :const)
-            new_col[i] = values[params_index[param]]
-        elseif param == :const
-            new_col[i] = zero(eltype(values))
-        end
+        coldata[i] = param != :const ? values[params_index[param]] : zero(eltype(values))
     end
-    push!(partable.columns, column => new_col)
     return partable
 end
-
-"""
-    update_partable!(partable::AbstractParameterTable, sem_fit::SemFit, vec, column)
-
-Write `vec` to `column` of `partable`.
-
-# Arguments
-- `vec::Vector`: has to be in the same order as the `model` parameters
-"""
-update_partable!(partable::AbstractParameterTable, sem_fit::SemFit, values, column) =
-    update_partable!(partable, params(sem_fit), values, column)
 
 # update estimates -------------------------------------------------------------------------
 """
