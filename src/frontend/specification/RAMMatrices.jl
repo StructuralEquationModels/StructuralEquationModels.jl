@@ -222,18 +222,40 @@ function RAMMatrices(
     )
 end
 
-Base.convert(::Type{RAMMatrices}, partable::ParameterTable) = RAMMatrices(partable)
+Base.convert(
+    ::Type{RAMMatrices},
+    partable::ParameterTable;
+    params::Union{AbstractVector{Symbol}, Nothing} = nothing,
+) = RAMMatrices(partable; params)
 
 ############################################################################################
 ### get parameter table from RAMMatrices
 ############################################################################################
 
-function ParameterTable(ram_matrices::RAMMatrices)
-    colnames = ram_matrices.colnames
+function ParameterTable(
+    ram_matrices::RAMMatrices;
+    params::Union{AbstractVector{Symbol}, Nothing} = nothing,
+    observed_var_prefix::Symbol = :obs,
+    latent_var_prefix::Symbol = :var,
+)
+    # defer parameter checks until we know which ones are used
+    if !isnothing(ram_matrices.colnames)
+        colnames = ram_matrices.colnames
+        observed_vars = colnames[ram_matrices.F_ind]
+        latent_vars = colnames[setdiff(eachindex(colnames), ram_matrices.F_ind)]
+    else
+        observed_vars =
+            [Symbol("$(observed_var_prefix)_$i") for i in 1:nobserved_vars(ram_matrices)]
+        latent_vars =
+            [Symbol("$(latent_var_prefix)_$i") for i in 1:nlatent_vars(ram_matrices)]
+        colnames = vcat(observed_vars, latent_vars)
+    end
 
+    # construct an empty table
     partable = ParameterTable(
-        observed_vars = colnames[ram_matrices.F_ind],
-        latent_vars = colnames[setdiff(eachindex(colnames), ram_matrices.F_ind)],
+        observed_vars = observed_vars,
+        latent_vars = latent_vars,
+        params = isnothing(params) ? SEM.params(ram_matrices) : params,
     )
 
     # constants
@@ -254,12 +276,16 @@ function ParameterTable(ram_matrices::RAMMatrices)
             ram_matrices.size_F[2],
         )
     end
+    check_params(SEM.params(partable), partable.columns[:param])
 
     return partable
 end
 
-Base.convert(::Type{<:ParameterTable}, ram_matrices::RAMMatrices) =
-    ParameterTable(ram_matrices)
+Base.convert(
+    ::Type{<:ParameterTable},
+    ram::RAMMatrices;
+    params::Union{AbstractVector{Symbol}, Nothing} = nothing,
+) = ParameterTable(ram; params)
 
 ############################################################################################
 ### Pretty Printing

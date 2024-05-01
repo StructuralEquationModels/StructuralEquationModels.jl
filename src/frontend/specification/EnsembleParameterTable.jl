@@ -23,25 +23,19 @@ function EnsembleParameterTable(
     spec_ensemble::AbstractDict{K, V};
     params::Union{Nothing, Vector{Symbol}} = nothing,
 ) where {K, V <: SemSpecification}
-    partables = Dict{Symbol, ParameterTable}(
-        Symbol(group) => convert(ParameterTable, spec; params = params) for
-        (group, spec) in pairs(spec_ensemble)
-    )
-
-    if isnothing(params)
+    params = if isnothing(params)
         # collect all SEM parameters in ensemble if not specified
         # and apply the set to all partables
-        params =
-            unique(mapreduce(SEM.params, vcat, values(partables), init = Vector{Symbol}()))
-        for partable in values(partables)
-            if partable.params != params
-                copyto!(resize!(partable.params, length(params)), params)
-                #throw(ArgumentError("The parameter sets of the SEM specifications in the ensemble do not match."))
-            end
-        end
+        unique(mapreduce(SEM.params, vcat, values(spec_ensemble), init = Vector{Symbol}()))
     else
-        params = copy(params)
+        copy(params)
     end
+
+    # convert each model specification to ParameterTable
+    partables = Dict{Symbol, ParameterTable}(
+        Symbol(group) => convert(ParameterTable, spec; params) for
+        (group, spec) in pairs(spec_ensemble)
+    )
     return EnsembleParameterTable(partables, params)
 end
 

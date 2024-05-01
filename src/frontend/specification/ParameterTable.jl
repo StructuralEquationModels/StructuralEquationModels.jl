@@ -7,6 +7,7 @@ struct ParameterTable{C} <: AbstractParameterTable
     observed_vars::Vector{Symbol}
     latent_vars::Vector{Symbol}
     sorted_vars::Vector{Symbol}
+    params::Vector{Symbol}
 end
 
 ############################################################################################
@@ -31,11 +32,32 @@ function ParameterTable(
     columns::Dict{Symbol, Vector} = empty_partable_columns();
     observed_vars::Union{AbstractVector{Symbol}, Nothing} = nothing,
     latent_vars::Union{AbstractVector{Symbol}, Nothing} = nothing,
+    params::Union{AbstractVector{Symbol}, Nothing} = nothing,
 )
-    return ParameterTable(columns,
+    params = isnothing(params) ? unique!(filter(!=(:const), columns[:param])) : copy(params)
+    check_params(params, columns[:param])
+    return ParameterTable(
+        columns,
         !isnothing(observed_vars) ? copy(observed_vars) : Vector{Symbol}(),
         !isnothing(latent_vars) ? copy(latent_vars) : Vector{Symbol}(),
-        Vector{Symbol}())
+        Vector{Symbol}(),
+        params,
+    )
+end
+
+# new parameter table with different parameters order
+function ParameterTable(
+    partable::ParameterTable;
+    params::Union{AbstractVector{Symbol}, Nothing} = nothing,
+)
+    isnothing(params) || check_params(params, partable.columns[:param])
+
+    return ParameterTable(
+        Dict(col => copy(values) for (col, values) in pairs(partable.columns)),
+        observed_vars = copy(partable.observed_vars),
+        latent_vars = copy(partable.latent_vars),
+        params = params,
+    )
 end
 
 ############################################################################################
@@ -44,6 +66,15 @@ end
 
 function Base.convert(::Type{Dict}, partable::ParameterTable)
     return partable.columns
+end
+
+function Base.convert(
+    ::Type{ParameterTable},
+    partable::ParameterTable;
+    params::Union{AbstractVector{Symbol}, Nothing} = nothing,
+)
+    return isnothing(params) || partable.params == params ? partable :
+           ParameterTable(partable; params)
 end
 
 function DataFrames.DataFrame(
@@ -110,12 +141,8 @@ Base.eltype(::Type{<:ParameterTable}) = ParameterTableRow
 Base.iterate(partable::ParameterTable, i::Integer = 1) =
     i > length(partable) ? nothing : (partable[i], i + 1)
 
-
-# get the vector of all parameters in the table
-# the position of the parameter is based on its first appearance in the table (and the ensemble)
-params(partable::ParameterTable) =
-    filter!(!=(:const), unique(partable.columns[:param]))
-
+params(partable::ParameterTable) = partable.params
+n_par(partable::ParameterTable) = length(params(partable))
 
 # Sorting ----------------------------------------------------------------------------------
 
