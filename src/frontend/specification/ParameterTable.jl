@@ -239,7 +239,7 @@ end
 Write parameter estimates from `sem_fit` to the `:estimate` column of `partable`
 """
 update_estimate!(partable::AbstractParameterTable, sem_fit::SemFit) =
-    update_partable!(partable, sem_fit, sem_fit.solution, :estimate)
+    update_partable!(partable, params(sem_fit), sem_fit.solution, :estimate)
 
 # update starting values -------------------------------------------------------------------
 """
@@ -254,7 +254,7 @@ Write starting values from `sem_fit` or `start_val` to the `:estimate` column of
 - `kwargs...`: are passed to `start_val`
 """
 update_start!(partable::AbstractParameterTable, sem_fit::SemFit) =
-    update_partable!(partable, sem_fit, sem_fit.start_val, :start)
+    update_partable!(partable, params(sem_fit), sem_fit.start_val, :start)
 
 function update_start!(
     partable::AbstractParameterTable,
@@ -289,5 +289,5 @@ function update_se_hessian!(
     hessian = :finitediff,
 )
     se = se_hessian(sem_fit; hessian = hessian)
-    return update_partable!(partable, sem_fit, se, :se)
+    return update_partable!(partable, params(sem_fit), se, :se)
 end
