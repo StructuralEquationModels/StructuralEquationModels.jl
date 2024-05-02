@@ -16,7 +16,6 @@ using LinearAlgebra,
     DelimitedFiles,
     DataFrames
 
-import DataFrames: DataFrame
 export StenoGraphs, @StenoGraph, meld
 
 const SEM = StructuralEquationModels

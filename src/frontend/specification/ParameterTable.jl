@@ -46,12 +46,14 @@ function Dict(partable::ParameterTable)
     return partable.columns
 end
 
-function DataFrame(partable::ParameterTable; columns = nothing)
+function DataFrames.DataFrame(
+    partable::ParameterTable;
+    columns::Union{AbstractVector{Symbol}, Nothing} = nothing,
+)
     if isnothing(columns)
         columns = keys(partable.columns)
     end
-    out = DataFrame([key => partable.columns[key] for key in columns])
-    return DataFrame(out)
+    return DataFrame([col => partable.columns[col] for col in columns])
 end
 
 ############################################################################################
