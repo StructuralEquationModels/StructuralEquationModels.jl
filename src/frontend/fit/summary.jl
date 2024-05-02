@@ -96,9 +96,9 @@ function sem_summary(
 
     for var in partable.latent_vars
         indicator_indices = findall(
-            (partable.columns[:from] .== var) .&
-            (partable.columns[:relation] .== :→) .&
-            (partable.columns[:to] .∈ [partable.observed_vars]),
+            r ->
+                (r.from == var) && (r.relation == :→) && (r.to ∈ partable.observed_vars),
+            partable,
         )
 
         printstyled(var; color = secondary_color)
@@ -116,20 +116,13 @@ function sem_summary(
     printstyled("Directed Effects: \n"; color = color)
 
     regression_indices = findall(
-        (partable.columns[:relation] .== :→) .& (
-            (
-                (partable.columns[:to] .∈ [partable.observed_vars]) .&
-                (partable.columns[:from] .∈ [partable.observed_vars])
-            ) .|
-            (
-                (partable.columns[:to] .∈ [partable.latent_vars]) .&
-                (partable.columns[:from] .∈ [partable.observed_vars])
-            ) .|
-            (
-                (partable.columns[:to] .∈ [partable.latent_vars]) .&
-                (partable.columns[:from] .∈ [partable.latent_vars])
-            )
-        ),
+        r ->
+            (r.relation == :→) && (
+                ((r.to ∈ partable.observed_vars) && (r.from ∈ partable.observed_vars)) ||
+                ((r.to ∈ partable.latent_vars) && (r.from ∈ partable.observed_vars)) ||
+                ((r.to ∈ partable.latent_vars) && (r.from ∈ partable.latent_vars))
+            ),
+        partable,
     )
 
     sorted_columns = [:from, :relation, :to, :estimate, :param, :value_fixed, :start]
@@ -153,25 +146,22 @@ function sem_summary(
 
     printstyled("Variances: \n"; color = color)
 
-    variance_indices = findall(
-        (partable.columns[:relation] .== :↔) .&
-        (partable.columns[:to] .== partable.columns[:from]),
-    )
+    var_indices = findall(r -> r.relation == :↔ && r.to == r.from, partable)
 
     sorted_columns = [:from, :relation, :to, :estimate, :param, :value_fixed, :start]
-    variance_columns = sort_partially(sorted_columns, columns)
+    var_columns = sort_partially(sorted_columns, columns)
 
-    variance_array = reduce(
+    var_array = reduce(
         hcat,
-        check_round(partable.columns[c][variance_indices]; digits = digits) for
+        check_round(partable.columns[c][var_indices]; digits = digits) for
         c in variance_columns
     )
-    variance_columns[2] = Symbol("")
+    var_columns[2] = Symbol("")
 
     print("\n")
     pretty_table(
-        variance_array;
-        header = variance_columns,
+        var_array;
+        header = var_columns,
         tf = PrettyTables.tf_borderless,
         alignment = :l,
     )
@@ -179,51 +169,45 @@ function sem_summary(
 
     printstyled("Covariances: \n"; color = color)
 
-    variance_indices = findall(
-        (partable.columns[:relation] .== :↔) .&
-        (partable.columns[:to] .!= partable.columns[:from]),
-    )
+    covar_indices = findall(r -> r.relation == :↔ && r.to != r.from, partable)
 
-    sorted_columns = [:from, :relation, :to, :estimate, :param, :value_fixed, :start]
-    variance_columns = sort_partially(sorted_columns, columns)
+    covar_columns = sort_partially(sorted_columns, columns)
 
-    variance_array = reduce(
+    covar_array = reduce(
         hcat,
-        check_round(partable.columns[c][variance_indices]; digits = digits) for
-        c in variance_columns
+        check_round(partable.columns[c][covar_indices]; digits = digits) for
+        c in covar_columns
     )
-    variance_columns[2] = Symbol("")
+    covar_columns[2] = Symbol("")
 
     print("\n")
     pretty_table(
-        variance_array;
-        header = variance_columns,
+        covar_array;
+        header = covar_columns,
         tf = PrettyTables.tf_borderless,
         alignment = :l,
     )
     print("\n")
 
-    mean_indices = findall(
-        (partable.columns[:relation] .== :→) .& (partable.columns[:from] .== Symbol("1")),
-    )
+    mean_indices = findall(r -> (r.relation == :→) && (r.from == Symbol("1")), partable)
 
     if length(mean_indices) > 0
         printstyled("Means: \n"; color = color)
 
         sorted_columns = [:from, :relation, :to, :estimate, :param, :value_fixed, :start]
-        variance_columns = sort_partially(sorted_columns, columns)
+        mean_columns = sort_partially(sorted_columns, columns)
 
-        variance_array = reduce(
+        mean_array = reduce(
             hcat,
             check_round(partable.columns[c][mean_indices]; digits = digits) for
-            c in variance_columns
+            c in mean_columns
         )
-        variance_columns[2] = Symbol("")
+        mean_columns[2] = Symbol("")
 
         print("\n")
         pretty_table(
-            variance_array;
-            header = variance_columns,
+            mean_array;
+            header = mean_columns,
             tf = PrettyTables.tf_borderless,
             alignment = :l,
         )
