@@ -44,7 +44,7 @@ function ParameterTable(
 
     columns = empty_partable_columns(n)
     from = columns[:from]
-    parameter_type = columns[:parameter_type]
+    relation = columns[:relation]
     to = columns[:to]
     free = columns[:free]
     value_fixed = columns[:value_fixed]
@@ -57,9 +57,9 @@ function ParameterTable(
         from[i] = edge.src.node
         to[i] = edge.dst.node
         if edge isa DirectedEdge
-            parameter_type[i] = :→
+            relation[i] = :→
         elseif edge isa UndirectedEdge
-            parameter_type[i] = :↔
+            relation[i] = :↔
         else
             throw(
                 ArgumentError(

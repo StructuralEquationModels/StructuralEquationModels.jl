@@ -93,18 +93,12 @@ function sem_summary(
     sorted_columns = [:to, :estimate, :param, :value_fixed, :start]
     loading_columns = sort_partially(sorted_columns, columns)
     header_cols = copy(loading_columns)
-    replace!(header_cols, :parameter_type => :type)
 
     for var in partable.latent_vars
         indicator_indices = findall(
             (partable.columns[:from] .== var) .&
-            (partable.columns[:parameter_type] .== :→) .&
+            (partable.columns[:relation] .== :→) .&
             (partable.columns[:to] .∈ [partable.observed_vars]),
-        )
-        loading_array = reduce(
-            hcat,
-            check_round(partable.columns[c][indicator_indices]; digits = digits) for
-            c in loading_columns
         )
 
         printstyled(var; color = secondary_color)
@@ -122,7 +116,7 @@ function sem_summary(
     printstyled("Directed Effects: \n"; color = color)
 
     regression_indices = findall(
-        (partable.columns[:parameter_type] .== :→) .& (
+        (partable.columns[:relation] .== :→) .& (
             (
                 (partable.columns[:to] .∈ [partable.observed_vars]) .&
                 (partable.columns[:from] .∈ [partable.observed_vars])
@@ -138,7 +132,7 @@ function sem_summary(
         ),
     )
 
-    sorted_columns = [:from, :parameter_type, :to, :estimate, :param, :value_fixed, :start]
+    sorted_columns = [:from, :relation, :to, :estimate, :param, :value_fixed, :start]
     regression_columns = sort_partially(sorted_columns, columns)
 
     regression_array = reduce(
@@ -147,7 +141,6 @@ function sem_summary(
         c in regression_columns
     )
     regression_columns[2] = Symbol("")
-    replace!(regression_columns, :parameter_type => :type)
 
     print("\n")
     pretty_table(
@@ -161,11 +154,11 @@ function sem_summary(
     printstyled("Variances: \n"; color = color)
 
     variance_indices = findall(
-        (partable.columns[:parameter_type] .== :↔) .&
+        (partable.columns[:relation] .== :↔) .&
         (partable.columns[:to] .== partable.columns[:from]),
     )
 
-    sorted_columns = [:from, :parameter_type, :to, :estimate, :param, :value_fixed, :start]
+    sorted_columns = [:from, :relation, :to, :estimate, :param, :value_fixed, :start]
     variance_columns = sort_partially(sorted_columns, columns)
 
     variance_array = reduce(
@@ -174,7 +167,6 @@ function sem_summary(
         c in variance_columns
     )
     variance_columns[2] = Symbol("")
-    replace!(variance_columns, :parameter_type => :type)
 
     print("\n")
     pretty_table(
@@ -188,11 +180,11 @@ function sem_summary(
     printstyled("Covariances: \n"; color = color)
 
     variance_indices = findall(
-        (partable.columns[:parameter_type] .== :↔) .&
+        (partable.columns[:relation] .== :↔) .&
         (partable.columns[:to] .!= partable.columns[:from]),
     )
 
-    sorted_columns = [:from, :parameter_type, :to, :estimate, :param, :value_fixed, :start]
+    sorted_columns = [:from, :relation, :to, :estimate, :param, :value_fixed, :start]
     variance_columns = sort_partially(sorted_columns, columns)
 
     variance_array = reduce(
@@ -201,7 +193,6 @@ function sem_summary(
         c in variance_columns
     )
     variance_columns[2] = Symbol("")
-    replace!(variance_columns, :parameter_type => :type)
 
     print("\n")
     pretty_table(
@@ -213,15 +204,13 @@ function sem_summary(
     print("\n")
 
     mean_indices = findall(
-        (partable.columns[:parameter_type] .== :→) .&
-        (partable.columns[:from] .== Symbol("1")),
+        (partable.columns[:relation] .== :→) .& (partable.columns[:from] .== Symbol("1")),
     )
 
     if length(mean_indices) > 0
         printstyled("Means: \n"; color = color)
 
-        sorted_columns =
-            [:from, :parameter_type, :to, :estimate, :param, :value_fixed, :start]
+        sorted_columns = [:from, :relation, :to, :estimate, :param, :value_fixed, :start]
         variance_columns = sort_partially(sorted_columns, columns)
 
         variance_array = reduce(
@@ -230,7 +219,6 @@ function sem_summary(
             c in variance_columns
         )
         variance_columns[2] = Symbol("")
-        replace!(variance_columns, :parameter_type => :type)
 
         print("\n")
         pretty_table(

@@ -18,7 +18,7 @@ end
 # optionally pre-allocate data for nrows
 empty_partable_columns(nrows::Integer = 0) = Dict{Symbol, Vector}(
     :from => fill(Symbol(), nrows),
-    :parameter_type => fill(Symbol(), nrows),
+    :relation => fill(Symbol(), nrows),
     :to => fill(Symbol(), nrows),
     :free => fill(true, nrows),
     :value_fixed => fill(NaN, nrows),
@@ -93,7 +93,7 @@ end
 
 function Base.show(io::IO, partable::ParameterTable)
     relevant_columns =
-        [:from, :parameter_type, :to, :free, :value_fixed, :start, :estimate, :se, :param]
+        [:from, :relation, :to, :free, :value_fixed, :start, :estimate, :se, :param]
     shown_columns = filter!(
         col -> haskey(partable.columns, col) && length(partable.columns[col]) > 0,
         relevant_columns,
@@ -118,7 +118,7 @@ end
 # Iteration --------------------------------------------------------------------------------
 ParameterTableRow = @NamedTuple begin
     from::Symbol
-    parameter_type::Symbol
+    relation::Symbol
     to::Symbol
     free::Bool
     value_fixed::Any
@@ -127,7 +127,7 @@ end
 
 Base.getindex(partable::ParameterTable, i::Integer) = (
     from = partable.columns[:from][i],
-    parameter_type = partable.columns[:parameter_type][i],
+    relation = partable.columns[:relation][i],
     to = partable.columns[:to][i],
     free = partable.columns[:free][i],
     value_fixed = partable.columns[:value_fixed][i],
@@ -170,8 +170,8 @@ function sort_vars!(partable::ParameterTable)
     ]
 
     is_regression = [
-        (partype == :→) && (from != Symbol("1")) for (partype, from) in
-        zip(partable.columns[:parameter_type], partable.columns[:from])
+        (rel == :→) && (from != Symbol("1")) for
+        (rel, from) in zip(partable.columns[:relation], partable.columns[:from])
     ]
 
     to = partable.columns[:to][is_regression]
@@ -453,7 +453,7 @@ function lavaan_param_values!(
     for (from, to, type, id) in zip(
         [
             view(partable.columns[k], partable_mask) for
-            k in [:from, :to, :parameter_type, :param]
+            k in [:from, :to, :relation, :param]
         ]...,
     )
         lav_ind = nothing

@@ -176,34 +176,34 @@ function RAMMatrices(
         col_ind = r.from != Symbol("1") ? col_indices[r.from] : nothing
 
         if !r.free
-            if (r.parameter_type == :→) && (r.from == Symbol("1"))
+            if (r.relation == :→) && (r.from == Symbol("1"))
                 push!(constants, RAMConstant(:M, row_ind, r.value_fixed))
-            elseif r.parameter_type == :→
+            elseif r.relation == :→
                 push!(
                     constants,
                     RAMConstant(:A, CartesianIndex(row_ind, col_ind), r.value_fixed),
                 )
-            elseif r.parameter_type == :↔
+            elseif r.relation == :↔
                 push!(
                     constants,
                     RAMConstant(:S, CartesianIndex(row_ind, col_ind), r.value_fixed),
                 )
             else
-                error("Unsupported parameter type: $(r.parameter_type)")
+                error("Unsupported parameter type: $(r.relation)")
             end
         else
             par_ind = params_index[r.param]
-            if (r.parameter_type == :→) && (r.from == Symbol("1"))
+            if (r.relation == :→) && (r.from == Symbol("1"))
                 push!(M_ind[par_ind], row_ind)
-            elseif r.parameter_type == :→
+            elseif r.relation == :→
                 push!(A_ind[par_ind], row_ind + (col_ind - 1) * n_node)
-            elseif r.parameter_type == :↔
+            elseif r.relation == :↔
                 push!(S_ind[par_ind], row_ind + (col_ind - 1) * n_node)
                 if row_ind != col_ind
                     push!(S_ind[par_ind], col_ind + (row_ind - 1) * n_node)
                 end
             else
-                error("Unsupported parameter type: $(r.parameter_type)")
+                error("Unsupported parameter type: $(r.relation)")
             end
         end
     end
@@ -298,7 +298,8 @@ end
 ### Additional Functions
 ############################################################################################
 
-function matrix_to_parameter_type(matrix::Symbol)
+# return the `from □ to` variables relation symbol (□) given the name of the source RAM matrix
+function matrix_to_relation(matrix::Symbol)
     if matrix == :A
         return :→
     elseif matrix == :S
@@ -316,7 +317,7 @@ end
 
 partable_row(c::RAMConstant, varnames::AbstractVector{Symbol}) = (
     from = varnames[c.index[2]],
-    parameter_type = matrix_to_parameter_type(c.matrix),
+    relation = matrix_to_relation(c.matrix),
     to = varnames[c.index[1]],
     free = false,
     value_fixed = c.value,
@@ -346,7 +347,7 @@ function partable_row(
 
     return (
         from = from,
-        parameter_type = matrix_to_parameter_type(matrix),
+        relation = matrix_to_relation(matrix),
         to = to,
         free = true,
         value_fixed = 0.0,
