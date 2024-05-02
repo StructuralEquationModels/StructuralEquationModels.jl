@@ -171,41 +171,39 @@ function RAMMatrices(
     # handle constants
     constants = Vector{RAMConstant}()
 
-    for i in 1:length(partable)
-        from, parameter_type, to, free, value_fixed, param = partable[i]
+    for r in partable
+        row_ind = col_indices[r.to]
+        col_ind = r.from != Symbol("1") ? col_indices[r.from] : nothing
 
-        row_ind = col_indices[to]
-        col_ind = from != Symbol("1") ? col_indices[from] : nothing
-
-        if !free
-            if (parameter_type == :→) && (from == Symbol("1"))
-                push!(constants, RAMConstant(:M, row_ind, value_fixed))
-            elseif (parameter_type == :→)
+        if !r.free
+            if (r.parameter_type == :→) && (r.from == Symbol("1"))
+                push!(constants, RAMConstant(:M, row_ind, r.value_fixed))
+            elseif r.parameter_type == :→
                 push!(
                     constants,
-                    RAMConstant(:A, CartesianIndex(row_ind, col_ind), value_fixed),
+                    RAMConstant(:A, CartesianIndex(row_ind, col_ind), r.value_fixed),
                 )
-            elseif (parameter_type == :↔)
+            elseif r.parameter_type == :↔
                 push!(
                     constants,
-                    RAMConstant(:S, CartesianIndex(row_ind, col_ind), value_fixed),
+                    RAMConstant(:S, CartesianIndex(row_ind, col_ind), r.value_fixed),
                 )
             else
-                error("Unsupported parameter type: $(parameter_type)")
+                error("Unsupported parameter type: $(r.parameter_type)")
             end
         else
-            par_ind = params_index[param]
-            if (parameter_type == :→) && (from == Symbol("1"))
+            par_ind = params_index[r.param]
+            if (r.parameter_type == :→) && (r.from == Symbol("1"))
                 push!(M_ind[par_ind], row_ind)
-            elseif parameter_type == :→
+            elseif r.parameter_type == :→
                 push!(A_ind[par_ind], row_ind + (col_ind - 1) * n_node)
-            elseif parameter_type == :↔
+            elseif r.parameter_type == :↔
                 push!(S_ind[par_ind], row_ind + (col_ind - 1) * n_node)
                 if row_ind != col_ind
                     push!(S_ind[par_ind], col_ind + (row_ind - 1) * n_node)
                 end
             else
-                error("Unsupported parameter type: $(parameter_type)")
+                error("Unsupported parameter type: $(r.parameter_type)")
             end
         end
     end

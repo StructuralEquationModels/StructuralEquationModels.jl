@@ -126,12 +126,12 @@ ParameterTableRow = @NamedTuple begin
 end
 
 Base.getindex(partable::ParameterTable, i::Integer) = (
-    partable.columns[:from][i],
-    partable.columns[:parameter_type][i],
-    partable.columns[:to][i],
-    partable.columns[:free][i],
-    partable.columns[:value_fixed][i],
-    partable.columns[:param][i],
+    from = partable.columns[:from][i],
+    parameter_type = partable.columns[:parameter_type][i],
+    to = partable.columns[:to][i],
+    free = partable.columns[:free][i],
+    value_fixed = partable.columns[:value_fixed][i],
+    param = partable.columns[:param][i],
 )
 
 Base.length(partable::ParameterTable) = length(partable.columns[:param])
