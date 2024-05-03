@@ -67,7 +67,41 @@ end
 ### Constructor
 ############################################################################################
 
-function RAMMatrices(; A, S, F, M = nothing, params, colnames)
+function RAMMatrices(;
+    A::AbstractMatrix,
+    S::AbstractMatrix,
+    F::AbstractMatrix,
+    M::Union{AbstractVector, Nothing} = nothing,
+    params::AbstractVector{Symbol},
+    colnames::Union{AbstractVector{Symbol}, Nothing} = nothing,
+)
+    ncols = size(A, 2)
+    isnothing(colnames) || check_vars(colnames, ncols)
+
+    size(A, 1) == size(A, 2) || throw(DimensionMismatch("A must be a square matrix"))
+    size(S, 1) == size(S, 2) || throw(DimensionMismatch("S must be a square matrix"))
+    size(A, 2) == ncols || throw(
+        DimensionMismatch(
+            "A should have as many rows and columns as colnames length ($ncols), $(size(A)) found",
+        ),
+    )
+    size(S, 2) == ncols || throw(
+        DimensionMismatch(
+            "S should have as many rows and columns as colnames length ($ncols), $(size(S)) found",
+        ),
+    )
+    size(F, 2) == ncols || throw(
+        DimensionMismatch(
+            "F should have as many columns as colnames length ($ncols), $(size(F, 2)) found",
+        ),
+    )
+    if !isnothing(M)
+        length(M) == ncols || throw(
+            DimensionMismatch(
+                "M should have as many elements as colnames length ($ncols), $(length(M)) found",
+            ),
+        )
+    end
     A_indices = array_params_map(params, A)
     S_indices = array_params_map(params, S)
     M_indices = !isnothing(M) ? array_params_map(params, M) : nothing
