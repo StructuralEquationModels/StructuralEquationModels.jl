@@ -67,6 +67,15 @@ end
 ### Additional Methods
 ############################################################################################
 
+# get the vector of all parameters in the table
+# the position of the parameter is based on its first appearance in the table (and the ensemble)
+function params(partable::EnsembleParameterTable)
+    params = mapreduce(vcat, values(partable.tables)) do tbl
+        tbl.columns[:param]
+    end
+    return filter!(!=(:const), unique!(params)) # exclude constants
+end
+
 # Variables Sorting ------------------------------------------------------------------------
 
 function sort_vars!(partables::EnsembleParameterTable)

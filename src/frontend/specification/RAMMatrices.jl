@@ -102,6 +102,9 @@ function RAMMatrices(;
             ),
         )
     end
+
+    check_params(params, nothing)
+
     A_indices = array_params_map(params, A)
     S_indices = array_params_map(params, S)
     M_indices = !isnothing(M) ? array_params_map(params, M) : nothing
@@ -126,13 +129,13 @@ end
 ### get RAMMatrices from parameter table
 ############################################################################################
 
-function RAMMatrices(partable::ParameterTable; par_id = nothing)
-    if isnothing(par_id)
-        params, n_par, par_positions = get_par_npar_indices(partable)
-    else
-        params, n_par, par_positions =
-            par_id[:params], par_id[:n_par], par_id[:par_positions]
-    end
+function RAMMatrices(
+    partable::ParameterTable;
+    params::Union{AbstractVector{Symbol}, Nothing} = nothing,
+)
+    params = copy(isnothing(params) ? SEM.params(partable) : params)
+    check_params(params, partable.columns[:param])
+    params_index = Dict(param => i for (i, param) in enumerate(params))
 
     n_observed = length(partable.observed_vars)
     n_latent = length(partable.latent_vars)
@@ -156,20 +159,13 @@ function RAMMatrices(partable::ParameterTable; par_id = nothing)
     # fill Matrices
     # known_labels = Dict{Symbol, Int64}()
 
-    A_ind = Vector{Vector{Int64}}(undef, n_par)
-    for i in 1:length(A_ind)
-        A_ind[i] = Vector{Int64}()
-    end
-    S_ind = Vector{Vector{Int64}}(undef, n_par)
-    S_ind .= [Vector{Int64}()]
-    for i in 1:length(S_ind)
-        S_ind[i] = Vector{Int64}()
-    end
+    A_ind = [Vector{Int64}() for _ in 1:length(params)]
+    S_ind = [Vector{Int64}() for _ in 1:length(params)]
 
     # is there a meanstructure?
     M_ind =
-        any(==(Symbol("1")), partable.columns[:from]) ? [Vector{Int64}() for _ in 1:n_par] :
-        nothing
+        any(==(Symbol("1")), partable.columns[:from]) ?
+        [Vector{Int64}() for _ in 1:length(params)] : nothing
 
     # handle constants
     constants = Vector{RAMConstant}()
@@ -197,7 +193,7 @@ function RAMMatrices(partable::ParameterTable; par_id = nothing)
                 error("Unsupported parameter type: $(parameter_type)")
             end
         else
-            par_ind = par_positions[param]
+            par_ind = params_index[param]
             if (parameter_type == :→) && (from == Symbol("1"))
                 push!(M_ind[par_ind], row_ind)
             elseif parameter_type == :→
@@ -265,25 +261,6 @@ Base.convert(::Type{<:ParameterTable}, ram_matrices::RAMMatrices) =
     ParameterTable(ram_matrices)
 
 ############################################################################################
-### get RAMMatrices from EnsembleParameterTable
-############################################################################################
-
-function RAMMatrices(partable::EnsembleParameterTable)
-    ram_matrices = Dict{Symbol, RAMMatrices}()
-
-    params, n_par, par_positions = get_par_npar_indices(partable)
-    par_id =
-        Dict(:params => params, :n_par => n_par, :par_positions => par_positions)
-
-    for key in keys(partable.tables)
-        ram_mat = RAMMatrices(partable.tables[key]; par_id = par_id)
-        push!(ram_matrices, key => ram_mat)
-    end
-
-    return ram_matrices
-end
-
-############################################################################################
 ### Pretty Printing
 ############################################################################################
 
@@ -295,29 +272,6 @@ end
 ############################################################################################
 ### Additional Functions
 ############################################################################################
-
-function get_par_npar_indices(partable::ParameterTable)
-    params = unique(partable.columns[:param])
-    filter!(x -> x != :const, params)
-    n_par = length(params)
-    par_positions = Dict(params .=> 1:n_par)
-    return params, n_par, par_positions
-end
-
-function get_par_npar_indices(partable::EnsembleParameterTable)
-    params = Vector{Symbol}()
-    for key in keys(partable.tables)
-        append!(params, partable.tables[key].columns[:param])
-    end
-    params = unique(params)
-    filter!(x -> x != :const, params)
-
-    n_par = length(params)
-
-    par_positions = Dict(params .=> 1:n_par)
-
-    return params, n_par, par_positions
-end
 
 function matrix_to_parameter_type(matrix::Symbol)
     if matrix == :A

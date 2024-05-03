@@ -119,8 +119,14 @@ Base.eltype(::Type{<:ParameterTable}) = ParameterTableRow
 Base.iterate(partable::ParameterTable, i::Integer = 1) =
     i > length(partable) ? nothing : (partable[i], i + 1)
 
-# Sorting ----------------------------------------------------------------------------------
 
+# get the vector of all parameters in the table
+# the position of the parameter is based on its first appearance in the table (and the ensemble)
+params(partable::ParameterTable) =
+    filter!(!=(:const), unique(partable.columns[:param]))
+
+
+# Sorting ----------------------------------------------------------------------------------
 struct CyclicModelError <: Exception
     msg::AbstractString
 end
