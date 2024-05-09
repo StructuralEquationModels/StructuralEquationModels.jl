@@ -9,6 +9,8 @@ Rows are samples, columns are observed variables.
 """
 samples(observed::SemObserved) = observed.data
 
+observed_vars(observed::SemObserved) = observed.observed_vars
+
 ############################################################################################
 ### Additional functions
 ############################################################################################

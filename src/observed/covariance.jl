@@ -72,9 +72,10 @@ function SemObservedCovariance(;
 
     if !isnothing(spec_colnames)
         obs2spec_perm = source_to_dest_perm(obs_colnames, spec_colnames)
+        obs_colnames = obs_colnames[obs2spec_perm]
         obs_cov = obs_cov[obs2spec_perm, obs2spec_perm]
         isnothing(obs_mean) || (obs_mean = obs_mean[obs2spec_perm])
     end
 
-    return SemObservedData(nothing, obs_cov, obs_mean, size(obs_cov, 1), nsamples)
+    return SemObservedData(nothing, Symbol.(obs_colnames), obs_cov, obs_mean, nsamples)
 end
