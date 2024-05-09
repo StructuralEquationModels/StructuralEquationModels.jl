@@ -55,7 +55,6 @@ use this if you are sure your observed data is in the right format.
 """
 mutable struct SemObservedMissing{
     A <: AbstractArray,
-    D <: Number,
     O <: Number,
     P <: Vector,
     P2 <: Vector,
@@ -68,7 +67,7 @@ mutable struct SemObservedMissing{
     S <: EmMVNModel,
 } <: SemObserved
     data::A
-    nobs_vars::D
+    observed_vars::Vector{Symbol}
     nsamples::O
     patterns::P # missing patterns
     patterns_not::P2
@@ -100,6 +99,7 @@ function SemObservedMissing(;
         if isnothing(obs_colnames)
             try
                 data = data[:, spec_colnames]
+                obs_colnames = spec_colnames
             catch
                 throw(
                     ArgumentError(
@@ -123,7 +123,8 @@ function SemObservedMissing(;
                 throw(ArgumentError("please specify `obs_colnames` as a vector of Symbols"))
             end
 
-            data = data[:, source_to_dest_perm(obs_colnames, spec_colnames)]
+            obs_colnames = obs_colnames[source_to_dest_perm(obs_colnames, spec_colnames)]
+            data = data[:, obs_colnames]
         end
     end
 
@@ -186,7 +187,7 @@ function SemObservedMissing(;
 
     return SemObservedMissing(
         data,
-        nobs_vars,
+        Symbol.(obs_colnames),
         nsamples,
         remember_cart,
         remember_cart_not,
@@ -205,7 +206,6 @@ end
 ############################################################################################
 
 nsamples(observed::SemObservedMissing) = observed.nsamples
-nobserved_vars(observed::SemObservedMissing) = observed.nobs_vars
 
 ############################################################################################
 ### Additional methods

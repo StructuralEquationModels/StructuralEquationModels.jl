@@ -39,9 +39,9 @@ use this if you are sure your observed data is in the right format.
 """
 struct SemObservedData{A, B, C} <: SemObserved
     data::A
+    observed_vars::Vector{Symbol}
     obs_cov::B
     obs_mean::C
-    nobs_vars::Int
     nsamples::Int
 end
 
@@ -68,6 +68,7 @@ function SemObservedData(;
         if isnothing(obs_colnames)
             try
                 data = data[:, spec_colnames]
+                obs_colnames = spec_colnames
             catch
                 throw(
                     ArgumentError(
@@ -91,7 +92,8 @@ function SemObservedData(;
                 throw(ArgumentError("please specify `obs_colnames` as a vector of Symbols"))
             end
 
-            data = data[:, source_to_dest_perm(obs_colnames, spec_colnames)]
+            obs_colnames = obs_colnames[source_to_dest_perm(obs_colnames, spec_colnames)]
+            data = data[:, obs_colnames]
         end
     end
 
@@ -101,9 +103,9 @@ function SemObservedData(;
 
     return SemObservedData(
         data,
+        Symbol.(obs_colnames),
         compute_covariance ? Statistics.cov(data) : nothing,
         meanstructure ? vec(Statistics.mean(data, dims = 1)) : nothing,
-        size(data, 2),
         size(data, 1),
     )
 end
@@ -113,7 +115,6 @@ end
 ############################################################################################
 
 nsamples(observed::SemObservedData) = observed.nsamples
-nobserved_vars(observed::SemObservedData) = observed.nobs_vars
 
 ############################################################################################
 ### additional methods
