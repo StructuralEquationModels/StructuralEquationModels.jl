@@ -8,6 +8,7 @@ Rows are samples, columns are observed variables.
 [`nsamples`](@ref), [`observed_vars`](@ref).
 """
 samples(observed::SemObserved) = observed.data
+nsamples(observed::SemObserved) = observed.nsamples
 
 observed_vars(observed::SemObserved) = observed.observed_vars
 
