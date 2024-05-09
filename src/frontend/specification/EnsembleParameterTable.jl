@@ -2,8 +2,9 @@
 ### Types
 ############################################################################################
 
-mutable struct EnsembleParameterTable{C} <: AbstractParameterTable
-    tables::C
+struct EnsembleParameterTable <: AbstractParameterTable
+    tables::Dict{Symbol, ParameterTable}
+    params::Vector{Symbol}
 end
 
 ############################################################################################
@@ -11,9 +12,37 @@ end
 ############################################################################################
 
 # constuct an empty table
-function EnsembleParameterTable(::Nothing)
-    tables = Dict{Symbol, ParameterTable}()
-    return EnsembleParameterTable(tables)
+EnsembleParameterTable(::Nothing; params::Union{Nothing, Vector{Symbol}} = nothing) =
+    EnsembleParameterTable(
+        Dict{Symbol, ParameterTable}(),
+        isnothing(params) ? Symbol[] : copy(params),
+    )
+
+# dictionary of SEM specifications
+function EnsembleParameterTable(
+    spec_ensemble::AbstractDict{K, V};
+    params::Union{Nothing, Vector{Symbol}} = nothing,
+) where {K, V <: SemSpecification}
+    partables = Dict{Symbol, ParameterTable}(
+        Symbol(group) => convert(ParameterTable, spec; params = params) for
+        (group, spec) in pairs(spec_ensemble)
+    )
+
+    if isnothing(params)
+        # collect all SEM parameters in ensemble if not specified
+        # and apply the set to all partables
+        params =
+            unique(mapreduce(SEM.params, vcat, values(partables), init = Vector{Symbol}()))
+        for partable in values(partables)
+            if partable.params != params
+                copyto!(resize!(partable.params, length(params)), params)
+                #throw(ArgumentError("The parameter sets of the SEM specifications in the ensemble do not match."))
+            end
+        end
+    else
+        params = copy(params)
+    end
+    return EnsembleParameterTable(partables, params)
 end
 
 ############################################################################################
@@ -49,20 +78,6 @@ function DataFrames.DataFrame(
 end
 
 ############################################################################################
-### get parameter table from RAMMatrices
-############################################################################################
-
-function EnsembleParameterTable(args...; groups)
-    partable = EnsembleParameterTable(nothing)
-
-    for (group, ram_matrices) in zip(groups, args)
-        push!(partable.tables, group => ParameterTable(ram_matrices))
-    end
-
-    return partable
-end
-
-############################################################################################
 ### Pretty Printing
 ############################################################################################
 
@@ -82,15 +97,6 @@ end
 ############################################################################################
 ### Additional Methods
 ############################################################################################
-
-# get the vector of all parameters in the table
-# the position of the parameter is based on its first appearance in the table (and the ensemble)
-function params(partable::EnsembleParameterTable)
-    params = mapreduce(vcat, values(partable.tables)) do tbl
-        tbl.columns[:param]
-    end
-    return filter!(!=(:const), unique!(params)) # exclude constants
-end
 
 # Variables Sorting ------------------------------------------------------------------------
 

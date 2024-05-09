@@ -69,9 +69,7 @@ specification_g2 = RAMMatrices(;
 )
 
 partable = EnsembleParameterTable(
-    specification_g1,
-    specification_g2;
-    groups = [:Pasteur, :Grant_White],
+    Dict(:Pasteur => specification_g1, :Grant_White => specification_g2),
 )
 
 specification_miss_g1 = nothing
