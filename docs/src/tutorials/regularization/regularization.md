@@ -146,7 +146,7 @@ fit = sem_fit(model)
 
 update_estimate!(partable, fit)
 
-update_partable!(partable, fit_lasso, solution(fit_lasso), :estimate_lasso)
+update_partable!(partable, :estimate_lasso, params(fit_lasso), solution(fit_lasso))
 
 sem_summary(partable)
 ```
@@ -180,7 +180,7 @@ fit_mixed = sem_fit(model_mixed)
 Let's again compare the different results:
 
 ```@example reg
-update_partable!(partable, fit_mixed, solution(fit_mixed), :estimate_mixed)
+update_partable!(partable, :estimate_mixed, params(fit_mixed), solution(fit_mixed))
 
 sem_summary(partable)
 ```
