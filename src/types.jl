@@ -29,6 +29,23 @@ nparams(model::AbstractSem) = length(params(model))
 
 params(model::AbstractSemSingle) = params(model.imply)
 nparams(model::AbstractSemSingle) = nparams(model.imply)
+"""
+    param_indices(semobj)
+    param_indices(param_names, semobj)
+
+Returns either a dict of parameter names and their indices in `semobj`.
+If `param_names` are provided, returns a vector their indices in `semobj` instead.
+
+# Examples
+```julia
+parind = param_indices(my_fitted_sem)
+parind[:param_name]
+
+parind = param_indices([:param_name_1, param_name_2], my_fitted_sem)
+```
+"""
+param_indices(semobj) = Dict(params(semobj) .=> 1:nparams(semobj))
+param_indices(param_names, semobj) = getindex.([Dict(params(semobj) .=> 1:nparams(semobj))], param_names)
 
 """
     SemLoss(args...; loss_weights = nothing, ...)
