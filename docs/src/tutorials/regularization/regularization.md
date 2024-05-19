@@ -86,9 +86,10 @@ graph = @StenoGraph begin
 end
 
 partable = ParameterTable(
+    graph,
     latent_vars = latent_vars, 
-    observed_vars = observed_vars, 
-    graph = graph)
+    observed_vars = observed_vars
+)
 
 data = example_data("political_democracy")
 
@@ -101,7 +102,7 @@ model = Sem(
 We labeled the covariances between the items because we want to regularize those:
 
 ```@example reg
-ind = get_identifier_indices([:cov_15, :cov_24, :cov_26, :cov_37, :cov_48, :cov_68], model)
+ind = param_indices([:cov_15, :cov_24, :cov_26, :cov_37, :cov_48, :cov_68], model)
 ```
 
 In the following, we fit the same model with lasso regularization of those covariances.
