@@ -171,13 +171,15 @@ function sort_vars!(partable::ParameterTable)
         partable.observed_vars
     ]
 
-    is_regression = [
-        (rel == :→) && (from != Symbol("1")) for
-        (rel, from) in zip(partable.columns[:relation], partable.columns[:from])
+    # regression edges (excluding intercept)
+    edges = [
+        (from, to) for (rel, from, to) in zip(
+            partable.columns[:relation],
+            partable.columns[:from],
+            partable.columns[:to],
+        ) if (rel == :→) && (from != Symbol("1"))
     ]
-
-    to = partable.columns[:to][is_regression]
-    from = partable.columns[:from][is_regression]
+    sort!(edges, by = last) # sort edges by target
 
     sorted_vars = Vector{Symbol}()
 
@@ -185,21 +187,27 @@ function sort_vars!(partable::ParameterTable)
         acyclic = false
 
         for (i, var) in enumerate(vars)
-            if !(var ∈ to)
+            # check if var has any incoming edge
+            eix = searchsortedfirst(edges, (var, var), by = last)
+            if !(eix <= length(edges) && last(edges[eix]) == var)
+                # var is source, no edges to it
                 push!(sorted_vars, var)
                 deleteat!(vars, i)
-                delete_edges = from .!= var
-                to = to[delete_edges]
-                from = from[delete_edges]
+                # remove var outgoing edges
+                filter!(e -> e[1] != var, edges)
                 acyclic = true
+                break
             end
         end
 
+        # if acyclic is false, all vars have incoming edge
         acyclic ||
             throw(CyclicModelError("your model is cyclic and therefore can not be ordered"))
     end
 
     copyto!(resize!(partable.sorted_vars, length(sorted_vars)), sorted_vars)
+    @assert length(partable.sorted_vars) ==
+            length(partable.observed_vars) + length(partable.latent_vars)
 
     return partable
 end
