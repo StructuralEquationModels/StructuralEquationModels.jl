@@ -100,6 +100,11 @@ function sem_summary(
                 (r.from == var) && (r.relation == :→) && (r.to ∈ partable.observed_vars),
             partable,
         )
+        loading_array = reduce(
+            hcat,
+            check_round(partable.columns[c][indicator_indices]; digits = digits) for
+            c in loading_columns
+        )
 
         printstyled(var; color = secondary_color)
         print("\n")
@@ -109,6 +114,7 @@ function sem_summary(
             header = header_cols,
             tf = PrettyTables.tf_borderless,
             alignment = :l,
+            formatters = (v, i, j) -> isa(v, Number) && isnan(v) ? "" : v,
         )
         print("\n")
     end
@@ -141,6 +147,7 @@ function sem_summary(
         header = regression_columns,
         tf = PrettyTables.tf_borderless,
         alignment = :l,
+        formatters = (v, i, j) -> isa(v, Number) && isnan(v) ? "" : v,
     )
     print("\n")
 
@@ -154,7 +161,7 @@ function sem_summary(
     var_array = reduce(
         hcat,
         check_round(partable.columns[c][var_indices]; digits = digits) for
-        c in variance_columns
+        c in var_columns
     )
     var_columns[2] = Symbol("")
 
@@ -164,6 +171,7 @@ function sem_summary(
         header = var_columns,
         tf = PrettyTables.tf_borderless,
         alignment = :l,
+        formatters = (v, i, j) -> isa(v, Number) && isnan(v) ? "" : v,
     )
     print("\n")
 
@@ -186,6 +194,7 @@ function sem_summary(
         header = covar_columns,
         tf = PrettyTables.tf_borderless,
         alignment = :l,
+        formatters = (v, i, j) -> isa(v, Number) && isnan(v) ? "" : v,
     )
     print("\n")
 
@@ -210,6 +219,7 @@ function sem_summary(
             header = mean_columns,
             tf = PrettyTables.tf_borderless,
             alignment = :l,
+            formatters = (v, i, j) -> isa(v, Number) && isnan(v) ? "" : v,
         )
         print("\n")
     end
@@ -288,6 +298,14 @@ function sort_partially(sorted, to_sort)
     remaining = setdiff(to_sort, sorted)
     append!(out, sort(collect(remaining)))
     return out
+end
+
+function Base.findall(fun::Function, partable::ParameterTable)
+    rows = Int[]
+    for (i, r) in enumerate(partable)
+        fun(r) ? push!(rows, i) : nothing
+    end
+    return rows
 end
 
 """
