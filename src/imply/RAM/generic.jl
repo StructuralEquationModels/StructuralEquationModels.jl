@@ -143,6 +143,7 @@ function RAM(;
     # μ
     if meanstructure
         has_meanstructure = Val(true)
+        !isnothing(M_indices) || throw(ArgumentError("You set `meanstructure = true`, but your model specification contains no mean parameters."))
         ∇M = gradient ? matrix_gradient(M_indices, n_nod) : nothing
         μ = zeros(n_var)
     else
