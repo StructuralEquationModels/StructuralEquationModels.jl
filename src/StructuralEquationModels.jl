@@ -73,6 +73,7 @@ include("loss/ML/FIML.jl")
 include("loss/WLS/WLS.jl")
 include("loss/constant/constant.jl")
 # regularization
+include("loss/regularization/hinge.jl")
 include("loss/regularization/norm.jl")
 # optimizer
 include("optimizer/abstract.jl")
@@ -128,6 +129,7 @@ export AbstractSem,
     em_mvn,
     SemWLS,
     SemConstant,
+    SemHinge,
     SemLasso,
     SemNorm,
     SemRidge,
