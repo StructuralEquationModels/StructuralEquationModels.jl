@@ -31,8 +31,8 @@ function sem_fit(
     result = Optim.optimize(
         Optim.only_fgh!((F, G, H, par) -> evaluate!(F, G, H, model, par)),
         start_val,
-        model.optimizer.algorithm,
-        model.optimizer.options,
+        optim.algorithm,
+        optim.options,
     )
     return SemFit(result, model, start_val)
 end
