@@ -60,6 +60,15 @@ function ParameterTable(
     )
 end
 
+vars(partable::ParameterTable) =
+    !isempty(partable.sorted_vars) ? partable.sorted_vars :
+    vcat(partable.latent_vars, partable.observed_vars)
+observed_vars(partable::ParameterTable) = partable.observed_vars
+latent_vars(partable::ParameterTable) = partable.latent_vars
+
+nvars(partable::ParameterTable) =
+    length(partable.latent_vars) + length(partable.observed_vars)
+
 ############################################################################################
 ### Convert to other types
 ############################################################################################
@@ -206,8 +215,7 @@ function sort_vars!(partable::ParameterTable)
     end
 
     copyto!(resize!(partable.sorted_vars, length(sorted_vars)), sorted_vars)
-    @assert length(partable.sorted_vars) ==
-            length(partable.observed_vars) + length(partable.latent_vars)
+    @assert length(partable.sorted_vars) == nvars(partable)
 
     return partable
 end
