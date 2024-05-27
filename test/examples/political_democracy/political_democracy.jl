@@ -215,7 +215,7 @@ end
 
 spec = ParameterTable(graph, latent_vars = latent_vars, observed_vars = observed_vars)
 
-sort!(spec)
+sort_vars!(spec)
 
 partable = spec
 
@@ -246,7 +246,7 @@ end
 
 spec_mean = ParameterTable(graph, latent_vars = latent_vars, observed_vars = observed_vars)
 
-sort!(spec_mean)
+sort_vars!(spec_mean)
 
 partable_mean = spec_mean
 

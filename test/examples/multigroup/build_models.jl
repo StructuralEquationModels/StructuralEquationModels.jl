@@ -49,7 +49,7 @@ end
 # ML estimation - sorted
 ############################################################################################
 
-partable_s = sort(partable)
+partable_s = sort_vars(partable)
 
 specification_s = RAMMatrices(partable_s)
 
