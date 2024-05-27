@@ -2,9 +2,10 @@ using StructuralEquationModels, Test, Statistics
 using StructuralEquationModels: obs_cov, obs_mean, get_data
 ### model specification --------------------------------------------------------------------
 
-spec = ParameterTable(nothing)
-spec.variables[:observed_vars] = [:x1, :x2, :x3, :y1, :y2, :y3, :y4, :y5, :y6, :y7, :y8]
-spec.variables[:latent_vars] = [:ind60, :dem60, :dem65]
+spec = ParameterTable(
+    observed_vars = [:x1, :x2, :x3, :y1, :y2, :y3, :y4, :y5, :y6, :y7, :y8],
+    latent_vars = [:ind60, :dem60, :dem65],
+)
 
 ### data -----------------------------------------------------------------------------------
 

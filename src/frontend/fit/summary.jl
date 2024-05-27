@@ -60,19 +60,18 @@ function sem_summary(
         )
         print("\n")
         printstyled("Latent variables:    "; color = color)
-        for var in partable.variables[:latent_vars]
+        for var in partable.latent_vars
             print("$var ")
         end
         print("\n")
         printstyled("Observed variables:  "; color = color)
-        for var in partable.variables[:observed_vars]
+        for var in partable.observed_vars
             print("$var ")
         end
         print("\n")
-        if haskey(partable.variables, :sorted_vars) &&
-           (length(partable.variables[:sorted_vars]) > 0)
+        if length(partable.sorted_vars) > 0
             printstyled("Sorted variables:    "; color = color)
-            for var in partable.variables[:sorted_vars]
+            for var in partable.sorted_vars
                 print("$var ")
             end
             print("\n")
@@ -96,11 +95,11 @@ function sem_summary(
     header_cols = copy(loading_columns)
     replace!(header_cols, :parameter_type => :type)
 
-    for var in partable.variables[:latent_vars]
+    for var in partable.latent_vars
         indicator_indices = findall(
             (partable.columns[:from] .== var) .&
             (partable.columns[:parameter_type] .== :→) .&
-            (partable.columns[:to] .∈ [partable.variables[:observed_vars]]),
+            (partable.columns[:to] .∈ [partable.observed_vars]),
         )
         loading_array = reduce(
             hcat,
@@ -125,16 +124,16 @@ function sem_summary(
     regression_indices = findall(
         (partable.columns[:parameter_type] .== :→) .& (
             (
-                (partable.columns[:to] .∈ [partable.variables[:observed_vars]]) .&
-                (partable.columns[:from] .∈ [partable.variables[:observed_vars]])
+                (partable.columns[:to] .∈ [partable.observed_vars]) .&
+                (partable.columns[:from] .∈ [partable.observed_vars])
             ) .|
             (
-                (partable.columns[:to] .∈ [partable.variables[:latent_vars]]) .&
-                (partable.columns[:from] .∈ [partable.variables[:observed_vars]])
+                (partable.columns[:to] .∈ [partable.latent_vars]) .&
+                (partable.columns[:from] .∈ [partable.observed_vars])
             ) .|
             (
-                (partable.columns[:to] .∈ [partable.variables[:latent_vars]]) .&
-                (partable.columns[:from] .∈ [partable.variables[:latent_vars]])
+                (partable.columns[:to] .∈ [partable.latent_vars]) .&
+                (partable.columns[:from] .∈ [partable.latent_vars])
             )
         ),
     )
@@ -266,19 +265,18 @@ function sem_summary(
         print("\n")
         let partable = partable.tables[[keys(partable.tables)...][1]]
             printstyled("Latent variables:    "; color = color)
-            for var in partable.variables[:latent_vars]
+            for var in partable.latent_vars
                 print("$var ")
             end
             print("\n")
             printstyled("Observed variables:  "; color = color)
-            for var in partable.variables[:observed_vars]
+            for var in partable.observed_vars
                 print("$var ")
             end
             print("\n")
-            if haskey(partable.variables, :sorted_vars) &&
-               (length(partable.variables[:sorted_vars]) > 0)
+            if length(partable.sorted_vars) > 0
                 printstyled("Sorted variables:    "; color = color)
-                for var in partable.variables[:sorted_vars]
+                for var in partable.sorted_vars
                     print("$var ")
                 end
                 print("\n")

@@ -252,5 +252,5 @@ end
 
 get_n_nodes(specification::RAMMatrices) = specification.size_F[2]
 get_n_nodes(specification::ParameterTable) =
-    length(specification.variables[:observed_vars]) +
-    length(specification.variables[:latent_vars])
+    length(specification.observed_vars) +
+    length(specification.latent_vars)

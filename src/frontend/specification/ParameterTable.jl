@@ -2,9 +2,11 @@
 ### Types
 ############################################################################################
 
-mutable struct ParameterTable{C, V} <: AbstractParameterTable
+struct ParameterTable{C} <: AbstractParameterTable
     columns::C
-    variables::V
+    observed_vars::Vector{Symbol}
+    latent_vars::Vector{Symbol}
+    sorted_vars::Vector{Symbol}
 end
 
 ############################################################################################
@@ -12,7 +14,10 @@ end
 ############################################################################################
 
 # constuct an empty table
-function ParameterTable(::Nothing)
+function ParameterTable(;
+    observed_vars::Union{AbstractVector{Symbol}, Nothing} = nothing,
+    latent_vars::Union{AbstractVector{Symbol}, Nothing} = nothing,
+)
     columns = Dict{Symbol, Any}(
         :from => Vector{Symbol}(),
         :parameter_type => Vector{Symbol}(),
@@ -25,13 +30,10 @@ function ParameterTable(::Nothing)
         :start => Vector{Float64}(),
     )
 
-    variables = Dict{Symbol, Any}(
-        :latent_vars => Vector{Symbol}(),
-        :observed_vars => Vector{Symbol}(),
-        :sorted_vars => Vector{Symbol}(),
-    )
-
-    return ParameterTable(columns, variables)
+    return ParameterTable(columns,
+        !isnothing(observed_vars) ? copy(observed_vars) : Vector{Symbol}(),
+        !isnothing(latent_vars) ? copy(latent_vars) : Vector{Symbol}(),
+        Vector{Symbol}())
 end
 
 ############################################################################################
@@ -68,26 +70,21 @@ function Base.show(io::IO, partable::ParameterTable)
         :se,
         :param,
     ]
-    existing_columns = [haskey(partable.columns, key) for key in relevant_columns]
+    shown_columns = filter!(
+        col -> haskey(partable.columns, col) && length(partable.columns[col]) > 0,
+        relevant_columns,
+    )
 
-    as_matrix =
-        hcat([partable.columns[key] for key in relevant_columns[existing_columns]]...)
+    as_matrix = mapreduce(col -> partable.columns[col], hcat, shown_columns)
     pretty_table(
         io,
         as_matrix,
-        header = (
-            relevant_columns[existing_columns],
-            eltype.([partable.columns[key] for key in relevant_columns[existing_columns]]),
-        ),
+        header = (shown_columns, [eltype(partable.columns[col]) for col in shown_columns]),
         tf = PrettyTables.tf_compact,
     )
 
-    if haskey(partable.variables, :latent_vars)
-        print(io, "Latent Variables:    $(partable.variables[:latent_vars]) \n")
-    end
-    if haskey(partable.variables, :observed_vars)
-        print(io, "Observed Variables:  $(partable.variables[:observed_vars]) \n")
-    end
+    print(io, "Latent Variables:    $(partable.latent_vars) \n")
+    print(io, "Observed Variables:  $(partable.observed_vars) \n")
 end
 
 ############################################################################################
@@ -96,7 +93,7 @@ end
 
 # Iteration --------------------------------------------------------------------------------
 
-Base.getindex(partable::ParameterTable, i::Int) = (
+Base.getindex(partable::ParameterTable, i::Integer) = (
     partable.columns[:from][i],
     partable.columns[:parameter_type][i],
     partable.columns[:to][i],
@@ -105,14 +102,7 @@ Base.getindex(partable::ParameterTable, i::Int) = (
     partable.columns[:param][i],
 )
 
-function Base.length(partable::ParameterTable)
-    len = missing
-    for key in keys(partable.columns)
-        len = length(partable.columns[key])
-        break
-    end
-    return len
-end
+Base.length(partable::ParameterTable) = length(first(values(partable.columns)))
 
 # Sorting ----------------------------------------------------------------------------------
 
@@ -122,51 +112,46 @@ end
 
 Base.showerror(io::IO, e::CyclicModelError) = print(io, e.msg)
 
-import Base.sort!, Base.sort
+function Base.sort!(partable::ParameterTable)
+    vars = [
+        partable.latent_vars
+        partable.observed_vars
+    ]
 
-function sort!(partable::ParameterTable)
-    variables = [partable.variables[:latent_vars]; partable.variables[:observed_vars]]
-
-    is_regression =
-        (partable.columns[:parameter_type] .== :→) .&
-        (partable.columns[:from] .!= Symbol("1"))
+    is_regression = [
+        (partype == :→) && (from != Symbol("1")) for
+        (partype, from) in zip(partable.columns[:parameter_type], partable.columns[:from])
+    ]
 
     to = partable.columns[:to][is_regression]
     from = partable.columns[:from][is_regression]
 
-    sorted_variables = Vector{Symbol}()
+    sorted_vars = Vector{Symbol}()
 
-    sorted = false
-    while !sorted
+    while !isempty(vars)
         acyclic = false
 
-        for (i, variable) in enumerate(variables)
-            if !(variable ∈ to)
-                push!(sorted_variables, variable)
-                deleteat!(variables, i)
-                delete_edges = from .!= variable
+        for (i, var) in enumerate(vars)
+            if !(var ∈ to)
+                push!(sorted_vars, var)
+                deleteat!(vars, i)
+                delete_edges = from .!= var
                 to = to[delete_edges]
                 from = from[delete_edges]
                 acyclic = true
             end
         end
 
-        if !acyclic
+        acyclic ||
             throw(CyclicModelError("your model is cyclic and therefore can not be ordered"))
-        end
-        acyclic = false
-
-        if length(variables) == 0
-            sorted = true
-        end
     end
 
-    push!(partable.variables, :sorted_vars => sorted_variables)
+    copyto!(resize!(partable.sorted_vars, length(sorted_vars)), sorted_vars)
 
     return partable
 end
 
-function sort(partable::ParameterTable)
+function Base.sort(partable::ParameterTable)
     new_partable = deepcopy(partable)
     sort!(new_partable)
     return new_partable
@@ -174,15 +159,13 @@ end
 
 # add a row --------------------------------------------------------------------------------
 
-import Base.push!
-
-function push!(partable::ParameterTable, d::AbstractDict)
-    for key in keys(d)
-        push!(partable.columns[key], d[key])
+function Base.push!(partable::ParameterTable, d::AbstractDict{Symbol})
+    for (key, val) in pairs(d)
+        push!(partable.columns[key], val)
     end
 end
 
-push!(partable::ParameterTable, d::Nothing) = nothing
+Base.push!(partable::ParameterTable, d::Nothing) = nothing
 
 ############################################################################################
 ### Update Partable from Fitted Model

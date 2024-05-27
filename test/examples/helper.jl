@@ -118,8 +118,7 @@ function compare_estimates(
             if type == :↔
                 type = "~~"
             elseif type == :→
-                if (from ∈ partable.variables[:latent_vars]) &
-                   (to ∈ partable.variables[:observed_vars])
+                if (from ∈ partable.latent_vars) && (to ∈ partable.observed_vars)
                     type = "=~"
                 else
                     type = "~"
@@ -251,8 +250,8 @@ function compare_estimates(
                 if type == :↔
                     type = "~~"
                 elseif type == :→
-                    if (from ∈ partable.variables[:latent_vars]) &
-                       (to ∈ partable.variables[:observed_vars])
+                    if (from ∈ partable.latent_vars) &&
+                       (to ∈ partable.observed_vars)
                         type = "=~"
                     else
                         type = "~"
