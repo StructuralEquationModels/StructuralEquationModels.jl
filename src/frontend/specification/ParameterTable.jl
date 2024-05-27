@@ -227,6 +227,32 @@ end
 ############################################################################################
 
 # update generic ---------------------------------------------------------------------------
+function update_partable!(
+    partable::ParameterTable,
+    column::Symbol,
+    param_values::AbstractDict{Symbol, T},
+    default::Any = nothing,
+) where {T}
+    coldata = get!(() -> Vector{T}(undef, length(partable)), partable.columns, column)
+
+    isvec_def = (default isa AbstractVector) && (length(default) == length(partable))
+
+    for (i, par) in enumerate(partable.columns[:param])
+        if par == :const
+            coldata[i] = !isnothing(default) ? (isvec_def ? default[i] : default) : zero(T)
+        elseif haskey(param_values, par)
+            coldata[i] = param_values[par]
+        else
+            if isnothing(default)
+                throw(KeyError(par))
+            else
+                coldata[i] = isvec_def ? default[i] : default
+            end
+        end
+    end
+
+    return partable
+end
 
 """
     update_partable!(partable::AbstractParameterTable, params::Vector{Symbol}, values, column)
@@ -239,49 +265,62 @@ of the `partable`.
 """
 function update_partable!(
     partable::ParameterTable,
+    column::Symbol,
     params::AbstractVector{Symbol},
     values::AbstractVector,
-    column::Symbol,
+    default::Any = nothing,
 )
     length(params) == length(values) || throw(
         ArgumentError(
             "The length of `params` ($(length(params))) and their `values` ($(length(values))) must be the same",
         ),
     )
-    coldata = get!(() -> Vector{eltype(values)}(), partable.columns, column)
-    resize!(coldata, length(partable))
-    params_index = Dict(zip(params, eachindex(params)))
-    for (i, param) in enumerate(partable.columns[:param])
-        coldata[i] = param != :const ? values[params_index[param]] : zero(eltype(values))
+    param_values = Dict(zip(params, values))
+    if length(param_values) != length(params)
+        throw(ArgumentError("Duplicate parameter names in `params`"))
     end
-    return partable
+    update_partable!(partable, column, param_values, default)
 end
 
 # update estimates -------------------------------------------------------------------------
 """
     update_estimate!(
         partable::AbstractParameterTable,
-        sem_fit::SemFit)
+        fit::SemFit)
 
-Write parameter estimates from `sem_fit` to the `:estimate` column of `partable`
+Write parameter estimates from `fit` to the `:estimate` column of `partable`
 """
-update_estimate!(partable::AbstractParameterTable, sem_fit::SemFit) =
-    update_partable!(partable, params(sem_fit), sem_fit.solution, :estimate)
+update_estimate!(partable::ParameterTable, fit::SemFit) = update_partable!(
+    partable,
+    :estimate,
+    params(fit),
+    fit.solution,
+    partable.columns[:value_fixed],
+)
+
+# fallback method for ensemble
+update_estimate!(partable::AbstractParameterTable, fit::SemFit) =
+    update_partable!(partable, :estimate, params(fit), fit.solution)
 
 # update starting values -------------------------------------------------------------------
 """
-    update_start!(partable::AbstractParameterTable, sem_fit::SemFit)
+    update_start!(partable::AbstractParameterTable, fit::SemFit)
     update_start!(partable::AbstractParameterTable, model::AbstractSem, start_val; kwargs...)
 
-Write starting values from `sem_fit` or `start_val` to the `:estimate` column of `partable`.
+Write starting values from `fit` or `start_val` to the `:estimate` column of `partable`.
 
 # Arguments
 - `start_val`: either a vector of starting values or a function to compute starting values
     from `model`
 - `kwargs...`: are passed to `start_val`
 """
-update_start!(partable::AbstractParameterTable, sem_fit::SemFit) =
-    update_partable!(partable, params(sem_fit), sem_fit.start_val, :start)
+update_start!(partable::AbstractParameterTable, fit::SemFit) = update_partable!(
+    partable,
+    :start,
+    params(fit),
+    fit.start_val,
+    partable.columns[:value_fixed],
+)
 
 function update_start!(
     partable::AbstractParameterTable,
@@ -292,17 +331,17 @@ function update_start!(
     if !(start_val isa Vector)
         start_val = start_val(model; kwargs...)
     end
-    return update_partable!(partable, params(model), start_val, :start)
+    return update_partable!(partable, :start, params(model), start_val)
 end
 
 # update partable standard errors ----------------------------------------------------------
 """
     update_se_hessian!(
         partable::AbstractParameterTable,
-        sem_fit::SemFit;
+        fit::SemFit;
         hessian = :finitediff)
 
-Write hessian standard errors computed for `sem_fit` to the `:se` column of `partable`
+Write hessian standard errors computed for `fit` to the `:se` column of `partable`
 
 # Arguments
 - `hessian::Symbol`: how to compute the hessian, see [se_hessian](@ref) for more information.
@@ -312,11 +351,11 @@ Write hessian standard errors computed for `sem_fit` to the `:se` column of `par
 """
 function update_se_hessian!(
     partable::AbstractParameterTable,
-    sem_fit::SemFit;
+    fit::SemFit;
     hessian = :finitediff,
 )
-    se = se_hessian(sem_fit; hessian = hessian)
-    return update_partable!(partable, params(sem_fit), se, :se)
+    se = se_hessian(fit; hessian = hessian)
+    return update_partable!(partable, :se, params(fit), se)
 end
 
 """
