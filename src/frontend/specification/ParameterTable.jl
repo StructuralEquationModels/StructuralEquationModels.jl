@@ -94,6 +94,14 @@ end
 ############################################################################################
 
 # Iteration --------------------------------------------------------------------------------
+ParameterTableRow = @NamedTuple begin
+    from::Symbol
+    parameter_type::Symbol
+    to::Symbol
+    free::Bool
+    value_fixed::Any
+    param::Symbol
+end
 
 Base.getindex(partable::ParameterTable, i::Integer) = (
     partable.columns[:from][i],
@@ -104,7 +112,12 @@ Base.getindex(partable::ParameterTable, i::Integer) = (
     partable.columns[:param][i],
 )
 
-Base.length(partable::ParameterTable) = length(first(values(partable.columns)))
+Base.length(partable::ParameterTable) = length(partable.columns[:param])
+Base.eachindex(partable::ParameterTable) = Base.OneTo(length(partable))
+
+Base.eltype(::Type{<:ParameterTable}) = ParameterTableRow
+Base.iterate(partable::ParameterTable, i::Integer = 1) =
+    i > length(partable) ? nothing : (partable[i], i + 1)
 
 # Sorting ----------------------------------------------------------------------------------
 
