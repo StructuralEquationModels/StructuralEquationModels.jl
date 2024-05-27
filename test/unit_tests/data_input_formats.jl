@@ -209,7 +209,7 @@ end
     )
 end
 
-@test_throws UndefKeywordError(:specification) SemObservedCovariance(obs_cov = dat_cov)
+@test_throws UndefKeywordError(:n_obs) SemObservedCovariance(obs_cov = dat_cov)
 
 @test_throws ArgumentError("no `obs_colnames` were specified") begin
     SemObservedCovariance(specification = spec, obs_cov = dat_cov, n_obs = 75)

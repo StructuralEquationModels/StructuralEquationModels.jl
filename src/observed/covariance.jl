@@ -47,13 +47,13 @@ struct SemObservedCovariance{B, C} <: SemObserved
 end
 
 function SemObservedCovariance(;
-    specification::Union{SemSpecification, Nothing},
+    specification::Union{SemSpecification, Nothing} = nothing,
     obs_cov,
     obs_colnames = nothing,
     spec_colnames = nothing,
     obs_mean = nothing,
     meanstructure = false,
-    n_obs = nothing,
+    n_obs::Integer,
     kwargs...,
 )
     if !meanstructure & !isnothing(obs_mean)
