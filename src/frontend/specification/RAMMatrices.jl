@@ -214,18 +214,16 @@ function ParameterTable(ram_matrices::RAMMatrices)
         latent_vars = colnames[setdiff(eachindex(colnames), ram_matrices.F_ind)],
     )
 
-    position_names = Dict{Int64, Symbol}(1:length(colnames) .=> colnames)
-
     # constants
     for c in ram_matrices.constants
-        push!(partable, get_partable_row(c, position_names))
+        push!(partable, partable_row(c, colnames))
     end
 
     # parameters
     for (i, par) in enumerate(ram_matrices.params)
-        push_partable_rows!(
+        append_partable_rows!(
             partable,
-            position_names,
+            colnames,
             par,
             i,
             ram_matrices.A_ind,
@@ -296,112 +294,98 @@ function get_par_npar_indices(partable::EnsembleParameterTable)
     return params, n_par, par_positions
 end
 
-function get_partable_row(c::RAMConstant, position_names)
-    # variable names
-    from = position_names[c.index[2]]
-    to = position_names[c.index[1]]
-    # parameter type
-    if c.matrix == :A
-        parameter_type = :→
-    elseif c.matrix == :S
-        parameter_type = :↔
-    elseif c.matrix == :M
-        parameter_type = :→
+function matrix_to_parameter_type(matrix::Symbol)
+    if matrix == :A
+        return :→
+    elseif matrix == :S
+        return :↔
+    elseif matrix == :M
+        return :→
+    else
+        throw(
+            ArgumentError(
+                "Unsupported matrix $matrix, supported matrices are :A, :S and :M",
+            ),
+        )
     end
-    free = false
-    value_fixed = c.value
-    start = 0.0
-    estimate = 0.0
-
-    return Dict(
-        :from => from,
-        :parameter_type => parameter_type,
-        :to => to,
-        :free => free,
-        :value_fixed => value_fixed,
-        :start => start,
-        :estimate => estimate,
-        :param => :const,
-    )
 end
 
-function cartesian_is_known(index, known_indices)
-    known = false
-    for k_in in known_indices
-        if (index == k_in) | ((index[1] == k_in[2]) & (index[2] == k_in[1]))
-            known = true
-        end
-    end
-    return known
-end
+partable_row(c::RAMConstant, varnames::AbstractVector{Symbol}) = (
+    from = varnames[c.index[2]],
+    parameter_type = matrix_to_parameter_type(c.matrix),
+    to = varnames[c.index[1]],
+    free = false,
+    value_fixed = c.value,
+    start = 0.0,
+    estimate = 0.0,
+    param = :const,
+)
 
-cartesian_is_known(index, known_indices::Nothing) = false
-
-function get_partable_row(param, position_names, index, matrix, n_nod, known_indices)
+function partable_row(
+    par::Symbol,
+    varnames::AbstractVector{Symbol},
+    index::Integer,
+    matrix::Symbol,
+    n_nod::Integer,
+)
 
     # variable names
     if matrix == :M
         from = Symbol("1")
-        to = position_names[index]
+        to = varnames[index]
     else
-        index = linear2cartesian(index, (n_nod, n_nod))
+        cart_index = linear2cartesian(index, (n_nod, n_nod))
 
-        if (matrix == :S) & (cartesian_is_known(index, known_indices))
-            return nothing
-        elseif matrix == :S
-            push!(known_indices, index)
-        end
-
-        from = position_names[index[2]]
-        to = position_names[index[1]]
+        from = varnames[cart_index[2]]
+        to = varnames[cart_index[1]]
     end
 
-    # parameter type
-    if matrix == :A
-        parameter_type = :→
-    elseif matrix == :S
-        parameter_type = :↔
-    elseif matrix == :M
-        parameter_type = :→
-    end
-
-    free = true
-    value_fixed = 0.0
-    start = 0.0
-    estimate = 0.0
-
-    return Dict(
-        :from => from,
-        :parameter_type => parameter_type,
-        :to => to,
-        :free => free,
-        :value_fixed => value_fixed,
-        :start => start,
-        :estimate => estimate,
-        :param => param,
+    return (
+        from = from,
+        parameter_type = matrix_to_parameter_type(matrix),
+        to = to,
+        free = true,
+        value_fixed = 0.0,
+        start = 0.0,
+        estimate = 0.0,
+        param = par,
     )
 end
 
-function push_partable_rows!(partable, position_names, par, i, A_ind, S_ind, M_ind, n_nod)
-    A_ind = A_ind[i]
-    S_ind = S_ind[i]
-    isnothing(M_ind) || (M_ind = M_ind[i])
-
-    for ind in A_ind
-        push!(partable, get_partable_row(par, position_names, ind, :A, n_nod, nothing))
+function append_partable_rows!(
+    partable::ParameterTable,
+    varnames::AbstractVector{Symbol},
+    par::Symbol,
+    par_index::Integer,
+    A_ind,
+    S_ind,
+    M_ind,
+    n_nod::Integer,
+)
+    for ind in A_ind[par_index]
+        push!(partable, partable_row(par, varnames, ind, :A, n_nod))
     end
 
-    known_indices = Vector{CartesianIndex}()
-    for ind in S_ind
-        push!(
-            partable,
-            get_partable_row(par, position_names, ind, :S, n_nod, known_indices),
-        )
+    visited_S_indices = Set{Int}()
+    for ind in S_ind[par_index]
+        if ind ∉ visited_S_indices
+            push!(partable, partable_row(par, varnames, ind, :S, n_nod))
+            # mark index and its symmetric as visited
+            push!(visited_S_indices, ind)
+            cart_index = linear2cartesian(ind, (n_nod, n_nod))
+            push!(
+                visited_S_indices,
+                cartesian2linear(
+                    CartesianIndex(cart_index[2], cart_index[1]),
+                    (n_nod, n_nod),
+                ),
+            )
+        end
     end
 
     if !isnothing(M_ind)
-        for ind in M_ind
-            push!(partable, get_partable_row(par, position_names, ind, :M, n_nod, nothing))
+        for ind in M_ind[par_index]
+            push!(partable, partable_row(par, varnames, ind, :M, n_nod))
         end
     end
 

@@ -178,7 +178,7 @@ sort_vars(partable::ParameterTable) = sort_vars!(deepcopy(partable))
 
 # add a row --------------------------------------------------------------------------------
 
-function Base.push!(partable::ParameterTable, d::AbstractDict{Symbol})
+function Base.push!(partable::ParameterTable, d::Union{AbstractDict{Symbol}, NamedTuple})
     for (key, val) in pairs(d)
         push!(partable.columns[key], val)
     end
