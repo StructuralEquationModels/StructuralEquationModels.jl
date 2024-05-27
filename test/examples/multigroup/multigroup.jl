@@ -111,8 +111,8 @@ graph = @StenoGraph begin
     _(latent_vars) ⇔ _(latent_vars)
 end
 
-partable = EnsembleParameterTable(;
-    graph = graph,
+partable = EnsembleParameterTable(
+    graph;
     observed_vars = observed_vars,
     latent_vars = latent_vars,
     groups = [:Pasteur, :Grant_White],
@@ -140,8 +140,8 @@ graph = @StenoGraph begin
     Symbol("1") → _(observed_vars)
 end
 
-partable_miss = EnsembleParameterTable(;
-    graph = graph,
+partable_miss = EnsembleParameterTable(
+    graph;
     observed_vars = observed_vars,
     latent_vars = latent_vars,
     groups = [:Pasteur, :Grant_White],
