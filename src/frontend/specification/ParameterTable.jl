@@ -105,6 +105,8 @@ function Base.show(io::IO, partable::ParameterTable)
         as_matrix,
         header = (shown_columns, [eltype(partable.columns[col]) for col in shown_columns]),
         tf = PrettyTables.tf_compact,
+        # TODO switch to `missing` as non-specified values and suppress printing of `missing` instead
+        formatters = (v, i, j) -> isa(v, Number) && isnan(v) ? "" : v,
     )
 
     print(io, "Latent Variables:    $(partable.latent_vars) \n")
