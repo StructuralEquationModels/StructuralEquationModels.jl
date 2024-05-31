@@ -34,8 +34,8 @@ and for models with a meanstructure, the model implied means are computed as
 ```
 
 ## Interfaces
-- `identifier(::RAM) `-> Dict containing the parameter labels and their position
-- `n_par(::RAM)` -> Number of parameters
+- `params(::RAM) `-> vector of parameter labels
+- `nparams(::RAM)` -> number of parameters
 
 - `Σ(::RAM)` -> model implied covariance matrix
 - `μ(::RAM)` -> model implied mean vector
@@ -65,28 +65,8 @@ Additional interfaces
 Only available in gradient! calls:
 - `I_A⁻¹(::RAM)` -> ``(I-A)^{-1}``
 """
-mutable struct RAM{
-    A1,
-    A2,
-    A3,
-    A4,
-    A5,
-    A6,
-    V,
-    V2,
-    I1,
-    I2,
-    I3,
-    M1,
-    M2,
-    M3,
-    M4,
-    S1,
-    S2,
-    S3,
-    B,
-    D,
-} <: SemImply
+mutable struct RAM{A1, A2, A3, A4, A5, A6, V2, I1, I2, I3, M1, M2, M3, M4, S1, S2, S3, B} <:
+               SemImply
     Σ::A1
     A::A2
     S::A3
@@ -94,7 +74,6 @@ mutable struct RAM{
     μ::A5
     M::A6
 
-    n_par::V
     ram_matrices::V2
     has_meanstructure::B
 
@@ -110,8 +89,6 @@ mutable struct RAM{
     ∇A::S1
     ∇S::S2
     ∇M::S3
-
-    identifier::D
 end
 
 using StructuralEquationModels
@@ -121,19 +98,17 @@ using StructuralEquationModels
 ############################################################################################
 
 function RAM(;
-    specification,
+    specification::SemSpecification,
     #vech = false,
     gradient = true,
     meanstructure = false,
     kwargs...,
 )
-    ram_matrices = RAMMatrices(specification)
-    identifier = StructuralEquationModels.identifier(ram_matrices)
+    ram_matrices = convert(RAMMatrices, specification)
 
     # get dimensions of the model
-    n_par = length(ram_matrices.parameters)
+    n_par = nparams(ram_matrices)
     n_var, n_nod = ram_matrices.size_F
-    parameters = ram_matrices.parameters
     F = zeros(ram_matrices.size_F)
     F[CartesianIndex.(1:n_var, ram_matrices.F_ind)] .= 1.0
 
@@ -168,6 +143,7 @@ function RAM(;
     # μ
     if meanstructure
         has_meanstructure = Val(true)
+        !isnothing(M_indices) || throw(ArgumentError("You set `meanstructure = true`, but your model specification contains no mean parameters."))
         ∇M = gradient ? matrix_gradient(M_indices, n_nod) : nothing
         μ = zeros(n_var)
     else
@@ -185,7 +161,6 @@ function RAM(;
         F,
         μ,
         M_pre,
-        n_par,
         ram_matrices,
         has_meanstructure,
         A_indices,
@@ -198,7 +173,6 @@ function RAM(;
         ∇A,
         ∇S,
         ∇M,
-        identifier,
     )
 end
 
@@ -213,7 +187,7 @@ gradient!(imply::RAM, par, model::AbstractSemSingle) =
     gradient!(imply, par, model, imply.has_meanstructure)
 
 # objective and gradient
-function objective!(imply::RAM, parameters, model, has_meanstructure::Val{T}) where {T}
+function objective!(imply::RAM, params, model, has_meanstructure::Val{T}) where {T}
     fill_A_S_M!(
         imply.A,
         imply.S,
@@ -221,7 +195,7 @@ function objective!(imply::RAM, parameters, model, has_meanstructure::Val{T}) wh
         imply.A_indices,
         imply.S_indices,
         imply.M_indices,
-        parameters,
+        params,
     )
 
     @. imply.I_A = -imply.A
@@ -239,7 +213,7 @@ end
 
 function gradient!(
     imply::RAM,
-    parameters,
+    params,
     model::AbstractSemSingle,
     has_meanstructure::Val{T},
 ) where {T}
@@ -250,7 +224,7 @@ function gradient!(
         imply.A_indices,
         imply.S_indices,
         imply.M_indices,
-        parameters,
+        params,
     )
 
     @. imply.I_A = -imply.A
@@ -280,9 +254,6 @@ objective_gradient_hessian!(imply::RAM, par, model::AbstractSemSingle, has_means
 ############################################################################################
 ### Recommended methods
 ############################################################################################
-
-identifier(imply::RAM) = imply.identifier
-n_par(imply::RAM) = imply.n_par
 
 function update_observed(imply::RAM, observed::SemObserved; kwargs...)
     if n_man(observed) == size(imply.Σ, 1)

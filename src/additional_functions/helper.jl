@@ -41,7 +41,7 @@ function get_observed(rowind, data, semobserved; args = (), kwargs = NamedTuple(
     return observed_vec
 end
 
-skipmissing_mean(mat::AbstractMatrix) =
+skipmissing_mean(mat::AbstractMatrix) = 
     [mean(skipmissing(coldata)) for coldata in eachcol(mat)]
 
 function F_one_person(imp_mean, meandiff, inverse, data, logdet)
@@ -141,4 +141,19 @@ function elimination_matrix(n::Integer)
         end
     end
     return L
+end
+
+# returns the vector of non-unique values in the order of appearance
+# each non-unique values is reported once
+function nonunique(values::AbstractVector)
+    value_counts = Dict{eltype(values), Int}()
+    res = similar(values, 0)
+    for v in values
+        n = get!(value_counts, v, 0)
+        if n == 1 # second encounter
+            push!(res, v)
+        end
+        value_counts[v] = n + 1
+    end
+    return res
 end

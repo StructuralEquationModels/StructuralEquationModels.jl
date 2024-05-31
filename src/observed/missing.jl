@@ -86,7 +86,7 @@ end
 ############################################################################################
 
 function SemObservedMissing(;
-    specification,
+    specification::Union{SemSpecification, Nothing},
     data,
     obs_colnames = nothing,
     spec_colnames = nothing,

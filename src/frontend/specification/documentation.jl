@@ -14,7 +14,7 @@ Return a `ParameterTable` constructed from (1) a graph or (2) RAM matrices.
 - `observed_vars::Vector{Symbol}`: observed variable names
 - `latent_vars::Vector{Symbol}`: latent variable names
 - `ram_matrices::RAMMatrices`: a `RAMMatrices` object
-    
+
 # Examples
 See the online documentation on [Model specification](@ref) and the [ParameterTable interface](@ref).
 
@@ -54,11 +54,11 @@ function EnsembleParameterTable end
 
     (1) RAMMatrices(partable::ParameterTable)
 
-    (2) RAMMatrices(;A, S, F, M = nothing, parameters, colnames)
+    (2) RAMMatrices(;A, S, F, M = nothing, params, colnames)
 
     (3) RAMMatrices(partable::EnsembleParameterTable)
-    
-Return `RAMMatrices` constructed from (1) a parameter table or (2) individual matrices. 
+
+Return `RAMMatrices` constructed from (1) a parameter table or (2) individual matrices.
 
 (3) Return a dictionary of `RAMMatrices` from an `EnsembleParameterTable` (keys are the group names).
 
@@ -68,7 +68,7 @@ Return `RAMMatrices` constructed from (1) a parameter table or (2) individual ma
 - `S`: matrix of undirected effects
 - `F`: filter matrix
 - `M`: vector of mean effects
-- `parameters::Vector{Symbol}`: parameter labels
+- `params::Vector{Symbol}`: parameter labels
 - `colnames::Vector{Symbol}`: variable names corresponding to the A, S and F matrix columns
 
 # Examples
@@ -79,7 +79,7 @@ function RAMMatrices end
 """
     fixed(args...)
 
-Fix parameters to a certain value. 
+Fix parameters to a certain value.
 For ensemble models, multiple values (one for each submodel/group) are needed.
 
 # Examples
@@ -94,7 +94,7 @@ function fixed end
 """
     start(args...)
 
-Define starting values for parameters. 
+Define starting values for parameters.
 For ensemble models, multiple values (one for each submodel/group) are needed.
 
 # Examples

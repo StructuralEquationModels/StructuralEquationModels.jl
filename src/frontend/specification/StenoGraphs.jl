@@ -4,6 +4,9 @@
 ### Define Modifiers
 ############################################################################################
 
+#FIXME: remove when StenoGraphs.jl will provide AbstractStenoGraph
+const AbstractStenoGraph = AbstractArray{T, 1} where {T <: StenoGraphs.AbstractEdge}
+
 # fixed parameter values
 struct Fixed{N} <: EdgeModifier
     value::N
@@ -28,59 +31,60 @@ label(args...) = Label(args)
 ### constructor for parameter table from graph
 ############################################################################################
 
-function ParameterTable(; graph, observed_vars, latent_vars, g = 1, parname = :θ)
+function ParameterTable(
+    graph::AbstractStenoGraph;
+    observed_vars::AbstractVector{Symbol},
+    latent_vars::AbstractVector{Symbol},
+    params::Union{AbstractVector{Symbol}, Nothing} = nothing,
+    group::Integer = 1,
+    param_prefix = :θ,
+)
     graph = unique(graph)
     n = length(graph)
-    from = Vector{Symbol}(undef, n)
-    parameter_type = Vector{Symbol}(undef, n)
-    to = Vector{Symbol}(undef, n)
-    free = ones(Bool, n)
-    value_fixed = zeros(n)
-    start = zeros(n)
-    estimate = zeros(n)
-    identifier = Vector{Symbol}(undef, n)
-    identifier .= Symbol("")
-    # group = Vector{Symbol}(undef, n)
-    # start_partable = zeros(Bool, n)
 
-    sorted_vars = Vector{Symbol}()
+    columns = empty_partable_columns(n)
+    from = columns[:from]
+    relation = columns[:relation]
+    to = columns[:to]
+    free = columns[:free]
+    value_fixed = columns[:value_fixed]
+    start = columns[:start]
+    param_refs = columns[:param]
+    # group = Vector{Symbol}(undef, n)
 
     for (i, element) in enumerate(graph)
-        if element isa DirectedEdge
-            from[i] = element.src.node
-            to[i] = element.dst.node
-            parameter_type[i] = :→
-        elseif element isa UndirectedEdge
-            from[i] = element.src.node
-            to[i] = element.dst.node
-            parameter_type[i] = :↔
-        elseif element isa ModifiedEdge
-            if element.edge isa DirectedEdge
-                from[i] = element.edge.src.node
-                to[i] = element.edge.dst.node
-                parameter_type[i] = :→
-            elseif element.edge isa UndirectedEdge
-                from[i] = element.edge.src.node
-                to[i] = element.edge.dst.node
-                parameter_type[i] = :↔
-            end
+        edge = element isa ModifiedEdge ? element.edge : element
+        from[i] = edge.src.node
+        to[i] = edge.dst.node
+        if edge isa DirectedEdge
+            relation[i] = :→
+        elseif edge isa UndirectedEdge
+            relation[i] = :↔
+        else
+            throw(
+                ArgumentError(
+                    "The graph contains an unsupported edge of type $(typeof(edge)).",
+                ),
+            )
+        end
+        if element isa ModifiedEdge
             for modifier in values(element.modifiers)
+                modval = modifier.value[group]
                 if modifier isa Fixed
-                    if modifier.value[g] == :NaN
+                    if modval == :NaN
                         free[i] = true
                         value_fixed[i] = 0.0
                     else
                         free[i] = false
-                        value_fixed[i] = modifier.value[g]
+                        value_fixed[i] = modval
                     end
                 elseif modifier isa Start
-                    start_partable[i] = modifier.value[g] == :NaN
-                    start[i] = modifier.value[g]
+                    start[i] = modval
                 elseif modifier isa Label
-                    if modifier.value[g] == :NaN
+                    if modval == :NaN
                         throw(DomainError(NaN, "NaN is not allowed as a parameter label."))
                     end
-                    identifier[i] = modifier.value[g]
+                    param_refs[i] = modval
                 end
             end
         end
@@ -88,57 +92,45 @@ function ParameterTable(; graph, observed_vars, latent_vars, g = 1, parname = :�
 
     # make identifiers for parameters that are not labeled
     current_id = 1
-    for i in 1:length(identifier)
-        if (identifier[i] == Symbol("")) & free[i]
-            identifier[i] = Symbol(parname, :_, current_id)
-            current_id += 1
-        elseif (identifier[i] == Symbol("")) & !free[i]
-            identifier[i] = :const
-        elseif (identifier[i] != Symbol("")) & !free[i]
-            @warn "You labeled a constant. Please check if the labels of your graph are correct."
+    for i in eachindex(param_refs)
+        if param_refs[i] == Symbol("")
+            if free[i]
+                param_refs[i] = Symbol(param_prefix, :_, current_id)
+                current_id += 1
+            else
+                param_refs[i] = :const
+            end
+        elseif !free[i]
+            @warn "You labeled a constant ($(param_refs[i])=$(value_fixed[i])). Please check if the labels of your graph are correct."
         end
     end
 
-    return StructuralEquationModels.ParameterTable(
-        Dict(
-            :from => from,
-            :parameter_type => parameter_type,
-            :to => to,
-            :free => free,
-            :value_fixed => value_fixed,
-            :start => start,
-            :estimate => estimate,
-            :identifier => identifier,
-        ),
-        Dict(
-            :latent_vars => latent_vars,
-            :observed_vars => observed_vars,
-            :sorted_vars => sorted_vars,
-        ),
-    )
+    return ParameterTable(columns; latent_vars, observed_vars, params)
 end
 
 ############################################################################################
 ### constructor for EnsembleParameterTable from graph
 ############################################################################################
 
-function EnsembleParameterTable(; graph, observed_vars, latent_vars, groups)
+function EnsembleParameterTable(
+    graph::AbstractStenoGraph;
+    observed_vars::AbstractVector{Symbol},
+    latent_vars::AbstractVector{Symbol},
+    params::Union{AbstractVector{Symbol}, Nothing} = nothing,
+    groups,
+)
     graph = unique(graph)
 
-    partable = EnsembleParameterTable(nothing)
+    partables = Dict(
+        group => ParameterTable(
+            graph;
+            observed_vars,
+            latent_vars,
+            params,
+            group = i,
+            param_prefix = Symbol(:g, group),
+        ) for (i, group) in enumerate(groups)
+    )
 
-    for (i, group) in enumerate(groups)
-        push!(
-            partable.tables,
-            Symbol(group) => ParameterTable(;
-                graph = graph,
-                observed_vars = observed_vars,
-                latent_vars = latent_vars,
-                g = i,
-                parname = Symbol(:g, i),
-            ),
-        )
-    end
-
-    return partable
+    return EnsembleParameterTable(partables; params)
 end

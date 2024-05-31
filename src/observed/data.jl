@@ -55,7 +55,7 @@ function check_arguments_SemObservedData(kwargs...)
 end
 
 function SemObservedData(;
-    specification,
+    specification::Union{SemSpecification, Nothing},
     data,
     obs_colnames = nothing,
     spec_colnames = nothing,

@@ -16,7 +16,6 @@ using LinearAlgebra,
     DelimitedFiles,
     DataFrames
 
-import DataFrames: DataFrame
 export StenoGraphs, @StenoGraph, meld
 
 const SEM = StructuralEquationModels
@@ -31,9 +30,10 @@ include("additional_functions/commutation_matrix.jl")
 # fitted objects
 include("frontend/fit/SemFit.jl")
 # specification of models
+include("frontend/specification/checks.jl")
 include("frontend/specification/ParameterTable.jl")
-include("frontend/specification/EnsembleParameterTable.jl")
 include("frontend/specification/RAMMatrices.jl")
+include("frontend/specification/EnsembleParameterTable.jl")
 include("frontend/specification/StenoGraphs.jl")
 include("frontend/fit/summary.jl")
 # pretty printing
@@ -74,15 +74,12 @@ include("additional_functions/start_val/start_partable.jl")
 include("additional_functions/start_val/start_simple.jl")
 include("additional_functions/artifacts.jl")
 include("additional_functions/simulation.jl")
-# identifier
-include("additional_functions/identifier.jl")
 # fit measures
 include("frontend/fit/fitmeasures/AIC.jl")
 include("frontend/fit/fitmeasures/BIC.jl")
 include("frontend/fit/fitmeasures/chi2.jl")
 include("frontend/fit/fitmeasures/df.jl")
 include("frontend/fit/fitmeasures/minus2ll.jl")
-include("frontend/fit/fitmeasures/n_par.jl")
 include("frontend/fit/fitmeasures/n_obs.jl")
 include("frontend/fit/fitmeasures/p.jl")
 include("frontend/fit/fitmeasures/RMSEA.jl")
@@ -153,9 +150,12 @@ export AbstractSem,
     start,
     Label,
     label,
-    get_identifier_indices,
+    sort_vars!,
+    sort_vars,
     RAMMatrices,
-    identifier,
+    params,
+    nparams,
+    param_indices,
     fit_measures,
     AIC,
     BIC,
@@ -163,7 +163,6 @@ export AbstractSem,
     df,
     fit_measures,
     minus2ll,
-    n_par,
     n_obs,
     p_value,
     RMSEA,

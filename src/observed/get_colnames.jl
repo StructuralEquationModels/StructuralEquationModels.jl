@@ -1,15 +1,8 @@
-# specification colnames
+# specification colnames (only observed)
 function get_colnames(specification::ParameterTable)
-    if !haskey(specification.variables, :sorted_vars) ||
-       (length(specification.variables[:sorted_vars]) == 0)
-        colnames = specification.variables[:observed_vars]
-    else
-        is_obs = [
-            var ∈ specification.variables[:observed_vars] for
-            var in specification.variables[:sorted_vars]
-        ]
-        colnames = specification.variables[:sorted_vars][is_obs]
-    end
+    colnames =
+        isempty(specification.sorted_vars) ? specification.observed_vars :
+        filter(in(Set(specification.observed_vars)), specification.sorted_vars)
     return colnames
 end
 

@@ -87,7 +87,7 @@ for (model, name, solution_name) in zip(models, model_names, solution_names)
         @testset "$(name)_solution" begin
             solution = sem_fit(model)
             update_estimate!(partable, solution)
-            @test compare_estimates(partable, solution_lav[solution_name]; atol = 1e-2)
+            test_estimates(partable, solution_lav[solution_name]; atol = 1e-2)
         end
     catch
     end
@@ -131,7 +131,7 @@ end
     test_fitmeasures(fit_measures(solution_ml), solution_lav[:fitmeasures_ml]; atol = 1e-3)
 
     update_se_hessian!(partable, solution_ml)
-    @test compare_estimates(
+    test_estimates(
         partable,
         solution_lav[:parameter_estimates_ml];
         atol = 1e-3,
@@ -152,7 +152,7 @@ end
     @test ismissing(fm[:AIC]) && ismissing(fm[:BIC]) && ismissing(fm[:minus2ll])
 
     update_se_hessian!(partable, solution_ls)
-    @test compare_estimates(
+    test_estimates(
         partable,
         solution_lav[:parameter_estimates_ls];
         atol = 1e-2,
@@ -199,22 +199,19 @@ if semoptimizer == SemOptimizerOptim
     @testset "ml_solution_hessian" begin
         solution = sem_fit(model_ml)
         update_estimate!(partable, solution)
-        @test compare_estimates(
-            partable,
-            solution_lav[:parameter_estimates_ml];
-            atol = 1e-3,
-        )
+        test_estimates(partable, solution_lav[:parameter_estimates_ml]; atol = 1e-3)
     end
 
     @testset "ls_solution_hessian" begin
         solution = sem_fit(model_ls)
         update_estimate!(partable, solution)
-        @test compare_estimates(
+        test_estimates(
             partable,
             solution_lav[:parameter_estimates_ls];
             atol = 0.002,
             rtol = 0.0,
-        ) skip = true
+            skip = true,
+        )
     end
 end
 
@@ -286,7 +283,7 @@ for (model, name, solution_name) in zip(models, model_names, solution_names)
         @testset "$(name)_solution_mean" begin
             solution = sem_fit(model)
             update_estimate!(partable_mean, solution)
-            @test compare_estimates(partable_mean, solution_lav[solution_name]; atol = 1e-2)
+            test_estimates(partable_mean, solution_lav[solution_name]; atol = 1e-2)
         end
     catch
     end
@@ -305,7 +302,7 @@ end
     )
 
     update_se_hessian!(partable_mean, solution_ml)
-    @test compare_estimates(
+    test_estimates(
         partable_mean,
         solution_lav[:parameter_estimates_ml_mean];
         atol = 0.002,
@@ -326,7 +323,7 @@ end
     @test ismissing(fm[:AIC]) && ismissing(fm[:BIC]) && ismissing(fm[:minus2ll])
 
     update_se_hessian!(partable_mean, solution_ls)
-    @test compare_estimates(
+    test_estimates(
         partable_mean,
         solution_lav[:parameter_estimates_ls_mean];
         atol = 1e-2,
@@ -379,21 +376,13 @@ end
 @testset "fiml_solution" begin
     solution = sem_fit(model_ml)
     update_estimate!(partable_mean, solution)
-    @test compare_estimates(
-        partable_mean,
-        solution_lav[:parameter_estimates_fiml];
-        atol = 1e-2,
-    )
+    test_estimates(partable_mean, solution_lav[:parameter_estimates_fiml]; atol = 1e-2)
 end
 
 @testset "fiml_solution_symbolic" begin
     solution = sem_fit(model_ml_sym)
     update_estimate!(partable_mean, solution)
-    @test compare_estimates(
-        partable_mean,
-        solution_lav[:parameter_estimates_fiml];
-        atol = 1e-2,
-    )
+    test_estimates(partable_mean, solution_lav[:parameter_estimates_fiml]; atol = 1e-2)
 end
 
 ############################################################################################
@@ -409,7 +398,7 @@ end
     )
 
     update_se_hessian!(partable_mean, solution_ml)
-    @test compare_estimates(
+    test_estimates(
         partable_mean,
         solution_lav[:parameter_estimates_fiml];
         atol = 0.002,

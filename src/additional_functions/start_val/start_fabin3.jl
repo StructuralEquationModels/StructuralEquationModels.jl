@@ -31,13 +31,13 @@ function start_fabin3(observed::SemObservedMissing, imply, optimizer, args...; k
 end
 
 function start_fabin3(ram_matrices::RAMMatrices, Σ, μ)
-    A_ind, S_ind, F_ind, M_ind, parameters = ram_matrices.A_ind,
+    A_ind, S_ind, F_ind, M_ind, params = ram_matrices.A_ind,
     ram_matrices.S_ind,
     ram_matrices.F_ind,
     ram_matrices.M_ind,
-    ram_matrices.parameters
+    ram_matrices.params
 
-    n_par = length(parameters)
+    n_par = length(params)
     start_val = zeros(n_par)
     n_var, n_nod = ram_matrices.size_F
     n_latent = n_nod - n_var
