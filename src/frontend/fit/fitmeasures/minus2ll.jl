@@ -49,7 +49,7 @@ function minus2ll(observed::SemObservedMissing)
     for pat in observed.patterns
         nᵢ = nsamples(pat)
         # implied covariance/mean
-        Σᵢ = Σ[pat.obs_mask, pat.obs_mask]
+        Σᵢ = Symmetric(Σ[pat.obs_mask, pat.obs_mask])
 
         ld = logdet(Σᵢ)
         Σᵢ⁻¹ = LinearAlgebra.inv!(cholesky!(Σᵢ))

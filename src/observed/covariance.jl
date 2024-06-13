@@ -33,5 +33,11 @@ function SemObservedCovariance(;
         isnothing(obs_mean) || (obs_mean = obs_mean[obs2spec_perm])
     end
 
-    return SemObservedData(nothing, obs_cov, obs_mean, size(obs_cov, 1), nsamples)
+    return SemObservedData(
+        nothing,
+        Symmetric(obs_cov),
+        obs_mean,
+        size(obs_cov, 1),
+        nsamples,
+    )
 end
