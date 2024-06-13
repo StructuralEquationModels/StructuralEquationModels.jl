@@ -52,7 +52,7 @@ function χ²(fit::SemFit, models::SemEnsemble)
 end
 
 function χ²(lossfun::SemWLS, fit::SemFit, models::SemEnsemble)
-    return (sum(n_obs, models.sems) - 1) * fit.minimum
+    return (nsamples(models) - 1) * fit.minimum
 end
 
 function χ²(lossfun::SemML, fit::SemFit, models::SemEnsemble)
@@ -60,7 +60,7 @@ function χ²(lossfun::SemML, fit::SemFit, models::SemEnsemble)
         data = observed(model)
         w * (logdet(obs_cov(data)) + nobserved_vars(data))
     end
-    return (sum(nsamples, models.sems) - 1) * (fit.minimum - G)
+    return (nsamples(models) - 1) * (fit.minimum - G)
 end
 
 function χ²(lossfun::SemFIML, fit::SemFit, models::SemEnsemble)
