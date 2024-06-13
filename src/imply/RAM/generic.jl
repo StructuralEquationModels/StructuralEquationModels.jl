@@ -226,27 +226,3 @@ function update_observed(imply::RAM, observed::SemObserved; kwargs...)
         return RAM(; observed = observed, kwargs...)
     end
 end
-
-############################################################################################
-### additional functions
-############################################################################################
-
-function check_acyclic(A::AbstractMatrix)
-    # check if the model is acyclic
-    acyclic = isone(det(I - A))
-
-    # check if A is lower or upper triangular
-    if istril(A)
-        @info "A matrix is lower triangular"
-        return LowerTriangular(A)
-    elseif istriu(A)
-        @info "A matrix is upper triangular"
-        return UpperTriangular(A)
-    else
-        if acyclic
-            @info "Your model is acyclic, specifying the A Matrix as either Upper or Lower Triangular can have great performance benefits.\n" maxlog =
-                1
-        end
-        return A
-    end
-end
