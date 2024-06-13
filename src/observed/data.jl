@@ -23,10 +23,10 @@ For observed data without missings.
 - `obs_cov(::SemObservedData)` -> observed covariance matrix
 - `obs_mean(::SemObservedData)` -> observed mean vector
 """
-struct SemObservedData{D <: Union{Nothing, AbstractMatrix}, S <: Number} <: SemObserved
+struct SemObservedData{D <: Union{Nothing, AbstractMatrix}, C, S <: Number} <: SemObserved
     data::D
     observed_vars::Vector{Symbol}
-    obs_cov::Matrix{S}
+    obs_cov::C
     obs_mean::Vector{S}
     nsamples::Int
 end
@@ -47,7 +47,7 @@ function SemObservedData(;
         throw(ArgumentError(
             "Your dataset contains missing values.
             Remove missing values or use full information maximum likelihood (FIML) estimation.
-            A FIML model can be constructed with 
+            A FIML model can be constructed with
             Sem(
                 ...,
                 observed = SemObservedMissing,
@@ -56,7 +56,7 @@ function SemObservedData(;
             )"))
     end
 
-    return SemObservedData(data, obs_vars, obs_cov, vec(obs_mean), size(data, 1))
+    return SemObservedData(data, obs_vars, Symmetric(obs_cov), vec(obs_mean), size(data, 1))
 end
 
 ############################################################################################
