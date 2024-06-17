@@ -20,6 +20,14 @@ function Sem(;
     return sem
 end
 
+nvars(sem::AbstractSemSingle) = nvars(sem.imply)
+nobserved_vars(sem::AbstractSemSingle) = nobserved_vars(sem.imply)
+nlatent_vars(sem::AbstractSemSingle) = nlatent_vars(sem.imply)
+
+vars(sem::AbstractSemSingle) = vars(sem.imply)
+observed_vars(sem::AbstractSemSingle) = observed_vars(sem.imply)
+latent_vars(sem::AbstractSemSingle) = latent_vars(sem.imply)
+
 function SemFiniteDiff(;
     observed::O = SemObservedData,
     imply::I = RAM,
