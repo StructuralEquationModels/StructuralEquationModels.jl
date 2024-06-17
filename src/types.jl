@@ -14,13 +14,6 @@ abstract type AbstractSemCollection <: AbstractSem end
 abstract type SemLossFunction end
 
 """
-    params(semobj)
-
-Return the vector of SEM model parameters.
-"""
-params(model::AbstractSem) = model.params
-
-"""
     SemLoss(args...; loss_weights = nothing, ...)
 
 Constructs the loss field of a SEM. Can contain multiple `SemLossFunction`s, the model is optimized over their sum.
@@ -224,37 +217,6 @@ weights(ensemble::SemEnsemble) = ensemble.weights
 Returns the optimizer part of an ensemble model.
 """
 optimizer(ensemble::SemEnsemble) = ensemble.optimizer
-
-############################################################################################
-# additional methods
-############################################################################################
-"""
-    observed(model::AbstractSemSingle) -> SemObserved
-
-Returns the observed part of a model.
-"""
-observed(model::AbstractSemSingle) = model.observed
-
-"""
-    imply(model::AbstractSemSingle) -> SemImply
-
-Returns the imply part of a model.
-"""
-imply(model::AbstractSemSingle) = model.imply
-
-"""
-    loss(model::AbstractSemSingle) -> SemLoss
-
-Returns the loss part of a model.
-"""
-loss(model::AbstractSemSingle) = model.loss
-
-"""
-    optimizer(model::AbstractSemSingle) -> SemOptimizer
-
-Returns the optimizer part of a model.
-"""
-optimizer(model::AbstractSemSingle) = model.optimizer
 
 """
 Base type for all SEM specifications.

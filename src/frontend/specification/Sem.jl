@@ -30,8 +30,41 @@ latent_vars(sem::AbstractSemSingle) = latent_vars(sem.imply)
 
 nsamples(sem::AbstractSemSingle) = nsamples(sem.observed)
 
+params(model::AbstractSem) = params(model.imply)
+
 # sum of samples in all sub-models
 nsamples(ensemble::SemEnsemble) = sum(nsamples, ensemble.sems)
+
+############################################################################################
+# additional methods
+############################################################################################
+"""
+    observed(model::AbstractSemSingle) -> SemObserved
+
+Returns the observed part of a model.
+"""
+observed(model::AbstractSemSingle) = model.observed
+
+"""
+    imply(model::AbstractSemSingle) -> SemImply
+
+Returns the imply part of a model.
+"""
+imply(model::AbstractSemSingle) = model.imply
+
+"""
+    loss(model::AbstractSemSingle) -> SemLoss
+
+Returns the loss part of a model.
+"""
+loss(model::AbstractSemSingle) = model.loss
+
+"""
+    optimizer(model::AbstractSemSingle) -> SemOptimizer
+
+Returns the optimizer part of a model.
+"""
+optimizer(model::AbstractSemSingle) = model.optimizer
 
 function SemFiniteDiff(;
     observed::O = SemObservedData,
