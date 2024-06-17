@@ -1,5 +1,5 @@
 using StructuralEquationModels, Test, Statistics
-using StructuralEquationModels: obs_cov, obs_mean, get_data
+using StructuralEquationModels: obs_cov, obs_mean, samples
 ### model specification --------------------------------------------------------------------
 
 spec = ParameterTable(
@@ -64,8 +64,8 @@ all_equal_cov =
     (obs_cov(observed) == obs_cov(observed_matrix))
 
 all_equal_data =
-    (get_data(observed) == get_data(observed_nospec)) &
-    (get_data(observed) == get_data(observed_matrix))
+    (samples(observed) == samples(observed_nospec)) &
+    (samples(observed) == samples(observed_matrix))
 
 @testset "unit tests | SemObservedData | input formats" begin
     @test all_equal_cov
@@ -94,8 +94,8 @@ all_equal_cov_suffled =
     (obs_cov(observed) == obs_cov(observed_matrix_shuffle))
 
 all_equal_data_suffled =
-    (get_data(observed) == get_data(observed_shuffle)) &
-    (get_data(observed) == get_data(observed_matrix_shuffle))
+    (samples(observed) == samples(observed_shuffle)) &
+    (samples(observed) == samples(observed_matrix_shuffle))
 
 @testset "unit tests | SemObservedData | input formats shuffled " begin
     @test all_equal_cov_suffled
@@ -396,8 +396,8 @@ observed_matrix = SemObservedMissing(
 )
 
 all_equal_data =
-    isequal(get_data(observed), get_data(observed_nospec)) &
-    isequal(get_data(observed), get_data(observed_matrix))
+    isequal(samples(observed), samples(observed_nospec)) &
+    isequal(samples(observed), samples(observed_matrix))
 
 @testset "unit tests | SemObservedMissing | input formats" begin
     @test all_equal_data
@@ -421,8 +421,8 @@ observed_matrix_shuffle = SemObservedMissing(
 )
 
 all_equal_data_shuffled =
-    isequal(get_data(observed), get_data(observed_shuffle)) &
-    isequal(get_data(observed), get_data(observed_matrix_shuffle))
+    isequal(samples(observed), samples(observed_shuffle)) &
+    isequal(samples(observed), samples(observed_matrix_shuffle))
 
 @testset "unit tests | SemObservedMissing | input formats shuffled " begin
     @test all_equal_data_suffled

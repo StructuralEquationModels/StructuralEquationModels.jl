@@ -30,7 +30,7 @@ For observed data with missing values.
 - `n_obs(::SemObservedMissing)` -> number of observed data points
 - `n_man(::SemObservedMissing)` -> number of manifest variables
 
-- `get_data(::SemObservedMissing)` -> observed data
+- `samples(::SemObservedMissing)` -> observed data
 - `data_rowwise(::SemObservedMissing)` -> observed data as vector per observation, with missing values deleted
 
 - `patterns(::SemObservedMissing)` -> indices of non-missing variables per missing patterns
@@ -211,7 +211,6 @@ n_man(observed::SemObservedMissing) = observed.n_man
 ### Additional methods
 ############################################################################################
 
-get_data(observed::SemObservedMissing) = observed.data
 patterns(observed::SemObservedMissing) = observed.patterns
 patterns_not(observed::SemObservedMissing) = observed.patterns_not
 rows(observed::SemObservedMissing) = observed.rows

@@ -21,7 +21,7 @@ For observed data without missings.
 - `n_obs(::SemObservedData)` -> number of observed data points
 - `n_man(::SemObservedData)` -> number of manifest variables
 
-- `get_data(::SemObservedData)` -> observed data
+- `samples(::SemObservedData)` -> observed data
 - `obs_cov(::SemObservedData)` -> observed.obs_cov
 - `obs_mean(::SemObservedData)` -> observed.obs_mean
 - `data_rowwise(::SemObservedData)` -> observed data, stored as vectors per observation
@@ -124,7 +124,6 @@ n_man(observed::SemObservedData) = observed.n_man
 ### additional methods
 ############################################################################################
 
-get_data(observed::SemObservedData) = observed.data
 obs_cov(observed::SemObservedData) = observed.obs_cov
 obs_mean(observed::SemObservedData) = observed.obs_mean
 data_rowwise(observed::SemObservedData) = observed.data_rowwise
