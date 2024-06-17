@@ -90,7 +90,7 @@ function objective!(semfiml::SemFIML, params, model)
     prepare_SemFIML!(semfiml, model)
 
     objective = F_FIML(rows(observed(model)), semfiml, model, params)
-    return objective / n_obs(observed(model))
+    return objective / nsamples(observed(model))
 end
 
 function gradient!(semfiml::SemFIML, params, model)
@@ -100,7 +100,7 @@ function gradient!(semfiml::SemFIML, params, model)
 
     prepare_SemFIML!(semfiml, model)
 
-    gradient = ∇F_FIML(rows(observed(model)), semfiml, model) / n_obs(observed(model))
+    gradient = ∇F_FIML(rows(observed(model)), semfiml, model) / nsamples(observed(model))
     return gradient
 end
 
@@ -112,8 +112,8 @@ function objective_gradient!(semfiml::SemFIML, params, model)
     prepare_SemFIML!(semfiml, model)
 
     objective =
-        F_FIML(rows(observed(model)), semfiml, model, params) / n_obs(observed(model))
-    gradient = ∇F_FIML(rows(observed(model)), semfiml, model) / n_obs(observed(model))
+        F_FIML(rows(observed(model)), semfiml, model, params) / nsamples(observed(model))
+    gradient = ∇F_FIML(rows(observed(model)), semfiml, model) / nsamples(observed(model))
 
     return objective, gradient
 end
@@ -182,7 +182,7 @@ function F_FIML(rows, semfiml, model, params)
             semfiml.inverses[i],
             obs_cov(observed(model))[i],
             semfiml.logdets[i],
-            pattern_n_obs(observed(model))[i],
+            pattern_nsamples(observed(model))[i],
         )
     end
     return F
@@ -199,7 +199,7 @@ function ∇F_FIML(rows, semfiml, model)
             obs_cov(observed(model))[i],
             patterns(observed(model))[i],
             semfiml.∇ind[i],
-            pattern_n_obs(observed(model))[i],
+            pattern_nsamples(observed(model))[i],
             Jμ,
             JΣ,
             model,
@@ -213,7 +213,7 @@ function prepare_SemFIML!(semfiml, model)
     batch_cholesky!(semfiml, model)
     #batch_sym_inv_update!(semfiml, model)
     batch_inv!(semfiml, model)
-    for i in 1:size(pattern_n_obs(observed(model)), 1)
+    for i in 1:size(pattern_nsamples(observed(model)), 1)
         semfiml.meandiff[i] .= obs_mean(observed(model))[i] - semfiml.imp_mean[i]
     end
 end

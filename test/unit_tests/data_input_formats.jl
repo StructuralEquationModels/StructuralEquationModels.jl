@@ -205,14 +205,14 @@ end
         specification = nothing,
         obs_cov = dat_cov,
         obs_mean = dat_mean,
-        n_obs = 75,
+        nsamples = 75,
     )
 end
 
-@test_throws UndefKeywordError(:n_obs) SemObservedCovariance(obs_cov = dat_cov)
+@test_throws UndefKeywordError(:nsamples) SemObservedCovariance(obs_cov = dat_cov)
 
 @test_throws ArgumentError("no `obs_colnames` were specified") begin
-    SemObservedCovariance(specification = spec, obs_cov = dat_cov, n_obs = 75)
+    SemObservedCovariance(specification = spec, obs_cov = dat_cov, nsamples = 75)
 end
 
 @test_throws ArgumentError("please specify `obs_colnames` as a vector of Symbols") begin
@@ -220,7 +220,7 @@ end
         specification = spec,
         obs_cov = dat_cov,
         obs_colnames = names(dat),
-        n_obs = 75,
+        nsamples = 75,
     )
 end
 
@@ -229,18 +229,18 @@ observed = SemObservedCovariance(
     specification = spec,
     obs_cov = dat_cov,
     obs_colnames = obs_colnames = Symbol.(names(dat)),
-    n_obs = 75,
+    nsamples = 75,
 )
 
 observed_nospec =
-    SemObservedCovariance(specification = nothing, obs_cov = dat_cov, n_obs = 75)
+    SemObservedCovariance(specification = nothing, obs_cov = dat_cov, nsamples = 75)
 
 all_equal_cov = (obs_cov(observed) == obs_cov(observed_nospec))
 
 @testset "unit tests | SemObservedCovariance | input formats" begin
     @test all_equal_cov
-    @test n_obs(observed) == 75
-    @test n_obs(observed_nospec) == 75
+    @test nsamples(observed) == 75
+    @test nsamples(observed_nospec) == 75
 end
 
 # shuffle variables
@@ -256,7 +256,7 @@ observed_shuffle = SemObservedCovariance(
     specification = spec,
     obs_cov = shuffle_dat_cov,
     obs_colnames = shuffle_names,
-    n_obs = 75,
+    nsamples = 75,
 )
 
 all_equal_cov_suffled = (obs_cov(observed) ≈ obs_cov(observed_shuffle))
@@ -273,7 +273,7 @@ end
         specification = spec,
         obs_cov = dat_cov,
         meanstructure = true,
-        n_obs = 75,
+        nsamples = 75,
     )
 end
 
@@ -293,7 +293,7 @@ end
         obs_cov = dat_cov,
         obs_colnames = Symbol.(names(dat)),
         meanstructure = true,
-        n_obs = 75,
+        nsamples = 75,
     )
 end
 
@@ -303,7 +303,7 @@ observed = SemObservedCovariance(
     obs_cov = dat_cov,
     obs_mean = dat_mean,
     obs_colnames = Symbol.(names(dat)),
-    n_obs = 75,
+    nsamples = 75,
     meanstructure = true,
 )
 
@@ -312,7 +312,7 @@ observed_nospec = SemObservedCovariance(
     obs_cov = dat_cov,
     obs_mean = dat_mean,
     meanstructure = true,
-    n_obs = 75,
+    nsamples = 75,
 )
 
 all_equal_mean = (obs_mean(observed) == obs_mean(observed_nospec))
@@ -338,7 +338,7 @@ observed_shuffle = SemObservedCovariance(
     obs_cov = shuffle_dat_cov,
     obs_mean = shuffle_dat_mean,
     obs_colnames = shuffle_names,
-    n_obs = 75,
+    nsamples = 75,
     meanstructure = true,
 )
 

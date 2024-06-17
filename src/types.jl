@@ -176,8 +176,8 @@ function SemEnsemble(models...; optimizer = SemOptimizerOptim, weights = nothing
     # default weights
 
     if isnothing(weights)
-        nobs_total = sum(n_obs, models)
-        weights = [n_obs(model) / nobs_total for model in models]
+        nsamples_total = sum(nsamples, models)
+        weights = [nsamples(model) / nsamples_total for model in models]
     end
 
     # check parameters equality

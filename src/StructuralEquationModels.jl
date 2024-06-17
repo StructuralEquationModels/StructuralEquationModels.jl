@@ -82,7 +82,6 @@ include("frontend/fit/fitmeasures/BIC.jl")
 include("frontend/fit/fitmeasures/chi2.jl")
 include("frontend/fit/fitmeasures/df.jl")
 include("frontend/fit/fitmeasures/minus2ll.jl")
-include("frontend/fit/fitmeasures/n_obs.jl")
 include("frontend/fit/fitmeasures/p.jl")
 include("frontend/fit/fitmeasures/RMSEA.jl")
 include("frontend/fit/fitmeasures/n_man.jl")
@@ -165,7 +164,7 @@ export AbstractSem,
     df,
     fit_measures,
     minus2ll,
-    n_obs,
+    nsamples,
     p_value,
     RMSEA,
     n_man,

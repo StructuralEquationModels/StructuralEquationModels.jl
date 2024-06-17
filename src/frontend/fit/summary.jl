@@ -17,7 +17,7 @@ function sem_summary(
     println("No. iterations/evaluations:  $(n_iterations(sem_fit))")
     print("\n")
     println("Number of parameters:        $(nparams(sem_fit))")
-    println("Number of observations:      $(n_obs(sem_fit))")
+    println("Number of data samples:      $(nsamples(sem_fit))")
     print("\n")
     printstyled(
         "----------------------------------- Model ----------------------------------- \n";

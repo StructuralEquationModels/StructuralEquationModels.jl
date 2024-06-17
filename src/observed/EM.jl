@@ -29,7 +29,8 @@ function em_mvn(
     rtol_em = 1e-4,
     kwargs...,
 )
-    n_obs, n_man = observed.n_obs, Int(observed.n_man)
+    n_man = observed.n_man
+    nsamps = nsamples(observed)
 
     # preallocate stuff?
     𝔼x_pre = zeros(n_man)
@@ -44,8 +45,8 @@ function em_mvn(
         end
     end
 
-    # ess = 𝔼x, 𝔼xxᵀ, ismissing, missingRows, n_obs
-    # estepFn = (em_model, data) -> estep(em_model, data, EXsum, EXXsum, ismissing, missingRows, n_obs)
+    # ess = 𝔼x, 𝔼xxᵀ, ismissing, missingRows, nsamps
+    # estepFn = (em_model, data) -> estep(em_model, data, EXsum, EXXsum, ismissing, missingRows, nsamps)
 
     # initialize
     em_model = start_em(observed; kwargs...)
@@ -57,7 +58,7 @@ function em_mvn(
 
     while !done
         em_mvn_Estep!(𝔼x, 𝔼xxᵀ, em_model, observed, 𝔼x_pre, 𝔼xxᵀ_pre)
-        em_mvn_Mstep!(em_model, n_obs, 𝔼x, 𝔼xxᵀ)
+        em_mvn_Mstep!(em_model, nsamps, 𝔼x, 𝔼xxᵀ)
 
         if iter > max_iter_em
             done = true
@@ -96,7 +97,7 @@ function em_mvn_Estep!(𝔼x, 𝔼xxᵀ, em_model, observed, 𝔼x_pre, 𝔼xx�
     Σ = em_model.Σ
 
     # Compute the expected sufficient statistics
-    for i in 2:length(observed.pattern_n_obs)
+    for i in 2:length(observed.pattern_nsamples)
 
         # observed and unobserved vars
         u = observed.patterns_not[i]
@@ -125,9 +126,9 @@ function em_mvn_Estep!(𝔼x, 𝔼xxᵀ, em_model, observed, 𝔼x_pre, 𝔼xx�
     𝔼xxᵀ .+= 𝔼xxᵀ_pre
 end
 
-function em_mvn_Mstep!(em_model, n_obs, 𝔼x, 𝔼xxᵀ)
-    em_model.μ = 𝔼x / n_obs
-    Σ = Symmetric(𝔼xxᵀ / n_obs - em_model.μ * em_model.μ')
+function em_mvn_Mstep!(em_model, nsamples, 𝔼x, 𝔼xxᵀ)
+    em_model.μ = 𝔼x / nsamples
+    Σ = Symmetric(𝔼xxᵀ / nsamples - em_model.μ * em_model.μ')
 
     # ridge Σ
     # while !isposdef(Σ)
@@ -152,7 +153,7 @@ end
 
 # use μ and Σ of full cases
 function start_em_observed(observed::SemObservedMissing; kwargs...)
-    if (length(observed.patterns[1]) == observed.n_man) & (observed.pattern_n_obs[1] > 1)
+    if (length(observed.patterns[1]) == observed.n_man) & (observed.pattern_nsamples[1] > 1)
         μ = copy(observed.obs_mean[1])
         Σ = copy(Symmetric(observed.obs_cov[1]))
         if !isposdef(Σ)

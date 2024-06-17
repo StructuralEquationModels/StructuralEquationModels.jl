@@ -27,7 +27,7 @@ For observed data with missing values.
 
 # Extended help
 ## Interfaces
-- `n_obs(::SemObservedMissing)` -> number of observed data points
+- `nsamples(::SemObservedMissing)` -> number of observed data points
 - `n_man(::SemObservedMissing)` -> number of manifest variables
 
 - `samples(::SemObservedMissing)` -> observed data
@@ -36,7 +36,7 @@ For observed data with missing values.
 - `patterns(::SemObservedMissing)` -> indices of non-missing variables per missing patterns
 - `patterns_not(::SemObservedMissing)` -> indices of missing variables per missing pattern
 - `rows(::SemObservedMissing)` -> row indices of observed data points that belong to each pattern
-- `pattern_n_obs(::SemObservedMissing)` -> number of data points per pattern
+- `pattern_nsamples(::SemObservedMissing)` -> number of data points per pattern
 - `pattern_nvar_obs(::SemObservedMissing)` -> number of non-missing observed variables per pattern
 - `obs_mean(::SemObservedMissing)` -> observed mean per pattern
 - `obs_cov(::SemObservedMissing)` -> observed covariance per pattern
@@ -56,7 +56,7 @@ use this if you are sure your observed data is in the right format.
 mutable struct SemObservedMissing{
     A <: AbstractArray,
     D <: AbstractFloat,
-    O <: AbstractFloat,
+    O <: Number,
     P <: Vector,
     P2 <: Vector,
     R <: Vector,
@@ -69,12 +69,12 @@ mutable struct SemObservedMissing{
 } <: SemObserved
     data::A
     n_man::D
-    n_obs::O
+    nsamples::O
     patterns::P # missing patterns
     patterns_not::P2
     rows::R # coresponding rows in data_rowwise
     data_rowwise::PD # list of data
-    pattern_n_obs::PO # observed rows per pattern
+    pattern_nsamples::PO # observed rows per pattern
     pattern_nvar_obs::PVO # number of non-missing variables per pattern
     obs_mean::A2
     obs_cov::A3
@@ -140,14 +140,14 @@ function SemObservedMissing(;
     end
     data = data[keep, :]
 
-    n_obs, n_man = size(data)
+    nsamples, n_man = size(data)
 
     # compute and store the different missing patterns with their rowindices
     missings = ismissing.(data)
     patterns = [missings[i, :] for i in 1:size(missings, 1)]
 
     patterns_cart = findall.(!, patterns)
-    data_rowwise = [data[i, patterns_cart[i]] for i in 1:n_obs]
+    data_rowwise = [data[i, patterns_cart[i]] for i in 1:nsamples]
     data_rowwise = convert.(Array{Float64}, data_rowwise)
 
     remember = Vector{BitArray{1}}()
@@ -175,7 +175,7 @@ function SemObservedMissing(;
     remember_cart_not = findall.(remember)
     rows = rows[sort_n_miss]
 
-    pattern_n_obs = size.(rows, 1)
+    pattern_nsamples = size.(rows, 1)
     pattern_nvar_obs = length.(remember_cart)
 
     cov_mean = [cov_and_mean(data_rowwise[rows]) for rows in rows]
@@ -186,13 +186,13 @@ function SemObservedMissing(;
 
     return SemObservedMissing(
         data,
-        Float64(n_man),
-        Float64(n_obs),
+        Float64(nobs_vars),
+        nsamples,
         remember_cart,
         remember_cart_not,
         rows,
         data_rowwise,
-        Float64.(pattern_n_obs),
+        pattern_nsamples,
         Float64.(pattern_nvar_obs),
         obs_mean,
         obs_cov,
@@ -204,7 +204,7 @@ end
 ### Recommended methods
 ############################################################################################
 
-n_obs(observed::SemObservedMissing) = observed.n_obs
+nsamples(observed::SemObservedMissing) = observed.nsamples
 n_man(observed::SemObservedMissing) = observed.n_man
 
 ############################################################################################
@@ -215,7 +215,7 @@ patterns(observed::SemObservedMissing) = observed.patterns
 patterns_not(observed::SemObservedMissing) = observed.patterns_not
 rows(observed::SemObservedMissing) = observed.rows
 data_rowwise(observed::SemObservedMissing) = observed.data_rowwise
-pattern_n_obs(observed::SemObservedMissing) = observed.pattern_n_obs
+pattern_nsamples(observed::SemObservedMissing) = observed.pattern_nsamples
 pattern_nvar_obs(observed::SemObservedMissing) = observed.pattern_nvar_obs
 obs_mean(observed::SemObservedMissing) = observed.obs_mean
 obs_cov(observed::SemObservedMissing) = observed.obs_cov

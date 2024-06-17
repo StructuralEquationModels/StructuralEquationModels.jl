@@ -9,7 +9,7 @@ For observed covariance matrices and means.
         obs_colnames = nothing,
         meanstructure = false,
         obs_mean = nothing,
-        n_obs = nothing,
+        nsamples = nothing,
         kwargs...)
 
 # Arguments
@@ -18,11 +18,11 @@ For observed covariance matrices and means.
 - `obs_colnames::Vector{Symbol}`: column names of the covariance matrix
 - `meanstructure::Bool`: does the model have a meanstructure?
 - `obs_mean`: observed mean vector
-- `n_obs::Number`: number of observed data points (necessary for fit statistics)
+- `nsamples::Number`: number of samples (observed data points); necessary for fit statistics
 
 # Extended help
 ## Interfaces
-- `n_obs(::SemObservedCovariance)` -> number of observed data points
+- `nsamples(::SemObservedCovariance)`: number of samples (observed data points)
 - `n_man(::SemObservedCovariance)` -> number of manifest variables
 
 - `obs_cov(::SemObservedCovariance)` -> observed covariance matrix
@@ -43,7 +43,7 @@ struct SemObservedCovariance{B, C} <: SemObserved
     obs_cov::B
     obs_mean::C
     n_man::Int
-    n_obs::Int
+    nsamples::Int
 end
 
 function SemObservedCovariance(;
@@ -53,7 +53,7 @@ function SemObservedCovariance(;
     spec_colnames = nothing,
     obs_mean = nothing,
     meanstructure = false,
-    n_obs::Integer,
+    nsamples::Integer,
     kwargs...,
 )
     if !meanstructure & !isnothing(obs_mean)
@@ -80,14 +80,14 @@ function SemObservedCovariance(;
             (obs_mean = reorder_obs_mean(obs_mean, spec_colnames, obs_colnames))
     end
 
-    return SemObservedCovariance(obs_cov, obs_mean, size(obs_cov, 1), n_obs)
+    return SemObservedCovariance(obs_cov, obs_mean, size(obs_cov, 1), nsamples)
 end
 
 ############################################################################################
 ### Recommended methods
 ############################################################################################
 
-n_obs(observed::SemObservedCovariance) = observed.n_obs
+nsamples(observed::SemObservedCovariance) = observed.nsamples
 n_man(observed::SemObservedCovariance) = observed.n_man
 
 ############################################################################################

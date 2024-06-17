@@ -46,3 +46,12 @@ parind[:param_name]
 See also [`params`](@ref).
 """
 param_indices(semobj) = Dict(par => i for (i, par) in enumerate(params(semobj)))
+
+"""
+    nsamples(semobj)
+
+Return the number of samples (observed data points).
+
+For ensemble models, return the sum over all submodels.
+"""
+function nsamples end
