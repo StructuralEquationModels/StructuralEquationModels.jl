@@ -261,6 +261,4 @@ Base type for all SEM specifications.
 """
 abstract type SemSpecification end
 
-params(spec::SemSpecification) = spec.params
-
 abstract type AbstractParameterTable <: SemSpecification end
