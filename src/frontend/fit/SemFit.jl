@@ -25,6 +25,8 @@ mutable struct SemFit{Mi, So, St, Mo, O}
     optimization_result::O
 end
 
+params(fit::SemFit) = params(fit.model)
+
 ############################################################################################
 # pretty printing
 ############################################################################################
@@ -48,6 +50,7 @@ end
 
 params(fit::SemFit) = params(fit.model)
 nparams(fit::SemFit) = nparams(fit.model)
+nsamples(fit::SemFit) = nsamples(fit.model)
 
 # access fields
 minimum(sem_fit::SemFit) = sem_fit.minimum

@@ -11,7 +11,7 @@ imply_ram = RAM(specification = spec)
 imply_ram_sym = RAMSymbolic(specification = spec)
 
 # loss functions ---------------------------------------------------------------------------
-ml = SemML(observed = observed)
+ml = SemML(specification = spec, observed = observed)
 
 wls = SemWLS(observed = observed)
 
@@ -25,7 +25,7 @@ loss_ml = SemLoss(ml)
 loss_wls = SemLoss(wls)
 
 # optimizer -------------------------------------------------------------------------------------
-optimizer_obj = semoptimizer()
+optimizer_obj = SemOptimizer(engine = opt_engine)
 
 # models -----------------------------------------------------------------------------------
 
@@ -40,8 +40,12 @@ model_ridge = Sem(observed, imply_ram, SemLoss(ml, ridge), optimizer_obj)
 
 model_constant = Sem(observed, imply_ram, SemLoss(ml, constant), optimizer_obj)
 
-model_ml_weighted =
-    Sem(observed, imply_ram, SemLoss(ml; loss_weights = [n_obs(model_ml)]), optimizer_obj)
+model_ml_weighted = Sem(
+    observed,
+    imply_ram,
+    SemLoss(ml; loss_weights = [nsamples(model_ml)]),
+    optimizer_obj,
+)
 
 ############################################################################################
 ### test gradients
@@ -101,7 +105,7 @@ end
     solution_ml = sem_fit(model_ml)
     solution_ml_weighted = sem_fit(model_ml_weighted)
     @test solution(solution_ml) ≈ solution(solution_ml_weighted) rtol = 1e-3
-    @test n_obs(model_ml) * StructuralEquationModels.minimum(solution_ml) ≈
+    @test nsamples(model_ml) * StructuralEquationModels.minimum(solution_ml) ≈
           StructuralEquationModels.minimum(solution_ml_weighted) rtol = 1e-6
 end
 
@@ -148,10 +152,11 @@ end
 ### test hessians
 ############################################################################################
 
-if semoptimizer == SemOptimizerOptim
+if opt_engine == :Optim
     using Optim, LineSearches
 
-    optimizer_obj = SemOptimizerOptim(
+    optimizer_obj = SemOptimizer(
+        engine = opt_engine,
         algorithm = Newton(;
             linesearch = BackTracking(order = 3),
             alphaguess = InitialHagerZhang(),
@@ -206,7 +211,7 @@ imply_ram = RAM(specification = spec_mean, meanstructure = true)
 imply_ram_sym = RAMSymbolic(specification = spec_mean, meanstructure = true)
 
 # loss functions ---------------------------------------------------------------------------
-ml = SemML(observed = observed, meanstructure = true)
+ml = SemML(observed = observed, specification = spec_mean, meanstructure = true)
 
 wls = SemWLS(observed = observed, meanstructure = true)
 
@@ -216,7 +221,7 @@ loss_ml = SemLoss(ml)
 loss_wls = SemLoss(wls)
 
 # optimizer -------------------------------------------------------------------------------------
-optimizer_obj = semoptimizer()
+optimizer_obj = SemOptimizer(engine = opt_engine)
 
 # models -----------------------------------------------------------------------------------
 model_ml = Sem(observed, imply_ram, loss_ml, optimizer_obj)
@@ -310,7 +315,8 @@ end
 ### fiml
 ############################################################################################
 
-observed = SemObservedMissing(specification = spec_mean, data = dat_missing)
+observed =
+    SemObservedMissing(specification = spec_mean, data = dat_missing, rtol_em = 1e-10)
 
 fiml = SemFIML(observed = observed, specification = spec_mean)
 

@@ -1,3 +1,5 @@
+const SEM = StructuralEquationModels
+
 ############################################################################################
 # ML estimation
 ############################################################################################
@@ -5,6 +7,8 @@
 model_g1 = Sem(specification = specification_g1, data = dat_g1, imply = RAMSymbolic)
 
 model_g2 = Sem(specification = specification_g2, data = dat_g2, imply = RAM)
+
+@test SEM.params(model_g1.imply.ram_matrices) == SEM.params(model_g2.imply.ram_matrices)
 
 model_ml_multigroup = SemEnsemble(model_g1, model_g2; optimizer = semoptimizer)
 
@@ -70,7 +74,7 @@ end
 grad = similar(start_test)
 gradient!(grad, model_ml_multigroup, rand(36))
 grad_fd = FiniteDiff.finite_difference_gradient(
-    x -> objective!(model_ml_multigroup, x),
+    Base.Fix1(SEM.objective, model_ml_multigroup),
     start_test,
 )
 
@@ -114,7 +118,7 @@ end
 # ML estimation - user defined loss function
 ############################################################################################
 
-struct UserSemML <: SemLossFunction end
+struct UserSemML <: SemLossFunction{ExactHessian} end
 
 ############################################################################################
 ### functors
@@ -122,7 +126,7 @@ struct UserSemML <: SemLossFunction end
 
 using LinearAlgebra: isposdef, logdet, tr, inv
 
-function SEM.objective!(semml::UserSemML, params, model::AbstractSem)
+function SEM.objective(ml::UserSemML, model::AbstractSem, params)
     Σ = imply(model).Σ
     Σₒ = SEM.obs_cov(observed(model))
     if !isposdef(Σ)

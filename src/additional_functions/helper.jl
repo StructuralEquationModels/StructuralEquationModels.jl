@@ -33,12 +33,16 @@ function semvec(observed, imply, loss, optimizer)
     return sem_vec
 end
 
-function get_observed(rowind, data, semobserved; args = (), kwargs = NamedTuple())
-    observed_vec = Vector{semobserved}(undef, length(rowind))
-    for i in 1:length(rowind)
-        observed_vec[i] = semobserved(args...; data = Matrix(data[rowind[i], :]), kwargs...)
-    end
-    return observed_vec
+# construct a vector of SemObserved objects
+# for each specified data row
+function observed(
+    ::Type{T},
+    data,
+    rowinds;
+    args = (),
+    kwargs = NamedTuple(),
+) where {T <: SemObserved}
+    return T[T(args...; data = Matrix(view(data, row, :)), kwargs...) for row in rowinds]
 end
 
 skipmissing_mean(mat::AbstractMatrix) = 
@@ -59,12 +63,6 @@ function remove_all_missing(data::AbstractMatrix)
         end
     end
     return data[keep, :], keep
-end
-
-function batch_inv!(fun, model)
-    for i in 1:size(fun.inverses, 1)
-        fun.inverses[i] .= LinearAlgebra.inv!(fun.choleskys[i])
-    end
 end
 
 #=
@@ -104,11 +102,6 @@ function sparse_outer_mul!(C, A, B::Vector, ind) #computes A*S*B -> C, where ind
     @views @inbounds for i in 1:length(ind)
         C .+= B[ind[i][2]] .* A[:, ind[i][1]]
     end
-end
-
-function cov_and_mean(rows; corrected = false)
-    obs_mean, obs_cov = StatsBase.mean_and_cov(reduce(hcat, rows), 2, corrected = corrected)
-    return obs_cov, vec(obs_mean)
 end
 
 # n²×(n(n+1)/2) matrix to transform a vector of lower

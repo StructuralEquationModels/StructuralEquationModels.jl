@@ -18,13 +18,12 @@ For observed data without missings.
 
 # Extended help
 ## Interfaces
-- `n_obs(::SemObservedData)` -> number of observed data points
-- `n_man(::SemObservedData)` -> number of manifest variables
+- `nsamples(::SemObservedData)` -> number of observed data points
+- `nobserved_vars(::SemObservedData)` -> number of observed (manifested) variables
 
 - `get_data(::SemObservedData)` -> observed data
 - `obs_cov(::SemObservedData)` -> observed.obs_cov
 - `obs_mean(::SemObservedData)` -> observed.obs_mean
-- `data_rowwise(::SemObservedData)` -> observed data, stored as vectors per observation
 
 ## Implementation
 Subtype of `SemObserved`
@@ -37,15 +36,13 @@ use this if you are sure your observed data is in the right format.
 ## Additional keyword arguments:
 - `spec_colnames::Vector{Symbol} = nothing`: overwrites column names of the specification object
 - `compute_covariance::Bool ) = true`: should the covariance of `data` be computed and stored?
-- `rowwise::Bool = false`: should the data be stored also as vectors per observation
 """
-struct SemObservedData{A, B, C, R} <: SemObserved
+struct SemObservedData{A, B, C} <: SemObserved
     data::A
     obs_cov::B
     obs_mean::C
-    n_man::Int
-    n_obs::Int
-    data_rowwise::R
+    nobs_vars::Int
+    nsamples::Int
 end
 
 # error checks
@@ -61,11 +58,10 @@ function SemObservedData(;
     spec_colnames = nothing,
     meanstructure = false,
     compute_covariance = true,
-    rowwise = false,
     kwargs...,
 )
-    if isnothing(spec_colnames)
-        spec_colnames = get_colnames(specification)
+    if isnothing(spec_colnames) && !isnothing(specification)
+        spec_colnames = observed_vars(specification)
     end
 
     if !isnothing(spec_colnames)
@@ -95,7 +91,7 @@ function SemObservedData(;
                 throw(ArgumentError("please specify `obs_colnames` as a vector of Symbols"))
             end
 
-            data = reorder_data(data, spec_colnames, obs_colnames)
+            data = data[:, source_to_dest_perm(obs_colnames, spec_colnames)]
         end
     end
 
@@ -105,11 +101,10 @@ function SemObservedData(;
 
     return SemObservedData(
         data,
-        compute_covariance ? Statistics.cov(data) : nothing,
+        compute_covariance ? Symmetric(cov(data)) : nothing,
         meanstructure ? vec(Statistics.mean(data, dims = 1)) : nothing,
         size(data, 2),
         size(data, 1),
-        rowwise ? [data[i, :] for i in axes(data, 1)] : nothing,
     )
 end
 
@@ -117,29 +112,26 @@ end
 ### Recommended methods
 ############################################################################################
 
-n_obs(observed::SemObservedData) = observed.n_obs
-n_man(observed::SemObservedData) = observed.n_man
+nsamples(observed::SemObservedData) = observed.nsamples
+nobserved_vars(observed::SemObservedData) = observed.nobs_vars
 
 ############################################################################################
 ### additional methods
 ############################################################################################
 
-get_data(observed::SemObservedData) = observed.data
 obs_cov(observed::SemObservedData) = observed.obs_cov
 obs_mean(observed::SemObservedData) = observed.obs_mean
-data_rowwise(observed::SemObservedData) = observed.data_rowwise
 
 ############################################################################################
 ### Additional functions
 ############################################################################################
 
-# reorder data -----------------------------------------------------------------------------
-function reorder_data(data::AbstractArray, spec_colnames, obs_colnames)
-    if spec_colnames == obs_colnames
-        return data
+# permutation that subsets and reorders source to matches the destination order ------------
+function source_to_dest_perm(src::AbstractVector, dest::AbstractVector)
+    if dest == src # exact match
+        return eachindex(dest)
     else
-        obs_positions = Dict(col => i for (i, col) in enumerate(obs_colnames))
-        new_positions = [obs_positions[col] for col in spec_colnames]
-        return data[:, new_positions]
+        src_inds = Dict(el => i for (i, el) in enumerate(src))
+        return [src_inds[el] for el in dest]
     end
 end

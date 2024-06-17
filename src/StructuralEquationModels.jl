@@ -7,14 +7,14 @@ using LinearAlgebra,
     StatsBase,
     SparseArrays,
     Symbolics,
-    NLopt,
     FiniteDiff,
     PrettyTables,
     Distributions,
     StenoGraphs,
     LazyArtifacts,
     DelimitedFiles,
-    DataFrames
+    DataFrames,
+    PackageExtensionCompat
 
 export StenoGraphs, @StenoGraph, meld
 
@@ -30,24 +30,28 @@ include("additional_functions/commutation_matrix.jl")
 # fitted objects
 include("frontend/fit/SemFit.jl")
 # specification of models
+include("additional_functions/params_array.jl")
+include("frontend/common.jl")
 include("frontend/specification/checks.jl")
 include("frontend/specification/ParameterTable.jl")
 include("frontend/specification/RAMMatrices.jl")
 include("frontend/specification/EnsembleParameterTable.jl")
 include("frontend/specification/StenoGraphs.jl")
 include("frontend/fit/summary.jl")
+include("frontend/predict.jl")
 # pretty printing
 include("frontend/pretty_printing.jl")
 # observed
-include("observed/get_colnames.jl")
-include("observed/covariance.jl")
 include("observed/data.jl")
-include("observed/missing.jl")
+include("observed/covariance.jl")
+include("observed/missing_pattern.jl")
 include("observed/EM.jl")
+include("observed/missing.jl")
 # constructor
 include("frontend/specification/Sem.jl")
 include("frontend/specification/documentation.jl")
 # imply
+include("imply/abstract.jl")
 include("imply/RAM/symbolic.jl")
 include("imply/RAM/generic.jl")
 include("imply/empty.jl")
@@ -59,16 +63,12 @@ include("loss/WLS/WLS.jl")
 include("loss/constant/constant.jl")
 # optimizer
 include("diff/optim.jl")
-include("diff/NLopt.jl")
 include("diff/Empty.jl")
 # optimizer
 include("optimizer/documentation.jl")
 include("optimizer/optim.jl")
-include("optimizer/NLopt.jl")
 # helper functions
 include("additional_functions/helper.jl")
-include("additional_functions/parameters.jl")
-include("additional_functions/start_val/start_val.jl")
 include("additional_functions/start_val/start_fabin3.jl")
 include("additional_functions/start_val/start_partable.jl")
 include("additional_functions/start_val/start_simple.jl")
@@ -80,10 +80,8 @@ include("frontend/fit/fitmeasures/BIC.jl")
 include("frontend/fit/fitmeasures/chi2.jl")
 include("frontend/fit/fitmeasures/df.jl")
 include("frontend/fit/fitmeasures/minus2ll.jl")
-include("frontend/fit/fitmeasures/n_obs.jl")
 include("frontend/fit/fitmeasures/p.jl")
 include("frontend/fit/fitmeasures/RMSEA.jl")
-include("frontend/fit/fitmeasures/n_man.jl")
 include("frontend/fit/fitmeasures/fit_measures.jl")
 # standard errors
 include("frontend/fit/standard_errors/hessian.jl")
@@ -95,6 +93,12 @@ export AbstractSem,
     Sem,
     SemFiniteDiff,
     SemEnsemble,
+    MeanStructure,
+    NoMeanStructure,
+    HasMeanStructure,
+    HessianEvaluation,
+    ExactHessian,
+    ApproximateHessian,
     SemImply,
     RAMSymbolic,
     RAM,
@@ -116,8 +120,6 @@ export AbstractSem,
     SemOptimizer,
     SemOptimizerEmpty,
     SemOptimizerOptim,
-    SemOptimizerNLopt,
-    NLoptConstraint,
     optimizer,
     n_iterations,
     convergence,
@@ -163,10 +165,9 @@ export AbstractSem,
     df,
     fit_measures,
     minus2ll,
-    n_obs,
+    nsamples,
     p_value,
     RMSEA,
-    n_man,
     EmMVNModel,
     se_hessian,
     se_bootstrap,
@@ -178,4 +179,9 @@ export AbstractSem,
     ←,
     ↔,
     ⇔
+
+function __init__()
+    @require_extensions
+end
+
 end

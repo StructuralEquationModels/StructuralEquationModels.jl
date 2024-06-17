@@ -25,7 +25,7 @@ model per group and an additional model with `ImplyEmpty` and `SemRidge` for the
 ## Implementation
 Subtype of `SemImply`.
 """
-struct ImplyEmpty{V2} <: SemImply
+struct ImplyEmpty{V2} <: SemImply{NoMeanStructure, ExactHessian}
     ram_matrices::V2
 end
 
@@ -33,7 +33,7 @@ end
 ### Constructors
 ############################################################################################
 
-function ImplyEmpty(; specification, kwargs...)
+function ImplyEmpty(; specification::SemSpecification, kwargs...)
     return ImplyEmpty(convert(RAMMatrices, specification))
 end
 
@@ -41,12 +41,13 @@ end
 ### methods
 ############################################################################################
 
-objective!(imply::ImplyEmpty, par, model) = nothing
-gradient!(imply::ImplyEmpty, par, model) = nothing
-hessian!(imply::ImplyEmpty, par, model) = nothing
+update!(targets::EvaluationTargets, imply::ImplyEmpty, par, model) = nothing
 
 ############################################################################################
 ### Recommended methods
 ############################################################################################
+
+params(imply::ImplyEmpty) = params(imply.ram_matrices)
+nparams(imply::ImplyEmpty) = nparams(imply.ram_matrices)
 
 update_observed(imply::ImplyEmpty, observed::SemObserved; kwargs...) = imply

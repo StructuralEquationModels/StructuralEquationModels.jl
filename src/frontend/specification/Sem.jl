@@ -20,6 +20,19 @@ function Sem(;
     return sem
 end
 
+nvars(sem::AbstractSemSingle) = nvars(sem.imply.ram_matrices)
+nobserved_vars(sem::AbstractSemSingle) = nobserved_vars(sem.imply.ram_matrices)
+nlatent_vars(sem::AbstractSemSingle) = nlatent_vars(sem.imply.ram_matrices)
+
+vars(sem::AbstractSemSingle) = vars(sem.imply.ram_matrices)
+observed_vars(sem::AbstractSemSingle) = observed_vars(sem.imply.ram_matrices)
+latent_vars(sem::AbstractSemSingle) = latent_vars(sem.imply.ram_matrices)
+
+nsamples(sem::AbstractSemSingle) = nsamples(sem.observed)
+
+# sum of samples in all sub-models
+nsamples(ensemble::SemEnsemble) = sum(nsamples, ensemble.sems)
+
 function SemFiniteDiff(;
     observed::O = SemObservedData,
     imply::I = RAM,

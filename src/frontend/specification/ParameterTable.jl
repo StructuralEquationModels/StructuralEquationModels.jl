@@ -54,11 +54,20 @@ function ParameterTable(
 
     return ParameterTable(
         Dict(col => copy(values) for (col, values) in pairs(partable.columns)),
-        observed_vars = copy(partable.observed_vars),
-        latent_vars = copy(partable.latent_vars),
+        observed_vars = copy(observed_vars(partable)),
+        latent_vars = copy(latent_vars(partable)),
         params = params,
     )
 end
+
+vars(partable::ParameterTable) =
+    !isempty(partable.sorted_vars) ? partable.sorted_vars :
+    vcat(partable.latent_vars, partable.observed_vars)
+observed_vars(partable::ParameterTable) = partable.observed_vars
+latent_vars(partable::ParameterTable) = partable.latent_vars
+
+nvars(partable::ParameterTable) =
+    length(partable.latent_vars) + length(partable.observed_vars)
 
 ############################################################################################
 ### Convert to other types
@@ -206,8 +215,7 @@ function sort_vars!(partable::ParameterTable)
     end
 
     copyto!(resize!(partable.sorted_vars, length(sorted_vars)), sorted_vars)
-    @assert length(partable.sorted_vars) ==
-            length(partable.observed_vars) + length(partable.latent_vars)
+    @assert length(partable.sorted_vars) == nvars(partable)
 
     return partable
 end
@@ -227,8 +235,11 @@ sort_vars(partable::ParameterTable) = sort_vars!(deepcopy(partable))
 # add a row --------------------------------------------------------------------------------
 
 function Base.push!(partable::ParameterTable, d::Union{AbstractDict{Symbol}, NamedTuple})
-    issetequal(keys(partable.columns), keys(d)) ||
-        throw(ArgumentError("The new row needs to have the same keys as the columns of the parameter table."))
+    issetequal(keys(partable.columns), keys(d)) || throw(
+        ArgumentError(
+            "The new row needs to have the same keys as the columns of the parameter table.",
+        ),
+    )
     for (key, val) in pairs(d)
         push!(partable.columns[key], val)
     end
@@ -287,10 +298,10 @@ function update_partable!(
             "The length of `params` ($(length(params))) and their `values` ($(length(values))) must be the same",
         ),
     )
+    dup_params = nonunique(params)
+    isempty(dup_params) ||
+        throw(ArgumentError("Duplicate parameters detected: $(join(dup_params, ", "))"))
     param_values = Dict(zip(params, values))
-    if length(param_values) != length(params)
-        throw(ArgumentError("Duplicate parameter names in `params`"))
-    end
     update_partable!(partable, column, param_values, default)
 end
 
@@ -351,12 +362,12 @@ end
     update_se_hessian!(
         partable::AbstractParameterTable,
         fit::SemFit;
-        hessian = :finitediff)
+        method = :finitediff)
 
 Write hessian standard errors computed for `fit` to the `:se` column of `partable`
 
 # Arguments
-- `hessian::Symbol`: how to compute the hessian, see [se_hessian](@ref) for more information.
+- `method::Symbol`: how to compute the hessian, see [se_hessian](@ref) for more information.
 
 # Examples
 
@@ -364,10 +375,22 @@ Write hessian standard errors computed for `fit` to the `:se` column of `partabl
 function update_se_hessian!(
     partable::AbstractParameterTable,
     fit::SemFit;
-    hessian = :finitediff,
+    method = :finitediff,
 )
-    se = se_hessian(fit; hessian = hessian)
+    se = se_hessian(fit; method)
     return update_partable!(partable, :se, params(fit), se)
+end
+
+function variance_params(partable::ParameterTable)
+    res = [
+        param for (param, rel, from, to) in zip(
+            partable.columns.param,
+            partable.columns.relation,
+            partable.columns.from,
+            partable.columns.to,
+        ) if (rel == :↔) && (from == to)
+    ]
+    unique!(res)
 end
 
 """
@@ -567,3 +590,78 @@ lavaan_param_values(
     lav_col,
     lav_group,
 )
+
+"""
+    lavaan_model(partable::ParameterTable)
+
+Generate lavaan model definition from a `partable`.
+"""
+function lavaan_model(partable::ParameterTable)
+    latent_vars = Set(partable.variables.latent)
+    observed_vars = Set(partable.variables.observed)
+
+    variance_defs = Dict{Symbol, IOBuffer}()
+    latent_dep_defs = Dict{Symbol, IOBuffer}()
+    latent_regr_defs = Dict{Symbol, IOBuffer}()
+    observed_regr_defs = Dict{Symbol, IOBuffer}()
+
+    model = IOBuffer()
+    for (from, to, rel, param, value, free) in zip(
+        partable.columns.from,
+        partable.columns.to,
+        partable.columns.relation,
+        partable.columns.param,
+        partable.columns.value_fixed,
+        partable.columns.free,
+    )
+        function append_param(io)
+            if free
+                @assert param != :const
+                param == Symbol("") || write(io, "$param * ")
+            else
+                write(io, "$value * ")
+            end
+        end
+        function append_rhs(io)
+            if position(io) > 0
+                write(io, " + ")
+            end
+            append_param(io)
+            write(io, "$to")
+        end
+
+        if from == Symbol("1")
+            write(model, "$to ~ ")
+            append_param(model)
+            write(model, "1\n")
+        else
+            if rel == :↔
+                variance_def = get!(() -> IOBuffer(), variance_defs, from)
+                append_rhs(variance_def)
+            elseif rel == :→
+                if (from ∈ latent_vars) && (to ∈ observed_vars)
+                    latent_dep_def = get!(() -> IOBuffer(), latent_dep_defs, from)
+                    append_rhs(latent_dep_def)
+                elseif (from ∈ latent_vars) && (to ∈ latent_vars)
+                    latent_regr_def = get!(() -> IOBuffer(), latent_regr_defs, from)
+                    append_rhs(latent_regr_def)
+                else
+                    observed_regr_def = get!(() -> IOBuffer(), observed_regr_defs, from)
+                    append_rhs(observed_regr_def)
+                end
+            end
+        end
+    end
+    function write_rules(io, defs, relation)
+        vars = sort!(collect(keys(defs)))
+        for var in vars
+            write(io, String(var), " ", relation, " ")
+            write(io, String(take!(defs[var])), "\n")
+        end
+    end
+    write_rules(model, latent_dep_defs, "=~")
+    write_rules(model, latent_regr_defs, "~")
+    write_rules(model, observed_regr_defs, "~")
+    write_rules(model, variance_defs, "~~")
+    return String(take!(model))
+end

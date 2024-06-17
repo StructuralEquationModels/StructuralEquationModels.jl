@@ -1,3 +1,12 @@
+params(spec::SemSpecification) = spec.params
+
+# observed + latent
+vars(spec::SemSpecification) = error("vars(spec::$(typeof(spec))) is not implemented")
+observed_vars(spec::SemSpecification) =
+    error("observed_vars(spec::$(typeof(spec))) is not implemented")
+latent_vars(spec::SemSpecification) =
+    error("latent_vars(spec::$(typeof(spec))) is not implemented")
+
 """
 `ParameterTable`s contain the specification of a structural equation model.
 
@@ -54,7 +63,7 @@ function EnsembleParameterTable end
 
     (1) RAMMatrices(partable::ParameterTable)
 
-    (2) RAMMatrices(;A, S, F, M = nothing, params, colnames)
+    (2) RAMMatrices(;A, S, F, M = nothing, params, vars)
 
     (3) RAMMatrices(partable::EnsembleParameterTable)
 
@@ -69,7 +78,7 @@ Return `RAMMatrices` constructed from (1) a parameter table or (2) individual ma
 - `F`: filter matrix
 - `M`: vector of mean effects
 - `params::Vector{Symbol}`: parameter labels
-- `colnames::Vector{Symbol}`: variable names corresponding to the A, S and F matrix columns
+- `vars::Vector{Symbol}`: variable names corresponding to the A, S and F matrix columns
 
 # Examples
 See the online documentation on [Model specification](@ref) and the [RAMMatrices interface](@ref).

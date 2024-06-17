@@ -10,8 +10,32 @@ abstract type AbstractSemSingle{O, I, L, D} <: AbstractSem end
 "Supertype for all collections of multiple SEMs"
 abstract type AbstractSemCollection <: AbstractSem end
 
+"Meanstructure trait for `SemImply` subtypes"
+abstract type MeanStructure end
+"Indicates that `SemImply` subtype supports meanstructure"
+struct HasMeanStructure <: MeanStructure end
+"Indicates that `SemImply` subtype does not support meanstructure"
+struct NoMeanStructure <: MeanStructure end
+
+# fallback implementation
+MeanStructure(::Type{T}) where {T} =
+    error("Objects of type $T do not support MeanStructure trait")
+MeanStructure(semobj) = MeanStructure(typeof(semobj))
+
+"Hessian Evaluation trait for `SemImply` and `SemLossFunction` subtypes"
+abstract type HessianEvaluation end
+struct ApproximateHessian <: HessianEvaluation end
+struct ExactHessian <: HessianEvaluation end
+
+# fallback implementation
+HessianEvaluation(::Type{T}) where {T} =
+    error("Objects of type $T do not support HessianEvaluation trait")
+HessianEvaluation(semobj) = HessianEvaluation(typeof(semobj))
+
 "Supertype for all loss functions of SEMs. If you want to implement a custom loss function, it should be a subtype of `SemLossFunction`."
-abstract type SemLossFunction end
+abstract type SemLossFunction{HE <: HessianEvaluation} end
+
+HessianEvaluation(::Type{<:SemLossFunction{HE}}) where {HE <: HessianEvaluation} = HE
 
 """
     params(semobj)
@@ -19,29 +43,6 @@ abstract type SemLossFunction end
 Return the vector of SEM model parameters.
 """
 params(model::AbstractSem) = model.params
-
-"""
-    nparams(semobj)
-
-Return the number of SEM model parameters.
-"""
-nparams(model::AbstractSem) = length(params(model))
-
-params(model::AbstractSemSingle) = params(model.imply)
-nparams(model::AbstractSemSingle) = nparams(model.imply)
-
-"""
-    param_indices(semobj)
-
-Returns a dict of parameter names and their indices in `semobj`.
-
-# Examples
-```julia
-parind = param_indices(my_fitted_sem)
-parind[:param_name]
-```
-"""
-param_indices(semobj) = Dict(par => i for (i, par) in enumerate(params(semobj)))
 
 """
     SemLoss(args...; loss_weights = nothing, ...)
@@ -88,7 +89,18 @@ Supertype of all objects that can serve as the `optimizer` field of a SEM.
 Connects the SEM to its optimization backend and controls options like the optimization algorithm.
 If you want to connect the SEM package to a new optimization backend, you should implement a subtype of SemOptimizer.
 """
-abstract type SemOptimizer end
+abstract type SemOptimizer{E} end
+
+engine(::Type{SemOptimizer{E}}) where {E} = E
+engine(optimizer::SemOptimizer) = engine(typeof(optimizer))
+
+SemOptimizer(args...; engine::Symbol = :Optim, kwargs...) =
+    SemOptimizer{engine}(args...; kwargs...)
+
+# fallback optimizer constructor
+function SemOptimizer{E}(args...; kwargs...) where {E}
+    throw(ErrorException("$E optimizer is not supported."))
+end
 
 """
 Supertype of all objects that can serve as the observed field of a SEM.
@@ -97,19 +109,33 @@ If you have a special kind of data, e.g. ordinal data, you should implement a su
 """
 abstract type SemObserved end
 
+get_data(observed::SemObserved) = observed.data
+
 """
 Supertype of all objects that can serve as the imply field of a SEM.
 Computed model-implied values that should be compared with the observed data to find parameter estimates,
 e. g. the model implied covariance or mean.
 If you would like to implement a different notation, e.g. LISREL, you should implement a subtype of SemImply.
 """
-abstract type SemImply end
+abstract type SemImply{MS <: MeanStructure, HE <: HessianEvaluation} end
 
-params(imply::SemImply) = params(imply.ram_matrices)
-nparams(imply::SemImply) = nparams(imply.ram_matrices)
+MeanStructure(::Type{<:SemImply{MS}}) where {MS <: MeanStructure} = MS
+HessianEvaluation(::Type{<:SemImply{MS, HE}}) where {MS, HE <: MeanStructure} = HE
 
 "Subtype of SemImply for all objects that can serve as the imply field of a SEM and use some form of symbolic precomputation."
-abstract type SemImplySymbolic <: SemImply end
+abstract type SemImplySymbolic{MS, HE} <: SemImply{MS, HE} end
+
+"""
+State of `SemImply` that corresponds to the specific SEM parameter values.
+
+Contains the necessary vectors and matrices for calculating the SEM
+objective, gradient and hessian (whichever is requested).
+"""
+abstract type SemImplyState end
+
+imply(state::SemImplyState) = state.imply
+MeanStructure(state::SemImplyState) = MeanStructure(imply(state))
+ApproximateHessian(state::SemImplyState) = ApproximateHessian(imply(state))
 
 """
     Sem(;observed = SemObservedData, imply = RAM, loss = SemML, optimizer = SemOptimizerOptim, kwargs...)
@@ -202,8 +228,8 @@ function SemEnsemble(models...; optimizer = SemOptimizerOptim, weights = nothing
     # default weights
 
     if isnothing(weights)
-        nobs_total = sum(n_obs, models)
-        weights = [n_obs(model) / nobs_total for model in models]
+        nsamples_total = sum(nsamples, models)
+        weights = [nsamples(model) / nsamples_total for model in models]
     end
 
     # check parameters equality
@@ -225,7 +251,6 @@ function SemEnsemble(models...; optimizer = SemOptimizerOptim, weights = nothing
 end
 
 params(ensemble::SemEnsemble) = ensemble.params
-nparams(ensemble::SemEnsemble) = length(ensemble.params)
 
 """
     n_models(ensemble::SemEnsemble) -> Integer
@@ -269,6 +294,8 @@ Returns the imply part of a model.
 """
 imply(model::AbstractSemSingle) = model.imply
 
+params(model::AbstractSemSingle) = params(imply(model))
+
 """
     loss(model::AbstractSemSingle) -> SemLoss
 
@@ -287,8 +314,5 @@ optimizer(model::AbstractSemSingle) = model.optimizer
 Base type for all SEM specifications.
 """
 abstract type SemSpecification end
-
-params(spec::SemSpecification) = spec.params
-nparams(spec::SemSpecification) = length(params(spec))
 
 abstract type AbstractParameterTable <: SemSpecification end

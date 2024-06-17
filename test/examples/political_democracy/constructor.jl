@@ -1,10 +1,14 @@
 using Statistics: cov, mean
+using NLopt
 
 ############################################################################################
 ### models w.o. meanstructure
 ############################################################################################
 
+semoptimizer = SemOptimizer(engine = opt_engine)
+
 model_ml = Sem(specification = spec, data = dat, optimizer = semoptimizer)
+@test SEM.params(model_ml.imply.ram_matrices) == SEM.params(spec)
 
 model_ml_cov = Sem(
     specification = spec,
@@ -12,7 +16,7 @@ model_ml_cov = Sem(
     obs_cov = cov(Matrix(dat)),
     obs_colnames = Symbol.(names(dat)),
     optimizer = semoptimizer,
-    n_obs = 75,
+    nsamples = 75,
 )
 
 model_ls_sym = Sem(
@@ -46,7 +50,7 @@ model_constant = Sem(
 model_ml_weighted = Sem(
     specification = partable,
     data = dat,
-    loss_weights = (n_obs(model_ml),),
+    loss_weights = (nsamples(model_ml),),
     optimizer = semoptimizer,
 )
 
@@ -116,7 +120,7 @@ end
     solution_ml_weighted = sem_fit(model_ml_weighted)
     @test isapprox(solution(solution_ml), solution(solution_ml_weighted), rtol = 1e-3)
     @test isapprox(
-        n_obs(model_ml) * StructuralEquationModels.minimum(solution_ml),
+        nsamples(model_ml) * StructuralEquationModels.minimum(solution_ml),
         StructuralEquationModels.minimum(solution_ml_weighted),
         rtol = 1e-6,
     )
@@ -165,7 +169,7 @@ end
 ### test hessians
 ############################################################################################
 
-if semoptimizer == SemOptimizerOptim
+if opt_engine == :Optim
     using Optim, LineSearches
 
     model_ls = Sem(
@@ -244,7 +248,7 @@ model_ml_cov = Sem(
     obs_colnames = Symbol.(names(dat)),
     meanstructure = true,
     optimizer = semoptimizer,
-    n_obs = 75,
+    nsamples = 75,
 )
 
 model_ml_sym = Sem(

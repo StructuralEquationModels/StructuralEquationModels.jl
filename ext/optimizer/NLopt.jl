@@ -2,24 +2,14 @@
 ### connect to NLopt.jl as backend
 ############################################################################################
 
-# wrapper to define the objective
-function sem_wrap_nlopt(par, G, model::AbstractSem)
-    need_gradient = length(G) != 0
-    if need_gradient
-        return objective_gradient!(G, model, par)
-    else
-        return objective!(model, par)
-    end
-end
-
 mutable struct NLoptResult
     result::Any
     problem::Any
 end
 
-optimizer(res::NLoptResult) = res.problem.algorithm
-n_iterations(res::NLoptResult) = res.problem.numevals
-convergence(res::NLoptResult) = res.result[3]
+SEM.optimizer(res::NLoptResult) = res.problem.algorithm
+SEM.n_iterations(res::NLoptResult) = res.problem.numevals
+SEM.convergence(res::NLoptResult) = res.result[3]
 
 # construct SemFit from fitted NLopt object
 function SemFit_NLopt(optimization_result, model::AbstractSem, start_val, opt)
@@ -33,74 +23,42 @@ function SemFit_NLopt(optimization_result, model::AbstractSem, start_val, opt)
 end
 
 # sem_fit method
-function sem_fit(
-    model::Sem{O, I, L, D};
-    start_val = start_val,
+function SEM.sem_fit(
+    optimizer::SemOptimizerNLopt,
+    model::AbstractSem,
+    start_params::AbstractVector;
     kwargs...,
-) where {O, I, L, D <: SemOptimizerNLopt}
-
-    # starting values
-    if !isa(start_val, Vector)
-        start_val = start_val(model; kwargs...)
-    end
+)
 
     # construct the NLopt problem
     opt = construct_NLopt_problem(
         model.optimizer.algorithm,
         model.optimizer.options,
-        length(start_val),
+        length(start_params),
     )
     set_NLopt_constraints!(opt, model.optimizer)
-    opt.min_objective = (par, G) -> sem_wrap_nlopt(par, G, model)
+    opt.min_objective =
+        (par, G) -> SEM.evaluate!(
+            eltype(par),
+            !isnothing(G) && !isempty(G) ? G : nothing,
+            nothing,
+            model,
+            par,
+        )
 
     if !isnothing(model.optimizer.local_algorithm)
         opt_local = construct_NLopt_problem(
             model.optimizer.local_algorithm,
             model.optimizer.local_options,
-            length(start_val),
+            length(start_params),
         )
         opt.local_optimizer = opt_local
     end
 
     # fit
-    result = NLopt.optimize(opt, start_val)
+    result = NLopt.optimize(opt, start_params)
 
-    return SemFit_NLopt(result, model, start_val, opt)
-end
-
-function sem_fit(
-    model::SemEnsemble{N, T, V, D, S};
-    start_val = start_val,
-    kwargs...,
-) where {N, T, V, D <: SemOptimizerNLopt, S}
-
-    # starting values
-    if !isa(start_val, Vector)
-        start_val = start_val(model; kwargs...)
-    end
-
-    # construct the NLopt problem
-    opt = construct_NLopt_problem(
-        model.optimizer.algorithm,
-        model.optimizer.options,
-        length(start_val),
-    )
-    set_NLopt_constraints!(opt, model.optimizer)
-    opt.min_objective = (par, G) -> sem_wrap_nlopt(par, G, model)
-
-    if !isnothing(model.optimizer.local_algorithm)
-        opt_local = construct_NLopt_problem(
-            model.optimizer.local_algorithm,
-            model.optimizer.local_options,
-            length(start_val),
-        )
-        opt.local_optimizer = opt_local
-    end
-
-    # fit
-    result = NLopt.optimize(opt, start_val)
-
-    return SemFit_NLopt(result, model, start_val, opt)
+    return SemFit_NLopt(result, model, start_params, opt)
 end
 
 ############################################################################################
@@ -110,19 +68,19 @@ end
 function construct_NLopt_problem(algorithm, options, npar)
     opt = Opt(algorithm, npar)
 
-    for key in keys(options)
-        setproperty!(opt, key, options[key])
+    for (key, val) in pairs(options)
+        setproperty!(opt, key, val)
     end
 
     return opt
 end
 
-function set_NLopt_constraints!(opt, optimizer::SemOptimizerNLopt)
+function set_NLopt_constraints!(opt::Opt, optimizer::SemOptimizerNLopt)
     for con in optimizer.inequality_constraints
-        inequality_constraint!(opt::Opt, con.f, con.tol)
+        inequality_constraint!(opt, con.f, con.tol)
     end
     for con in optimizer.equality_constraints
-        equality_constraint!(opt::Opt, con.f, con.tol)
+        equality_constraint!(opt, con.f, con.tol)
     end
 end
 
