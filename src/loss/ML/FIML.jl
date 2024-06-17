@@ -50,7 +50,7 @@ function SemFIML(; observed, specification, kwargs...)
     inverses = broadcast(x -> zeros(x, x), pattern_nobs_vars(observed))
     choleskys = Array{Cholesky{Float64, Array{Float64, 2}}, 1}(undef, length(inverses))
 
-    n_patterns = size(rows(observed), 1)
+    n_patterns = size(pattern_rows(observed), 1)
     logdets = zeros(n_patterns)
 
     imp_mean = zeros.(pattern_nobs_vars(observed))
@@ -89,7 +89,7 @@ function objective!(semfiml::SemFIML, params, model)
 
     prepare_SemFIML!(semfiml, model)
 
-    objective = F_FIML(rows(observed(model)), semfiml, model, params)
+    objective = F_FIML(pattern_rows(observed(model)), semfiml, model, params)
     return objective / nsamples(observed(model))
 end
 
@@ -100,7 +100,7 @@ function gradient!(semfiml::SemFIML, params, model)
 
     prepare_SemFIML!(semfiml, model)
 
-    gradient = ∇F_FIML(rows(observed(model)), semfiml, model) / nsamples(observed(model))
+    gradient = ∇F_FIML(pattern_rows(observed(model)), semfiml, model) / nsamples(observed(model))
     return gradient
 end
 
@@ -112,8 +112,8 @@ function objective_gradient!(semfiml::SemFIML, params, model)
     prepare_SemFIML!(semfiml, model)
 
     objective =
-        F_FIML(rows(observed(model)), semfiml, model, params) / nsamples(observed(model))
-    gradient = ∇F_FIML(rows(observed(model)), semfiml, model) / nsamples(observed(model))
+        F_FIML(pattern_rows(observed(model)), semfiml, model, params) / nsamples(observed(model))
+    gradient = ∇F_FIML(pattern_rows(observed(model)), semfiml, model) / nsamples(observed(model))
 
     return objective, gradient
 end

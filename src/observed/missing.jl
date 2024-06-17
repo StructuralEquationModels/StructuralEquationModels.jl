@@ -35,7 +35,7 @@ For observed data with missing values.
 
 - `patterns(::SemObservedMissing)` -> indices of non-missing variables per missing patterns
 - `patterns_not(::SemObservedMissing)` -> indices of missing variables per missing pattern
-- `rows(::SemObservedMissing)` -> row indices of observed data points that belong to each pattern
+- `pattern_rows(::SemObservedMissing)` -> row indices of observed data points that belong to each pattern
 - `pattern_nsamples(::SemObservedMissing)` -> number of data points per pattern
 - `pattern_nobs_vars(::SemObservedMissing)` -> number of non-missing observed variables per pattern
 - `obs_mean(::SemObservedMissing)` -> observed mean per pattern
@@ -72,7 +72,7 @@ mutable struct SemObservedMissing{
     nsamples::O
     patterns::P # missing patterns
     patterns_not::P2
-    rows::R # coresponding rows in data_rowwise
+    pattern_rows::R # coresponding rows in data_rowwise
     data_rowwise::PD # list of data
     pattern_nsamples::PO # observed rows per pattern
     pattern_nobs_vars::PVO # number of non-missing variables per pattern
@@ -213,7 +213,7 @@ nobserved_vars(observed::SemObservedMissing) = observed.nobs_vars
 
 patterns(observed::SemObservedMissing) = observed.patterns
 patterns_not(observed::SemObservedMissing) = observed.patterns_not
-rows(observed::SemObservedMissing) = observed.rows
+pattern_rows(observed::SemObservedMissing) = observed.pattern_rows
 data_rowwise(observed::SemObservedMissing) = observed.data_rowwise
 pattern_nsamples(observed::SemObservedMissing) = observed.pattern_nsamples
 pattern_nobs_vars(observed::SemObservedMissing) = observed.pattern_nobs_vars

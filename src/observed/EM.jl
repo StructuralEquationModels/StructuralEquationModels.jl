@@ -38,7 +38,7 @@ function em_mvn(
 
     ### precompute for full cases
     if length(observed.patterns[1]) == nvars
-        for row in observed.rows[1]
+        for row in pattern_rows(observed)[1]
             row = observed.data_rowwise[row]
             𝔼x_pre += row
             𝔼xxᵀ_pre += row * row'
@@ -107,7 +107,7 @@ function em_mvn_Estep!(𝔼x, 𝔼xxᵀ, em_model, observed, 𝔼x_pre, 𝔼xx�
         V = Σ[u, u] - Σ[u, o] * (Σ[o, o] \ Σ[o, u])
 
         # loop trough data
-        for row in observed.rows[i]
+        for row in pattern_rows(observed)[i]
             m = μ[u] + Σ[u, o] * (Σ[o, o] \ (observed.data_rowwise[row] - μ[o]))
 
             𝔼xᵢ[u] = m
