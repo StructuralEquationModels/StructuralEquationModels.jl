@@ -42,7 +42,7 @@ use this if you are sure your covariance matrix is in the right format.
 struct SemObservedCovariance{B, C} <: SemObserved
     obs_cov::B
     obs_mean::C
-    n_man::Int
+    nobs_vars::Int
     nsamples::Int
 end
 
@@ -88,7 +88,7 @@ end
 ############################################################################################
 
 nsamples(observed::SemObservedCovariance) = observed.nsamples
-n_man(observed::SemObservedCovariance) = observed.n_man
+nobserved_vars(observed::SemObservedCovariance) = observed.nobs_vars
 
 ############################################################################################
 ### additional methods

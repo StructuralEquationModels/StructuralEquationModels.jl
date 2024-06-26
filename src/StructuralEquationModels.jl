@@ -84,7 +84,6 @@ include("frontend/fit/fitmeasures/df.jl")
 include("frontend/fit/fitmeasures/minus2ll.jl")
 include("frontend/fit/fitmeasures/p.jl")
 include("frontend/fit/fitmeasures/RMSEA.jl")
-include("frontend/fit/fitmeasures/n_man.jl")
 include("frontend/fit/fitmeasures/fit_measures.jl")
 # standard errors
 include("frontend/fit/standard_errors/hessian.jl")
@@ -167,7 +166,6 @@ export AbstractSem,
     nsamples,
     p_value,
     RMSEA,
-    n_man,
     EmMVNModel,
     se_hessian,
     se_bootstrap,

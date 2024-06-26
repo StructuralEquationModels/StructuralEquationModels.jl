@@ -111,7 +111,7 @@ function RAM(;
     n_obs = nobserved_vars(ram_matrices)
     n_var = nvars(ram_matrices)
     F = zeros(ram_matrices.size_F)
-    F[CartesianIndex.(1:n_var, ram_matrices.F_ind)] .= 1.0
+    F[CartesianIndex.(1:n_obs, ram_matrices.F_ind)] .= 1.0
 
     # get indices
     A_indices = copy(ram_matrices.A_ind)
@@ -146,7 +146,7 @@ function RAM(;
         has_meanstructure = Val(true)
         !isnothing(M_indices) || throw(ArgumentError("You set `meanstructure = true`, but your model specification contains no mean parameters."))
         ∇M = gradient ? matrix_gradient(M_indices, n_var) : nothing
-        μ = zeros(n_var)
+        μ = zeros(n_obs)
     else
         has_meanstructure = Val(false)
         M_indices = nothing
@@ -257,7 +257,7 @@ objective_gradient_hessian!(imply::RAM, par, model::AbstractSemSingle, has_means
 ############################################################################################
 
 function update_observed(imply::RAM, observed::SemObserved; kwargs...)
-    if n_man(observed) == size(imply.Σ, 1)
+    if nobserved_vars(observed) == size(imply.Σ, 1)
         return imply
     else
         return RAM(; observed = observed, kwargs...)

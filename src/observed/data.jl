@@ -19,7 +19,7 @@ For observed data without missings.
 # Extended help
 ## Interfaces
 - `nsamples(::SemObservedData)` -> number of observed data points
-- `n_man(::SemObservedData)` -> number of manifest variables
+- `nobserved_vars(::SemObservedData)` -> number of observed (manifested) variables
 
 - `samples(::SemObservedData)` -> observed data
 - `obs_cov(::SemObservedData)` -> observed.obs_cov
@@ -41,7 +41,7 @@ struct SemObservedData{A, B, C} <: SemObserved
     data::A
     obs_cov::B
     obs_mean::C
-    n_man::Int
+    nobs_vars::Int
     nsamples::Int
 end
 
@@ -113,7 +113,7 @@ end
 ############################################################################################
 
 nsamples(observed::SemObservedData) = observed.nsamples
-n_man(observed::SemObservedData) = observed.n_man
+nobserved_vars(observed::SemObservedData) = observed.nobs_vars
 
 ############################################################################################
 ### additional methods

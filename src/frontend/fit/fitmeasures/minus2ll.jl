@@ -25,7 +25,7 @@ minus2ll(sem_fit::SemFit, obs, imp, optimizer, args...) =
 
 # SemML ------------------------------------------------------------------------------------
 minus2ll(minimum::Number, obs, imp::Union{RAM, RAMSymbolic}, optimizer, loss_ml::SemML) =
-    nsamples(obs) * (minimum + log(2π) * n_man(obs))
+    nsamples(obs) * (minimum + log(2π) * nobserved_vars(obs))
 
 # WLS --------------------------------------------------------------------------------------
 minus2ll(minimum::Number, obs, imp::Union{RAM, RAMSymbolic}, optimizer, loss_ml::SemWLS) =
@@ -42,7 +42,7 @@ function minus2ll(
 )
     F = minimum
     F *= nsamples(observed)
-    F += sum(log(2π) * observed.pattern_nsamples .* observed.pattern_nvar_obs)
+    F += sum(log(2π) * observed.pattern_nsamples .* observed.pattern_nobs_vars)
     return F
 end
 
@@ -59,7 +59,7 @@ function minus2ll(observed::SemObservedMissing)
             observed.obs_mean,
             observed.obs_cov,
             observed.pattern_nsamples,
-            observed.pattern_nvar_obs,
+            observed.pattern_nobs_vars,
         )
     else
         em_mvn(observed)
@@ -72,7 +72,7 @@ function minus2ll(observed::SemObservedMissing)
             observed.obs_mean,
             observed.obs_cov,
             observed.pattern_nsamples,
-            observed.pattern_nvar_obs,
+            observed.pattern_nobs_vars,
         )
     end
 end
@@ -86,7 +86,7 @@ function minus2ll(
     obs_mean,
     obs_cov,
     pattern_nsamples,
-    pattern_nvar_obs,
+    pattern_nobs_vars,
 )
     F = 0.0
 
@@ -106,7 +106,7 @@ function minus2ll(
         F += F_one_pattern(meandiffᵢ, Σᵢ⁻¹, Sᵢ, ld, nᵢ)
     end
 
-    F += sum(log(2π) * pattern_nsamples .* pattern_nvar_obs)
+    F += sum(log(2π) * pattern_nsamples .* pattern_nobs_vars)
     #F *= N
 
     return F

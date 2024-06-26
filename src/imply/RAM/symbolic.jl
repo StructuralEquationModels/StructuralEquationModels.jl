@@ -236,7 +236,7 @@ objective_gradient_hessian!(imply::RAMSymbolic, par, model) = gradient!(imply, p
 ############################################################################################
 
 function update_observed(imply::RAMSymbolic, observed::SemObserved; kwargs...)
-    if n_man(observed) == size(imply.Σ, 1)
+    if nobserved_vars(observed) == size(imply.Σ, 1)
         return imply
     else
         return RAMSymbolic(; observed = observed, kwargs...)

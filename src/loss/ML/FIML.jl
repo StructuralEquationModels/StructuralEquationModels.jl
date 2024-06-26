@@ -47,20 +47,20 @@ end
 ############################################################################################
 
 function SemFIML(; observed, specification, kwargs...)
-    inverses = broadcast(x -> zeros(x, x), Int64.(pattern_nvar_obs(observed)))
+    inverses = broadcast(x -> zeros(x, x), pattern_nobs_vars(observed))
     choleskys = Array{Cholesky{Float64, Array{Float64, 2}}, 1}(undef, length(inverses))
 
     n_patterns = size(rows(observed), 1)
     logdets = zeros(n_patterns)
 
-    imp_mean = zeros.(Int64.(pattern_nvar_obs(observed)))
-    meandiff = zeros.(Int64.(pattern_nvar_obs(observed)))
+    imp_mean = zeros.(pattern_nobs_vars(observed))
+    meandiff = zeros.(pattern_nobs_vars(observed))
 
-    nman = Int64(n_man(observed))
-    imp_inv = zeros(nman, nman)
+    nobs_vars = nobserved_vars(observed)
+    imp_inv = zeros(nobs_vars, nobs_vars)
     mult = similar.(inverses)
 
-    ∇ind = vec(CartesianIndices(Array{Float64}(undef, nman, nman)))
+    ∇ind = vec(CartesianIndices(Array{Float64}(undef, nobs_vars, nobs_vars)))
     ∇ind =
         [findall(x -> !(x[1] ∈ ind || x[2] ∈ ind), ∇ind) for ind in patterns_not(observed)]
 
@@ -189,8 +189,8 @@ function F_FIML(rows, semfiml, model, params)
 end
 
 function ∇F_FIML(rows, semfiml, model)
-    Jμ = zeros(Int64(n_man(model)))
-    JΣ = zeros(Int64(n_man(model)^2))
+    Jμ = zeros(nobserved_vars(model))
+    JΣ = zeros(nobserved_vars(model)^2)
 
     for i in 1:size(rows, 1)
         ∇F_one_pattern(

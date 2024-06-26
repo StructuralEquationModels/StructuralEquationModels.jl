@@ -29,15 +29,15 @@ function em_mvn(
     rtol_em = 1e-4,
     kwargs...,
 )
-    n_man = observed.n_man
+    nvars = nobserved_vars(observed)
     nsamps = nsamples(observed)
 
     # preallocate stuff?
-    𝔼x_pre = zeros(n_man)
-    𝔼xxᵀ_pre = zeros(n_man, n_man)
+    𝔼x_pre = zeros(nvars)
+    𝔼xxᵀ_pre = zeros(nvars, nvars)
 
     ### precompute for full cases
-    if length(observed.patterns[1]) == observed.n_man
+    if length(observed.patterns[1]) == nvars
         for row in observed.rows[1]
             row = observed.data_rowwise[row]
             𝔼x_pre += row
@@ -50,11 +50,11 @@ function em_mvn(
 
     # initialize
     em_model = start_em(observed; kwargs...)
-    em_model_prev = EmMVNModel(zeros(n_man, n_man), zeros(n_man), false)
+    em_model_prev = EmMVNModel(zeros(nvars, nvars), zeros(nvars), false)
     iter = 1
     done = false
-    𝔼x = zeros(n_man)
-    𝔼xxᵀ = zeros(n_man, n_man)
+    𝔼x = zeros(nvars)
+    𝔼xxᵀ = zeros(nvars, nvars)
 
     while !done
         em_mvn_Estep!(𝔼x, 𝔼xxᵀ, em_model, observed, 𝔼x_pre, 𝔼xxᵀ_pre)
@@ -153,7 +153,7 @@ end
 
 # use μ and Σ of full cases
 function start_em_observed(observed::SemObservedMissing; kwargs...)
-    if (length(observed.patterns[1]) == observed.n_man) & (observed.pattern_nsamples[1] > 1)
+    if (length(observed.patterns[1]) == nobserved_vars(observed)) & (observed.pattern_nsamples[1] > 1)
         μ = copy(observed.obs_mean[1])
         Σ = copy(Symmetric(observed.obs_cov[1]))
         if !isposdef(Σ)
@@ -167,11 +167,11 @@ end
 
 # use μ = O and Σ = I
 function start_em_simple(observed::SemObservedMissing; kwargs...)
-    n_man = Int(observed.n_man)
-    μ = zeros(n_man)
-    Σ = rand(n_man, n_man)
+    nvars = nobserved_vars(observed)
+    μ = zeros(nvars)
+    Σ = rand(nvars, nvars)
     Σ = Σ * Σ'
-    # Σ = Matrix(1.0I, n_man, n_man)
+    # Σ = Matrix(1.0I, nvars, nvars)
     return EmMVNModel(Σ, μ, false)
 end
 
