@@ -90,6 +90,9 @@ end
 nsamples(observed::SemObservedCovariance) = observed.nsamples
 nobserved_vars(observed::SemObservedCovariance) = observed.nobs_vars
 
+samples(observed::SemObservedCovariance) =
+    error("$(typeof(observed)) does not store data samples")
+
 ############################################################################################
 ### additional methods
 ############################################################################################
