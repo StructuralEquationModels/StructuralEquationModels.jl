@@ -62,17 +62,17 @@ function start_simple(
     start_means = 0.0,
     kwargs...,
 )
-    A_ind, S_ind, F_ind, M_ind, params = ram_matrices.A_ind,
+    A_ind, S_ind, F_ind, M_ind, n_par = ram_matrices.A_ind,
     ram_matrices.S_ind,
     ram_matrices.F_ind,
     ram_matrices.M_ind,
-    ram_matrices.params
+    nparams(ram_matrices)
 
-    n_par = length(params)
     start_val = zeros(n_par)
-    n_var, n_nod = ram_matrices.size_F
+    n_obs = nobserved_vars(ram_matrices)
+    n_var = nvars(ram_matrices)
 
-    C_indices = CartesianIndices((n_nod, n_nod))
+    C_indices = CartesianIndices((n_var, n_var))
 
     for i in 1:n_par
         if length(S_ind[i]) != 0

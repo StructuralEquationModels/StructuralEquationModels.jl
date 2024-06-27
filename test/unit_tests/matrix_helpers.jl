@@ -1,6 +1,10 @@
 using StructuralEquationModels, Test, Random, SparseArrays, LinearAlgebra
 using StructuralEquationModels:
-    CommutationMatrix, transpose_linear_indices, duplication_matrix, elimination_matrix
+    CommutationMatrix,
+    check_acyclic,
+    transpose_linear_indices,
+    duplication_matrix,
+    elimination_matrix
 
 Random.seed!(73721)
 
@@ -46,4 +50,16 @@ end
     # elimination
     E = elimination_matrix(m)
     @test E * vec(A) == A[tril(trues(size(A)))]
+end
+
+@testset "check_acyclic()" begin
+    @test check_acyclic([1 0; 0 1]) isa LowerTriangular{Int, Matrix{Int}}
+    @test check_acyclic([1 0; 1 1]) isa LowerTriangular{Int, Matrix{Int}}
+    @test check_acyclic([1.0 1.0; 0.0 1.0]) isa UpperTriangular{Float64, Matrix{Float64}}
+
+    A = [0 1; 1 0]
+    @test check_acyclic(A) === A # returns the input if cyclic
+
+    # acyclic, but not u/l triangular
+    @test_logs (:warn, r"^Your model is acyclic") check_acyclic([0 0 0; 1 0 1; 0 0 0])
 end

@@ -27,6 +27,11 @@ struct Label{N} <: EdgeModifier
 end
 label(args...) = Label(args)
 
+# test whether the modifier is NaN
+isnanmodval(val::Number) = isnan(val)
+isnanmodval(val::Symbol) = val == :NaN
+isnanmodval(val::SimpleNode{Symbol}) = val.node == :NaN
+
 ############################################################################################
 ### constructor for parameter table from graph
 ############################################################################################
@@ -36,7 +41,7 @@ function ParameterTable(
     observed_vars::AbstractVector{Symbol},
     latent_vars::AbstractVector{Symbol},
     params::Union{AbstractVector{Symbol}, Nothing} = nothing,
-    group::Integer = 1,
+    group::Union{Integer, Nothing} = nothing,
     param_prefix = :θ,
 )
     graph = unique(graph)
@@ -69,9 +74,19 @@ function ParameterTable(
         end
         if element isa ModifiedEdge
             for modifier in values(element.modifiers)
-                modval = modifier.value[group]
+                if isnothing(group) &&
+                   modifier.value isa Union{AbstractVector, Tuple} &&
+                   length(modifier.value) > 1
+                    throw(
+                        ArgumentError(
+                            "The graph contains a group of parameters, ParameterTable expects a single value.\n" *
+                            "For SEM ensembles, use EnsembleParameterTable instead.",
+                        ),
+                    )
+                end
+                modval = modifier.value[something(group, 1)]
                 if modifier isa Fixed
-                    if modval == :NaN
+                    if isnanmodval(modval)
                         free[i] = true
                         value_fixed[i] = 0.0
                     else
@@ -79,9 +94,11 @@ function ParameterTable(
                         value_fixed[i] = modval
                     end
                 elseif modifier isa Start
-                    start[i] = modval
+                    if !isnanmodval(modval)
+                        start[i] = modval
+                    end
                 elseif modifier isa Label
-                    if modval == :NaN
+                    if isnanmodval(modval)
                         throw(DomainError(NaN, "NaN is not allowed as a parameter label."))
                     end
                     param_refs[i] = modval

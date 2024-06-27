@@ -46,13 +46,13 @@ end
 H_scaling(model::AbstractSemSingle) =
     H_scaling(model, model.observed, model.imply, model.optimizer, model.loss.functions...)
 
-H_scaling(model, obs, imp, optimizer, lossfun::SemML) = 2 / (n_obs(model) - 1)
+H_scaling(model, obs, imp, optimizer, lossfun::SemML) = 2 / (nsamples(model) - 1)
 
 function H_scaling(model, obs, imp, optimizer, lossfun::SemWLS)
     @warn "Standard errors for WLS are only correct if a GLS weight matrix (the default) is used."
-    return 2 / (n_obs(model) - 1)
+    return 2 / (nsamples(model) - 1)
 end
 
-H_scaling(model, obs, imp, optimizer, lossfun::SemFIML) = 2 / n_obs(model)
+H_scaling(model, obs, imp, optimizer, lossfun::SemFIML) = 2 / nsamples(model)
 
-H_scaling(model::SemEnsemble) = 2 / n_obs(model)
+H_scaling(model::SemEnsemble) = 2 / nsamples(model)

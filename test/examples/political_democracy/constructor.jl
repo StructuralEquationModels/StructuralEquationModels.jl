@@ -12,7 +12,7 @@ model_ml_cov = Sem(
     obs_cov = cov(Matrix(dat)),
     obs_colnames = Symbol.(names(dat)),
     optimizer = semoptimizer,
-    n_obs = 75,
+    nsamples = 75,
 )
 
 model_ls_sym = Sem(
@@ -46,7 +46,7 @@ model_constant = Sem(
 model_ml_weighted = Sem(
     specification = partable,
     data = dat,
-    loss_weights = (n_obs(model_ml),),
+    loss_weights = (nsamples(model_ml),),
     optimizer = semoptimizer,
 )
 
@@ -116,7 +116,7 @@ end
     solution_ml_weighted = sem_fit(model_ml_weighted)
     @test isapprox(solution(solution_ml), solution(solution_ml_weighted), rtol = 1e-3)
     @test isapprox(
-        n_obs(model_ml) * StructuralEquationModels.minimum(solution_ml),
+        nsamples(model_ml) * StructuralEquationModels.minimum(solution_ml),
         StructuralEquationModels.minimum(solution_ml_weighted),
         rtol = 1e-6,
     )
@@ -244,7 +244,7 @@ model_ml_cov = Sem(
     obs_colnames = Symbol.(names(dat)),
     meanstructure = true,
     optimizer = semoptimizer,
-    n_obs = 75,
+    nsamples = 75,
 )
 
 model_ml_sym = Sem(
