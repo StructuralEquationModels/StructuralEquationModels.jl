@@ -15,3 +15,7 @@ end
 @safetestset "SemSpecification" begin
     include("specification.jl")
 end
+
+@safetestset "Sem model" begin
+    include("model.jl")
+end
