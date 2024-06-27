@@ -27,6 +27,11 @@ struct Label{N} <: EdgeModifier
 end
 label(args...) = Label(args)
 
+# test whether the modifier is NaN
+isnanmodval(val::Number) = isnan(val)
+isnanmodval(val::Symbol) = val == :NaN
+isnanmodval(val::SimpleNode{Symbol}) = val.node == :NaN
+
 ############################################################################################
 ### constructor for parameter table from graph
 ############################################################################################
@@ -81,7 +86,7 @@ function ParameterTable(
                 end
                 modval = modifier.value[something(group, 1)]
                 if modifier isa Fixed
-                    if modval == :NaN
+                    if isnanmodval(modval)
                         free[i] = true
                         value_fixed[i] = 0.0
                     else
@@ -89,9 +94,11 @@ function ParameterTable(
                         value_fixed[i] = modval
                     end
                 elseif modifier isa Start
-                    start[i] = modval
+                    if !isnanmodval(modval)
+                        start[i] = modval
+                    end
                 elseif modifier isa Label
-                    if modval == :NaN
+                    if isnanmodval(modval)
                         throw(DomainError(NaN, "NaN is not allowed as a parameter label."))
                     end
                     param_refs[i] = modval
