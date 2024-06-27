@@ -36,7 +36,7 @@ function ParameterTable(
     observed_vars::AbstractVector{Symbol},
     latent_vars::AbstractVector{Symbol},
     params::Union{AbstractVector{Symbol}, Nothing} = nothing,
-    group::Integer = 1,
+    group::Union{Integer, Nothing} = nothing,
     param_prefix = :θ,
 )
     graph = unique(graph)
@@ -69,7 +69,17 @@ function ParameterTable(
         end
         if element isa ModifiedEdge
             for modifier in values(element.modifiers)
-                modval = modifier.value[group]
+                if isnothing(group) &&
+                   modifier.value isa Union{AbstractVector, Tuple} &&
+                   length(modifier.value) > 1
+                    throw(
+                        ArgumentError(
+                            "The graph contains a group of parameters, ParameterTable expects a single value.\n" *
+                            "For SEM ensembles, use EnsembleParameterTable instead.",
+                        ),
+                    )
+                end
+                modval = modifier.value[something(group, 1)]
                 if modifier isa Fixed
                     if modval == :NaN
                         free[i] = true
