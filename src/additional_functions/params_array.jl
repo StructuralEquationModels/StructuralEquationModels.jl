@@ -22,7 +22,7 @@ function ParamsArray{T, N}(
 ) where {T, N}
     params_ptr =
         pushfirst!(accumulate((ptr, inds) -> ptr + length(inds), params_map, init = 1), 1)
-    param_lin_inds = reduce(vcat, params_map, init = Vector{Int}())
+    param_lin_inds = collect(Iterators.flatten(params_map))
     nz_lin_inds = unique!(sort!([param_lin_inds; first.(constants)]))
     if length(nz_lin_inds) < length(param_lin_inds) + length(constants)
         throw(ArgumentError("Duplicate linear indices in the parameterized array"))
