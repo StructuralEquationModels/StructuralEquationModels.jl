@@ -62,7 +62,7 @@ function em_mvn(
 
         if iter > max_iter_em
             done = true
-            @warn "EM Algorithm for MVN missing data did not converge. Likelihood for FIML is not interpretable. 
+            @warn "EM Algorithm for MVN missing data did not converge. Likelihood for FIML is not interpretable.
             Maybe try passing different starting values via 'start_em = ...' "
         elseif iter > 1
             # done = isapprox(ll, ll_prev; rtol = rtol)
@@ -153,7 +153,8 @@ end
 
 # use μ and Σ of full cases
 function start_em_observed(observed::SemObservedMissing; kwargs...)
-    if (length(observed.patterns[1]) == nobserved_vars(observed)) & (observed.pattern_nsamples[1] > 1)
+    if (length(observed.patterns[1]) == nobserved_vars(observed)) &
+       (observed.pattern_nsamples[1] > 1)
         μ = copy(observed.obs_mean[1])
         Σ = copy(Symmetric(observed.obs_cov[1]))
         if !isposdef(Σ)

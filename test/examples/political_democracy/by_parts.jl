@@ -40,8 +40,12 @@ model_ridge = Sem(observed, imply_ram, SemLoss(ml, ridge), optimizer_obj)
 
 model_constant = Sem(observed, imply_ram, SemLoss(ml, constant), optimizer_obj)
 
-model_ml_weighted =
-    Sem(observed, imply_ram, SemLoss(ml; loss_weights = [nsamples(model_ml)]), optimizer_obj)
+model_ml_weighted = Sem(
+    observed,
+    imply_ram,
+    SemLoss(ml; loss_weights = [nsamples(model_ml)]),
+    optimizer_obj,
+)
 
 ############################################################################################
 ### test gradients

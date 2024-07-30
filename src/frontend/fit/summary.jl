@@ -160,8 +160,7 @@ function sem_summary(
 
     var_array = reduce(
         hcat,
-        check_round(partable.columns[c][var_indices]; digits = digits) for
-        c in var_columns
+        check_round(partable.columns[c][var_indices]; digits) for c in var_columns
     )
     var_columns[2] = Symbol("")
 

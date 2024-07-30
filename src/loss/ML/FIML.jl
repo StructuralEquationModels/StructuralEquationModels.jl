@@ -100,7 +100,8 @@ function gradient!(semfiml::SemFIML, params, model)
 
     prepare_SemFIML!(semfiml, model)
 
-    gradient = ∇F_FIML(pattern_rows(observed(model)), semfiml, model) / nsamples(observed(model))
+    gradient =
+        ∇F_FIML(pattern_rows(observed(model)), semfiml, model) / nsamples(observed(model))
     return gradient
 end
 
@@ -112,8 +113,10 @@ function objective_gradient!(semfiml::SemFIML, params, model)
     prepare_SemFIML!(semfiml, model)
 
     objective =
-        F_FIML(pattern_rows(observed(model)), semfiml, model, params) / nsamples(observed(model))
-    gradient = ∇F_FIML(pattern_rows(observed(model)), semfiml, model) / nsamples(observed(model))
+        F_FIML(pattern_rows(observed(model)), semfiml, model, params) /
+        nsamples(observed(model))
+    gradient =
+        ∇F_FIML(pattern_rows(observed(model)), semfiml, model) / nsamples(observed(model))
 
     return objective, gradient
 end

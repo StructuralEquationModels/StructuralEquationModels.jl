@@ -235,8 +235,11 @@ sort_vars(partable::ParameterTable) = sort_vars!(deepcopy(partable))
 # add a row --------------------------------------------------------------------------------
 
 function Base.push!(partable::ParameterTable, d::Union{AbstractDict{Symbol}, NamedTuple})
-    issetequal(keys(partable.columns), keys(d)) ||
-        throw(ArgumentError("The new row needs to have the same keys as the columns of the parameter table."))
+    issetequal(keys(partable.columns), keys(d)) || throw(
+        ArgumentError(
+            "The new row needs to have the same keys as the columns of the parameter table.",
+        ),
+    )
     for (key, val) in pairs(d)
         push!(partable.columns[key], val)
     end
