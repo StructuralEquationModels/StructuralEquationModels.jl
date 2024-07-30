@@ -1,6 +1,4 @@
 using StructuralEquationModels, Test, Statistics
-using StructuralEquationModels:
-    samples, nsamples, observed_vars, nobserved_vars, obs_cov, obs_mean
 
 ### model specification --------------------------------------------------------------------
 
