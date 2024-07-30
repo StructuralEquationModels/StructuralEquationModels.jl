@@ -11,3 +11,7 @@ end
 @safetestset "SemObserved" begin
     include("data_input_formats.jl")
 end
+
+@safetestset "SemSpecification" begin
+    include("specification.jl")
+end
