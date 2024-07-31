@@ -30,6 +30,7 @@ include("additional_functions/commutation_matrix.jl")
 # fitted objects
 include("frontend/fit/SemFit.jl")
 # specification of models
+include("frontend/common.jl")
 include("frontend/specification/checks.jl")
 include("frontend/specification/ParameterTable.jl")
 include("frontend/specification/RAMMatrices.jl")
@@ -39,7 +40,7 @@ include("frontend/fit/summary.jl")
 # pretty printing
 include("frontend/pretty_printing.jl")
 # observed
-include("observed/get_colnames.jl")
+include("observed/abstract.jl")
 include("observed/covariance.jl")
 include("observed/data.jl")
 include("observed/missing.jl")
@@ -48,6 +49,7 @@ include("observed/EM.jl")
 include("frontend/specification/Sem.jl")
 include("frontend/specification/documentation.jl")
 # imply
+include("imply/abstract.jl")
 include("imply/RAM/symbolic.jl")
 include("imply/RAM/generic.jl")
 include("imply/empty.jl")
@@ -80,10 +82,8 @@ include("frontend/fit/fitmeasures/BIC.jl")
 include("frontend/fit/fitmeasures/chi2.jl")
 include("frontend/fit/fitmeasures/df.jl")
 include("frontend/fit/fitmeasures/minus2ll.jl")
-include("frontend/fit/fitmeasures/n_obs.jl")
 include("frontend/fit/fitmeasures/p.jl")
 include("frontend/fit/fitmeasures/RMSEA.jl")
-include("frontend/fit/fitmeasures/n_man.jl")
 include("frontend/fit/fitmeasures/fit_measures.jl")
 # standard errors
 include("frontend/fit/standard_errors/hessian.jl")
@@ -126,6 +126,10 @@ export AbstractSem,
     SemObservedCovariance,
     SemObservedMissing,
     observed,
+    obs_cov,
+    obs_mean,
+    nsamples,
+    samples,
     sem_fit,
     SemFit,
     minimum,
@@ -138,6 +142,8 @@ export AbstractSem,
     objective_hessian!,
     gradient_hessian!,
     objective_gradient_hessian!,
+    SemSpecification,
+    RAMMatrices,
     ParameterTable,
     EnsembleParameterTable,
     update_partable!,
@@ -150,9 +156,14 @@ export AbstractSem,
     start,
     Label,
     label,
+    nvars,
+    vars,
+    nlatent_vars,
+    latent_vars,
+    nobserved_vars,
+    observed_vars,
     sort_vars!,
     sort_vars,
-    RAMMatrices,
     params,
     nparams,
     param_indices,
@@ -163,10 +174,8 @@ export AbstractSem,
     df,
     fit_measures,
     minus2ll,
-    n_obs,
     p_value,
     RMSEA,
-    n_man,
     EmMVNModel,
     se_hessian,
     se_bootstrap,

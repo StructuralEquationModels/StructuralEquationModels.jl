@@ -60,6 +60,15 @@ function ParameterTable(
     )
 end
 
+vars(partable::ParameterTable) =
+    !isempty(partable.sorted_vars) ? partable.sorted_vars :
+    vcat(partable.latent_vars, partable.observed_vars)
+observed_vars(partable::ParameterTable) = partable.observed_vars
+latent_vars(partable::ParameterTable) = partable.latent_vars
+
+nvars(partable::ParameterTable) =
+    length(partable.latent_vars) + length(partable.observed_vars)
+
 ############################################################################################
 ### Convert to other types
 ############################################################################################
@@ -206,8 +215,7 @@ function sort_vars!(partable::ParameterTable)
     end
 
     copyto!(resize!(partable.sorted_vars, length(sorted_vars)), sorted_vars)
-    @assert length(partable.sorted_vars) ==
-            length(partable.observed_vars) + length(partable.latent_vars)
+    @assert length(partable.sorted_vars) == nvars(partable)
 
     return partable
 end
@@ -227,8 +235,11 @@ sort_vars(partable::ParameterTable) = sort_vars!(deepcopy(partable))
 # add a row --------------------------------------------------------------------------------
 
 function Base.push!(partable::ParameterTable, d::Union{AbstractDict{Symbol}, NamedTuple})
-    issetequal(keys(partable.columns), keys(d)) ||
-        throw(ArgumentError("The new row needs to have the same keys as the columns of the parameter table."))
+    issetequal(keys(partable.columns), keys(d)) || throw(
+        ArgumentError(
+            "The new row needs to have the same keys as the columns of the parameter table.",
+        ),
+    )
     for (key, val) in pairs(d)
         push!(partable.columns[key], val)
     end

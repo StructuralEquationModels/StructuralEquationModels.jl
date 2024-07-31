@@ -48,6 +48,7 @@ end
 
 params(fit::SemFit) = params(fit.model)
 nparams(fit::SemFit) = nparams(fit.model)
+nsamples(fit::SemFit) = nsamples(fit.model)
 
 # access fields
 minimum(sem_fit::SemFit) = sem_fit.minimum

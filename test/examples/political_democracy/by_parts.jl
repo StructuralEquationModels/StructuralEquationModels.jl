@@ -40,8 +40,12 @@ model_ridge = Sem(observed, imply_ram, SemLoss(ml, ridge), optimizer_obj)
 
 model_constant = Sem(observed, imply_ram, SemLoss(ml, constant), optimizer_obj)
 
-model_ml_weighted =
-    Sem(observed, imply_ram, SemLoss(ml; loss_weights = [n_obs(model_ml)]), optimizer_obj)
+model_ml_weighted = Sem(
+    observed,
+    imply_ram,
+    SemLoss(ml; loss_weights = [nsamples(model_ml)]),
+    optimizer_obj,
+)
 
 ############################################################################################
 ### test gradients
@@ -101,7 +105,7 @@ end
     solution_ml = sem_fit(model_ml)
     solution_ml_weighted = sem_fit(model_ml_weighted)
     @test solution(solution_ml) ≈ solution(solution_ml_weighted) rtol = 1e-3
-    @test n_obs(model_ml) * StructuralEquationModels.minimum(solution_ml) ≈
+    @test nsamples(model_ml) * StructuralEquationModels.minimum(solution_ml) ≈
           StructuralEquationModels.minimum(solution_ml_weighted) rtol = 1e-6
 end
 
