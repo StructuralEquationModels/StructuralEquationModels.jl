@@ -27,12 +27,22 @@ ens_graph = @StenoGraph begin
     textual ↔ speed
 end
 
+fixed_and_labeled_graph = @StenoGraph begin
+    # measurement model
+    visual → fixed(1.0)*label(:λ)*x1
+end
+
 @testset "ParameterTable" begin
     @testset "from StenoGraph" begin
         @test_throws UndefKeywordError(:observed_vars) ParameterTable(graph)
         @test_throws UndefKeywordError(:latent_vars) ParameterTable(
             graph,
             observed_vars = obs_vars,
+        )
+        @test_throws ArgumentError("It is not allowed to label fixed parameters.") ParameterTable(
+            fixed_and_labeled_graph,
+            observed_vars = obs_vars,
+            latent_vars = lat_vars
         )
         partable = @inferred(
             ParameterTable(graph, observed_vars = obs_vars, latent_vars = lat_vars)
