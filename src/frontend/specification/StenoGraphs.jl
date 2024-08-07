@@ -68,6 +68,13 @@ function ParameterTable(
             )
         end
         if element isa ModifiedEdge
+            if any(Base.Fix2(isa, Fixed), values(element.modifiers)) & any(Base.Fix2(isa, Label), values(element.modifiers))
+                throw(
+                    ArgumentError(
+                        "It is not allowed to label fixed parameters."
+                    )
+                )
+            end
             for modifier in values(element.modifiers)
                 modval = modifier.value[group]
                 if modifier isa Fixed
