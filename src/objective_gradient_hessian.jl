@@ -2,56 +2,51 @@
 # methods for AbstractSem
 ############################################################################################
 
-function objective!(model::AbstractSemSingle, parameters)
-    objective!(imply(model), parameters, model)
-    return objective!(loss(model), parameters, model)
+function objective!(model::AbstractSemSingle, params)
+    objective!(imply(model), params, model)
+    return objective!(loss(model), params, model)
 end
 
-function gradient!(gradient, model::AbstractSemSingle, parameters)
+function gradient!(gradient, model::AbstractSemSingle, params)
     fill!(gradient, zero(eltype(gradient)))
-    gradient!(imply(model), parameters, model)
-    gradient!(gradient, loss(model), parameters, model)
+    gradient!(imply(model), params, model)
+    gradient!(gradient, loss(model), params, model)
 end
 
-function hessian!(hessian, model::AbstractSemSingle, parameters)
+function hessian!(hessian, model::AbstractSemSingle, params)
     fill!(hessian, zero(eltype(hessian)))
-    hessian!(imply(model), parameters, model)
-    hessian!(hessian, loss(model), parameters, model)
+    hessian!(imply(model), params, model)
+    hessian!(hessian, loss(model), params, model)
 end
 
-function objective_gradient!(gradient, model::AbstractSemSingle, parameters)
+function objective_gradient!(gradient, model::AbstractSemSingle, params)
     fill!(gradient, zero(eltype(gradient)))
-    objective_gradient!(imply(model), parameters, model)
-    objective_gradient!(gradient, loss(model), parameters, model)
+    objective_gradient!(imply(model), params, model)
+    objective_gradient!(gradient, loss(model), params, model)
 end
 
-function objective_hessian!(hessian, model::AbstractSemSingle, parameters)
+function objective_hessian!(hessian, model::AbstractSemSingle, params)
     fill!(hessian, zero(eltype(hessian)))
-    objective_hessian!(imply(model), parameters, model)
-    objective_hessian!(hessian, loss(model), parameters, model)
+    objective_hessian!(imply(model), params, model)
+    objective_hessian!(hessian, loss(model), params, model)
 end
 
-function gradient_hessian!(gradient, hessian, model::AbstractSemSingle, parameters)
-    fill!(gradient, zero(eltype(gradient)))
-    fill!(hessian, zero(eltype(hessian)))
-    gradient_hessian!(imply(model), parameters, model)
-    gradient_hessian!(gradient, hessian, loss(model), parameters, model)
-end
-
-function objective_gradient_hessian!(
-    gradient,
-    hessian,
-    model::AbstractSemSingle,
-    parameters,
-)
+function gradient_hessian!(gradient, hessian, model::AbstractSemSingle, params)
     fill!(gradient, zero(eltype(gradient)))
     fill!(hessian, zero(eltype(hessian)))
-    objective_gradient_hessian!(imply(model), parameters, model)
-    return objective_gradient_hessian!(gradient, hessian, loss(model), parameters, model)
+    gradient_hessian!(imply(model), params, model)
+    gradient_hessian!(gradient, hessian, loss(model), params, model)
+end
+
+function objective_gradient_hessian!(gradient, hessian, model::AbstractSemSingle, params)
+    fill!(gradient, zero(eltype(gradient)))
+    fill!(hessian, zero(eltype(hessian)))
+    objective_gradient_hessian!(imply(model), params, model)
+    return objective_gradient_hessian!(gradient, hessian, loss(model), params, model)
 end
 
 ############################################################################################
-# methods for SemFiniteDiff 
+# methods for SemFiniteDiff
 ############################################################################################
 
 gradient!(gradient, model::SemFiniteDiff, par) =
@@ -60,25 +55,25 @@ gradient!(gradient, model::SemFiniteDiff, par) =
 hessian!(hessian, model::SemFiniteDiff, par) =
     FiniteDiff.finite_difference_hessian!(hessian, x -> objective!(model, x), par)
 
-function objective_gradient!(gradient, model::SemFiniteDiff, parameters)
-    gradient!(gradient, model, parameters)
-    return objective!(model, parameters)
+function objective_gradient!(gradient, model::SemFiniteDiff, params)
+    gradient!(gradient, model, params)
+    return objective!(model, params)
 end
 
 # other methods
-function gradient_hessian!(gradient, hessian, model::SemFiniteDiff, parameters)
-    gradient!(gradient, model, parameters)
-    hessian!(hessian, model, parameters)
+function gradient_hessian!(gradient, hessian, model::SemFiniteDiff, params)
+    gradient!(gradient, model, params)
+    hessian!(hessian, model, params)
 end
 
-function objective_hessian!(hessian, model::SemFiniteDiff, parameters)
-    hessian!(hessian, model, parameters)
-    return objective!(model, parameters)
+function objective_hessian!(hessian, model::SemFiniteDiff, params)
+    hessian!(hessian, model, params)
+    return objective!(model, params)
 end
 
-function objective_gradient_hessian!(gradient, hessian, model::SemFiniteDiff, parameters)
-    hessian!(hessian, model, parameters)
-    return objective_gradient!(gradient, model, parameters)
+function objective_gradient_hessian!(gradient, hessian, model::SemFiniteDiff, params)
+    hessian!(hessian, model, params)
+    return objective_gradient!(gradient, model, params)
 end
 
 ############################################################################################
@@ -341,44 +336,44 @@ end
 # Documentation
 ############################################################################################
 """
-    objective!(model::AbstractSem, parameters)
+    objective!(model::AbstractSem, params)
 
-Returns the objective value at `parameters`.
+Returns the objective value at `params`.
 The model object can be modified.
 
 # Implementation
 To implement a new `SemImply` or `SemLossFunction` subtype, you need to add a method for
-    objective!(newtype::MyNewType, parameters, model::AbstractSemSingle)
+    objective!(newtype::MyNewType, params, model::AbstractSemSingle)
 
 To implement a new `AbstractSem` subtype, you need to add a method for
-    objective!(model::MyNewType, parameters)
+    objective!(model::MyNewType, params)
 """
 function objective! end
 
 """
-    gradient!(gradient, model::AbstractSem, parameters)
+    gradient!(gradient, model::AbstractSem, params)
 
-Writes the gradient value at `parameters` to `gradient`.
+Writes the gradient value at `params` to `gradient`.
 
 # Implementation
 To implement a new `SemImply` or `SemLossFunction` type, you can add a method for
-    gradient!(newtype::MyNewType, parameters, model::AbstractSemSingle)
+    gradient!(newtype::MyNewType, params, model::AbstractSemSingle)
 
 To implement a new `AbstractSem` subtype, you can add a method for
-    gradient!(gradient, model::MyNewType, parameters)
+    gradient!(gradient, model::MyNewType, params)
 """
 function gradient! end
 
 """
-    hessian!(hessian, model::AbstractSem, parameters)
+    hessian!(hessian, model::AbstractSem, params)
 
-Writes the hessian value at `parameters` to `hessian`.
+Writes the hessian value at `params` to `hessian`.
 
 # Implementation
 To implement a new `SemImply` or `SemLossFunction` type, you can add a method for
-    hessian!(newtype::MyNewType, parameters, model::AbstractSemSingle)
+    hessian!(newtype::MyNewType, params, model::AbstractSemSingle)
 
 To implement a new `AbstractSem` subtype, you can add a method for
-    hessian!(hessian, model::MyNewType, parameters)
+    hessian!(hessian, model::MyNewType, params)
 """
 function hessian! end

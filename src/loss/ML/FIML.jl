@@ -24,7 +24,7 @@ Analytic gradients are available.
 ## Implementation
 Subtype of `SemLossFunction`.
 """
-mutable struct SemFIML{INV, C, L, O, M, IM, I, T, U, W} <: SemLossFunction
+mutable struct SemFIML{INV, C, L, O, M, IM, I, T, W} <: SemLossFunction
     inverses::INV #preallocated inverses of imp_cov
     choleskys::C #preallocated choleskys
     logdets::L #logdets of implied covmats
@@ -37,7 +37,7 @@ mutable struct SemFIML{INV, C, L, O, M, IM, I, T, U, W} <: SemLossFunction
 
     mult::T
 
-    commutation_indices::U
+    commutator::CommutationMatrix
 
     interaction::W
 end
@@ -47,24 +47,22 @@ end
 ############################################################################################
 
 function SemFIML(; observed, specification, kwargs...)
-    inverses = broadcast(x -> zeros(x, x), Int64.(pattern_nvar_obs(observed)))
+    inverses = broadcast(x -> zeros(x, x), pattern_nobs_vars(observed))
     choleskys = Array{Cholesky{Float64, Array{Float64, 2}}, 1}(undef, length(inverses))
 
-    n_patterns = size(rows(observed), 1)
+    n_patterns = size(pattern_rows(observed), 1)
     logdets = zeros(n_patterns)
 
-    imp_mean = zeros.(Int64.(pattern_nvar_obs(observed)))
-    meandiff = zeros.(Int64.(pattern_nvar_obs(observed)))
+    imp_mean = zeros.(pattern_nobs_vars(observed))
+    meandiff = zeros.(pattern_nobs_vars(observed))
 
-    nman = Int64(n_man(observed))
-    imp_inv = zeros(nman, nman)
+    nobs_vars = nobserved_vars(observed)
+    imp_inv = zeros(nobs_vars, nobs_vars)
     mult = similar.(inverses)
 
-    ∇ind = vec(CartesianIndices(Array{Float64}(undef, nman, nman)))
+    ∇ind = vec(CartesianIndices(Array{Float64}(undef, nobs_vars, nobs_vars)))
     ∇ind =
         [findall(x -> !(x[1] ∈ ind || x[2] ∈ ind), ∇ind) for ind in patterns_not(observed)]
-
-    commutation_indices = get_commutation_lookup(get_n_nodes(specification)^2)
 
     return SemFIML(
         inverses,
@@ -75,7 +73,7 @@ function SemFIML(; observed, specification, kwargs...)
         meandiff,
         imp_inv,
         mult,
-        commutation_indices,
+        CommutationMatrix(nvars(specification)),
         nothing,
     )
 end
@@ -84,38 +82,41 @@ end
 ### methods
 ############################################################################################
 
-function objective!(semfiml::SemFIML, parameters, model)
+function objective!(semfiml::SemFIML, params, model)
     if !check_fiml(semfiml, model)
-        return non_posdef_return(parameters)
+        return non_posdef_return(params)
     end
 
     prepare_SemFIML!(semfiml, model)
 
-    objective = F_FIML(rows(observed(model)), semfiml, model, parameters)
-    return objective / n_obs(observed(model))
+    objective = F_FIML(pattern_rows(observed(model)), semfiml, model, params)
+    return objective / nsamples(observed(model))
 end
 
-function gradient!(semfiml::SemFIML, parameters, model)
+function gradient!(semfiml::SemFIML, params, model)
     if !check_fiml(semfiml, model)
-        return ones(eltype(parameters), size(parameters))
+        return ones(eltype(params), size(params))
     end
 
     prepare_SemFIML!(semfiml, model)
 
-    gradient = ∇F_FIML(rows(observed(model)), semfiml, model) / n_obs(observed(model))
+    gradient =
+        ∇F_FIML(pattern_rows(observed(model)), semfiml, model) / nsamples(observed(model))
     return gradient
 end
 
-function objective_gradient!(semfiml::SemFIML, parameters, model)
+function objective_gradient!(semfiml::SemFIML, params, model)
     if !check_fiml(semfiml, model)
-        return non_posdef_return(parameters), ones(eltype(parameters), size(parameters))
+        return non_posdef_return(params), ones(eltype(params), size(params))
     end
 
     prepare_SemFIML!(semfiml, model)
 
     objective =
-        F_FIML(rows(observed(model)), semfiml, model, parameters) / n_obs(observed(model))
-    gradient = ∇F_FIML(rows(observed(model)), semfiml, model) / n_obs(observed(model))
+        F_FIML(pattern_rows(observed(model)), semfiml, model, params) /
+        nsamples(observed(model))
+    gradient =
+        ∇F_FIML(pattern_rows(observed(model)), semfiml, model) / nsamples(observed(model))
 
     return objective, gradient
 end
@@ -163,10 +164,9 @@ function ∇F_fiml_outer(JΣ, Jμ, imply, model, semfiml)
     Iₙ = sparse(1.0I, size(A(imply))...)
     P = kron(F⨉I_A⁻¹(imply), F⨉I_A⁻¹(imply))
     Q = kron(S(imply) * I_A⁻¹(imply)', Iₙ)
-    #commutation_matrix_pre_square_add!(Q, Q)
-    Q2 = commutation_matrix_pre_square(Q, semfiml.commutation_indices)
+    Q .+= semfiml.commutator * Q
 
-    ∇Σ = P * (∇S(imply) + (Q + Q2) * ∇A(imply))
+    ∇Σ = P * (∇S(imply) + Q * ∇A(imply))
 
     ∇μ =
         F⨉I_A⁻¹(imply) * ∇M(imply) +
@@ -177,23 +177,23 @@ function ∇F_fiml_outer(JΣ, Jμ, imply, model, semfiml)
     return G
 end
 
-function F_FIML(rows, semfiml, model, parameters)
-    F = zero(eltype(parameters))
+function F_FIML(rows, semfiml, model, params)
+    F = zero(eltype(params))
     for i in 1:size(rows, 1)
         F += F_one_pattern(
             semfiml.meandiff[i],
             semfiml.inverses[i],
             obs_cov(observed(model))[i],
             semfiml.logdets[i],
-            pattern_n_obs(observed(model))[i],
+            pattern_nsamples(observed(model))[i],
         )
     end
     return F
 end
 
 function ∇F_FIML(rows, semfiml, model)
-    Jμ = zeros(Int64(n_man(model)))
-    JΣ = zeros(Int64(n_man(model)^2))
+    Jμ = zeros(nobserved_vars(model))
+    JΣ = zeros(nobserved_vars(model)^2)
 
     for i in 1:size(rows, 1)
         ∇F_one_pattern(
@@ -202,7 +202,7 @@ function ∇F_FIML(rows, semfiml, model)
             obs_cov(observed(model))[i],
             patterns(observed(model))[i],
             semfiml.∇ind[i],
-            pattern_n_obs(observed(model))[i],
+            pattern_nsamples(observed(model))[i],
             Jμ,
             JΣ,
             model,
@@ -216,7 +216,7 @@ function prepare_SemFIML!(semfiml, model)
     batch_cholesky!(semfiml, model)
     #batch_sym_inv_update!(semfiml, model)
     batch_inv!(semfiml, model)
-    for i in 1:size(pattern_n_obs(observed(model)), 1)
+    for i in 1:size(pattern_nsamples(observed(model)), 1)
         semfiml.meandiff[i] .= obs_mean(observed(model))[i] - semfiml.imp_mean[i]
     end
 end
@@ -252,8 +252,3 @@ function check_fiml(semfiml, model)
     a = cholesky!(Symmetric(semfiml.imp_inv); check = false)
     return isposdef(a)
 end
-
-get_n_nodes(specification::RAMMatrices) = specification.size_F[2]
-get_n_nodes(specification::ParameterTable) =
-    length(specification.variables[:observed_vars]) +
-    length(specification.variables[:latent_vars])

@@ -61,8 +61,8 @@ You can then use the resulting graph to specify an `EnsembleParameterTable`
 ```@example mg; ansicolor = true
 groups = [:Pasteur, :Grant_White]
 
-partable = EnsembleParameterTable(;
-    graph = graph, 
+partable = EnsembleParameterTable(
+    graph, 
     observed_vars = observed_vars,
     latent_vars = latent_vars,
     groups = groups)
@@ -71,7 +71,7 @@ partable = EnsembleParameterTable(;
 The parameter table can be used to create a `Dict` of RAMMatrices with keys equal to the group names and parameter tables as values:
 
 ```@example mg; ansicolor = true
-specification = RAMMatrices(partable)
+specification = convert(Dict{Symbol, RAMMatrices}, partable)
 ```
 
 That is, you can asses the group-specific `RAMMatrices` as `specification[:group_name]`.

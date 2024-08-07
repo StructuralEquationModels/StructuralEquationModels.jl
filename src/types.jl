@@ -153,32 +153,31 @@ Returns a SemEnsemble with fields
 - `sems::Tuple`: `AbstractSem`s.
 - `weights::Vector`: Weights for each model.
 - `optimizer::SemOptimizer`: Connects the model to the optimizer. See also [`SemOptimizer`](@ref).
-- `identifier::Dict`: Stores parameter labels and their position.
+- `params::Vector`: Stores parameter labels and their position.
 """
 struct SemEnsemble{N, T <: Tuple, V <: AbstractVector, D, I} <: AbstractSemCollection
     n::N
     sems::T
     weights::V
     optimizer::D
-    identifier::I
+    params::I
 end
 
 function SemEnsemble(models...; optimizer = SemOptimizerOptim, weights = nothing, kwargs...)
     n = length(models)
-    npar = n_par(models[1])
 
     # default weights
 
     if isnothing(weights)
-        nobs_total = sum(n_obs, models)
-        weights = [n_obs(model) / nobs_total for model in models]
+        nsamples_total = sum(nsamples, models)
+        weights = [nsamples(model) / nsamples_total for model in models]
     end
 
-    # check identifier equality
-    id = identifier(models[1])
+    # check parameters equality
+    params = SEM.params(models[1])
     for model in models
-        if id != identifier(model)
-            throw(ErrorException("The identifier of your models do not match. \n
+        if params != SEM.params(model)
+            throw(ErrorException("The parameters of your models do not match. \n
             Maybe you tried to specify models of an ensemble via ParameterTables. \n
             In that case, you may use RAMMatrices instead."))
         end
@@ -189,8 +188,10 @@ function SemEnsemble(models...; optimizer = SemOptimizerOptim, weights = nothing
         optimizer = optimizer(; kwargs...)
     end
 
-    return SemEnsemble(n, models, weights, optimizer, id)
+    return SemEnsemble(n, models, weights, optimizer, params)
 end
+
+params(ensemble::SemEnsemble) = ensemble.params
 
 """
     n_models(ensemble::SemEnsemble) -> Integer
@@ -217,33 +218,9 @@ Returns the optimizer part of an ensemble model.
 """
 optimizer(ensemble::SemEnsemble) = ensemble.optimizer
 
-############################################################################################
-# additional methods
-############################################################################################
 """
-    observed(model::AbstractSemSingle) -> SemObserved
+Base type for all SEM specifications.
+"""
+abstract type SemSpecification end
 
-Returns the observed part of a model.
-"""
-observed(model::AbstractSemSingle) = model.observed
-
-"""
-    imply(model::AbstractSemSingle) -> SemImply
-
-Returns the imply part of a model.
-"""
-imply(model::AbstractSemSingle) = model.imply
-
-"""
-    loss(model::AbstractSemSingle) -> SemLoss
-
-Returns the loss part of a model.
-"""
-loss(model::AbstractSemSingle) = model.loss
-
-"""
-    optimizer(model::AbstractSemSingle) -> SemOptimizer
-
-Returns the optimizer part of a model.
-"""
-optimizer(model::AbstractSemSingle) = model.optimizer
+abstract type AbstractParameterTable <: SemSpecification end

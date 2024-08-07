@@ -64,7 +64,7 @@ function SemWLS(;
 
     # compute V here
     if isnothing(wls_weight_matrix)
-        D = duplication_matrix(n_man(observed))
+        D = duplication_matrix(nobserved_vars(observed))
         S = inv(obs_cov(observed))
         S = kron(S, S)
         wls_weight_matrix = 0.5 * (D' * S * D)

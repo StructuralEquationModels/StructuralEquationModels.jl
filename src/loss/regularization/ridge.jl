@@ -8,18 +8,18 @@ Ridge regularization.
 
 # Constructor
 
-    SemRidge(;α_ridge, which_ridge, n_par, parameter_type = Float64, imply = nothing, kwargs...)
+    SemRidge(;α_ridge, which_ridge, nparams, parameter_type = Float64, imply = nothing, kwargs...)
 
 # Arguments
 - `α_ridge`: hyperparameter for penalty term
 - `which_ridge::Vector`: Vector of parameter labels (Symbols) or indices that indicate which parameters should be regularized.
-- `n_par::Int`: number of parameters of the model
+- `nparams::Int`: number of parameters of the model
 - `imply::SemImply`: imply part of the model
 - `parameter_type`: type of the parameters
 
 # Examples
 ```julia
-my_ridge = SemRidge(;α_ridge = 0.02, which_ridge = [:λ₁, :λ₂, :ω₂₃], n_par = 30, imply = my_imply)
+my_ridge = SemRidge(;α_ridge = 0.02, which_ridge = [:λ₁, :λ₂, :ω₂₃], nparams = 30, imply = my_imply)
 ```
 
 # Interfaces
@@ -45,7 +45,7 @@ end
 function SemRidge(;
     α_ridge,
     which_ridge,
-    n_par,
+    nparams,
     parameter_type = Float64,
     imply = nothing,
     kwargs...,
@@ -58,7 +58,8 @@ function SemRidge(;
                 ),
             )
         else
-            which_ridge = get_identifier_indices(which_ridge, imply)
+            par2ind = Dict(par => ind for (ind, par) in enumerate(params(imply)))
+            which_ridge = getindex.(Ref(par2ind), which_ridge)
         end
     end
     which = [CartesianIndex(x) for x in which_ridge]
@@ -67,8 +68,8 @@ function SemRidge(;
         α_ridge,
         which,
         which_H,
-        zeros(parameter_type, n_par),
-        zeros(parameter_type, n_par, n_par),
+        zeros(parameter_type, nparams),
+        zeros(parameter_type, nparams, nparams),
     )
 end
 

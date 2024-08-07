@@ -29,8 +29,8 @@ Subtype of `SemImply` that implements the RAM notation with symbolic precomputat
 Subtype of `SemImply`.
 
 ## Interfaces
-- `identifier(::RAMSymbolic) `-> Dict containing the parameter labels and their position
-- `n_par(::RAMSymbolic)` -> Number of parameters
+- `params(::RAMSymbolic) `-> vector of parameter ids
+- `nparams(::RAMSymbolic)` -> number of parameters
 
 - `Σ(::RAMSymbolic)` -> model implied covariance matrix
 - `μ(::RAMSymbolic)` -> model implied mean vector
@@ -62,7 +62,7 @@ and for models with a meanstructure, the model implied means are computed as
     \mu = F(I-A)^{-1}M
 ```
 """
-struct RAMSymbolic{F1, F2, F3, A1, A2, A3, S1, S2, S3, V, V2, F4, A4, F5, A5, D1, B} <:
+struct RAMSymbolic{F1, F2, F3, A1, A2, A3, S1, S2, S3, V2, F4, A4, F5, A5, B} <:
        SemImplySymbolic
     Σ_function::F1
     ∇Σ_function::F2
@@ -73,13 +73,11 @@ struct RAMSymbolic{F1, F2, F3, A1, A2, A3, S1, S2, S3, V, V2, F4, A4, F5, A5, D1
     Σ_symbolic::S1
     ∇Σ_symbolic::S2
     ∇²Σ_symbolic::S3
-    n_par::V
     ram_matrices::V2
     μ_function::F4
     μ::A4
     ∇μ_function::F5
     ∇μ::A5
-    identifier::D1
     has_meanstructure::B
 end
 
@@ -88,7 +86,7 @@ end
 ############################################################################################
 
 function RAMSymbolic(;
-    specification,
+    specification::SemSpecification,
     loss_types = nothing,
     vech = false,
     gradient = true,
@@ -97,19 +95,19 @@ function RAMSymbolic(;
     approximate_hessian = false,
     kwargs...,
 )
-    ram_matrices = RAMMatrices(specification)
-    identifier = StructuralEquationModels.identifier(ram_matrices)
+    ram_matrices = convert(RAMMatrices, specification)
 
-    n_par = length(ram_matrices.parameters)
-    n_var, n_nod = ram_matrices.size_F
+    n_par = nparams(ram_matrices)
+    n_obs = nobserved_vars(ram_matrices)
+    n_var = nvars(ram_matrices)
 
     par = (Symbolics.@variables θ[1:n_par])[1]
 
-    A = zeros(Num, n_nod, n_nod)
-    S = zeros(Num, n_nod, n_nod)
-    !isnothing(ram_matrices.M_ind) ? M = zeros(Num, n_nod) : M = nothing
+    A = zeros(Num, n_var, n_var)
+    S = zeros(Num, n_var, n_var)
+    !isnothing(ram_matrices.M_ind) ? M = zeros(Num, n_var) : M = nothing
     F = zeros(ram_matrices.size_F)
-    F[CartesianIndex.(1:n_var, ram_matrices.F_ind)] .= 1.0
+    F[CartesianIndex.(1:n_obs, ram_matrices.F_ind)] .= 1.0
 
     set_RAMConstants!(A, S, M, ram_matrices.constants)
     fill_A_S_M!(A, S, M, ram_matrices.A_ind, ram_matrices.S_ind, ram_matrices.M_ind, par)
@@ -144,7 +142,6 @@ function RAMSymbolic(;
 
     if hessian & !approximate_hessian
         n_sig = length(Σ_symbolic)
-        n_par = size(par, 1)
         ∇²Σ_symbolic_vec = [Symbolics.sparsehessian(σᵢ, [par...]) for σᵢ in vec(Σ_symbolic)]
 
         @variables J[1:n_sig]
@@ -195,13 +192,11 @@ function RAMSymbolic(;
         Σ_symbolic,
         ∇Σ_symbolic,
         ∇²Σ_symbolic,
-        n_par,
         ram_matrices,
         μ_function,
         μ,
         ∇μ_function,
         ∇μ,
-        identifier,
         has_meanstructure,
     )
 end
@@ -240,11 +235,8 @@ objective_gradient_hessian!(imply::RAMSymbolic, par, model) = gradient!(imply, p
 ### Recommended methods
 ############################################################################################
 
-identifier(imply::RAMSymbolic) = imply.identifier
-n_par(imply::RAMSymbolic) = imply.n_par
-
 function update_observed(imply::RAMSymbolic, observed::SemObserved; kwargs...)
-    if n_man(observed) == size(imply.Σ, 1)
+    if nobserved_vars(observed) == size(imply.Σ, 1)
         return imply
     else
         return RAMSymbolic(; observed = observed, kwargs...)
