@@ -9,7 +9,7 @@ struct RAMMatrices <: SemSpecification
     F::SparseMatrixCSC{Float64}
     M::Union{ParamsVector{Float64}, Nothing}
     params::Vector{Symbol}
-    colnames::Union{Vector{Symbol}, Nothing}    # better call it "variables": it's a mixture of observed and latent (and it gets confusing with get_colnames())
+    vars::Union{Vector{Symbol}, Nothing}    # better call it "variables": it's a mixture of observed and latent (and it gets confusing with get_vars())
 end
 
 nparams(ram::RAMMatrices) = nparams(ram.A)
@@ -17,7 +17,7 @@ nvars(ram::RAMMatrices) = size(ram.F, 2)
 nobserved_vars(ram::RAMMatrices) = size(ram.F, 1)
 nlatent_vars(ram::RAMMatrices) = nvars(ram) - nobserved_vars(ram)
 
-vars(ram::RAMMatrices) = ram.colnames
+vars(ram::RAMMatrices) = ram.vars
 
 isobserved_var(ram::RAMMatrices, i::Integer) = ram.F.colptr[i+1] > ram.F.colptr[i]
 islatent_var(ram::RAMMatrices, i::Integer) = ram.F.colptr[i+1] == ram.F.colptr[i]
@@ -34,13 +34,12 @@ function observed_var_indices(ram::RAMMatrices)
     return obs_inds
 end
 
-latent_var_indices(ram::RAMMatrices) =
-    [i for i in axes(ram.F, 2) if islatent_var(ram, i)]
+latent_var_indices(ram::RAMMatrices) = [i for i in axes(ram.F, 2) if islatent_var(ram, i)]
 
 # observed variables in the order as they appear in ram.F rows
 function observed_vars(ram::RAMMatrices)
-    if isnothing(ram.colnames)
-        @warn "Your RAMMatrices do not contain column names. Please make sure the order of variables in your data is correct!"
+    if isnothing(ram.vars)
+        @warn "Your RAMMatrices do not contain variable names. Please make sure the order of variables in your data is correct!"
         return nothing
     else
         obs_vars = Vector{Symbol}(undef, nobserved_vars(ram))
@@ -55,11 +54,11 @@ function observed_vars(ram::RAMMatrices)
 end
 
 function latent_vars(ram::RAMMatrices)
-    if isnothing(ram.colnames)
-        @warn "Your RAMMatrices do not contain column names. Please make sure the order of variables in your data is correct!"
+    if isnothing(ram.vars)
+        @warn "Your RAMMatrices do not contain variable names. Please make sure the order of variables in your data is correct!"
         return nothing
     else
-        return [col for (i, col) in enumerate(ram.colnames) if islatent_var(ram, i)]
+        return [col for (i, col) in enumerate(ram.vars) if islatent_var(ram, i)]
     end
 end
 
@@ -73,32 +72,32 @@ function RAMMatrices(;
     F::AbstractMatrix,
     M::Union{AbstractVector, Nothing} = nothing,
     params::AbstractVector{Symbol},
-    colnames::Union{AbstractVector{Symbol}, Nothing} = nothing,
+    vars::Union{AbstractVector{Symbol}, Nothing} = nothing,
 )
     ncols = size(A, 2)
-    isnothing(colnames) || check_vars(colnames, ncols)
+    isnothing(vars) || check_vars(vars, ncols)
 
     size(A, 1) == size(A, 2) || throw(DimensionMismatch("A must be a square matrix"))
     size(S, 1) == size(S, 2) || throw(DimensionMismatch("S must be a square matrix"))
     size(A, 2) == ncols || throw(
         DimensionMismatch(
-            "A should have as many rows and columns as colnames length ($ncols), $(size(A)) found",
+            "A should have as many rows and columns as vars length ($ncols), $(size(A)) found",
         ),
     )
     size(S, 2) == ncols || throw(
         DimensionMismatch(
-            "S should have as many rows and columns as colnames length ($ncols), $(size(S)) found",
+            "S should have as many rows and columns as vars length ($ncols), $(size(S)) found",
         ),
     )
     size(F, 2) == ncols || throw(
         DimensionMismatch(
-            "F should have as many columns as colnames length ($ncols), $(size(F, 2)) found",
+            "F should have as many columns as vars length ($ncols), $(size(F, 2)) found",
         ),
     )
     if !isnothing(M)
         length(M) == ncols || throw(
             DimensionMismatch(
-                "M should have as many elements as colnames length ($ncols), $(length(M)) found",
+                "M should have as many elements as vars length ($ncols), $(length(M)) found",
             ),
         )
     end
@@ -111,7 +110,7 @@ function RAMMatrices(;
     if any(!isone, spF.nzval)
         throw(ArgumentError("F should contain only 0s and 1s"))
     end
-    return RAMMatrices(A, S, F, M, params, colnames)
+    return RAMMatrices(A, S, F, M, params, vars)
 end
 
 ############################################################################################
@@ -244,14 +243,14 @@ function ParameterTable(
 )
     # defer parameter checks until we know which ones are used
 
-    if !isnothing(ram.colnames)
+    if !isnothing(ram.vars)
         latent_vars = SEM.latent_vars(ram)
         observed_vars = SEM.observed_vars(ram)
-        colnames = ram.colnames
+        vars = ram.vars
     else
         observed_vars = [Symbol("$(observed_var_prefix)_$i") for i in 1:nobserved_vars(ram)]
         latent_vars = [Symbol("$(latent_var_prefix)_$i") for i in 1:nlatent_vars(ram)]
-        colnames = vcat(observed_vars, latent_vars)
+        vars = vcat(observed_vars, latent_vars)
     end
 
     # construct an empty table
@@ -262,10 +261,10 @@ function ParameterTable(
     )
 
     # fill the table
-    append_rows!(partable, ram.S, :S, ram.params, colnames, skip_symmetric = true)
-    append_rows!(partable, ram.A, :A, ram.params, colnames)
+    append_rows!(partable, ram.S, :S, ram.params, vars, skip_symmetric = true)
+    append_rows!(partable, ram.A, :A, ram.params, vars)
     if !isnothing(ram.M)
-        append_rows!(partable, ram.M, :M, ram.params, colnames)
+        append_rows!(partable, ram.M, :M, ram.params, vars)
     end
 
     check_params(SEM.params(partable), partable.columns[:param])
@@ -395,7 +394,7 @@ function Base.:(==)(mat1::RAMMatrices, mat2::RAMMatrices)
         (mat1.F == mat2.F) &&
         (mat1.M == mat2.M) &&
         (mat1.params == mat2.params) &&
-        (mat1.colnames == mat2.colnames)
+        (mat1.vars == mat2.vars)
     )
     return res
 end

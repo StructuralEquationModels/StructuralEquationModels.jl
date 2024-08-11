@@ -129,7 +129,7 @@ function start_fabin3(ram_matrices::RAMMatrices, Σ, μ)
         # is there at least one reference indicator?
         if length(reference) > 0
             if (length(reference) > 1) && any(((obs, param),) -> param > 0, indicators) # don't warn if entire column is fixed
-                @warn "You have more than 1 scaling indicator for $(ram_matrices.colnames[i])"
+                @warn "You have more than 1 scaling indicator for $(ram_matrices.vars[i])"
             end
             ref = reference[1]
 

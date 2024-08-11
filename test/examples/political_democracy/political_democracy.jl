@@ -76,7 +76,7 @@ spec = RAMMatrices(;
     S = S,
     F = F,
     params = x,
-    colnames = [
+    vars = [
         :x1,
         :x2,
         :x3,
@@ -108,7 +108,7 @@ spec_mean = RAMMatrices(;
     F = F,
     M = M,
     params = x,
-    colnames = [
+    vars = [
         :x1,
         :x2,
         :x3,
