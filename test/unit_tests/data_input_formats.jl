@@ -340,13 +340,10 @@ end # SemObservedCovariance
             meanstructure,
         )
 
-        @test @inferred(length(StructuralEquationModels.patterns(observed))) == 55
-        @test sum(@inferred(StructuralEquationModels.pattern_nsamples(observed))) ==
+        @test @inferred(length(observed.patterns)) == 55
+        @test sum(@inferred(nsamples(pat)) for pat in observed.patterns) ==
               size(dat_missing, 1)
-        @test all(
-            <=(size(dat_missing, 2)),
-            @inferred(StructuralEquationModels.pattern_nsamples(observed))
-        )
+        @test all(nsamples(pat) <= size(dat_missing, 2) for pat in observed.patterns)
 
         observed_nospec = SemObservedMissing(
             specification = nothing,
