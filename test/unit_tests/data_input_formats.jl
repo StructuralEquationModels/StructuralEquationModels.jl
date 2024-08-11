@@ -240,7 +240,7 @@ end # SemObservedData
             approx_cov = true,
         )
 
-        @test_throws ErrorException samples(observed)
+        @test @inferred(samples(observed)) === nothing
 
         observed_nospec = SemObservedCovariance(
             specification = nothing,
@@ -260,7 +260,7 @@ end # SemObservedData
             approx_cov = true,
         )
 
-        @test_throws ErrorException samples(observed_nospec)
+        @test @inferred(samples(observed_nospec)) === nothing
 
         observed_shuffle = SemObservedCovariance(
             specification = spec,
@@ -281,7 +281,7 @@ end # SemObservedData
             approx_cov = true,
         )
 
-        @test_throws ErrorException samples(observed_shuffle)
+        @test @inferred(samples(observed_shuffle)) === nothing
 
         # respect specification order
         @test @inferred(obs_cov(observed_shuffle)) ≈ obs_cov(observed)
