@@ -79,6 +79,14 @@ Base.:(==)(a::ParamsArray, b::ParamsArray) = return eltype(a) == eltype(b) &&
        a.param_ptr == b.param_ptr &&
        a.linear_indices == b.linear_indices
 
+Base.hash(a::ParamsArray, h::UInt) = hash(
+    typeof(a),
+    hash(
+        eltype(a),
+        hash(size(a), hash(a.constants, hash(a.param_ptr, hash(a.linear_indices, h)))),
+    ),
+)
+
 # the range of arr.param_ptr indices that correspond to i-th parameter
 param_occurences_range(arr::ParamsArray, i::Integer) =
     arr.param_ptr[i]:(arr.param_ptr[i+1]-1)
