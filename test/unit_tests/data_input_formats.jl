@@ -187,7 +187,7 @@ end # SemObservedData
         )
     end
 
-    @test_throws ArgumentError("please specify `obs_colnames` as a vector of Symbols") begin
+    @test_throws "TypeError: in keyword argument obs_colnames, " begin
         SemObservedCovariance(
             specification = spec,
             obs_cov = dat_cov,
