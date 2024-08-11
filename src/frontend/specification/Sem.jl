@@ -20,15 +20,25 @@ function Sem(;
     return sem
 end
 
-nvars(sem::AbstractSemSingle) = nvars(sem.imply)
-nobserved_vars(sem::AbstractSemSingle) = nobserved_vars(sem.imply)
-nlatent_vars(sem::AbstractSemSingle) = nlatent_vars(sem.imply)
+imply(sem::AbstractSemSingle) = sem.imply
 
-vars(sem::AbstractSemSingle) = vars(sem.imply)
-observed_vars(sem::AbstractSemSingle) = observed_vars(sem.imply)
-latent_vars(sem::AbstractSemSingle) = latent_vars(sem.imply)
+nvars(sem::AbstractSemSingle) = nvars(imply(sem))
+nobserved_vars(sem::AbstractSemSingle) = nobserved_vars(imply(sem))
+nlatent_vars(sem::AbstractSemSingle) = nlatent_vars(imply(sem))
 
-nsamples(sem::AbstractSemSingle) = nsamples(sem.observed)
+vars(sem::AbstractSemSingle) = vars(imply(sem))
+observed_vars(sem::AbstractSemSingle) = observed_vars(imply(sem))
+latent_vars(sem::AbstractSemSingle) = latent_vars(imply(sem))
+
+params(sem::AbstractSemSingle) = params(imply(sem))
+nparams(sem::AbstractSemSingle) = nparams(imply(sem))
+
+observed(sem::AbstractSemSingle) = sem.observed
+nsamples(sem::AbstractSemSingle) = nsamples(observed(sem))
+
+loss(sem::AbstractSemSingle) = sem.loss
+
+optimizer(sem::AbstractSemSingle) = sem.optimizer
 
 # sum of samples in all sub-models
 nsamples(ensemble::SemEnsemble) = sum(nsamples, ensemble.sems)
