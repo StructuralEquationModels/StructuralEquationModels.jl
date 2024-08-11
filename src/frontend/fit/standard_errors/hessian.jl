@@ -17,7 +17,7 @@ function se_hessian(sem_fit::SemFit; hessian = :finitediff)
         hessian!(H, sem_fit.model, sem_fit.solution)
     elseif hessian == :finitediff
         H = FiniteDiff.finite_difference_hessian(
-            Base.Fix1(objective!, sem_fit.model),
+            p -> evaluate!(zero(eltype(sem_fit.solution)), nothing, nothing, fit.model, p),
             sem_fit.solution,
         )
     elseif hessian == :optimizer

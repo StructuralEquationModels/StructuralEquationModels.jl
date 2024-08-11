@@ -76,14 +76,15 @@ end
 ### methods
 ############################################################################################
 
-objective!(ridge::SemRidge, par, model) = @views ridge.α * sum(abs2, par[ridge.which])
+objective(ridge::SemRidge, model::AbstractSem, par) =
+    @views ridge.α * sum(abs2, par[ridge.which])
 
-function gradient!(ridge::SemRidge, par, model)
+function gradient(ridge::SemRidge, model::AbstractSem, par)
     @views ridge.gradient[ridge.which] .= (2 * ridge.α) * par[ridge.which]
     return ridge.gradient
 end
 
-function hessian!(ridge::SemRidge, par, model)
+function hessian(ridge::SemRidge, model::AbstractSem, par)
     @views @. ridge.hessian[ridge.which_H] .= 2 * ridge.α
     return ridge.hessian
 end

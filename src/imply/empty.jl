@@ -41,9 +41,7 @@ end
 ### methods
 ############################################################################################
 
-objective!(imply::ImplyEmpty, par, model) = nothing
-gradient!(imply::ImplyEmpty, par, model) = nothing
-hessian!(imply::ImplyEmpty, par, model) = nothing
+update!(targets::EvaluationTargets, imply::ImplyEmpty, par, model) = nothing
 
 ############################################################################################
 ### Recommended methods

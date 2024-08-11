@@ -70,7 +70,7 @@ end
 grad = similar(start_test)
 gradient!(grad, model_ml_multigroup, rand(36))
 grad_fd = FiniteDiff.finite_difference_gradient(
-    x -> objective!(model_ml_multigroup, x),
+    Base.Fix1(SEM.objective, model_ml_multigroup),
     start_test,
 )
 
@@ -122,7 +122,7 @@ struct UserSemML <: SemLossFunction{ExactHessian} end
 
 using LinearAlgebra: isposdef, logdet, tr, inv
 
-function SEM.objective!(semml::UserSemML, params, model::AbstractSem)
+function SEM.objective(ml::UserSemML, model::AbstractSem, params)
     Σ = imply(model).Σ
     Σₒ = SEM.obs_cov(observed(model))
     if !isposdef(Σ)
