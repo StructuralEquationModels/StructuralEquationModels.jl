@@ -19,7 +19,7 @@ struct NoMeanStructure <: MeanStructure end
 
 # fallback implementation
 MeanStructure(::Type{T}) where {T} =
-    error("Objects of type $T do not support MeanStructure trait")
+    error("Objects of type $T do not support the MeanStructure trait")
 MeanStructure(semobj) = MeanStructure(typeof(semobj))
 
 "Hessian Evaluation trait for `SemImply` and `SemLossFunction` subtypes"
