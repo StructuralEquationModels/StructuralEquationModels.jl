@@ -1,7 +1,10 @@
 """
-    minus2ll(sem_fit::SemFit)
+    minus2ll(fit::SemFit)
 
-Return the negative 2* log likelihood.
+Calculate the *-2⋅log(likelihood(fit))*.
+
+# See also
+[`fit_measures`](@ref)
 """
 function minus2ll end
 
