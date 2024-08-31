@@ -1,6 +1,6 @@
 """
-    BIC(sem_fit::SemFit)
+    BIC(fit::SemFit)
 
-Return the bayesian information criterion.
+Calculate the *BIC* ([*Bayesian information criterion*](https://en.wikipedia.org/wiki/Bayesian_information_criterion)).
 """
-BIC(sem_fit::SemFit) = minus2ll(sem_fit) + log(nsamples(sem_fit)) * nparams(sem_fit)
+BIC(fit::SemFit) = minus2ll(fit) + log(nsamples(fit)) * nparams(fit)

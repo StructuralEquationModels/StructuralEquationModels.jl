@@ -1,7 +1,11 @@
 """
     χ²(fit::SemFit)
 
-Return the χ² value.
+Calculate the *χ²* (*chi-square*) value for the `fit`.
+
+The *χ²* is a test statistic for the SEM goodness-of-fit.
+It compares the *implied* covariance matrix of the SEM model
+with the *observed* covariance matrix.
 """
 χ²(fit::SemFit) = χ²(fit, fit.model)
 
