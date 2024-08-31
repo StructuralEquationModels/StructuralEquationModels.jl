@@ -1,6 +1,9 @@
 """
-    AIC(sem_fit::SemFit)
+    AIC(fit::SemFit)
 
-Return the akaike information criterion.
+Calculate the *AIC* ([*Akaike information criterion*](https://en.wikipedia.org/wiki/Akaike_information_criterion)).
+
+# See also
+[`fit_measures`](@ref)
 """
-AIC(sem_fit::SemFit) = minus2ll(sem_fit) + 2nparams(sem_fit)
+AIC(fit::SemFit) = minus2ll(fit) + 2nparams(fit)
