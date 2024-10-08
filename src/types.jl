@@ -17,9 +17,11 @@ struct HasMeanStruct <: MeanStruct end
 "Indicates that `SemImply` subtype does not support mean structure"
 struct NoMeanStruct <: MeanStruct end
 
-# fallback implementation
+# default implementation
 MeanStruct(::Type{T}) where {T} =
+    hasfield(T, :meanstruct) ? fieldtype(T, :meanstruct) :
     error("Objects of type $T do not support MeanStruct trait")
+
 MeanStruct(semobj) = MeanStruct(typeof(semobj))
 
 "Hessian Evaluation trait for `SemImply` and `SemLossFunction` subtypes"
@@ -27,15 +29,15 @@ abstract type HessianEval end
 struct ApproxHessian <: HessianEval end
 struct ExactHessian <: HessianEval end
 
-# fallback implementation
+# default implementation
 HessianEval(::Type{T}) where {T} =
+    hasfield(T, :hessianeval) ? fieldtype(T, :hessianeval) :
     error("Objects of type $T do not support HessianEval trait")
+
 HessianEval(semobj) = HessianEval(typeof(semobj))
 
 "Supertype for all loss functions of SEMs. If you want to implement a custom loss function, it should be a subtype of `SemLossFunction`."
-abstract type SemLossFunction{HE <: HessianEval} end
-
-HessianEval(::Type{<:SemLossFunction{HE}}) where {HE <: HessianEval} = HE
+abstract type SemLossFunction end
 
 """
     SemLoss(args...; loss_weights = nothing, ...)
@@ -97,13 +99,10 @@ Computed model-implied values that should be compared with the observed data to 
 e. g. the model implied covariance or mean.
 If you would like to implement a different notation, e.g. LISREL, you should implement a subtype of SemImply.
 """
-abstract type SemImply{MS <: MeanStruct, HE <: HessianEval} end
-
-MeanStruct(::Type{<:SemImply{MS}}) where {MS <: MeanStruct} = MS
-HessianEval(::Type{<:SemImply{MS, HE}}) where {MS, HE <: MeanStruct} = HE
+abstract type SemImply end
 
 "Subtype of SemImply for all objects that can serve as the imply field of a SEM and use some form of symbolic precomputation."
-abstract type SemImplySymbolic{MS, HE} <: SemImply{MS, HE} end
+abstract type SemImplySymbolic <: SemImply end
 
 """
     Sem(;observed = SemObservedData, imply = RAM, loss = SemML, optimizer = SemOptimizerOptim, kwargs...)

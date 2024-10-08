@@ -25,7 +25,9 @@ model per group and an additional model with `ImplyEmpty` and `SemRidge` for the
 ## Implementation
 Subtype of `SemImply`.
 """
-struct ImplyEmpty{V2} <: SemImply{NoMeanStruct, ExactHessian}
+struct ImplyEmpty{V2} <: SemImply
+    hessianeval::ExactHessian
+    meanstruct::NoMeanStruct
     ram_matrices::V2
 end
 
@@ -34,7 +36,7 @@ end
 ############################################################################################
 
 function ImplyEmpty(; specification, kwargs...)
-    return ImplyEmpty(convert(RAMMatrices, specification))
+    return ImplyEmpty(hessianeval, meanstruct, convert(RAMMatrices, specification))
 end
 
 ############################################################################################

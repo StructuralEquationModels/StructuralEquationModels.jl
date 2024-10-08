@@ -114,7 +114,11 @@ end
 # ML estimation - user defined loss function
 ############################################################################################
 
-struct UserSemML <: SemLossFunction{ExactHessian} end
+struct UserSemML <: SemLossFunction
+    hessianeval::ExactHessian
+
+    UserSemML() = new(ExactHessian())
+end
 
 ############################################################################################
 ### functors

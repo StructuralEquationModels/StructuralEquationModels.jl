@@ -27,13 +27,14 @@ Analytic gradients are available, and for models without a meanstructure, also a
 ## Implementation
 Subtype of `SemLossFunction`.
 """
-struct SemML{HE <: HessianEval, INV, M, M2} <: SemLossFunction{HE}
+struct SemML{HE <: HessianEval, INV, M, M2} <: SemLossFunction
+    hessianeval::HE
     Σ⁻¹::INV
     Σ⁻¹Σₒ::M
     meandiff::M2
 
     SemML{HE}(args...) where {HE <: HessianEval} =
-        new{HE, map(typeof, args)...}(args...)
+        new{HE, map(typeof, args)...}(HE(), args...)
 end
 
 ############################################################################################

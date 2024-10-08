@@ -84,7 +84,10 @@ mutable struct RAM{
     S1,
     S2,
     S3,
-} <: SemImply{MS, ExactHessian}
+} <: SemImply
+    meanstruct::MS
+    hessianeval::ExactHessian
+
     Σ::A1
     A::A2
     S::A3
@@ -107,7 +110,8 @@ mutable struct RAM{
     ∇S::S2
     ∇M::S3
 
-    RAM{MS}(args...) where {MS <: MeanStruct} = new{MS, map(typeof, args)...}(args...)
+    RAM{MS}(args...) where {MS <: MeanStruct} =
+        new{MS, map(typeof, args)...}(MS(), ExactHessian(), args...)
 end
 
 ############################################################################################

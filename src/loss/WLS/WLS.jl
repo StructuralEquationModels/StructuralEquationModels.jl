@@ -38,7 +38,8 @@ Analytic gradients are available, and for models without a meanstructure, also a
 ## Implementation
 Subtype of `SemLossFunction`.
 """
-struct SemWLS{HE <: HessianEval, Vt, St, C} <: SemLossFunction{HE}
+struct SemWLS{HE <: HessianEval, Vt, St, C} <: SemLossFunction
+    hessianeval::HE
     V::Vt
     σₒ::St
     V_μ::C
@@ -49,7 +50,7 @@ end
 ############################################################################################
 
 SemWLS{HE}(args...) where {HE <: HessianEval} =
-    SemWLS{HE, map(typeof, args)...}(args...)
+    SemWLS{HE, map(typeof, args)...}(HE(), args...)
 
 function SemWLS(;
     observed,

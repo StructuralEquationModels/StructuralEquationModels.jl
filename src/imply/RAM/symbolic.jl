@@ -63,7 +63,9 @@ and for models with a meanstructure, the model implied means are computed as
 ```
 """
 struct RAMSymbolic{MS, F1, F2, F3, A1, A2, A3, S1, S2, S3, V2, F4, A4, F5, A5} <:
-       SemImplySymbolic{MS, ExactHessian}
+       SemImplySymbolic
+    meanstruct::MS
+    hessianeval::ExactHessian
     Σ_function::F1
     ∇Σ_function::F2
     ∇²Σ_function::F3
@@ -80,7 +82,7 @@ struct RAMSymbolic{MS, F1, F2, F3, A1, A2, A3, S1, S2, S3, V2, F4, A4, F5, A5} <
     ∇μ::A5
 
     RAMSymbolic{MS}(args...) where {MS <: MeanStruct} =
-        new{MS, map(typeof, args)...}(args...)
+        new{MS, map(typeof, args)...}(MS(), ExactHessian(), args...)
 end
 
 ############################################################################################
