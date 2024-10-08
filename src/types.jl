@@ -23,19 +23,19 @@ MeanStructure(::Type{T}) where {T} =
 MeanStructure(semobj) = MeanStructure(typeof(semobj))
 
 "Hessian Evaluation trait for `SemImply` and `SemLossFunction` subtypes"
-abstract type HessianEvaluation end
-struct ApproximateHessian <: HessianEvaluation end
-struct ExactHessian <: HessianEvaluation end
+abstract type HessianEval end
+struct ApproxHessian <: HessianEval end
+struct ExactHessian <: HessianEval end
 
 # fallback implementation
-HessianEvaluation(::Type{T}) where {T} =
-    error("Objects of type $T do not support HessianEvaluation trait")
-HessianEvaluation(semobj) = HessianEvaluation(typeof(semobj))
+HessianEval(::Type{T}) where {T} =
+    error("Objects of type $T do not support HessianEval trait")
+HessianEval(semobj) = HessianEval(typeof(semobj))
 
 "Supertype for all loss functions of SEMs. If you want to implement a custom loss function, it should be a subtype of `SemLossFunction`."
-abstract type SemLossFunction{HE <: HessianEvaluation} end
+abstract type SemLossFunction{HE <: HessianEval} end
 
-HessianEvaluation(::Type{<:SemLossFunction{HE}}) where {HE <: HessianEvaluation} = HE
+HessianEval(::Type{<:SemLossFunction{HE}}) where {HE <: HessianEval} = HE
 
 """
     SemLoss(args...; loss_weights = nothing, ...)
@@ -97,10 +97,10 @@ Computed model-implied values that should be compared with the observed data to 
 e. g. the model implied covariance or mean.
 If you would like to implement a different notation, e.g. LISREL, you should implement a subtype of SemImply.
 """
-abstract type SemImply{MS <: MeanStructure, HE <: HessianEvaluation} end
+abstract type SemImply{MS <: MeanStructure, HE <: HessianEval} end
 
 MeanStructure(::Type{<:SemImply{MS}}) where {MS <: MeanStructure} = MS
-HessianEvaluation(::Type{<:SemImply{MS, HE}}) where {MS, HE <: MeanStructure} = HE
+HessianEval(::Type{<:SemImply{MS, HE}}) where {MS, HE <: MeanStructure} = HE
 
 "Subtype of SemImply for all objects that can serve as the imply field of a SEM and use some form of symbolic precomputation."
 abstract type SemImplySymbolic{MS, HE} <: SemImply{MS, HE} end

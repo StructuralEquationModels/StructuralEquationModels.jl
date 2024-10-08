@@ -38,7 +38,7 @@ Analytic gradients are available, and for models without a meanstructure, also a
 ## Implementation
 Subtype of `SemLossFunction`.
 """
-struct SemWLS{HE <: HessianEvaluation, Vt, St, C} <: SemLossFunction{HE}
+struct SemWLS{HE <: HessianEval, Vt, St, C} <: SemLossFunction{HE}
     V::Vt
     σₒ::St
     V_μ::C
@@ -48,7 +48,7 @@ end
 ### Constructors
 ############################################################################################
 
-SemWLS{HE}(args...) where {HE <: HessianEvaluation} =
+SemWLS{HE}(args...) where {HE <: HessianEval} =
     SemWLS{HE, map(typeof, args)...}(args...)
 
 function SemWLS(;
@@ -89,7 +89,7 @@ function SemWLS(;
             @warn "Ignoring wls_weight_matrix_mean since meanstructure is disabled"
         wls_weight_matrix_mean = nothing
     end
-    HE = approximate_hessian ? ApproximateHessian : ExactHessian
+    HE = approximate_hessian ? ApproxHessian : ExactHessian
 
     return SemWLS{HE}(wls_weight_matrix, s, wls_weight_matrix_mean)
 end
@@ -128,7 +128,7 @@ function evaluate!(
         gradient .*= -2
     end
     isnothing(hessian) || (mul!(hessian, ∇σ' * V, ∇σ, 2, 0))
-    if !isnothing(hessian) && (HessianEvaluation(semwls) === ExactHessian)
+    if !isnothing(hessian) && (HessianEval(semwls) === ExactHessian)
         ∇²Σ_function! = implied.∇²Σ_function
         ∇²Σ = implied.∇²Σ
         J = -2 * (σ₋' * semwls.V)'

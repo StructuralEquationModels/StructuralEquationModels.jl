@@ -27,12 +27,12 @@ Analytic gradients are available, and for models without a meanstructure, also a
 ## Implementation
 Subtype of `SemLossFunction`.
 """
-struct SemML{HE <: HessianEvaluation, INV, M, M2} <: SemLossFunction{HE}
+struct SemML{HE <: HessianEval, INV, M, M2} <: SemLossFunction{HE}
     Σ⁻¹::INV
     Σ⁻¹Σₒ::M
     meandiff::M2
 
-    SemML{HE}(args...) where {HE <: HessianEvaluation} =
+    SemML{HE}(args...) where {HE <: HessianEval} =
         new{HE, map(typeof, args)...}(args...)
 end
 
@@ -45,7 +45,7 @@ function SemML(; observed::SemObserved, approximate_hessian::Bool = false, kwarg
     obscov = obs_cov(observed)
     meandiff = isnothing(obsmean) ? nothing : copy(obsmean)
 
-    return SemML{approximate_hessian ? ApproximateHessian : ExactHessian}(
+    return SemML{approximate_hessian ? ApproxHessian : ExactHessian}(
         similar(obscov),
         similar(obscov),
         meandiff,
@@ -113,7 +113,7 @@ function evaluate!(
             mul!(gradient, ∇Σ', J')
         end
         if !isnothing(hessian)
-            if HessianEvaluation(semml) === ApproximateHessian
+            if HessianEval(semml) === ApproxHessian
                 mul!(hessian, ∇Σ' * kron(Σ⁻¹, Σ⁻¹), ∇Σ, 2, 0)
             else
                 ∇²Σ_function! = implied.∇²Σ_function
