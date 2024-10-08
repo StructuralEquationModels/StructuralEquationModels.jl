@@ -107,7 +107,7 @@ function evaluate!(
     model::AbstractSemSingle,
     par,
 )
-    if !isnothing(hessian) && (MeanStructure(implied) === HasMeanStructure)
+    if !isnothing(hessian) && (MeanStruct(implied) === HasMeanStruct)
         error("hessian of WLS with meanstructure is not available")
     end
 
@@ -135,7 +135,7 @@ function evaluate!(
         ∇²Σ_function!(∇²Σ, J, par)
         hessian .+= ∇²Σ
     end
-    if MeanStructure(implied) === HasMeanStructure
+    if MeanStruct(implied) === HasMeanStruct
         μ = implied.μ
         μₒ = obs_mean(observed(model))
         μ₋ = μₒ - μ

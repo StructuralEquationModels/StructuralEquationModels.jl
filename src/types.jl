@@ -11,16 +11,16 @@ abstract type AbstractSemSingle{O, I, L, D} <: AbstractSem end
 abstract type AbstractSemCollection <: AbstractSem end
 
 "Meanstructure trait for `SemImply` subtypes"
-abstract type MeanStructure end
-"Indicates that `SemImply` subtype supports meanstructure"
-struct HasMeanStructure <: MeanStructure end
-"Indicates that `SemImply` subtype does not support meanstructure"
-struct NoMeanStructure <: MeanStructure end
+abstract type MeanStruct end
+"Indicates that `SemImply` subtype supports mean structure"
+struct HasMeanStruct <: MeanStruct end
+"Indicates that `SemImply` subtype does not support mean structure"
+struct NoMeanStruct <: MeanStruct end
 
 # fallback implementation
-MeanStructure(::Type{T}) where {T} =
-    error("Objects of type $T do not support the MeanStructure trait")
-MeanStructure(semobj) = MeanStructure(typeof(semobj))
+MeanStruct(::Type{T}) where {T} =
+    error("Objects of type $T do not support MeanStruct trait")
+MeanStruct(semobj) = MeanStruct(typeof(semobj))
 
 "Hessian Evaluation trait for `SemImply` and `SemLossFunction` subtypes"
 abstract type HessianEval end
@@ -97,10 +97,10 @@ Computed model-implied values that should be compared with the observed data to 
 e. g. the model implied covariance or mean.
 If you would like to implement a different notation, e.g. LISREL, you should implement a subtype of SemImply.
 """
-abstract type SemImply{MS <: MeanStructure, HE <: HessianEval} end
+abstract type SemImply{MS <: MeanStruct, HE <: HessianEval} end
 
-MeanStructure(::Type{<:SemImply{MS}}) where {MS <: MeanStructure} = MS
-HessianEval(::Type{<:SemImply{MS, HE}}) where {MS, HE <: MeanStructure} = HE
+MeanStruct(::Type{<:SemImply{MS}}) where {MS <: MeanStruct} = MS
+HessianEval(::Type{<:SemImply{MS, HE}}) where {MS, HE <: MeanStruct} = HE
 
 "Subtype of SemImply for all objects that can serve as the imply field of a SEM and use some form of symbolic precomputation."
 abstract type SemImplySymbolic{MS, HE} <: SemImply{MS, HE} end

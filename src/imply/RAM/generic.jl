@@ -107,7 +107,7 @@ mutable struct RAM{
     ∇S::S2
     ∇M::S3
 
-    RAM{MS}(args...) where {MS <: MeanStructure} = new{MS, map(typeof, args)...}(args...)
+    RAM{MS}(args...) where {MS <: MeanStruct} = new{MS, map(typeof, args)...}(args...)
 end
 
 ############################################################################################
@@ -160,7 +160,7 @@ function RAM(;
 
     # μ
     if meanstructure
-        MS = HasMeanStructure
+        MS = HasMeanStruct
         !isnothing(M_indices) || throw(
             ArgumentError(
                 "You set `meanstructure = true`, but your model specification contains no mean parameters.",
@@ -169,7 +169,7 @@ function RAM(;
         ∇M = gradient_required ? matrix_gradient(M_indices, n_var) : nothing
         μ = zeros(n_obs)
     else
-        MS = NoMeanStructure
+        MS = NoMeanStruct
         M_indices = nothing
         M_pre = nothing
         μ = nothing
@@ -226,7 +226,7 @@ function update!(targets::EvaluationTargets, imply::RAM, model::AbstractSemSingl
     mul!(imply.F⨉I_A⁻¹S, imply.F⨉I_A⁻¹, imply.S)
     mul!(imply.Σ, imply.F⨉I_A⁻¹S, imply.F⨉I_A⁻¹')
 
-    if MeanStructure(imply) === HasMeanStructure
+    if MeanStruct(imply) === HasMeanStruct
         mul!(imply.μ, imply.F⨉I_A⁻¹, imply.M)
     end
 end

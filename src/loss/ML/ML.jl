@@ -69,7 +69,7 @@ function evaluate!(
     par,
 )
     if !isnothing(hessian)
-        (MeanStructure(implied) === HasMeanStructure) &&
+        (MeanStruct(implied) === HasMeanStruct) &&
             throw(DomainError(H, "hessian of ML + meanstructure is not available"))
     end
 
@@ -92,7 +92,7 @@ function evaluate!(
     mul!(Σ⁻¹Σₒ, Σ⁻¹, Σₒ)
     isnothing(objective) || (objective = ld + tr(Σ⁻¹Σₒ))
 
-    if MeanStructure(implied) === HasMeanStructure
+    if MeanStruct(implied) === HasMeanStruct
         μ = implied.μ
         μₒ = obs_mean(observed(model))
         μ₋ = μₒ - μ
@@ -167,7 +167,7 @@ function evaluate!(
     if !isnothing(objective)
         objective = ld + tr(Σ⁻¹Σₒ)
 
-        if MeanStructure(implied) === HasMeanStructure
+        if MeanStruct(implied) === HasMeanStruct
             μ = implied.μ
             μₒ = obs_mean(observed(model))
             μ₋ = μₒ - μ
@@ -186,7 +186,7 @@ function evaluate!(
         mul!(gradient, ∇A', vec(C * S * I_A⁻¹'), 2, 0)
         mul!(gradient, ∇S', vec(C), 1, 1)
 
-        if MeanStructure(implied) === HasMeanStructure
+        if MeanStruct(implied) === HasMeanStruct
             μ = implied.μ
             μₒ = obs_mean(observed(model))
             ∇M = implied.∇M

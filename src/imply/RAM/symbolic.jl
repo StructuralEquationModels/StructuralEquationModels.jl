@@ -79,7 +79,7 @@ struct RAMSymbolic{MS, F1, F2, F3, A1, A2, A3, S1, S2, S3, V2, F4, A4, F5, A5} <
     ∇μ_function::F5
     ∇μ::A5
 
-    RAMSymbolic{MS}(args...) where {MS <: MeanStructure} =
+    RAMSymbolic{MS}(args...) where {MS <: MeanStruct} =
         new{MS, map(typeof, args)...}(args...)
 end
 
@@ -163,7 +163,7 @@ function RAMSymbolic(;
 
     # μ
     if meanstructure
-        MS = HasMeanStructure
+        MS = HasMeanStruct
         μ_symbolic = eval_μ_symbolic(M, I_A⁻¹, F)
         μ_function = Symbolics.build_function(μ_symbolic, par, expression = Val{false})[2]
         μ = zeros(size(μ_symbolic))
@@ -177,7 +177,7 @@ function RAMSymbolic(;
             ∇μ = nothing
         end
     else
-        MS = NoMeanStructure
+        MS = NoMeanStruct
         μ_function = nothing
         μ = nothing
         ∇μ_function = nothing
@@ -213,13 +213,13 @@ function update!(
     par,
 )
     imply.Σ_function(imply.Σ, par)
-    if MeanStructure(imply) === HasMeanStructure
+    if MeanStruct(imply) === HasMeanStruct
         imply.μ_function(imply.μ, par)
     end
 
     if is_gradient_required(targets) || is_hessian_required(targets)
         imply.∇Σ_function(imply.∇Σ, par)
-        if MeanStructure(imply) === HasMeanStructure
+        if MeanStruct(imply) === HasMeanStruct
             imply.∇μ_function(imply.∇μ, par)
         end
     end
