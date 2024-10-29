@@ -51,6 +51,7 @@ function sem_summary(
     secondary_color = :light_yellow,
     digits = 2,
     show_variables = true,
+    show_columns = nothing
 )
     if show_variables
         print("\n")
@@ -86,13 +87,19 @@ function sem_summary(
     print("\n")
 
     columns = keys(partable.columns)
+    show_columns = isnothing(show_columns) ? nothing : intersect(show_columns, columns)
 
     printstyled("Loadings: \n"; color = color)
     print("\n")
 
-    sorted_columns = [:to, :estimate, :param, :value_fixed, :start]
-    loading_columns = sort_partially(sorted_columns, columns)
-    header_cols = copy(loading_columns)
+    if isnothing(show_columns)
+        sorted_columns = [:to, :estimate, :param, :value_fixed, :start]
+        loading_columns = sort_partially(sorted_columns, columns)
+        header_cols = copy(loading_columns)
+    else
+        loading_columns = copy(show_columns)
+        header_cols = copy(loading_columns)
+    end
 
     for var in partable.latent_vars
         indicator_indices = findall(
@@ -131,15 +138,19 @@ function sem_summary(
         partable,
     )
 
-    sorted_columns = [:from, :relation, :to, :estimate, :param, :value_fixed, :start]
-    regression_columns = sort_partially(sorted_columns, columns)
+    if isnothing(show_columns)
+        sorted_columns = [:from, :relation, :to, :estimate, :param, :value_fixed, :start]
+        regression_columns = sort_partially(sorted_columns, columns)
+    else
+        regression_columns = copy(show_columns)
+    end
 
     regression_array = reduce(
         hcat,
         check_round(partable.columns[c][regression_indices]; digits = digits) for
         c in regression_columns
     )
-    regression_columns[2] = Symbol("")
+    regression_columns[2] = regression_columns[2] == :relation ? Symbol("") : regression_columns[2]
 
     print("\n")
     pretty_table(
@@ -155,14 +166,18 @@ function sem_summary(
 
     var_indices = findall(r -> r.relation == :↔ && r.to == r.from, partable)
 
-    sorted_columns = [:from, :relation, :to, :estimate, :param, :value_fixed, :start]
-    var_columns = sort_partially(sorted_columns, columns)
+    if isnothing(show_columns)
+        sorted_columns = [:from, :relation, :to, :estimate, :param, :value_fixed, :start]
+        var_columns = sort_partially(sorted_columns, columns)
+    else
+        var_columns = copy(show_columns)
+    end
 
     var_array = reduce(
         hcat,
         check_round(partable.columns[c][var_indices]; digits) for c in var_columns
     )
-    var_columns[2] = Symbol("")
+    var_columns[2] = var_columns[2] == :relation ? Symbol("") : var_columns[2]
 
     print("\n")
     pretty_table(
@@ -178,14 +193,18 @@ function sem_summary(
 
     covar_indices = findall(r -> r.relation == :↔ && r.to != r.from, partable)
 
-    covar_columns = sort_partially(sorted_columns, columns)
+    if isnothing(show_columns)
+        covar_columns = sort_partially(sorted_columns, columns)
+    else
+        covar_columns = copy(show_columns)
+    end
 
     covar_array = reduce(
         hcat,
         check_round(partable.columns[c][covar_indices]; digits = digits) for
         c in covar_columns
     )
-    covar_columns[2] = Symbol("")
+    covar_columns[2] = covar_columns[2] == :relation ? Symbol("") : covar_columns[2]
 
     print("\n")
     pretty_table(
@@ -202,15 +221,19 @@ function sem_summary(
     if length(mean_indices) > 0
         printstyled("Means: \n"; color = color)
 
-        sorted_columns = [:from, :relation, :to, :estimate, :param, :value_fixed, :start]
-        mean_columns = sort_partially(sorted_columns, columns)
+        if isnothing(show_columns)
+            sorted_columns = [:from, :relation, :to, :estimate, :param, :value_fixed, :start]
+            mean_columns = sort_partially(sorted_columns, columns)
+        else
+            mean_columns = copy(show_columns)
+        end
 
         mean_array = reduce(
             hcat,
             check_round(partable.columns[c][mean_indices]; digits = digits) for
             c in mean_columns
         )
-        mean_columns[2] = Symbol("")
+        mean_columns[2] = mean_columns[2] == :relation ? Symbol("") : mean_columns[2]
 
         print("\n")
         pretty_table(
@@ -233,6 +256,7 @@ function sem_summary(
     secondary_color = :light_yellow,
     digits = 2,
     show_variables = true,
+    show_columns = nothing
 )
     if show_variables
         print("\n")
@@ -273,6 +297,7 @@ function sem_summary(
             secondary_color = secondary_color,
             digits = digits,
             show_variables = false,
+            show_columns = show_columns
         )
     end
 
@@ -310,7 +335,7 @@ end
 """
     (1) sem_summary(sem_fit::SemFit; show_fitmeasures = false)
 
-    (2) sem_summary(partable::AbstractParameterTable)
+    (2) sem_summary(partable::AbstractParameterTable; ...)
 
 Print information about (1) a fitted SEM or (2) a parameter table to stdout.
 
@@ -320,5 +345,6 @@ Print information about (1) a fitted SEM or (2) a parameter table to stdout.
 - `color = :light_cyan`: color of some parts of the printed output. Can be adjusted for readability.
 - `secondary_color = :light_yellow`
 - `show_variables = true`
+- `show_columns = nothing`: columns names to include in the output e.g.`[:from, :to, :estimate]`)
 """
 function sem_summary end
