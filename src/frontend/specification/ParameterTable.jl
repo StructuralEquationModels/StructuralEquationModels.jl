@@ -126,6 +126,17 @@ end
 ### Additional Methods
 ############################################################################################
 
+# Equality --------------------------------------------------------------------------------
+function Base.:(==)(p1::ParameterTable, p2::ParameterTable)
+    out = 
+        (p1.columns == p2.columns) &&
+        (p1.observed_vars == p2.observed_vars) &&
+        (p1.latent_vars == p2.latent_vars) &&
+        (p1.sorted_vars == p2.sorted_vars) &&
+        (p1.params == p2.params)
+    return out
+end
+
 # Iteration --------------------------------------------------------------------------------
 ParameterTableRow = @NamedTuple begin
     from::Symbol
