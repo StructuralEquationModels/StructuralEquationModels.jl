@@ -10,6 +10,32 @@ abstract type AbstractSemSingle{O, I, L, D} <: AbstractSem end
 "Supertype for all collections of multiple SEMs"
 abstract type AbstractSemCollection <: AbstractSem end
 
+"Meanstructure trait for `SemImply` subtypes"
+abstract type MeanStruct end
+"Indicates that `SemImply` subtype supports mean structure"
+struct HasMeanStruct <: MeanStruct end
+"Indicates that `SemImply` subtype does not support mean structure"
+struct NoMeanStruct <: MeanStruct end
+
+# default implementation
+MeanStruct(::Type{T}) where {T} =
+    hasfield(T, :meanstruct) ? fieldtype(T, :meanstruct) :
+    error("Objects of type $T do not support MeanStruct trait")
+
+MeanStruct(semobj) = MeanStruct(typeof(semobj))
+
+"Hessian Evaluation trait for `SemImply` and `SemLossFunction` subtypes"
+abstract type HessianEval end
+struct ApproxHessian <: HessianEval end
+struct ExactHessian <: HessianEval end
+
+# default implementation
+HessianEval(::Type{T}) where {T} =
+    hasfield(T, :hessianeval) ? fieldtype(T, :hessianeval) :
+    error("Objects of type $T do not support HessianEval trait")
+
+HessianEval(semobj) = HessianEval(typeof(semobj))
+
 "Supertype for all loss functions of SEMs. If you want to implement a custom loss function, it should be a subtype of `SemLossFunction`."
 abstract type SemLossFunction end
 

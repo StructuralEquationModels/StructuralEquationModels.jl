@@ -29,7 +29,7 @@ end
 
 fixed_and_labeled_graph = @StenoGraph begin
     # measurement model
-    visual → fixed(1.0)*label(:λ)*x1
+    visual → fixed(1.0) * label(:λ) * x1
 end
 
 @testset "ParameterTable" begin
@@ -42,7 +42,7 @@ end
         @test_throws ArgumentError("It is not allowed to label fixed parameters.") ParameterTable(
             fixed_and_labeled_graph,
             observed_vars = obs_vars,
-            latent_vars = lat_vars
+            latent_vars = lat_vars,
         )
         partable = @inferred(
             ParameterTable(graph, observed_vars = obs_vars, latent_vars = lat_vars)
