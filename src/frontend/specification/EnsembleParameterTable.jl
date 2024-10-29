@@ -18,6 +18,10 @@ EnsembleParameterTable(::Nothing; params::Union{Nothing, Vector{Symbol}} = nothi
         isnothing(params) ? Symbol[] : copy(params),
     )
 
+# convert pairs to dict
+EnsembleParameterTable(ps::Pair{K, V}...; params = nothing) where {K, V} = 
+    EnsembleParameterTable(Dict(ps...); params = params)
+
 # dictionary of SEM specifications
 function EnsembleParameterTable(
     spec_ensemble::AbstractDict{K, V};
