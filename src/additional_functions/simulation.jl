@@ -6,7 +6,7 @@
 Return a new model with swaped observed part.
 
 # Arguments
-- `model::AbstractSemSingle`: optimization algorithm.
+- `model::AbstractSemSingle`: model to swap the observed part of.
 - `kwargs`: additional keyword arguments; typically includes `data = ...`
 - `observed`: Either an object of subtype of `SemObserved` or a subtype of `SemObserved`
 
@@ -97,4 +97,48 @@ function update_observed(loss::SemLoss, new_observed; kwargs...)
         update_observed(lossfun, new_observed; kwargs...) for lossfun in loss.functions
     )
     return SemLoss(new_functions, loss.weights)
+end
+
+
+############################################################################################
+# simulate data
+############################################################################################
+"""
+    (1) rand(model::AbstractSemSingle, params, n)
+
+    (2) rand(model::AbstractSemSingle, n)
+
+Sample normally distributed data from the model-implied covariance matrix and mean vector.
+
+# Arguments
+- `model::AbstractSemSingle`: model to simulate from.
+- `params`: parameter values to simulate from.
+- `n::Integer`: Number of samples.
+
+# Examples
+```julia
+rand(model, start_simple(model), 100)
+```
+"""
+function Distributions.rand(
+        model::AbstractSemSingle{O, I, L, D}, 
+        params, 
+        n::Integer) where {O, I <: Union{RAM, RAMSymbolic}, L, D}
+    update!(
+        EvaluationTargets{true, false, false}(),
+        model.imply,
+        model,
+        params)
+    return rand(model, n)
+end
+
+function Distributions.rand(
+        model::AbstractSemSingle{O, I, L, D},
+        n::Integer) where {O, I <: Union{RAM, RAMSymbolic}, L, D}
+    if MeanStruct(model.imply) === NoMeanStruct
+        data = permutedims(rand(MvNormal(Symmetric(model.imply.Σ)), n))
+    elseif MeanStruct(model.imply) === HasMeanStruct
+        data = permutedims(rand(MvNormal(model.imply.μ, Symmetric(model.imply.Σ)), n))
+    end
+    return data
 end
