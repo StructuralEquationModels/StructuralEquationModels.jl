@@ -18,6 +18,10 @@ EnsembleParameterTable(::Nothing; params::Union{Nothing, Vector{Symbol}} = nothi
         isnothing(params) ? Symbol[] : copy(params),
     )
 
+# convert pairs to dict
+EnsembleParameterTable(ps::Pair{K, V}...; params = nothing) where {K, V} = 
+    EnsembleParameterTable(Dict(ps...); params = params)
+
 # dictionary of SEM specifications
 function EnsembleParameterTable(
     spec_ensemble::AbstractDict{K, V};
@@ -137,4 +141,15 @@ function update_partable!(
     default::Any = nothing,
 )
     return update_partable!(partables, column, Dict(zip(params, values)), default)
+end
+
+############################################################################################
+### Additional methods
+############################################################################################
+
+function Base.:(==)(p1::EnsembleParameterTable, p2::EnsembleParameterTable)
+    out = 
+        (p1.tables == p2.tables) &&
+        (p1.params == p2.params)
+    return out
 end

@@ -15,6 +15,9 @@ dat_g2 = dat[dat.school.=="Grant-White", :]
 dat_miss_g1 = dat_missing[dat_missing.school.=="Pasteur", :]
 dat_miss_g2 = dat_missing[dat_missing.school.=="Grant-White", :]
 
+dat.school = ifelse.(dat.school .== "Pasteur", :Pasteur, :Grant_White)
+dat_missing.school = ifelse.(dat_missing.school .== "Pasteur", :Pasteur, :Grant_White)
+
 ############################################################################################
 ### specification - RAMMatrices
 ############################################################################################
@@ -69,7 +72,8 @@ specification_g2 = RAMMatrices(;
 )
 
 partable = EnsembleParameterTable(
-    Dict(:Pasteur => specification_g1, :Grant_White => specification_g2),
+    :Pasteur => specification_g1,
+    :Grant_White => specification_g2
 )
 
 specification_miss_g1 = nothing
