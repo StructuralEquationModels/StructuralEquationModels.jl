@@ -182,13 +182,13 @@ end
     # simulate data
     model_ml_new = swap_observed(
         model_ml,
-        data = rand(model_ml, params, 100_000),
+        data = rand(model_ml, params, 1_000_000),
         specification = spec,
         obs_colnames = colnames,
     )
     model_ml_sym_new = swap_observed(
         model_ml_sym,
-        data = rand(model_ml_sym, params, 100_000),
+        data = rand(model_ml_sym, params, 1_000_000),
         specification = spec,
         obs_colnames = colnames,
     )
@@ -392,14 +392,14 @@ end
     # simulate data
     model_ml_new = swap_observed(
         model_ml,
-        data = rand(model_ml, params, 100_000),
+        data = rand(model_ml, params, 1_000_000),
         specification = spec,
         obs_colnames = colnames,
         meanstructure = true,
     )
     model_ml_sym_new = swap_observed(
         model_ml_sym,
-        data = rand(model_ml_sym, params, 100_000),
+        data = rand(model_ml_sym, params, 1_000_000),
         specification = spec,
         obs_colnames = colnames,
         meanstructure = true,
