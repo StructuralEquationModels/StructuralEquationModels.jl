@@ -21,7 +21,7 @@ function start_simple(model::AbstractSemSingle; kwargs...)
         model.observed,
         model.imply,
         model.optimizer,
-        model.loss.functions...,
+        model.loss.functions...;
         kwargs...,
     )
 end

@@ -163,16 +163,22 @@ end
 # ensemble models
 ############################################################################################
 """
-    SemEnsemble(models..., optimizer = SemOptimizerOptim, weights = nothing, kwargs...)
+    (1) SemEnsemble(models..., optimizer = SemOptimizerOptim, weights = nothing, kwargs...)
 
-Constructor for ensemble models.
+    (2) SemEnsemble(;specification, data, groups, column = :group, optimizer = SemOptimizerOptim, kwargs...)
+
+Constructor for ensemble models. (2) can be used to conveniently specify multigroup models.
 
 # Arguments
 - `models...`: `AbstractSem`s.
 - `optimizer`: object of subtype `SemOptimizer` or a constructor.
 - `weights::Vector`:  Weights for each model. Defaults to the number of observed data points.
+- `specification::EnsembleParameterTable`: Model specification.
+- `data::DataFrame`: Observed data. Must contain a `column` of type `Vector{Symbol}` that contains the group.
+- `groups::Vector{Symbol}`: Group names.
+- `column::Symbol`: Name of the column in `data` that contains the group.
 
-All additional kwargs are passed down to the constructor for the optimizer field.
+All additional kwargs are passed down to the model parts.
 
 Returns a SemEnsemble with fields
 - `n::Int`: Number of models.
@@ -189,6 +195,7 @@ struct SemEnsemble{N, T <: Tuple, V <: AbstractVector, D, I} <: AbstractSemColle
     params::I
 end
 
+# constructor from multiple models
 function SemEnsemble(models...; optimizer = SemOptimizerOptim, weights = nothing, kwargs...)
     n = length(models)
 
@@ -215,6 +222,28 @@ function SemEnsemble(models...; optimizer = SemOptimizerOptim, weights = nothing
     end
 
     return SemEnsemble(n, models, weights, optimizer, params)
+end
+
+# constructor from EnsembleParameterTable and data set
+function SemEnsemble(;specification, data, groups, column = :group, optimizer = SemOptimizerOptim, kwargs...)
+    if specification isa EnsembleParameterTable
+        specification = convert(Dict{Symbol, RAMMatrices}, specification)
+    end
+    models = []
+    for group in groups
+        ram_matrices = specification[group]
+        data_group = select(filter(r -> r[column] == group, data), Not(column))
+        if iszero(nrow(data_group))
+            error("Your data does not contain any observations from group `$(group)`.")
+        end
+        model = Sem(;
+            specification = ram_matrices,
+            data = data_group,
+            kwargs...
+        )
+        push!(models, model)
+    end
+    return SemEnsemble(models...; optimizer = optimizer, weights = nothing, kwargs...)
 end
 
 params(ensemble::SemEnsemble) = ensemble.params
