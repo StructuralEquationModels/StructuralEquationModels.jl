@@ -1,4 +1,5 @@
 using Statistics: cov, mean
+using Random
 
 ############################################################################################
 ### models w.o. meanstructure
@@ -159,6 +160,44 @@ end
         col = :se,
         lav_col = :se,
     )
+end
+
+############################################################################################
+### data simulation
+############################################################################################
+
+@testset "data_simulation_wo_mean" begin
+    # parameters to recover
+    params = start_simple(
+        model_ml;
+        start_loadings = 0.5,
+        start_regressions = 0.5,
+        start_variances_observed = 0.5,
+        start_variances_latent = 1.0,
+        start_covariances_observed = 0.2,
+    )
+    # set seed for simulation
+    Random.seed!(83472834)
+    colnames = Symbol.(names(example_data("political_democracy")))
+    # simulate data
+    model_ml_new = swap_observed(
+        model_ml,
+        data = rand(model_ml, params, 1_000_000),
+        specification = spec,
+        obs_colnames = colnames,
+    )
+    model_ml_sym_new = swap_observed(
+        model_ml_sym,
+        data = rand(model_ml_sym, params, 1_000_000),
+        specification = spec,
+        obs_colnames = colnames,
+    )
+    # fit models
+    sol_ml = solution(sem_fit(model_ml_new))
+    sol_ml_sym = solution(sem_fit(model_ml_sym_new))
+    # check solution
+    @test maximum(abs.(sol_ml - params)) < 0.01
+    @test maximum(abs.(sol_ml_sym - params)) < 0.01
 end
 
 ############################################################################################
@@ -330,6 +369,47 @@ end
         col = :se,
         lav_col = :se,
     )
+end
+
+############################################################################################
+### data simulation
+############################################################################################
+
+@testset "data_simulation_with_mean" begin
+    # parameters to recover
+    params = start_simple(
+        model_ml;
+        start_loadings = 0.5,
+        start_regressions = 0.5,
+        start_variances_observed = 0.5,
+        start_variances_latent = 1.0,
+        start_covariances_observed = 0.2,
+        start_means = 0.5,
+    )
+    # set seed for simulation
+    Random.seed!(83472834)
+    colnames = Symbol.(names(example_data("political_democracy")))
+    # simulate data
+    model_ml_new = swap_observed(
+        model_ml,
+        data = rand(model_ml, params, 1_000_000),
+        specification = spec,
+        obs_colnames = colnames,
+        meanstructure = true,
+    )
+    model_ml_sym_new = swap_observed(
+        model_ml_sym,
+        data = rand(model_ml_sym, params, 1_000_000),
+        specification = spec,
+        obs_colnames = colnames,
+        meanstructure = true,
+    )
+    # fit models
+    sol_ml = solution(sem_fit(model_ml_new))
+    sol_ml_sym = solution(sem_fit(model_ml_sym_new))
+    # check solution
+    @test maximum(abs.(sol_ml - params)) < 0.01
+    @test maximum(abs.(sol_ml_sym - params)) < 0.01
 end
 
 ############################################################################################
