@@ -60,7 +60,7 @@ imply_ml.Σ_function(imply_ml.Σ, true_val)
 true_dist = MultivariateNormal(imply_ml.Σ)
 
 Random.seed!(1234)
-x = transpose(rand(true_dist, 100000))
+x = transpose(rand(true_dist, 100_000))
 semobserved = SemObservedData(data = x, specification = nothing)
 
 loss_ml = SemLoss(SemML(; observed = semobserved, nparams = length(start)))
