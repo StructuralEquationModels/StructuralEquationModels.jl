@@ -99,7 +99,6 @@ function update_observed(loss::SemLoss, new_observed; kwargs...)
     return SemLoss(new_functions, loss.weights)
 end
 
-
 ############################################################################################
 # simulate data
 ############################################################################################
@@ -121,20 +120,18 @@ rand(model, start_simple(model), 100)
 ```
 """
 function Distributions.rand(
-        model::AbstractSemSingle{O, I, L, D}, 
-        params, 
-        n::Integer) where {O, I <: Union{RAM, RAMSymbolic}, L, D}
-    update!(
-        EvaluationTargets{true, false, false}(),
-        model.imply,
-        model,
-        params)
+    model::AbstractSemSingle{O, I, L, D},
+    params,
+    n::Integer,
+) where {O, I <: Union{RAM, RAMSymbolic}, L, D}
+    update!(EvaluationTargets{true, false, false}(), model.imply, model, params)
     return rand(model, n)
 end
 
 function Distributions.rand(
-        model::AbstractSemSingle{O, I, L, D},
-        n::Integer) where {O, I <: Union{RAM, RAMSymbolic}, L, D}
+    model::AbstractSemSingle{O, I, L, D},
+    n::Integer,
+) where {O, I <: Union{RAM, RAMSymbolic}, L, D}
     if MeanStruct(model.imply) === NoMeanStruct
         data = permutedims(rand(MvNormal(Symmetric(model.imply.Σ)), n))
     elseif MeanStruct(model.imply) === HasMeanStruct

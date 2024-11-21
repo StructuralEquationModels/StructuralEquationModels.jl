@@ -174,7 +174,8 @@ end
         start_regressions = 0.5,
         start_variances_observed = 0.5,
         start_variances_latent = 1.0,
-        start_covariances_observed = 0.2)
+        start_covariances_observed = 0.2,
+    )
     # set seed for simulation
     Random.seed!(83472834)
     colnames = Symbol.(names(example_data("political_democracy")))
@@ -183,13 +184,13 @@ end
         model_ml,
         data = rand(model_ml, params, 100_000),
         specification = spec,
-        obs_colnames = colnames
+        obs_colnames = colnames,
     )
     model_ml_sym_new = swap_observed(
         model_ml_sym,
         data = rand(model_ml_sym, params, 100_000),
         specification = spec,
-        obs_colnames = colnames
+        obs_colnames = colnames,
     )
     # fit models
     sol_ml = solution(sem_fit(model_ml_new))
@@ -370,7 +371,6 @@ end
     )
 end
 
-
 ############################################################################################
 ### data simulation
 ############################################################################################
@@ -384,7 +384,8 @@ end
         start_variances_observed = 0.5,
         start_variances_latent = 1.0,
         start_covariances_observed = 0.2,
-        start_means = 0.5)
+        start_means = 0.5,
+    )
     # set seed for simulation
     Random.seed!(83472834)
     colnames = Symbol.(names(example_data("political_democracy")))
@@ -394,14 +395,14 @@ end
         data = rand(model_ml, params, 100_000),
         specification = spec,
         obs_colnames = colnames,
-        meanstructure = true
+        meanstructure = true,
     )
     model_ml_sym_new = swap_observed(
         model_ml_sym,
         data = rand(model_ml_sym, params, 100_000),
         specification = spec,
         obs_colnames = colnames,
-        meanstructure = true
+        meanstructure = true,
     )
     # fit models
     sol_ml = solution(sem_fit(model_ml_new))
