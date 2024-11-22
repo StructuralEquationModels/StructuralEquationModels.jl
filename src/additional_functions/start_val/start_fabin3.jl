@@ -31,22 +31,19 @@ function start_fabin3(observed::SemObservedMissing, imply, optimizer, args...; k
 end
 
 function start_fabin3(ram_matrices::RAMMatrices, Σ, μ)
-    A_ind, S_ind, F_ind, M_ind, n_par = ram_matrices.A_ind,
-    ram_matrices.S_ind,
-    ram_matrices.F_ind,
-    ram_matrices.M_ind,
+    A, S, F, M, n_par = ram_matrices.A,
+    ram_matrices.S,
+    ram_matrices.F,
+    ram_matrices.M,
     nparams(ram_matrices)
 
     start_val = zeros(n_par)
-    n_obs = nobserved_vars(ram_matrices)
-    n_var = nvars(ram_matrices)
-    n_latent = nlatent_vars(ram_matrices)
-
-    C_indices = CartesianIndices((n_var, n_var))
+    F_var2obs = Dict(
+        i => F.rowval[F.colptr[i]] for i in axes(F, 2) if isobserved_var(ram_matrices, i)
+    )
+    @assert length(F_var2obs) == size(F, 1)
 
     # check in which matrix each parameter appears
-
-    indices = Vector{CartesianIndex{2}}(undef, n_par)
 
     #=     in_S = length.(S_ind) .!= 0
         in_A = length.(A_ind) .!= 0
@@ -65,26 +62,53 @@ function start_fabin3(ram_matrices::RAMMatrices, Σ, μ)
         end =#
 
     # set undirected parameters in S
-    for (i, S_ind) in enumerate(S_ind)
-        for c_ind in C_indices[S_ind]
-            (c_ind[1] == c_ind[2]) || continue # covariances stay 0
-            pos = searchsortedfirst(F_ind, c_ind[1])
-            start_val[i] =
-                (pos <= length(F_ind)) && (F_ind[pos] == c_ind[1]) ? Σ[pos, pos] / 2 : 0.05
-            break # i-th parameter initialized
+    S_indices = CartesianIndices(S)
+    for j in 1:nparams(S)
+        for lin_ind in param_occurences(S, j)
+            to, from = Tuple(S_indices[lin_ind])
+            if (to == from) # covariances start with 0
+                # half of observed variance for observed, 0.05 for latent
+                obs = get(F_var2obs, to, nothing)
+                start_val[j] = !isnothing(obs) ? Σ[obs, obs] / 2 : 0.05
+                break # j-th parameter initialized
+            end
         end
     end
 
     # set loadings
-    constants = ram_matrices.constants
-    A_ind_c = [linear2cartesian(ind, (n_var, n_var)) for ind in A_ind]
+    A_indices = CartesianIndices(A)
     # ind_Λ = findall([is_in_Λ(ind_vec, F_ind) for ind_vec in A_ind_c])
 
-    function calculate_lambda(
-        ref::Integer,
-        indicator::Integer,
-        indicators::AbstractVector{<:Integer},
-    )
+    # collect latent variable indicators in A
+    # maps latent parameter to the vector of dependent vars
+    # the 2nd index in the pair specified the parameter index,
+    # 0 if no parameter (constant), -1 if constant=1
+    var2indicators = Dict{Int, Vector{Pair{Int, Int}}}()
+    for j in 1:nparams(A)
+        for lin_ind in param_occurences(A, j)
+            to, from = Tuple(A_indices[lin_ind])
+            haskey(F_var2obs, from) && continue # skip observed
+            obs = get(F_var2obs, to, nothing)
+            if !isnothing(obs)
+                indicators = get!(() -> Vector{Pair{Int, Int}}(), var2indicators, from)
+                push!(indicators, obs => j)
+            end
+        end
+    end
+
+    for (lin_ind, val) in A.constants
+        iszero(val) && continue # only non-zero loadings
+        to, from = Tuple(A_indices[lin_ind])
+        haskey(F_var2obs, from) && continue # skip observed
+        obs = get(F_var2obs, to, nothing)
+        if !isnothing(obs)
+            indicators = get!(() -> Vector{Pair{Int, Int}}(), var2indicators, from)
+            push!(indicators, obs => ifelse(isone(val), -1, 0)) # no parameter associated, -1 = reference, 0 = indicator
+        end
+    end
+
+    # calculate starting values for parameters of latent regression vars
+    function calculate_lambda(ref::Integer, indicator::Integer, indicators::AbstractVector)
         instruments = filter(i -> (i != ref) && (i != indicator), indicators)
         if length(instruments) == 1
             s13 = Σ[ref, instruments[1]]
@@ -99,61 +123,33 @@ function start_fabin3(ram_matrices::RAMMatrices, Σ, μ)
         end
     end
 
-    for i in setdiff(1:n_var, F_ind)
-        reference = Int64[]
-        indicators = Int64[]
-        indicator2parampos = Dict{Int, Int}()
-
-        for (j, Aj_ind_c) in enumerate(A_ind_c)
-            for ind_c in Aj_ind_c
-                (ind_c[2] == i) || continue
-                ind_pos = searchsortedfirst(F_ind, ind_c[1])
-                if (ind_pos <= length(F_ind)) && (F_ind[ind_pos] == ind_c[1])
-                    push!(indicators, ind_pos)
-                    indicator2parampos[ind_pos] = j
-                end
-            end
-        end
-
-        for ram_const in constants
-            if (ram_const.matrix == :A) && (ram_const.index[2] == i)
-                ind_pos = searchsortedfirst(F_ind, ram_const.index[1])
-                if (ind_pos <= length(F_ind)) && (F_ind[ind_pos] == ram_const.index[1])
-                    if isone(ram_const.value)
-                        push!(reference, ind_pos)
-                    else
-                        push!(indicators, ind_pos)
-                        # no parameter associated
-                    end
-                end
-            end
-        end
-
+    for (i, indicators) in pairs(var2indicators)
+        reference = [obs for (obs, param) in indicators if param == -1]
+        indicator_obs = first.(indicators)
         # is there at least one reference indicator?
         if length(reference) > 0
-            if (length(reference) > 1) && isempty(indicator2parampos) # don't warn if entire column is fixed
+            if (length(reference) > 1) && any(((obs, param),) -> param > 0, indicators) # don't warn if entire column is fixed
                 @warn "You have more than 1 scaling indicator for $(ram_matrices.colnames[i])"
             end
             ref = reference[1]
 
-            for (j, indicator) in enumerate(indicators)
-                if (indicator != ref) &&
-                   (parampos = get(indicator2parampos, indicator, 0)) != 0
-                    start_val[parampos] = calculate_lambda(ref, indicator, indicators)
+            for (indicator, param) in indicators
+                if (indicator != ref) && (param > 0)
+                    start_val[param] = calculate_lambda(ref, indicator, indicator_obs)
                 end
             end
             # no reference indicator:
-        elseif length(indicators) > 0
-            ref = indicators[1]
-            λ = Vector{Float64}(undef, length(indicators))
+        else
+            ref = indicator_obs[1]
+            λ = Vector{Float64}(undef, length(indicator_obs))
             λ[1] = 1.0
-            for (j, indicator) in enumerate(indicators)
+            for (j, indicator) in enumerate(indicator_obs)
                 if indicator != ref
-                    λ[j] = calculate_lambda(ref, indicator, indicators)
+                    λ[j] = calculate_lambda(ref, indicator, indicator_obs)
                 end
             end
 
-            Σ_λ = Σ[indicators, indicators]
+            Σ_λ = Σ[indicator_obs, indicator_obs]
             l₂ = sum(abs2, λ)
             D = λ * λ' ./ l₂
             θ = (I - D .^ 2) \ (diag(Σ_λ - D * Σ_λ * D))
@@ -164,24 +160,22 @@ function start_fabin3(ram_matrices::RAMMatrices, Σ, μ)
 
             λ .*= sign(Ψ) * sqrt(abs(Ψ))
 
-            for (j, indicator) in enumerate(indicators)
-                if (parampos = get(indicator2parampos, indicator, 0)) != 0
-                    start_val[parampos] = λ[j]
+            for (j, (_, param)) in enumerate(indicators)
+                if param > 0
+                    start_val[param] = λ[j]
                 end
             end
-        else
-            @warn "No scaling indicators for $(ram_matrices.colnames[i])"
         end
     end
 
-    # set means
-    if !isnothing(M_ind)
-        for (i, M_ind) in enumerate(M_ind)
-            if length(M_ind) != 0
-                ind = M_ind[1]
-                pos = searchsortedfirst(F_ind, ind[1])
-                if (pos <= length(F_ind)) && (F_ind[pos] == ind[1])
-                    start_val[i] = μ[pos]
+    if !isnothing(M)
+        # set starting values of the observed means
+        for j in 1:nparams(M)
+            M_ind = param_occurences(M, j)
+            if !isempty(M_ind)
+                obs = get(F_var2obs, M_ind[1], nothing)
+                if !isnothing(obs)
+                    start_val[j] = μ[obs]
                 end # latent means stay 0
             end
         end

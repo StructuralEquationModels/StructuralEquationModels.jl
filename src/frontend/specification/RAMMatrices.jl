@@ -1,82 +1,56 @@
-############################################################################################
-### Constants
-############################################################################################
-
-struct RAMConstant
-    matrix::Symbol
-    index::Union{Int, CartesianIndex{2}}
-    value::Any
-end
-
-function Base.:(==)(c1::RAMConstant, c2::RAMConstant)
-    res = ((c1.matrix == c2.matrix) && (c1.index == c2.index) && (c1.value == c2.value))
-    return res
-end
-
-function append_RAMConstants!(
-    constants::AbstractVector{RAMConstant},
-    mtx_name::Symbol,
-    mtx::AbstractArray;
-    skip_zeros::Bool = true,
-)
-    for (index, val) in pairs(mtx)
-        if isa(val, Number) && !(skip_zeros && iszero(val))
-            push!(constants, RAMConstant(mtx_name, index, val))
-        end
-    end
-    return constants
-end
-
-function set_RAMConstant!(A, S, M, rc::RAMConstant)
-    if rc.matrix == :A
-        A[rc.index] = rc.value
-    elseif rc.matrix == :S
-        S[rc.index] = rc.value
-        S[rc.index[2], rc.index[1]] = rc.value # symmetric
-    elseif rc.matrix == :M
-        M[rc.index] = rc.value
-    end
-end
-
-function set_RAMConstants!(A, S, M, rc_vec::Vector{RAMConstant})
-    for rc in rc_vec
-        set_RAMConstant!(A, S, M, rc)
-    end
-end
 
 ############################################################################################
 ### Type
 ############################################################################################
 
-# map from parameter index to linear indices of matrix/vector positions where it occurs
-AbstractArrayParamsMap = AbstractVector{<:AbstractVector{<:Integer}}
-ArrayParamsMap = Vector{Vector{Int}}
-
 struct RAMMatrices <: SemSpecification
-    A_ind::ArrayParamsMap
-    S_ind::ArrayParamsMap
-    F_ind::Vector{Int}
-    M_ind::Union{ArrayParamsMap, Nothing}
+    A::ParamsMatrix{Float64}
+    S::ParamsMatrix{Float64}
+    F::SparseMatrixCSC{Float64}
+    M::Union{ParamsVector{Float64}, Nothing}
     params::Vector{Symbol}
-    colnames::Union{Vector{Symbol}, Nothing}
-    constants::Vector{RAMConstant}
-    size_F::Tuple{Int, Int}
+    colnames::Union{Vector{Symbol}, Nothing}    # better call it "variables": it's a mixture of observed and latent (and it gets confusing with get_colnames())
 end
 
-nparams(ram::RAMMatrices) = length(ram.A_ind)
-
-nvars(ram::RAMMatrices) = ram.size_F[2]
-nobserved_vars(ram::RAMMatrices) = ram.size_F[1]
+nparams(ram::RAMMatrices) = nparams(ram.A)
+nvars(ram::RAMMatrices) = size(ram.F, 2)
+nobserved_vars(ram::RAMMatrices) = size(ram.F, 1)
 nlatent_vars(ram::RAMMatrices) = nvars(ram) - nobserved_vars(ram)
 
 vars(ram::RAMMatrices) = ram.colnames
 
+isobserved_var(ram::RAMMatrices, i::Integer) = ram.F.colptr[i+1] > ram.F.colptr[i]
+islatent_var(ram::RAMMatrices, i::Integer) = ram.F.colptr[i+1] == ram.F.colptr[i]
+
+# indices of observed variables in the order as they appear in ram.F rows
+function observed_var_indices(ram::RAMMatrices)
+    obs_inds = Vector{Int}(undef, nobserved_vars(ram))
+    @inbounds for i in 1:nvars(ram)
+        colptr = ram.F.colptr[i]
+        if ram.F.colptr[i+1] > colptr # is observed
+            obs_inds[ram.F.rowval[colptr]] = i
+        end
+    end
+    return obs_inds
+end
+
+latent_var_indices(ram::RAMMatrices) =
+    [i for i in axes(ram.F, 2) if islatent_var(ram, i)]
+
+# observed variables in the order as they appear in ram.F rows
 function observed_vars(ram::RAMMatrices)
     if isnothing(ram.colnames)
         @warn "Your RAMMatrices do not contain column names. Please make sure the order of variables in your data is correct!"
         return nothing
     else
-        return view(ram.colnames, ram.F_ind)
+        obs_vars = Vector{Symbol}(undef, nobserved_vars(ram))
+        @inbounds for (i, v) in enumerate(vars(ram))
+            colptr = ram.F.colptr[i]
+            if ram.F.colptr[i+1] > colptr # is observed
+                obs_vars[ram.F.rowval[colptr]] = v
+            end
+        end
+        return obs_vars
     end
 end
 
@@ -85,7 +59,7 @@ function latent_vars(ram::RAMMatrices)
         @warn "Your RAMMatrices do not contain column names. Please make sure the order of variables in your data is correct!"
         return nothing
     else
-        return view(ram.colnames, setdiff(eachindex(ram.colnames), ram.F_ind))
+        return [col for (i, col) in enumerate(ram.colnames) if islatent_var(ram, i)]
     end
 end
 
@@ -128,27 +102,16 @@ function RAMMatrices(;
             ),
         )
     end
-
     check_params(params, nothing)
 
-    A_indices = array_params_map(params, A)
-    S_indices = array_params_map(params, S)
-    M_indices = !isnothing(M) ? array_params_map(params, M) : nothing
-    F_indices = [i for (i, col) in zip(axes(F, 2), eachcol(F)) if any(isone, col)]
-    constants = Vector{RAMConstant}()
-    append_RAMConstants!(constants, :A, A)
-    append_RAMConstants!(constants, :S, S)
-    isnothing(M) || append_RAMConstants!(constants, :M, M)
-    return RAMMatrices(
-        A_indices,
-        S_indices,
-        F_indices,
-        M_indices,
-        params,
-        colnames,
-        constants,
-        size(F),
-    )
+    A = ParamsMatrix{Float64}(A, params)
+    S = ParamsMatrix{Float64}(S, params)
+    M = !isnothing(M) ? ParamsVector{Float64}(M, params) : nothing
+    spF = sparse(F)
+    if any(!isone, spF.nzval)
+        throw(ArgumentError("F should contain only 0s and 1s"))
+    end
+    return RAMMatrices(A, S, F, M, params, colnames)
 end
 
 ############################################################################################
@@ -165,83 +128,102 @@ function RAMMatrices(
 
     n_observed = length(partable.observed_vars)
     n_latent = length(partable.latent_vars)
-    n_node = n_observed + n_latent
+    n_vars = n_observed + n_latent
 
-    # F indices
-    F_ind =
-        length(partable.sorted_vars) != 0 ?
-        findall(∈(Set(partable.observed_vars)), partable.sorted_vars) : 1:n_observed
+    if length(partable.sorted_vars) != 0
+        @assert length(partable.sorted_vars) == nvars(partable)
+        vars_sorted = copy(partable.sorted_vars)
+    else
+        vars_sorted = [partable.observed_vars
+                       partable.latent_vars]
+    end
 
-    # indices of the colnames
-    colnames =
-        length(partable.sorted_vars) != 0 ? copy(partable.sorted_vars) :
-        [
-            partable.observed_vars
-            partable.latent_vars
-        ]
-    col_indices = Dict(col => i for (i, col) in enumerate(colnames))
+    # indices of the vars (A/S/M rows or columns)
+    vars_index = Dict(col => i for (i, col) in enumerate(vars_sorted))
 
     # fill Matrices
     # known_labels = Dict{Symbol, Int64}()
 
-    A_ind = [Vector{Int64}() for _ in 1:length(params)]
-    S_ind = [Vector{Int64}() for _ in 1:length(params)]
-
+    T = nonmissingtype(eltype(partable.columns[:value_fixed]))
+    A_inds = [Vector{Int64}() for _ in 1:length(params)]
+    A_lin_ixs = LinearIndices((n_vars, n_vars))
+    S_inds = [Vector{Int64}() for _ in 1:length(params)]
+    S_lin_ixs = LinearIndices((n_vars, n_vars))
+    A_consts = Vector{Pair{Int, T}}()
+    S_consts = Vector{Pair{Int, T}}()
     # is there a meanstructure?
-    M_ind =
+    M_inds =
         any(==(Symbol("1")), partable.columns[:from]) ?
         [Vector{Int64}() for _ in 1:length(params)] : nothing
-
-    # handle constants
-    constants = Vector{RAMConstant}()
+    M_consts = !isnothing(M_inds) ? Vector{Pair{Int, T}}() : nothing
 
     for r in partable
-        row_ind = col_indices[r.to]
-        col_ind = r.from != Symbol("1") ? col_indices[r.from] : nothing
+        row_ind = vars_index[r.to]
+        col_ind = r.from != Symbol("1") ? vars_index[r.from] : nothing
 
         if !r.free
             if (r.relation == :→) && (r.from == Symbol("1"))
-                push!(constants, RAMConstant(:M, row_ind, r.value_fixed))
+                push!(M_consts, row_ind => r.value_fixed)
             elseif r.relation == :→
                 push!(
-                    constants,
-                    RAMConstant(:A, CartesianIndex(row_ind, col_ind), r.value_fixed),
+                    A_consts,
+                    A_lin_ixs[CartesianIndex(row_ind, col_ind)] => r.value_fixed,
                 )
             elseif r.relation == :↔
                 push!(
-                    constants,
-                    RAMConstant(:S, CartesianIndex(row_ind, col_ind), r.value_fixed),
+                    S_consts,
+                    S_lin_ixs[CartesianIndex(row_ind, col_ind)] => r.value_fixed,
                 )
+                if row_ind != col_ind # symmetric
+                    push!(
+                        S_consts,
+                        S_lin_ixs[CartesianIndex(col_ind, row_ind)] => r.value_fixed,
+                    )
+                end
             else
-                error("Unsupported parameter type: $(r.relation)")
+                error("Unsupported relation: $(r.relation)")
             end
         else
             par_ind = params_index[r.param]
             if (r.relation == :→) && (r.from == Symbol("1"))
-                push!(M_ind[par_ind], row_ind)
+                push!(M_inds[par_ind], row_ind)
             elseif r.relation == :→
-                push!(A_ind[par_ind], row_ind + (col_ind - 1) * n_node)
+                push!(A_inds[par_ind], A_lin_ixs[CartesianIndex(row_ind, col_ind)])
             elseif r.relation == :↔
-                push!(S_ind[par_ind], row_ind + (col_ind - 1) * n_node)
-                if row_ind != col_ind
-                    push!(S_ind[par_ind], col_ind + (row_ind - 1) * n_node)
+                push!(S_inds[par_ind], S_lin_ixs[CartesianIndex(row_ind, col_ind)])
+                if row_ind != col_ind # symmetric
+                    push!(S_inds[par_ind], S_lin_ixs[CartesianIndex(col_ind, row_ind)])
                 end
             else
-                error("Unsupported parameter type: $(r.relation)")
+                error("Unsupported relation: $(r.relation)")
             end
         end
     end
+    # sort linear indices
+    for A_ind in A_inds
+        sort!(A_ind)
+    end
+    for S_ind in S_inds
+        unique!(sort!(S_ind)) # also symmetric duplicates
+    end
+    if !isnothing(M_inds)
+        for M_ind in M_inds
+            sort!(M_ind)
+        end
+    end
+    sort!(A_consts, by = first)
+    sort!(S_consts, by = first)
+    if !isnothing(M_consts)
+        sort!(M_consts, by = first)
+    end
 
-    return RAMMatrices(
-        A_ind,
-        S_ind,
-        F_ind,
-        M_ind,
-        params,
-        colnames,
-        constants,
-        (n_observed, n_node),
-    )
+    return RAMMatrices(ParamsMatrix{T}(A_inds, A_consts, (n_vars, n_vars)),
+                       ParamsMatrix{T}(S_inds, S_consts, (n_vars, n_vars)),
+                       sparse(1:n_observed,
+                              [vars_index[var] for var in partable.observed_vars],
+                              ones(T, n_observed), n_observed, n_vars),
+                       !isnothing(M_inds) ? ParamsVector{T}(M_inds, M_consts, (n_vars,)) : nothing,
+                       params, vars_sorted)
 end
 
 Base.convert(
@@ -255,21 +237,20 @@ Base.convert(
 ############################################################################################
 
 function ParameterTable(
-    ram_matrices::RAMMatrices;
+    ram::RAMMatrices;
     params::Union{AbstractVector{Symbol}, Nothing} = nothing,
     observed_var_prefix::Symbol = :obs,
     latent_var_prefix::Symbol = :var,
 )
     # defer parameter checks until we know which ones are used
-    if !isnothing(ram_matrices.colnames)
-        colnames = ram_matrices.colnames
-        observed_vars = colnames[ram_matrices.F_ind]
-        latent_vars = colnames[setdiff(eachindex(colnames), ram_matrices.F_ind)]
+
+    if !isnothing(ram.colnames)
+        latent_vars = SEM.latent_vars(ram)
+        observed_vars = SEM.observed_vars(ram)
+        colnames = ram.colnames
     else
-        observed_vars =
-            [Symbol("$(observed_var_prefix)_$i") for i in 1:nobserved_vars(ram_matrices)]
-        latent_vars =
-            [Symbol("$(latent_var_prefix)_$i") for i in 1:nlatent_vars(ram_matrices)]
+        observed_vars = [Symbol("$(observed_var_prefix)_$i") for i in 1:nobserved_vars(ram)]
+        latent_vars = [Symbol("$(latent_var_prefix)_$i") for i in 1:nlatent_vars(ram)]
         colnames = vcat(observed_vars, latent_vars)
     end
 
@@ -277,27 +258,16 @@ function ParameterTable(
     partable = ParameterTable(
         observed_vars = observed_vars,
         latent_vars = latent_vars,
-        params = isnothing(params) ? SEM.params(ram_matrices) : params,
+        params = isnothing(params) ? SEM.params(ram) : params,
     )
 
-    # constants
-    for c in ram_matrices.constants
-        push!(partable, partable_row(c, colnames))
+    # fill the table
+    append_rows!(partable, ram.S, :S, ram.params, colnames, skip_symmetric = true)
+    append_rows!(partable, ram.A, :A, ram.params, colnames)
+    if !isnothing(ram.M)
+        append_rows!(partable, ram.M, :M, ram.params, colnames)
     end
 
-    # parameters
-    for (i, par) in enumerate(ram_matrices.params)
-        append_partable_rows!(
-            partable,
-            colnames,
-            par,
-            i,
-            ram_matrices.A_ind,
-            ram_matrices.S_ind,
-            ram_matrices.M_ind,
-            ram_matrices.size_F[2],
-        )
-    end
     check_params(SEM.params(partable), partable.columns[:param])
 
     return partable
@@ -339,23 +309,13 @@ function matrix_to_relation(matrix::Symbol)
     end
 end
 
-partable_row(c::RAMConstant, varnames::AbstractVector{Symbol}) = (
-    from = varnames[c.index[2]],
-    relation = matrix_to_relation(c.matrix),
-    to = varnames[c.index[1]],
-    free = false,
-    value_fixed = c.value,
-    start = 0.0,
-    estimate = 0.0,
-    param = :const,
-)
-
+# generates a ParTable row NamedTuple for a given element of RAM matrix
 function partable_row(
-    par::Symbol,
-    varnames::AbstractVector{Symbol},
-    index::Integer,
+    val,
+    index,
     matrix::Symbol,
-    n_nod::Integer,
+    varnames::AbstractVector{Symbol};
+    free::Bool = true,
 )
 
     # variable names
@@ -363,58 +323,65 @@ function partable_row(
         from = Symbol("1")
         to = varnames[index]
     else
-        cart_index = linear2cartesian(index, (n_nod, n_nod))
-
-        from = varnames[cart_index[2]]
-        to = varnames[cart_index[1]]
+        from = varnames[index[2]]
+        to = varnames[index[1]]
     end
 
     return (
         from = from,
         relation = matrix_to_relation(matrix),
         to = to,
-        free = true,
-        value_fixed = 0.0,
+        free = free,
+        value_fixed = free ? 0.0 : val,
         start = 0.0,
         estimate = 0.0,
-        param = par,
+        param = free ? val : :const,
     )
 end
 
-function append_partable_rows!(
+function append_rows!(
     partable::ParameterTable,
-    varnames::AbstractVector{Symbol},
-    par::Symbol,
-    par_index::Integer,
-    A_ind,
-    S_ind,
-    M_ind,
-    n_nod::Integer,
+    arr::ParamsArray,
+    arr_name::Symbol,
+    params::AbstractVector,
+    varnames::AbstractVector{Symbol};
+    skip_symmetric::Bool = false,
 )
-    for ind in A_ind[par_index]
-        push!(partable, partable_row(par, varnames, ind, :A, n_nod))
-    end
+    nparams(arr) == length(params) || throw(
+        ArgumentError(
+            "Length of parameters vector ($(length(params))) does not match the number of parameters in the matrix ($(nparams(arr)))",
+        ),
+    )
+    arr_ixs = eachindex(arr)
 
-    visited_S_indices = Set{Int}()
-    for ind in S_ind[par_index]
-        if ind ∉ visited_S_indices
-            push!(partable, partable_row(par, varnames, ind, :S, n_nod))
-            # mark index and its symmetric as visited
-            push!(visited_S_indices, ind)
-            cart_index = linear2cartesian(ind, (n_nod, n_nod))
+    # add parameters
+    visited_indices = Set{eltype(arr_ixs)}()
+    for (i, par) in enumerate(params)
+        for j in param_occurences_range(arr, i)
+            arr_ix = arr_ixs[arr.linear_indices[j]]
+            skip_symmetric && (arr_ix ∈ visited_indices) && continue
+
             push!(
-                visited_S_indices,
-                cartesian2linear(
-                    CartesianIndex(cart_index[2], cart_index[1]),
-                    (n_nod, n_nod),
-                ),
+                partable,
+                partable_row(par, arr_ix, arr_name, varnames, free = true),
             )
+            if skip_symmetric
+                # mark index and its symmetric as visited
+                push!(visited_indices, arr_ix)
+                push!(visited_indices, CartesianIndex(arr_ix[2], arr_ix[1]))
+            end
         end
     end
 
-    if !isnothing(M_ind)
-        for ind in M_ind[par_index]
-            push!(partable, partable_row(par, varnames, ind, :M, n_nod))
+    # add constants
+    for (i, val) in arr.constants
+        arr_ix = arr_ixs[i]
+        skip_symmetric && (arr_ix ∈ visited_indices) && continue
+        push!(partable, partable_row(val, arr_ix, arr_name, varnames, free = false))
+        if skip_symmetric
+            # mark index and its symmetric as visited
+            push!(visited_indices, arr_ix)
+            push!(visited_indices, CartesianIndex(arr_ix[2], arr_ix[1]))
         end
     end
 
@@ -423,14 +390,12 @@ end
 
 function Base.:(==)(mat1::RAMMatrices, mat2::RAMMatrices)
     res = (
-        (mat1.A_ind == mat2.A_ind) &&
-        (mat1.S_ind == mat2.S_ind) &&
-        (mat1.F_ind == mat2.F_ind) &&
-        (mat1.M_ind == mat2.M_ind) &&
+        (mat1.A == mat2.A) &&
+        (mat1.S == mat2.S) &&
+        (mat1.F == mat2.F) &&
+        (mat1.M == mat2.M) &&
         (mat1.params == mat2.params) &&
-        (mat1.colnames == mat2.colnames) &&
-        (mat1.size_F == mat2.size_F) &&
-        (mat1.constants == mat2.constants)
+        (mat1.colnames == mat2.colnames)
     )
     return res
 end
