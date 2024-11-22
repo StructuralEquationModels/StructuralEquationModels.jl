@@ -54,8 +54,8 @@ function ParameterTable(
 
     return ParameterTable(
         Dict(col => copy(values) for (col, values) in pairs(partable.columns)),
-        observed_vars = copy(partable.observed_vars),
-        latent_vars = copy(partable.latent_vars),
+        observed_vars = copy(observed_vars(partable)),
+        latent_vars = copy(latent_vars(partable)),
         params = params,
     )
 end

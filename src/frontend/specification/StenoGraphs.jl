@@ -42,7 +42,7 @@ function ParameterTable(
     latent_vars::AbstractVector{Symbol},
     params::Union{AbstractVector{Symbol}, Nothing} = nothing,
     group::Union{Integer, Nothing} = nothing,
-    param_prefix = :θ,
+    param_prefix::Symbol = :θ,
 )
     graph = unique(graph)
     n = length(graph)

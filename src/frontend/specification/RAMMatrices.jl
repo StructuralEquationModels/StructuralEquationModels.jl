@@ -110,7 +110,7 @@ function RAMMatrices(;
     if any(!isone, spF.nzval)
         throw(ArgumentError("F should contain only 0s and 1s"))
     end
-    return RAMMatrices(A, S, F, M, params, vars)
+    return RAMMatrices(A, S, F, M, copy(params), vars)
 end
 
 ############################################################################################

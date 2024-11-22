@@ -1,5 +1,7 @@
 using StructuralEquationModels, Test, FiniteDiff
 
+SEM = StructuralEquationModels
+
 include(
     joinpath(
         chop(dirname(pathof(StructuralEquationModels)), tail = 3),
@@ -96,9 +98,9 @@ spec = RAMMatrices(;
 
 partable = ParameterTable(spec)
 
-# w. meanstructure -------------------------------------------------------------------------
+@test SEM.params(spec) == SEM.params(partable)
 
-x = Symbol.("x" .* string.(1:38))
+# w. meanstructure -------------------------------------------------------------------------
 
 M = [:x32; :x33; :x34; :x35; :x36; :x37; :x38; :x35; :x36; :x37; :x38; 0.0; 0.0; 0.0]
 
@@ -107,7 +109,7 @@ spec_mean = RAMMatrices(;
     S = S,
     F = F,
     M = M,
-    params = x,
+    params = [SEM.params(spec); Symbol.("x", string.(32:38))],
     vars = [
         :x1,
         :x2,
@@ -127,6 +129,8 @@ spec_mean = RAMMatrices(;
 )
 
 partable_mean = ParameterTable(spec_mean)
+
+@test SEM.params(partable_mean) == SEM.params(spec_mean)
 
 start_test = [fill(1.0, 11); fill(0.05, 3); fill(0.05, 6); fill(0.5, 8); fill(0.05, 3)]
 start_test_mean =
@@ -163,6 +167,8 @@ end
 
 spec = ParameterTable(spec)
 spec_mean = ParameterTable(spec_mean)
+
+@test SEM.params(spec) == SEM.params(partable)
 
 partable = spec
 partable_mean = spec_mean

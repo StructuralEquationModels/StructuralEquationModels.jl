@@ -1,6 +1,8 @@
 using LinearAlgebra: norm
 
 function test_gradient(model, params; rtol = 1e-10, atol = 0)
+    @test nparams(model) == length(params)
+
     true_grad = FiniteDiff.finite_difference_gradient(Base.Fix1(objective!, model), params)
     gradient = similar(params)
 
