@@ -62,6 +62,17 @@ function latent_vars(ram::RAMMatrices)
     end
 end
 
+function variance_params(ram::RAMMatrices)
+    S_diaginds = Set(diagind(ram.S))
+    varparams = Vector{Symbol}()
+    for (i, param) in enumerate(ram.params)
+        if any(∈(S_diaginds), param_occurences(ram.S, i))
+            push!(varparams, param)
+        end
+    end
+    return unique!(varparams)
+end
+
 ############################################################################################
 ### Constructor
 ############################################################################################
@@ -133,8 +144,10 @@ function RAMMatrices(
         @assert length(partable.sorted_vars) == nvars(partable)
         vars_sorted = copy(partable.sorted_vars)
     else
-        vars_sorted = [partable.observed_vars
-                       partable.latent_vars]
+        vars_sorted = [
+            partable.observed_vars
+            partable.latent_vars
+        ]
     end
 
     # indices of the vars (A/S/M rows or columns)
@@ -216,13 +229,20 @@ function RAMMatrices(
         sort!(M_consts, by = first)
     end
 
-    return RAMMatrices(ParamsMatrix{T}(A_inds, A_consts, (n_vars, n_vars)),
-                       ParamsMatrix{T}(S_inds, S_consts, (n_vars, n_vars)),
-                       sparse(1:n_observed,
-                              [vars_index[var] for var in partable.observed_vars],
-                              ones(T, n_observed), n_observed, n_vars),
-                       !isnothing(M_inds) ? ParamsVector{T}(M_inds, M_consts, (n_vars,)) : nothing,
-                       params, vars_sorted)
+    return RAMMatrices(
+        ParamsMatrix{T}(A_inds, A_consts, (n_vars, n_vars)),
+        ParamsMatrix{T}(S_inds, S_consts, (n_vars, n_vars)),
+        sparse(
+            1:n_observed,
+            [vars_index[var] for var in partable.observed_vars],
+            ones(T, n_observed),
+            n_observed,
+            n_vars,
+        ),
+        !isnothing(M_inds) ? ParamsVector{T}(M_inds, M_consts, (n_vars,)) : nothing,
+        params,
+        vars_sorted,
+    )
 end
 
 Base.convert(
@@ -360,10 +380,7 @@ function append_rows!(
             arr_ix = arr_ixs[arr.linear_indices[j]]
             skip_symmetric && (arr_ix ∈ visited_indices) && continue
 
-            push!(
-                partable,
-                partable_row(par, arr_ix, arr_name, varnames, free = true),
-            )
+            push!(partable, partable_row(par, arr_ix, arr_name, varnames, free = true))
             if skip_symmetric
                 # mark index and its symmetric as visited
                 push!(visited_indices, arr_ix)

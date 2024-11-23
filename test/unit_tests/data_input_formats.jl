@@ -81,8 +81,7 @@ function test_observed(
                 @test @inferred(obs_mean(observed)) == dat_mean
             end
         else
-            # FIXME if meanstructure is present, obs_mean() should provide something (currently Missing don't support it)
-            @test (@inferred(obs_mean(observed)) isa AbstractVector{Float64}) broken = true
+            @test @inferred(obs_mean(observed)) isa AbstractVector{Float64} # EM-based means
         end
     else
         @test @inferred(obs_mean(observed)) === nothing skip = true
@@ -187,7 +186,7 @@ end # SemObservedData
         )
     end
 
-    @test_throws ArgumentError("please specify `obs_colnames` as a vector of Symbols") begin
+    @test_throws "TypeError: in keyword argument obs_colnames, " begin
         SemObservedCovariance(
             specification = spec,
             obs_cov = dat_cov,
@@ -240,7 +239,7 @@ end # SemObservedData
             approx_cov = true,
         )
 
-        @test_throws ErrorException samples(observed)
+        @test @inferred(samples(observed)) === nothing
 
         observed_nospec = SemObservedCovariance(
             specification = nothing,
@@ -260,7 +259,7 @@ end # SemObservedData
             approx_cov = true,
         )
 
-        @test_throws ErrorException samples(observed_nospec)
+        @test @inferred(samples(observed_nospec)) === nothing
 
         observed_shuffle = SemObservedCovariance(
             specification = spec,
@@ -281,7 +280,7 @@ end # SemObservedData
             approx_cov = true,
         )
 
-        @test_throws ErrorException samples(observed_shuffle)
+        @test @inferred(samples(observed_shuffle)) === nothing
 
         # respect specification order
         @test @inferred(obs_cov(observed_shuffle)) ≈ obs_cov(observed)
@@ -340,13 +339,10 @@ end # SemObservedCovariance
             meanstructure,
         )
 
-        @test @inferred(length(StructuralEquationModels.patterns(observed))) == 55
-        @test sum(@inferred(StructuralEquationModels.pattern_nsamples(observed))) ==
+        @test @inferred(length(observed.patterns)) == 55
+        @test sum(@inferred(nsamples(pat)) for pat in observed.patterns) ==
               size(dat_missing, 1)
-        @test all(
-            <=(size(dat_missing, 2)),
-            @inferred(StructuralEquationModels.pattern_nsamples(observed))
-        )
+        @test all(nsamples(pat) <= size(dat_missing, 2) for pat in observed.patterns)
 
         observed_nospec = SemObservedMissing(
             specification = nothing,

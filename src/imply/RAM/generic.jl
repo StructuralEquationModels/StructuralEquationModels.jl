@@ -116,6 +116,7 @@ function RAM(;
     #vech = false,
     gradient_required = true,
     meanstructure = false,
+    sparse_S::Bool = true,
     kwargs...,
 )
     ram_matrices = convert(RAMMatrices, specification)
@@ -126,18 +127,19 @@ function RAM(;
     n_var = nvars(ram_matrices)
 
     #preallocate arrays
-    nan_params = fill(NaN, n_par)
-    A_pre = materialize(ram_matrices.A, nan_params)
-    S_pre = materialize(ram_matrices.S, nan_params)
+    rand_params = randn(Float64, n_par)
+    A_pre = check_acyclic(materialize(ram_matrices.A, rand_params))
+    S_pre = Symmetric(
+        (sparse_S ? sparse_materialize : materialize)(ram_matrices.S, rand_params),
+    )
     F = copy(ram_matrices.F)
 
-    A_pre = check_acyclic(A_pre, ram_matrices.A)
-
     # pre-allocate some matrices
-    Σ = zeros(n_obs, n_obs)
+    Σ = Symmetric(zeros(n_obs, n_obs))
     F⨉I_A⁻¹ = zeros(n_obs, n_var)
     F⨉I_A⁻¹S = zeros(n_obs, n_var)
-    I_A = similar(A_pre)
+    I_A = convert(Matrix, I - A_pre)
+    I_A = istril(I_A) ? LowerTriangular(I_A) : istriu(I_A) ? UpperTriangular(I_A) : I_A
 
     if gradient_required
         ∇A = sparse_gradient(ram_matrices.A)
@@ -155,7 +157,7 @@ function RAM(;
                 "You set `meanstructure = true`, but your model specification contains no mean parameters.",
             ),
         )
-        M_pre = materialize(ram_matrices.M, nan_params)
+        M_pre = materialize(ram_matrices.M, rand_params)
         ∇M = gradient_required ? sparse_gradient(ram_matrices.M) : nothing
         μ = zeros(n_obs)
     else
@@ -176,7 +178,7 @@ function RAM(;
         F⨉I_A⁻¹,
         F⨉I_A⁻¹S,
         I_A,
-        copy(I_A),
+        similar(I_A),
         ∇A,
         ∇S,
         ∇M,
@@ -194,7 +196,7 @@ function update!(targets::EvaluationTargets, imply::RAM, model::AbstractSemSingl
         materialize!(imply.M, imply.ram_matrices.M, params)
     end
 
-    @. imply.I_A = -imply.A
+    parent(imply.I_A) .= .-imply.A
     @view(imply.I_A[diagind(imply.I_A)]) .+= 1
 
     if is_gradient_required(targets) || is_hessian_required(targets)
@@ -206,7 +208,7 @@ function update!(targets::EvaluationTargets, imply::RAM, model::AbstractSemSingl
     end
 
     mul!(imply.F⨉I_A⁻¹S, imply.F⨉I_A⁻¹, imply.S)
-    mul!(imply.Σ, imply.F⨉I_A⁻¹S, imply.F⨉I_A⁻¹')
+    mul!(parent(imply.Σ), imply.F⨉I_A⁻¹S, imply.F⨉I_A⁻¹')
 
     if MeanStruct(imply) === HasMeanStruct
         mul!(imply.μ, imply.F⨉I_A⁻¹, imply.M)
@@ -223,28 +225,4 @@ function update_observed(imply::RAM, observed::SemObserved; kwargs...)
     else
         return RAM(; observed = observed, kwargs...)
     end
-end
-
-############################################################################################
-### additional functions
-############################################################################################
-
-function check_acyclic(A_pre::AbstractMatrix, A::ParamsMatrix)
-    # fill copy of A with random parameters
-    A_rand = materialize(A, rand(nparams(A)))
-
-    # check if the model is acyclic
-    acyclic = isone(det(I - A_rand))
-
-    # check if A is lower or upper triangular
-    if istril(A_rand)
-        A_pre = LowerTriangular(A_pre)
-    elseif istriu(A_rand)
-        A_pre = UpperTriangular(A_pre)
-    elseif acyclic
-        @info "Your model is acyclic, specifying the A Matrix as either Upper or Lower Triangular can have great performance benefits.\n" maxlog =
-            1
-    end
-
-    return A_pre
 end
