@@ -54,8 +54,8 @@ function ParameterTable(
 
     return ParameterTable(
         Dict(col => copy(values) for (col, values) in pairs(partable.columns)),
-        observed_vars = copy(partable.observed_vars),
-        latent_vars = copy(partable.latent_vars),
+        observed_vars = copy(observed_vars(partable)),
+        latent_vars = copy(latent_vars(partable)),
         params = params,
     )
 end
@@ -309,10 +309,10 @@ function update_partable!(
             "The length of `params` ($(length(params))) and their `values` ($(length(values))) must be the same",
         ),
     )
+    dup_params = nonunique(params)
+    isempty(dup_params) ||
+        throw(ArgumentError("Duplicate parameters detected: $(join(dup_params, ", "))"))
     param_values = Dict(zip(params, values))
-    if length(param_values) != length(params)
-        throw(ArgumentError("Duplicate parameter names in `params`"))
-    end
     update_partable!(partable, column, param_values, default)
 end
 

@@ -21,28 +21,19 @@ function start_parameter_table(observed, imply, optimizer, args...; kwargs...)
     return start_parameter_table(ram_matrices(imply); kwargs...)
 end
 
-function start_parameter_table(
-    ram_matrices::RAMMatrices;
-    parameter_table::ParameterTable,
-    kwargs...,
-)
+function start_parameter_table(ram::RAMMatrices; partable::ParameterTable, kwargs...)
     start_val = zeros(0)
 
-    for param in ram_matrices.params
-        found = false
-        for (i, param_table) in enumerate(parameter_table.params)
-            if param == param_table
-                push!(start_val, parameter_table.start[i])
-                found = true
-                break
-            end
-        end
-        if !found
-            throw(
-                ErrorException(
-                    "At least one parameter could not be found in the parameter table.",
-                ),
-            )
+    param_indices = Dict(param => i for (i, param) in enumerate(params(ram)))
+    start_col = partable.columns[:start]
+
+    for (i, param) in enumerate(partable.columns[:param])
+        par_ind = get(param_indices, param, nothing)
+        if !isnothing(par_ind)
+            par_start = start_col[i]
+            isfinite(par_start) && (start_val[i] = par_start)
+        else
+            throw(ErrorException("Parameter $(param) is not in the parameter table."))
         end
     end
 

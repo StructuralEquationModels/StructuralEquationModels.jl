@@ -1,3 +1,5 @@
+const SEM = StructuralEquationModels
+
 ############################################################################################
 # ML estimation
 ############################################################################################
@@ -5,6 +7,8 @@
 model_g1 = Sem(specification = specification_g1, data = dat_g1, imply = RAMSymbolic)
 
 model_g2 = Sem(specification = specification_g2, data = dat_g2, imply = RAM)
+
+@test SEM.params(model_g1.imply.ram_matrices) == SEM.params(model_g2.imply.ram_matrices)
 
 # test the different constructors
 model_ml_multigroup = SemEnsemble(model_g1, model_g2; optimizer = semoptimizer)

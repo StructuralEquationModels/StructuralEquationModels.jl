@@ -6,6 +6,7 @@ using Random
 ############################################################################################
 
 model_ml = Sem(specification = spec, data = dat, optimizer = semoptimizer)
+@test SEM.params(model_ml.imply.ram_matrices) == SEM.params(spec)
 
 model_ml_cov = Sem(
     specification = spec,

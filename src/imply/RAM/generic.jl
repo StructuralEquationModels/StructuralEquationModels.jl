@@ -74,9 +74,6 @@ mutable struct RAM{
     A5,
     A6,
     V2,
-    I1,
-    I2,
-    I3,
     M1,
     M2,
     M3,
@@ -96,10 +93,6 @@ mutable struct RAM{
     M::A6
 
     ram_matrices::V2
-
-    A_indices::I1
-    S_indices::I2
-    M_indices::I3
 
     F⨉I_A⁻¹::M1
     F⨉I_A⁻¹S::M2
@@ -131,22 +124,14 @@ function RAM(;
     n_par = nparams(ram_matrices)
     n_obs = nobserved_vars(ram_matrices)
     n_var = nvars(ram_matrices)
-    F = zeros(ram_matrices.size_F)
-    F[CartesianIndex.(1:n_obs, ram_matrices.F_ind)] .= 1.0
-
-    # get indices
-    A_indices = copy(ram_matrices.A_ind)
-    S_indices = copy(ram_matrices.S_ind)
-    M_indices = !isnothing(ram_matrices.M_ind) ? copy(ram_matrices.M_ind) : nothing
 
     #preallocate arrays
-    A_pre = zeros(n_var, n_var)
-    S_pre = zeros(n_var, n_var)
-    M_pre = !isnothing(M_indices) ? zeros(n_var) : nothing
+    nan_params = fill(NaN, n_par)
+    A_pre = materialize(ram_matrices.A, nan_params)
+    S_pre = materialize(ram_matrices.S, nan_params)
+    F = copy(ram_matrices.F)
 
-    set_RAMConstants!(A_pre, S_pre, M_pre, ram_matrices.constants)
-
-    A_pre = check_acyclic(A_pre, n_par, A_indices)
+    A_pre = check_acyclic(A_pre, ram_matrices.A)
 
     # pre-allocate some matrices
     Σ = zeros(n_obs, n_obs)
@@ -155,8 +140,8 @@ function RAM(;
     I_A = similar(A_pre)
 
     if gradient_required
-        ∇A = matrix_gradient(A_indices, n_var^2)
-        ∇S = matrix_gradient(S_indices, n_var^2)
+        ∇A = sparse_gradient(ram_matrices.A)
+        ∇S = sparse_gradient(ram_matrices.S)
     else
         ∇A = nothing
         ∇S = nothing
@@ -165,16 +150,16 @@ function RAM(;
     # μ
     if meanstructure
         MS = HasMeanStruct
-        !isnothing(M_indices) || throw(
+        !isnothing(ram_matrices.M) || throw(
             ArgumentError(
                 "You set `meanstructure = true`, but your model specification contains no mean parameters.",
             ),
         )
-        ∇M = gradient_required ? matrix_gradient(M_indices, n_var) : nothing
+        M_pre = materialize(ram_matrices.M, nan_params)
+        ∇M = gradient_required ? sparse_gradient(ram_matrices.M) : nothing
         μ = zeros(n_obs)
     else
         MS = NoMeanStruct
-        M_indices = nothing
         M_pre = nothing
         μ = nothing
         ∇M = nothing
@@ -188,9 +173,6 @@ function RAM(;
         μ,
         M_pre,
         ram_matrices,
-        A_indices,
-        S_indices,
-        M_indices,
         F⨉I_A⁻¹,
         F⨉I_A⁻¹S,
         I_A,
@@ -206,15 +188,11 @@ end
 ############################################################################################
 
 function update!(targets::EvaluationTargets, imply::RAM, model::AbstractSemSingle, params)
-    fill_A_S_M!(
-        imply.A,
-        imply.S,
-        imply.M,
-        imply.A_indices,
-        imply.S_indices,
-        imply.M_indices,
-        params,
-    )
+    materialize!(imply.A, imply.ram_matrices.A, params)
+    materialize!(imply.S, imply.ram_matrices.S, params)
+    if !isnothing(imply.M)
+        materialize!(imply.M, imply.ram_matrices.M, params)
+    end
 
     @. imply.I_A = -imply.A
     @view(imply.I_A[diagind(imply.I_A)]) .+= 1
@@ -251,12 +229,9 @@ end
 ### additional functions
 ############################################################################################
 
-function check_acyclic(A_pre, n_par, A_indices)
-    # fill copy of A-matrix with random parameters
-    A_rand = copy(A_pre)
-    randpar = rand(n_par)
-
-    fill_matrix!(A_rand, A_indices, randpar)
+function check_acyclic(A_pre::AbstractMatrix, A::ParamsMatrix)
+    # fill copy of A with random parameters
+    A_rand = materialize(A, rand(nparams(A)))
 
     # check if the model is acyclic
     acyclic = isone(det(I - A_rand))

@@ -40,7 +40,7 @@ A = [
     0 0 0 0 0 0 0    0
 ]
 
-ram_matrices = RAMMatrices(; A = A, S = S, F = F, params = x, colnames = nothing)
+ram_matrices = RAMMatrices(; A = A, S = S, F = F, params = x, vars = nothing)
 
 true_val = [
     repeat([1], 8)
