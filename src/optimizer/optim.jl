@@ -20,19 +20,41 @@ convergence(res::Optim.MultivariateOptimizationResults) = Optim.converged(res)
 
 function sem_fit(
     optim::SemOptimizerOptim,
-    model::AbstractSem;
-    start_val = start_val,
+    model::AbstractSem,
+    start_params::AbstractVector;
+    lower_bounds::Union{AbstractVector, AbstractDict, Nothing} = nothing,
+    upper_bounds::Union{AbstractVector, AbstractDict, Nothing} = nothing,
+    variance_lower_bound::Float64 = 0.0,
+    lower_bound = -Inf,
+    upper_bound = Inf,
     kwargs...,
 )
-    if !isa(start_val, AbstractVector)
-        start_val = start_val(model; kwargs...)
-    end
 
-    result = Optim.optimize(
-        Optim.only_fgh!((F, G, H, par) -> evaluate!(F, G, H, model, par)),
-        start_val,
-        model.optimizer.algorithm,
-        model.optimizer.options,
-    )
-    return SemFit(result, model, start_val)
+    # setup lower/upper bounds if the algorithm supports it
+    if optim.algorithm isa Optim.Fminbox || optim.algorithm isa Optim.SAMIN
+        lbounds = SEM.lower_bounds(
+            lower_bounds,
+            model,
+            default = lower_bound,
+            variance_default = variance_lower_bound,
+        )
+        ubounds = SEM.upper_bounds(upper_bounds, model, default = upper_bound)
+        start_params = clamp.(start_params, lbounds, ubounds)
+        result = Optim.optimize(
+            Optim.only_fgh!((F, G, H, par) -> evaluate!(F, G, H, model, par)),
+            lbounds,
+            ubounds,
+            start_params,
+            optim.algorithm,
+            optim.options,
+        )
+    else
+        result = Optim.optimize(
+            Optim.only_fgh!((F, G, H, par) -> evaluate!(F, G, H, model, par)),
+            start_params,
+            optim.algorithm,
+            optim.options,
+        )
+    end
+    return SemFit(result, model, start_params)
 end
