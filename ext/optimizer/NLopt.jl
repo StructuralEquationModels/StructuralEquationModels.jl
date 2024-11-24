@@ -24,32 +24,28 @@ end
 
 # sem_fit method
 function SEM.sem_fit(
-    optimizer::SemOptimizerNLopt,
+    optim::SemOptimizerNLopt,
     model::AbstractSem,
     start_params::AbstractVector;
     kwargs...,
 )
 
     # construct the NLopt problem
-    opt = construct_NLopt_problem(
-        model.optimizer.algorithm,
-        model.optimizer.options,
-        length(start_params),
-    )
-    set_NLopt_constraints!(opt, model.optimizer)
+    opt = construct_NLopt_problem(optim.algorithm, optim.options, length(start_params))
+    set_NLopt_constraints!(opt, optim)
     opt.min_objective =
         (par, G) -> SEM.evaluate!(
-            eltype(par),
+            zero(eltype(par)),
             !isnothing(G) && !isempty(G) ? G : nothing,
             nothing,
             model,
             par,
         )
 
-    if !isnothing(model.optimizer.local_algorithm)
+    if !isnothing(optim.local_algorithm)
         opt_local = construct_NLopt_problem(
-            model.optimizer.local_algorithm,
-            model.optimizer.local_options,
+            optim.local_algorithm,
+            optim.local_options,
             length(start_params),
         )
         opt.local_optimizer = opt_local
