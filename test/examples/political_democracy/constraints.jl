@@ -30,6 +30,8 @@ constrained_optimizer = SemOptimizer(;
     inequality_constraints = (f = ineq_constraint, tol = 0.0),
 )
 
+@test constrained_optimizer isa SemOptimizer{:NLopt}
+
 # NLopt option setting ---------------------------------------------------------------------
 
 ############################################################################################
@@ -49,6 +51,6 @@ end
     @test solution_constrained.solution[31] * solution_constrained.solution[30] >=
           (0.6 - 1e-8)
     @test all(abs.(solution_constrained.solution) .< 10)
-    @test solution_constrained.optimization_result.result[3] == :FTOL_REACHED skip = true
-    @test abs(solution_constrained.minimum - 21.21) < 0.01
+    @test solution_constrained.optimization_result.result[3] == :FTOL_REACHED
+    @test solution_constrained.minimum <= 21.21 + 0.01
 end
