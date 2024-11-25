@@ -60,10 +60,8 @@ include("loss/regularization/ridge.jl")
 include("loss/WLS/WLS.jl")
 include("loss/constant/constant.jl")
 # optimizer
-include("diff/optim.jl")
-include("diff/Empty.jl")
-# optimizer
 include("optimizer/documentation.jl")
+include("optimizer/Empty.jl")
 include("optimizer/optim.jl")
 # helper functions
 include("additional_functions/helper.jl")
