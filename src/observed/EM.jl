@@ -223,7 +223,7 @@ function start_em_observed(patterns::AbstractVector{<:SemObservedMissingPattern}
         end
         return Σ, μ
     else
-        return start_em_simple(observed, kwargs...)
+        return start_em_simple(patterns, kwargs...)
     end
 end
 
