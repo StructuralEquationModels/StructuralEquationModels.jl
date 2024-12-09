@@ -117,7 +117,8 @@ function SemObservedMissing(;
 
     em_cov, em_mean = em_mvn(patterns; kwargs...)
 
-    return SemObservedMissing(data, nobs_vars, nsamples, patterns, em_cov, em_mean)
+    return SemObservedMissing(convert(Matrix{Union{nonmissingtype(eltype(data)), Missing}}, data),
+                              nobs_vars, nsamples, patterns, em_cov, em_mean)
 end
 
 nsamples(observed::SemObservedMissing) = observed.nsamples
