@@ -3,12 +3,15 @@
 
 Return a vector of starting values taken from `parameter_table`.
 """
-start_parameter_table(model::AbstractSemSingle; partable::ParameterTable, kwargs...) =
-    start_parameter_table(partable)
+start_parameter_table(
+    model::AbstractSemSingle;
+    parameter_table::ParameterTable,
+    kwargs...,
+) = start_parameter_table(model.imply.ram_matrices, parameter_table)
 
-function start_parameter_table(partable::ParameterTable)
-    start_vals = zeros(eltype(partable.columns[:start]), nparams(partable))
-    param_indices = Dict(param => i for (i, param) in enumerate(params(partable)))
+function start_parameter_table(spec::SemSpecification, partable::ParameterTable)
+    start_vals = zeros(eltype(partable.columns[:start]), nparams(spec))
+    param_indices = Dict(param => i for (i, param) in enumerate(params(spec)))
 
     for (param, startval) in zip(partable.columns[:param], partable.columns[:start])
         (param == :const) && continue
