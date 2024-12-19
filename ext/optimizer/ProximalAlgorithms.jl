@@ -8,33 +8,29 @@ Connects to `ProximalAlgorithms.jl` as the optimization backend.
 
     SemOptimizerProximal(;
         algorithm = ProximalAlgorithms.PANOC(),
-        options = Dict{Symbol, Any}(),
         operator_g,
         operator_h = nothing,
         kwargs...,
 
 # Arguments
 - `algorithm`: optimization algorithm.
-- `options::Dict{Symbol, Any}`: options for the optimization algorithm
 - `operator_g`: gradient of the objective function
 - `operator_h`: optional hessian of the objective function
 """
-mutable struct SemOptimizerProximal{A, B, C, D} <: SemOptimizer{:Proximal}
+mutable struct SemOptimizerProximal{A, B, C} <: SemOptimizer{:Proximal}
     algorithm::A
-    options::B
-    operator_g::C
-    operator_h::D
+    operator_g::B
+    operator_h::C
 end
 
 SEM.SemOptimizer{:Proximal}(args...; kwargs...) = SemOptimizerProximal(args...; kwargs...)
 
 SemOptimizerProximal(;
     algorithm = ProximalAlgorithms.PANOC(),
-    options = Dict{Symbol, Any}(),
     operator_g,
     operator_h = nothing,
     kwargs...,
-) = SemOptimizerProximal(algorithm, options, operator_g, operator_h)
+) = SemOptimizerProximal(algorithm, operator_g, operator_h)
 
 ############################################################################################
 ### Recommended methods
@@ -48,7 +44,6 @@ SEM.update_observed(optimizer::SemOptimizerProximal, observed::SemObserved; kwar
 ############################################################################################
 
 SEM.algorithm(optimizer::SemOptimizerProximal) = optimizer.algorithm
-SEM.options(optimizer::SemOptimizerProximal) = optimizer.options
 
 ############################################################################
 ### Pretty Printing
