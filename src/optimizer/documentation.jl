@@ -77,3 +77,40 @@ function prepare_start_params(start_val::ParameterTable, model::AbstractSem; kwa
     end
     return res
 end
+
+# prepare a vector of model parameter bounds (BOUND=:lower or BOUND=:lower):
+# use the user-specified "bounds" vector "as is"
+function prepare_param_bounds(
+    ::Val{BOUND},
+    bounds::AbstractVector{<:Number},
+    model::AbstractSem;
+    default::Number,            # unused for vector bounds
+    variance_default::Number,   # unused for vector bounds
+) where {BOUND}
+    length(bounds) == nparams(model) || throw(
+        DimensionMismatch(
+            "The length of `bounds` vector ($(length(bounds))) does not match the number of model parameters ($(nparams(model))).",
+        ),
+    )
+    return bounds
+end
+
+# prepare a vector of model parameter bounds
+# given the "bounds" dictionary and default values
+function prepare_param_bounds(
+    ::Val{BOUND},
+    bounds::Union{AbstractDict, Nothing},
+    model::AbstractSem;
+    default::Number,
+    variance_default::Number,
+) where {BOUND}
+    varparams = Set(variance_params(model.imply.ram_matrices))
+    res = [
+        begin
+            def = in(p, varparams) ? variance_default : default
+            isnothing(bounds) ? def : get(bounds, p, def)
+        end for p in SEM.params(model)
+    ]
+
+    return res
+end
