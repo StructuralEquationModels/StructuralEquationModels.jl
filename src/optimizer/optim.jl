@@ -1,5 +1,79 @@
 ## connect to Optim.jl as backend
 
+############################################################################################
+### Types and Constructor
+############################################################################################
+"""
+    SemOptimizerOptim{A, B} <: SemOptimizer{:Optim}
+
+Connects to `Optim.jl` as the optimization backend.
+
+# Constructor
+
+    SemOptimizerOptim(;
+        algorithm = LBFGS(),
+        options = Optim.Options(;f_tol = 1e-10, x_tol = 1.5e-8),
+        kwargs...)
+
+# Arguments
+- `algorithm`: optimization algorithm.
+- `options::Optim.Options`: options for the optimization algorithm
+
+# Usage
+All algorithms and options from the Optim.jl library are available, for more information see
+the Optim.jl online documentation.
+
+# Examples
+```julia
+my_optimizer = SemOptimizerOptim()
+
+# hessian based optimization with backtracking linesearch and modified initial step size
+using Optim, LineSearches
+
+my_newton_optimizer = SemOptimizerOptim(
+    algorithm = Newton(
+        ;linesearch = BackTracking(order=3),
+        alphaguess = InitialHagerZhang()
+    )
+)
+```
+
+# Extended help
+
+## Interfaces
+- `algorithm(::SemOptimizerOptim)`
+- `options(::SemOptimizerOptim)`
+
+## Implementation
+
+Subtype of `SemOptimizer`.
+"""
+mutable struct SemOptimizerOptim{A, B} <: SemOptimizer{:Optim}
+    algorithm::A
+    options::B
+end
+
+SemOptimizer{:Optim}(args...; kwargs...) = SemOptimizerOptim(args...; kwargs...)
+
+SemOptimizerOptim(;
+    algorithm = LBFGS(),
+    options = Optim.Options(; f_tol = 1e-10, x_tol = 1.5e-8),
+    kwargs...,
+) = SemOptimizerOptim(algorithm, options)
+
+############################################################################################
+### Recommended methods
+############################################################################################
+
+update_observed(optimizer::SemOptimizerOptim, observed::SemObserved; kwargs...) = optimizer
+
+############################################################################################
+### additional methods
+############################################################################################
+
+algorithm(optimizer::SemOptimizerOptim) = optimizer.algorithm
+options(optimizer::SemOptimizerOptim) = optimizer.options
+
 function SemFit(
     optimization_result::Optim.MultivariateOptimizationResults,
     model::AbstractSem,
@@ -20,19 +94,41 @@ convergence(res::Optim.MultivariateOptimizationResults) = Optim.converged(res)
 
 function sem_fit(
     optim::SemOptimizerOptim,
-    model::AbstractSem;
-    start_val = start_val,
+    model::AbstractSem,
+    start_params::AbstractVector;
+    lower_bounds::Union{AbstractVector, AbstractDict, Nothing} = nothing,
+    upper_bounds::Union{AbstractVector, AbstractDict, Nothing} = nothing,
+    variance_lower_bound::Float64 = 0.0,
+    lower_bound = -Inf,
+    upper_bound = Inf,
     kwargs...,
 )
-    if !isa(start_val, AbstractVector)
-        start_val = start_val(model; kwargs...)
-    end
 
-    result = Optim.optimize(
-        Optim.only_fgh!((F, G, H, par) -> evaluate!(F, G, H, model, par)),
-        start_val,
-        model.optimizer.algorithm,
-        model.optimizer.options,
-    )
-    return SemFit(result, model, start_val)
+    # setup lower/upper bounds if the algorithm supports it
+    if optim.algorithm isa Optim.Fminbox || optim.algorithm isa Optim.SAMIN
+        lbounds = SEM.lower_bounds(
+            lower_bounds,
+            model,
+            default = lower_bound,
+            variance_default = variance_lower_bound,
+        )
+        ubounds = SEM.upper_bounds(upper_bounds, model, default = upper_bound)
+        start_params = clamp.(start_params, lbounds, ubounds)
+        result = Optim.optimize(
+            Optim.only_fgh!((F, G, H, par) -> evaluate!(F, G, H, model, par)),
+            lbounds,
+            ubounds,
+            start_params,
+            optim.algorithm,
+            optim.options,
+        )
+    else
+        result = Optim.optimize(
+            Optim.only_fgh!((F, G, H, par) -> evaluate!(F, G, H, model, par)),
+            start_params,
+            optim.algorithm,
+            optim.options,
+        )
+    end
+    return SemFit(result, model, start_params)
 end
