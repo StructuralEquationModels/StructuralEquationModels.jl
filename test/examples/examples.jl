@@ -9,3 +9,6 @@ end
 @safetestset "Multigroup" begin
     include("multigroup/multigroup.jl")
 end
+@safetestset "Proximal" begin
+    include("proximal/proximal.jl")
+end
