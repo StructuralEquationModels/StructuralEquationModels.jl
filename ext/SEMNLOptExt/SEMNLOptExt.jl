@@ -6,6 +6,6 @@ SEM = StructuralEquationModels
 
 export SemOptimizerNLopt, NLoptConstraint
 
-include("optimizer/NLopt.jl")
+include("NLopt.jl")
 
 end
