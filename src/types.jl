@@ -4,8 +4,8 @@
 "Most abstract supertype for all SEMs"
 abstract type AbstractSem end
 
-"Supertype for all single SEMs, e.g. SEMs that have at least the fields `observed`, `imply`, `loss` and `optimizer`"
-abstract type AbstractSemSingle{O, I, L, D} <: AbstractSem end
+"Supertype for all single SEMs, e.g. SEMs that have at least the fields `observed`, `imply`, `loss`"
+abstract type AbstractSemSingle{O, I, L} <: AbstractSem end
 
 "Supertype for all collections of multiple SEMs"
 abstract type AbstractSemCollection <: AbstractSem end
@@ -116,73 +116,66 @@ abstract type SemImply end
 abstract type SemImplySymbolic <: SemImply end
 
 """
-    Sem(;observed = SemObservedData, imply = RAM, loss = SemML, optimizer = SemOptimizerOptim, kwargs...)
+    Sem(;observed = SemObservedData, imply = RAM, loss = SemML, kwargs...)
 
 Constructor for the basic `Sem` type.
-All additional kwargs are passed down to the constructors for the observed, imply, loss and optimizer fields.
+All additional kwargs are passed down to the constructors for the observed, imply, and loss fields.
 
 # Arguments
 - `observed`: object of subtype `SemObserved` or a constructor.
 - `imply`: object of subtype `SemImply` or a constructor.
 - `loss`: object of subtype `SemLossFunction`s or constructor; or a tuple of such.
-- `optimizer`: object of subtype `SemOptimizer` or a constructor.
 
 Returns a Sem with fields
 - `observed::SemObserved`: Stores observed data, sample statistics, etc. See also [`SemObserved`](@ref).
 - `imply::SemImply`: Computes model implied statistics, like Σ, μ, etc. See also [`SemImply`](@ref).
 - `loss::SemLoss`: Computes the objective and gradient of a sum of loss functions. See also [`SemLoss`](@ref).
-- `optimizer::SemOptimizer`: Connects the model to the optimizer. See also [`SemOptimizer`](@ref).
 """
-mutable struct Sem{O <: SemObserved, I <: SemImply, L <: SemLoss, D <: SemOptimizer} <:
-               AbstractSemSingle{O, I, L, D}
+mutable struct Sem{O <: SemObserved, I <: SemImply, L <: SemLoss} <:
+               AbstractSemSingle{O, I, L}
     observed::O
     imply::I
     loss::L
-    optimizer::D
 end
 
 ############################################################################################
 # automatic differentiation
 ############################################################################################
 """
-    SemFiniteDiff(;observed = SemObservedData, imply = RAM, loss = SemML, optimizer = SemOptimizerOptim, kwargs...)
+    SemFiniteDiff(;observed = SemObservedData, imply = RAM, loss = SemML, kwargs...)
 
-Constructor for `SemFiniteDiff`.
-All additional kwargs are passed down to the constructors for the observed, imply, loss and optimizer fields.
+A wrapper around [`Sem`](@ref) that substitutes dedicated evaluation of gradient and hessian with
+finite difference approximation.
 
 # Arguments
 - `observed`: object of subtype `SemObserved` or a constructor.
 - `imply`: object of subtype `SemImply` or a constructor.
 - `loss`: object of subtype `SemLossFunction`s or constructor; or a tuple of such.
-- `optimizer`: object of subtype `SemOptimizer` or a constructor.
 
 Returns a Sem with fields
 - `observed::SemObserved`: Stores observed data, sample statistics, etc. See also [`SemObserved`](@ref).
 - `imply::SemImply`: Computes model implied statistics, like Σ, μ, etc. See also [`SemImply`](@ref).
 - `loss::SemLoss`: Computes the objective and gradient of a sum of loss functions. See also [`SemLoss`](@ref).
-- `optimizer::SemOptimizer`: Connects the model to the optimizer. See also [`SemOptimizer`](@ref).
 """
-struct SemFiniteDiff{O <: SemObserved, I <: SemImply, L <: SemLoss, D <: SemOptimizer} <:
-       AbstractSemSingle{O, I, L, D}
+struct SemFiniteDiff{O <: SemObserved, I <: SemImply, L <: SemLoss} <:
+       AbstractSemSingle{O, I, L}
     observed::O
     imply::I
     loss::L
-    optimizer::D
 end
 
 ############################################################################################
 # ensemble models
 ############################################################################################
 """
-    (1) SemEnsemble(models..., optimizer = SemOptimizerOptim, weights = nothing, kwargs...)
+    (1) SemEnsemble(models..., weights = nothing, kwargs...)
 
-    (2) SemEnsemble(;specification, data, groups, column = :group, optimizer = SemOptimizerOptim, kwargs...)
+    (2) SemEnsemble(;specification, data, groups, column = :group, kwargs...)
 
 Constructor for ensemble models. (2) can be used to conveniently specify multigroup models.
 
 # Arguments
 - `models...`: `AbstractSem`s.
-- `optimizer`: object of subtype `SemOptimizer` or a constructor.
 - `weights::Vector`:  Weights for each model. Defaults to the number of observed data points.
 - `specification::EnsembleParameterTable`: Model specification.
 - `data::DataFrame`: Observed data. Must contain a `column` of type `Vector{Symbol}` that contains the group.
@@ -195,19 +188,17 @@ Returns a SemEnsemble with fields
 - `n::Int`: Number of models.
 - `sems::Tuple`: `AbstractSem`s.
 - `weights::Vector`: Weights for each model.
-- `optimizer::SemOptimizer`: Connects the model to the optimizer. See also [`SemOptimizer`](@ref).
 - `params::Vector`: Stores parameter labels and their position.
 """
-struct SemEnsemble{N, T <: Tuple, V <: AbstractVector, D, I} <: AbstractSemCollection
+struct SemEnsemble{N, T <: Tuple, V <: AbstractVector, I} <: AbstractSemCollection
     n::N
     sems::T
     weights::V
-    optimizer::D
     params::I
 end
 
 # constructor from multiple models
-function SemEnsemble(models...; optimizer = SemOptimizerOptim, weights = nothing, kwargs...)
+function SemEnsemble(models...; weights = nothing, kwargs...)
     n = length(models)
 
     # default weights
@@ -227,16 +218,11 @@ function SemEnsemble(models...; optimizer = SemOptimizerOptim, weights = nothing
         end
     end
 
-    # optimizer
-    if !isa(optimizer, SemOptimizer)
-        optimizer = optimizer(; kwargs...)
-    end
-
-    return SemEnsemble(n, models, weights, optimizer, params)
+    return SemEnsemble(n, models, weights, params)
 end
 
 # constructor from EnsembleParameterTable and data set
-function SemEnsemble(;specification, data, groups, column = :group, optimizer = SemOptimizerOptim, kwargs...)
+function SemEnsemble(; specification, data, groups, column = :group, kwargs...)
     if specification isa EnsembleParameterTable
         specification = convert(Dict{Symbol, RAMMatrices}, specification)
     end
@@ -247,14 +233,10 @@ function SemEnsemble(;specification, data, groups, column = :group, optimizer = 
         if iszero(nrow(data_group))
             error("Your data does not contain any observations from group `$(group)`.")
         end
-        model = Sem(;
-            specification = ram_matrices,
-            data = data_group,
-            kwargs...
-        )
+        model = Sem(; specification = ram_matrices, data = data_group, kwargs...)
         push!(models, model)
     end
-    return SemEnsemble(models...; optimizer = optimizer, weights = nothing, kwargs...)
+    return SemEnsemble(models...; weights = nothing, kwargs...)
 end
 
 params(ensemble::SemEnsemble) = ensemble.params
@@ -277,12 +259,6 @@ models(ensemble::SemEnsemble) = ensemble.sems
 Returns the weights of an ensemble model.
 """
 weights(ensemble::SemEnsemble) = ensemble.weights
-"""
-    optimizer(ensemble::SemEnsemble) -> SemOptimizer
-
-Returns the optimizer part of an ensemble model.
-"""
-optimizer(ensemble::SemEnsemble) = ensemble.optimizer
 
 """
 Base type for all SEM specifications.

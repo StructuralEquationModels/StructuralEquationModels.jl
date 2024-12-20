@@ -30,33 +30,22 @@ constrained_optimizer = SemOptimizer(;
     inequality_constraints = (f = ineq_constraint, tol = 0.0),
 )
 
-model_ml_constrained =
-    Sem(specification = spec, data = dat, optimizer = constrained_optimizer)
-
-solution_constrained = sem_fit(model_ml_constrained)
-
 # NLopt option setting ---------------------------------------------------------------------
-
-model_ml_maxeval = Sem(
-    specification = spec,
-    data = dat,
-    optimizer = SemOptimizer,
-    engine = :NLopt,
-    options = Dict(:maxeval => 10),
-)
 
 ############################################################################################
 ### test solution
 ############################################################################################
 
 @testset "ml_solution_maxeval" begin
-    solution_maxeval = sem_fit(model_ml_maxeval)
+    solution_maxeval = sem_fit(model_ml, engine = :NLopt, options = Dict(:maxeval => 10))
+
     @test solution_maxeval.optimization_result.problem.numevals == 10
     @test solution_maxeval.optimization_result.result[3] == :MAXEVAL_REACHED
 end
 
 @testset "ml_solution_constrained" begin
-    solution_constrained = sem_fit(model_ml_constrained)
+    solution_constrained = sem_fit(constrained_optimizer, model_ml)
+
     @test solution_constrained.solution[31] * solution_constrained.solution[30] >=
           (0.6 - 1e-8)
     @test all(abs.(solution_constrained.solution) .< 10)
