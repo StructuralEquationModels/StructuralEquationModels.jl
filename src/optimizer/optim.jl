@@ -40,6 +40,16 @@ my_newton_optimizer = SemOptimizerOptim(
 
 # Extended help
 
+## Constrained optimization
+
+When using the `Fminbox` or `SAMIN` constrained optimization algorithms,
+the vector or dictionary of lower and upper bounds for each model parameter can be specified
+via `lower_bounds` and `upper_bounds` keyword arguments.
+Alternatively, the `lower_bound` and `upper_bound` keyword arguments can be used to specify
+the default bound for all non-variance model parameters,
+and the `variance_lower_bound` and `variance_upper_bound` keyword --
+for the variance parameters (the diagonal of the *S* matrix).
+
 ## Interfaces
 - `algorithm(::SemOptimizerOptim)`
 - `options(::SemOptimizerOptim)`
