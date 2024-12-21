@@ -84,7 +84,18 @@ Supertype of all objects that can serve as the `optimizer` field of a SEM.
 Connects the SEM to its optimization backend and controls options like the optimization algorithm.
 If you want to connect the SEM package to a new optimization backend, you should implement a subtype of SemOptimizer.
 """
-abstract type SemOptimizer end
+abstract type SemOptimizer{E} end
+
+engine(::Type{SemOptimizer{E}}) where {E} = E
+engine(optimizer::SemOptimizer) = engine(typeof(optimizer))
+
+SemOptimizer(args...; engine::Symbol = :Optim, kwargs...) =
+    SemOptimizer{engine}(args...; kwargs...)
+
+# fallback optimizer constructor
+function SemOptimizer{E}(args...; kwargs...) where {E}
+    throw(ErrorException("$E optimizer is not supported."))
+end
 
 """
 Supertype of all objects that can serve as the observed field of a SEM.
@@ -92,6 +103,8 @@ Pre-processes data and computes sufficient statistics for example.
 If you have a special kind of data, e.g. ordinal data, you should implement a subtype of SemObserved.
 """
 abstract type SemObserved end
+
+get_data(observed::SemObserved) = observed.data
 
 """
 Supertype of all objects that can serve as the imply field of a SEM.
@@ -103,6 +116,18 @@ abstract type SemImply end
 
 "Subtype of SemImply for all objects that can serve as the imply field of a SEM and use some form of symbolic precomputation."
 abstract type SemImplySymbolic <: SemImply end
+
+"""
+State of `SemImply` that corresponds to the specific SEM parameter values.
+
+Contains the necessary vectors and matrices for calculating the SEM
+objective, gradient and hessian (whichever is requested).
+"""
+abstract type SemImplyState end
+
+imply(state::SemImplyState) = state.imply
+MeanStructure(state::SemImplyState) = MeanStructure(imply(state))
+ApproximateHessian(state::SemImplyState) = ApproximateHessian(imply(state))
 
 """
     Sem(;observed = SemObservedData, imply = RAM, loss = SemML, optimizer = SemOptimizerOptim, kwargs...)

@@ -1,7 +1,7 @@
 # Model inspection
 
 ```@setup colored
-using StructuralEquationModels 
+using StructuralEquationModels
 
 observed_vars = [:x1, :x2, :x3, :y1, :y2, :y3, :y4, :y5, :y6, :y7, :y8]
 latent_vars = [:ind60, :dem60, :dem65]
@@ -32,7 +32,7 @@ end
 
 partable = ParameterTable(
     graph,
-    latent_vars = latent_vars, 
+    latent_vars = latent_vars,
     observed_vars = observed_vars)
 
 data = example_data("political_democracy")
@@ -128,8 +128,8 @@ BIC
 χ²
 df
 minus2ll
-n_man
-n_obs
+nobserved_vars
+nsamples
 nparams
 p_value
 RMSEA

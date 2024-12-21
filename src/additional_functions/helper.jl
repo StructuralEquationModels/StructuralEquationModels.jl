@@ -53,12 +53,6 @@ function remove_all_missing(data::AbstractMatrix)
     return data[keep, :], keep
 end
 
-function batch_inv!(fun, model)
-    for i in 1:size(fun.inverses, 1)
-        fun.inverses[i] .= LinearAlgebra.inv!(fun.choleskys[i])
-    end
-end
-
 #=
 function batch_sym_inv_update!(fun::Union{LossFunction, DiffFunction}, model)
     M_inv = inv(fun.choleskys[1])
@@ -96,11 +90,6 @@ function sparse_outer_mul!(C, A, B::Vector, ind) #computes A*S*B -> C, where ind
     @views @inbounds for i in 1:length(ind)
         C .+= B[ind[i][2]] .* A[:, ind[i][1]]
     end
-end
-
-function cov_and_mean(rows; corrected = false)
-    obs_mean, obs_cov = StatsBase.mean_and_cov(reduce(hcat, rows), 2, corrected = corrected)
-    return obs_cov, vec(obs_mean)
 end
 
 # n²×(n(n+1)/2) matrix to transform a vector of lower

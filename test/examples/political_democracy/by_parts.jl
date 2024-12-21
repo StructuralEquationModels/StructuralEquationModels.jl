@@ -11,7 +11,7 @@ imply_ram = RAM(specification = spec)
 imply_ram_sym = RAMSymbolic(specification = spec)
 
 # loss functions ---------------------------------------------------------------------------
-ml = SemML(observed = observed)
+ml = SemML(specification = spec, observed = observed)
 
 wls = SemWLS(observed = observed)
 
@@ -25,7 +25,7 @@ loss_ml = SemLoss(ml)
 loss_wls = SemLoss(wls)
 
 # optimizer -------------------------------------------------------------------------------------
-optimizer_obj = semoptimizer()
+optimizer_obj = SemOptimizer(engine = opt_engine)
 
 # models -----------------------------------------------------------------------------------
 
@@ -152,10 +152,11 @@ end
 ### test hessians
 ############################################################################################
 
-if semoptimizer == SemOptimizerOptim
+if opt_engine == :Optim
     using Optim, LineSearches
 
-    optimizer_obj = SemOptimizerOptim(
+    optimizer_obj = SemOptimizer(
+        engine = opt_engine,
         algorithm = Newton(;
             linesearch = BackTracking(order = 3),
             alphaguess = InitialHagerZhang(),
@@ -210,7 +211,7 @@ imply_ram = RAM(specification = spec_mean, meanstructure = true)
 imply_ram_sym = RAMSymbolic(specification = spec_mean, meanstructure = true)
 
 # loss functions ---------------------------------------------------------------------------
-ml = SemML(observed = observed, meanstructure = true)
+ml = SemML(observed = observed, specification = spec_mean, meanstructure = true)
 
 wls = SemWLS(observed = observed, meanstructure = true)
 
@@ -220,7 +221,7 @@ loss_ml = SemLoss(ml)
 loss_wls = SemLoss(wls)
 
 # optimizer -------------------------------------------------------------------------------------
-optimizer_obj = semoptimizer()
+optimizer_obj = SemOptimizer(engine = opt_engine)
 
 # models -----------------------------------------------------------------------------------
 model_ml = Sem(observed, imply_ram, loss_ml, optimizer_obj)
@@ -314,7 +315,8 @@ end
 ### fiml
 ############################################################################################
 
-observed = SemObservedMissing(specification = spec_mean, data = dat_missing)
+observed =
+    SemObservedMissing(specification = spec_mean, data = dat_missing, rtol_em = 1e-10)
 
 fiml = SemFIML(observed = observed, specification = spec_mean)
 

@@ -1,4 +1,5 @@
 # NLopt constraints ------------------------------------------------------------------------
+using NLopt
 
 # 1.5*x1 == x2 (aka 1.5*x1 - x2 == 0)
 #= function eq_constraint(x, grad)
@@ -20,12 +21,13 @@ function ineq_constraint(x, grad)
     0.6 - x[30] * x[31]
 end
 
-constrained_optimizer = SemOptimizerNLopt(;
+constrained_optimizer = SemOptimizer(;
+    engine = :NLopt,
     algorithm = :AUGLAG,
     local_algorithm = :LD_LBFGS,
     options = Dict(:xtol_rel => 1e-4),
-    # equality_constraints = NLoptConstraint(;f = eq_constraint, tol = 1e-14),
-    inequality_constraints = NLoptConstraint(; f = ineq_constraint, tol = 1e-8),
+    # equality_constraints = (f = eq_constraint, tol = 1e-14),
+    inequality_constraints = (f = ineq_constraint, tol = 0.0),
 )
 
 model_ml_constrained =
@@ -38,7 +40,8 @@ solution_constrained = sem_fit(model_ml_constrained)
 model_ml_maxeval = Sem(
     specification = spec,
     data = dat,
-    optimizer = SemOptimizerNLopt,
+    optimizer = SemOptimizer,
+    engine = :NLopt,
     options = Dict(:maxeval => 10),
 )
 
