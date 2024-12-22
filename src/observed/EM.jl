@@ -27,15 +27,17 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE. =#
 
 """
-    em_mvn!(;
-        observed::SemObservedMissing,
-        start_em = start_em_observed,
-        max_iter_em = 100,
-        rtol_em = 1e-4,
-        kwargs...)
+    em_mvn(patterns::AbstractVector{SemObservedMissingPattern};
+           start_em = start_em_observed,
+           max_iter_em = 100,
+           rtol_em = 1e-4,
+           kwargs...)
 
-Estimates the covariance matrix and mean vector of the normal distribution via expectation maximization for `observed`.
-Overwrites the statistics stored in `observed`.
+Estimates the covariance matrix and mean vector of the
+multivariate normal distribution (MVN)
+via expectation maximization (EM) for `observed`.
+
+Returns the tuple of the EM covariance matrix and the EM mean vector.
 
 Uses the EM algorithm for MVN-distributed data with missing values
 adapted from the supplementary material to the book *Machine Learning: A Probabilistic Perspective*,
@@ -43,14 +45,14 @@ copyright (2010) Kevin Murphy and Matt Dunham: see
 [*gaussMissingFitEm.m*](https://github.com/probml/pmtk3/blob/master/toolbox/BasicModels/gauss/sub/gaussMissingFitEm.m) and
 [*emAlgo.m*](https://github.com/probml/pmtk3/blob/master/toolbox/Algorithms/optimization/emAlgo.m) scripts.
 """
-function em_mvn!(
-    observed::SemObservedMissing;
+function em_mvn(
+    patterns::AbstractVector{<:SemObservedMissingPattern};
     start_em = start_em_observed,
-    max_iter_em = 100,
-    rtol_em = 1e-4,
+    max_iter_em::Integer = 100,
+    rtol_em::Number = 1e-4,
     kwargs...,
 )
-    nobs_vars = nobserved_vars(observed)
+    nobs_vars = nobserved_vars(patterns[1])
 
     # precompute for full cases
     𝔼x_full = zeros(nobs_vars)
@@ -68,38 +70,42 @@ function em_mvn!(
     end
 
     # initialize
-    em_model = start_em(observed; kwargs...)
-    em_model_prev = EmMVNModel(zeros(nobs_vars, nobs_vars), zeros(nobs_vars), false)
-    iter = 1
-    done = false
-    𝔼x = zeros(nobs_vars)
-    𝔼xxᵀ = zeros(nobs_vars, nobs_vars)
+    Σ₀, μ = start_em(patterns; kwargs...)
+    Σ = convert(Matrix, Σ₀)
+    @assert all(isfinite, Σ) all(isfinite, μ)
+    Σ_prev, μ_prev = copy(Σ), copy(μ)
 
-    while !done
-        step!(em_model, observed, 𝔼x, 𝔼xxᵀ, 𝔼x_pre, 𝔼xxᵀ_pre)
+    iter = 0
+    converged = false
+    while !converged && (iter < max_iter_em)
+        em_step!(Σ, μ, Σ_prev, μ_prev, patterns, 𝔼x_full, 𝔼xxᵀ_full)
 
-        if iter > max_iter_em
-            done = true
-            @warn "EM Algorithm for MVN missing data did not converge. Likelihood for FIML is not interpretable.
-            Maybe try passing different starting values via 'start_em = ...' "
-        elseif iter > 1
-            done =
-                isapprox(em_model_prev.μ, em_model.μ; rtol = rtol_em) &&
-                isapprox(em_model_prev.Σ, em_model.Σ; rtol = rtol_em)
+        if iter > 0
+            Δμ = norm(μ - μ_prev)
+            ΔΣ = norm(Σ - Σ_prev)
+            Δμ_rel = Δμ / max(norm(μ_prev), norm(μ))
+            ΔΣ_rel = ΔΣ / max(norm(Σ_prev), norm(Σ))
+            #@info "Iteration #$iter: ΔΣ=$(ΔΣ) ΔΣ/Σ=$(ΔΣ_rel) Δμ=$(Δμ) Δμ/μ=$(Δμ_rel)"
+            # converged = isapprox(ll, ll_prev; rtol = rtol)
+            converged = ΔΣ_rel <= rtol_em && Δμ_rel <= rtol_em
         end
-
-        # print("$iter \n")
+        if !converged
+            Σ, Σ_prev = Σ_prev, Σ
+            μ, μ_prev = μ_prev, μ
+        end
         iter += 1
-        copyto!(em_model_prev.μ, em_model.μ)
-        copyto!(em_model_prev.Σ, em_model.Σ)
+        #@info "$iter\n"
     end
 
-    # update EM Mode in observed
-    observed.em_model.Σ .= em_model.Σ
-    observed.em_model.μ .= em_model.μ
-    observed.em_model.fitted = true
+    if !converged
+        @warn "EM Algorithm for MVN missing data did not converge in $iter iterations.\n" *
+              "Likelihood for FIML is not interpretable.\n" *
+              "Maybe try passing different starting values via 'start_em = ...' "
+    else
+        @info "EM for MVN missing data converged in $iter iterations"
+    end
 
-    return nothing
+    return Σ, μ
 end
 
 # E and M steps combined
@@ -109,21 +115,15 @@ function em_step!(
     Σ₀::AbstractMatrix,
     μ₀::AbstractVector,
     patterns::AbstractVector{<:SemObservedMissingPattern},
-    𝔼xxᵀ_full::AbstractMatrix,
-    𝔼x_full::AbstractVector,
-    nsamples_full::Integer;
-    max_nsamples_em::Union{Integer, Nothing} = nothing,
-    min_eigval::Union{Number, Nothing} = nothing,
+    𝔼x_full,
+    𝔼xxᵀ_full,
 )
     # E step: update 𝔼x and 𝔼xxᵀ
     copy!(μ, 𝔼x_full)
     copy!(Σ, 𝔼xxᵀ_full)
-    nsamples_used = nsamples_full
-    mul!(Σ, μ₀, μ₀', -nsamples_used, 1)
-    axpy!(-nsamples_used, μ₀, μ)
 
     # Compute the expected sufficient statistics
-    for pat in observed.patterns
+    for pat in patterns
         (nmissed_vars(pat) == 0) && continue # skip full cases
 
         # observed and unobserved vars
@@ -131,17 +131,17 @@ function em_step!(
         o = pat.measured_mask
 
         # precompute for pattern
-        Σoo_chol = cholesky(Symmetric(Σ[o, o]))
-        Σuo = Σ[u, o]
-        μu = μ[u]
-        μo = μ[o]
+        Σoo_chol = cholesky(Symmetric(Σ₀[o, o]))
+        Σuo = Σ₀[u, o]
+        μu = μ₀[u]
+        μo = μ₀[o]
 
         𝔼xu = fill!(similar(μu), 0)
         𝔼xo = fill!(similar(μo), 0)
         𝔼xᵢu = similar(μu)
 
         𝔼xxᵀuo = fill!(similar(Σuo), 0)
-        𝔼xxᵀuu = n_obs(pat) * (Σ[u, u] - Σuo * (Σoo_chol \ Σuo'))
+        𝔼xxᵀuu = n_obs(pat) * (Σ₀[u, u] - Σuo * (Σoo_chol \ Σuo'))
 
         # loop through observations
         @inbounds for rowdata in eachcol(pat.data)
@@ -153,59 +153,56 @@ function em_step!(
             𝔼xo .+= rowdata
         end
 
-        𝔼xxᵀ[o, o] .+= pat.data' * pat.data
-        𝔼xxᵀ[u, o] .+= 𝔼xxᵀuo
-        𝔼xxᵀ[o, u] .+= 𝔼xxᵀuo'
-        𝔼xxᵀ[u, u] .+= 𝔼xxᵀuu
+        Σ[o, o] .+= pat.data' * pat.data
+        Σ[u, o] .+= 𝔼xxᵀuo
+        Σ[o, u] .+= 𝔼xxᵀuo'
+        Σ[u, u] .+= 𝔼xxᵀuu
 
-        𝔼x[o] .+= 𝔼xo
-        𝔼x[u] .+= 𝔼xu
+        μ[o] .+= 𝔼xo
+        μ[u] .+= 𝔼xu
     end
 
     # M step: update Σ and μ
-    lmul!(1 / nsamples_used, Σ)
-    lmul!(1 / nsamples_used, μ)
-    # at this point μ = μ - μ₀
-    # and Σ = Σ + (μ - μ₀)×(μ - μ₀)' - μ₀×μ₀'
-    mul!(Σ, μ, μ₀', -1, 1)
-    mul!(Σ, μ₀, μ', -1, 1)
+    k = inv(sum(nsamples, patterns))
+    lmul!(k, Σ)
+    lmul!(k, μ)
     mul!(Σ, μ, μ', -1, 1)
-    μ .+= μ₀
 
-    em_model.μ .= 𝔼x ./ nsamples(observed)
-    em_model.Σ .= 𝔼xxᵀ ./ nsamples(observed)
-    mul!(em_model.Σ, em_model.μ, em_model.μ', -1, 1)
-
-    return em_model
+    return Σ, μ
 end
 
 # generate starting values -----------------------------------------------------------------
 
 # use μ and Σ of full cases
-function start_em_observed(observed::SemObservedMissing; kwargs...)
-    fullpat = observed.patterns[1]
+function start_em_observed(patterns::AbstractVector{<:SemObservedMissingPattern}; kwargs...)
+    fullpat = patterns[1]
     if (nmissed_vars(fullpat) == 0) && (nsamples(fullpat) > 1)
         μ = copy(fullpat.measured_mean)
-        Σ = copy(fullpat.measured_cov)
+        Σ = copy(parent(fullpat.measured_cov))
         if !isposdef(Σ)
             Σ = Diagonal(Σ)
         end
-        return EmMVNModel(convert(Matrix, Σ), μ, false)
+        return Σ, μ
     else
-        return start_em_simple(observed, kwargs...)
+        return start_em_simple(patterns, kwargs...)
     end
 end
 
 # use μ = O and Σ = I
-function start_em_simple(observed::SemObservedMissing; kwargs...)
-    nvars = nobserved_vars(observed)
-    μ = zeros(nvars)
-    Σ = rand(nvars, nvars)
+function start_em_simple(patterns::AbstractVector{<:SemObservedMissingPattern}; kwargs...)
+    nobs_vars = nobserved_vars(first(patterns))
+    μ = zeros(nobs_vars)
+    Σ = rand(nobs_vars, nobs_vars)
     Σ = Σ * Σ'
-    return EmMVNModel(Σ, μ, false)
+    return Σ, μ
 end
 
 # set to passed values
-function start_em_set(observed::SemObservedMissing; model_em, kwargs...)
-    return em_model
+function start_em_set(
+    patterns::AbstractVector{<:SemObservedMissingPattern};
+    obs_cov::AbstractMatrix,
+    obs_mean::AbstractVector,
+    kwargs...,
+)
+    return copy(obs_cov), copy(obs_mean)
 end
