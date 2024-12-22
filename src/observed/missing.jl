@@ -2,17 +2,6 @@
 ### Types
 ############################################################################################
 
-# Type to store Expectation Maximization result --------------------------------------------
-mutable struct EmMVNModel{A, b, B}
-    Σ::A
-    μ::b
-    fitted::B
-end
-
-# FIXME type unstable
-obs_mean(em::EmMVNModel) = ifelse(em.fitted, em.μ, nothing)
-obs_cov(em::EmMVNModel) = ifelse(em.fitted, em.Σ, nothing)
-
 """
 For observed data with missing values.
 
@@ -44,13 +33,15 @@ After, the following methods are available:
 - `obs_cov(::SemObservedData)` -> EM covariance matrix
 - `obs_mean(::SemObservedData)` -> EM mean vector
 """
-struct SemObservedMissing{T <: Real, S <: Real, E <: EmMVNModel} <: SemObserved
+struct SemObservedMissing{T <: Real, S <: Real} <: SemObserved
     data::Matrix{Union{T, Missing}}
     observed_vars::Vector{Symbol}
     nsamples::Int
     patterns::Vector{SemObservedMissingPattern{T, S}}
 
-    em_model::E
+    em_kwargs::AbstractDict
+    obs_cov::Ref{Matrix{S}}
+    obs_mean::Ref{Vector{S}}
 end
 
 ############################################################################################
@@ -62,7 +53,8 @@ function SemObservedMissing(;
     observed_vars::Union{AbstractVector, Nothing} = nothing,
     specification::Union{SemSpecification, Nothing} = nothing,
     observed_var_prefix::Union{Symbol, AbstractString} = :obs,
-    kwargs...,
+    lazy_cov::Bool = true,
+    em_kwargs...,
 )
     data, obs_vars, _ =
         prepare_data(data, observed_vars, specification; observed_var_prefix)
@@ -83,22 +75,52 @@ function SemObservedMissing(;
     ]
     sort!(patterns, by = nmissed_vars)
 
-    # allocate EM model (but don't fit)
-    em_model = EmMVNModel(zeros(nobs_vars, nobs_vars), zeros(nobs_vars), false)
+    S = isempty(patterns) ? Float64 : eltype(patterns[1].measured_mean)
+    if lazy_cov
+        # defer EM covariance and mean calculation until requested
+        em_cov_ref = Ref{Matrix{S}}()
+        em_mean_ref = Ref{Vector{S}}()
+    else
+        em_cov, em_mean = em_mvn(patterns; em_kwargs...)
+        em_cov_ref, em_mean_ref = Ref(em_cov), Ref(em_mean)
+    end
 
     return SemObservedMissing(
         convert(Matrix{Union{nonmissingtype(eltype(data)), Missing}}, data),
         obs_vars,
         nsamples,
         patterns,
-        em_model,
+        em_kwargs, # remember EM kwargs for calculate_cov!
+        em_cov_ref,
+        em_mean_ref,
     )
 end
 
-############################################################################################
-### Additional methods
-############################################################################################
+"""
+    calculate_cov!(observed::SemObservedMissing; em_kwargs...)
 
-em_model(observed::SemObservedMissing) = observed.em_model
-obs_mean(observed::SemObservedMissing) = obs_mean(em_model(observed))
-obs_cov(observed::SemObservedMissing) = obs_cov(em_model(observed))
+Force calculation of the observed mean and covariance using the EM algorithm.
+
+# Arguments
+- `observed`: the observed data with missing values (see [`SemObservedMissing`](@ref))
+- `em_kwargs...`: keyword arguments for the EM algorithm (see [`em_mvn`](@ref)),
+  the values provided here override the EM arguments passed to the
+  [`SemObservedMissing`](@ref) constructor
+"""
+function calculate_cov!(observed::SemObservedMissing; em_kwargs...)
+    em_kwargs = merge(observed.em_kwargs, em_kwargs)
+    em_cov, em_mean = em_mvn(observed.patterns; em_kwargs...)
+    observed.obs_cov[] = em_cov
+    observed.obs_mean[] = em_mean
+    return observed
+end
+
+function obs_cov(observed::SemObservedMissing{<:Any, S}) where {S}
+    isassigned(observed.obs_cov) || calculate_cov!(observed)
+    return observed.obs_cov[]::Matrix{S}
+end
+
+function obs_mean(observed::SemObservedMissing{<:Any, S}) where {S}
+    isassigned(observed.obs_mean) || calculate_cov!(observed)
+    return observed.obs_mean[]::Vector{S}
+end
