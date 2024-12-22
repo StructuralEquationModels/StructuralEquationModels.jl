@@ -8,21 +8,15 @@ function start_fabin3 end
 
 # splice model and loss functions
 function start_fabin3(model::AbstractSemSingle; kwargs...)
-    return start_fabin3(
-        model.observed,
-        model.imply,
-        model.optimizer,
-        model.loss.functions...,
-        kwargs...,
-    )
+    return start_fabin3(model.observed, model.imply, model.loss.functions..., kwargs...)
 end
 
-function start_fabin3(observed, imply, optimizer, args...; kwargs...)
+function start_fabin3(observed, imply, args...; kwargs...)
     return start_fabin3(imply.ram_matrices, obs_cov(observed), obs_mean(observed))
 end
 
 # SemObservedMissing
-function start_fabin3(observed::SemObservedMissing, imply, optimizer, args...; kwargs...)
+function start_fabin3(observed::SemObservedMissing, imply, args...; kwargs...)
     if !observed.em_model.fitted
         em_mvn(observed; kwargs...)
     end

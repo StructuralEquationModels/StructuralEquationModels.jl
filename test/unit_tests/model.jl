@@ -59,7 +59,6 @@ end
     @test model isa Sem
     @test @inferred(imply(model)) isa implytype
     @test @inferred(observed(model)) isa SemObserved
-    @test @inferred(optimizer(model)) isa SemOptimizer
 
     test_vars_api(model, ram_matrices)
     test_params_api(model, ram_matrices)

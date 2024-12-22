@@ -15,13 +15,13 @@ an optimizer part.
 
 Subtype of `SemOptimizer`.
 """
-struct SemOptimizerEmpty <: SemOptimizer end
+struct SemOptimizerEmpty <: SemOptimizer{:Empty} end
 
 ############################################################################################
 ### Constructor
 ############################################################################################
 
-# SemOptimizerEmpty(;kwargs...) = SemOptimizerEmpty()
+SemOptimizer{:Empty}() = SemOptimizerEmpty()
 
 ############################################################################################
 ### Recommended methods

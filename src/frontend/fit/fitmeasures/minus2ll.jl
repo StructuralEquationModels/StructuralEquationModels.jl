@@ -16,30 +16,21 @@ minus2ll(
     sem_fit,
     sem_fit.model.observed,
     sem_fit.model.imply,
-    sem_fit.model.optimizer,
     sem_fit.model.loss.functions...,
 )
 
-minus2ll(sem_fit::SemFit, obs, imp, optimizer, args...) =
-    minus2ll(sem_fit.minimum, obs, imp, optimizer, args...)
+minus2ll(sem_fit::SemFit, obs, imp, args...) = minus2ll(sem_fit.minimum, obs, imp, args...)
 
 # SemML ------------------------------------------------------------------------------------
-minus2ll(minimum::Number, obs, imp::Union{RAM, RAMSymbolic}, optimizer, loss_ml::SemML) =
+minus2ll(minimum::Number, obs, imp::Union{RAM, RAMSymbolic}, loss_ml::SemML) =
     nsamples(obs) * (minimum + log(2π) * nobserved_vars(obs))
 
 # WLS --------------------------------------------------------------------------------------
-minus2ll(minimum::Number, obs, imp::Union{RAM, RAMSymbolic}, optimizer, loss_ml::SemWLS) =
-    missing
+minus2ll(minimum::Number, obs, imp::Union{RAM, RAMSymbolic}, loss_ml::SemWLS) = missing
 
 # compute likelihood for missing data - H0 -------------------------------------------------
 # -2ll = (∑ log(2π)*(nᵢ + mᵢ)) + F*n
-function minus2ll(
-    minimum::Number,
-    observed,
-    imp::Union{RAM, RAMSymbolic},
-    optimizer,
-    loss_ml::SemFIML,
-)
+function minus2ll(minimum::Number, observed, imp::Union{RAM, RAMSymbolic}, loss_ml::SemFIML)
     F = minimum
     F *= nsamples(observed)
     F += sum(log(2π) * observed.pattern_nsamples .* observed.pattern_nobs_vars)
@@ -117,7 +108,7 @@ end
 ############################################################################################
 
 minus2ll(minimum, model::AbstractSemSingle) =
-    minus2ll(minimum, model.observed, model.imply, model.optimizer, model.loss.functions...)
+    minus2ll(minimum, model.observed, model.imply, model.loss.functions...)
 
 function minus2ll(
     sem_fit::SemFit{Mi, So, St, Mo, O} where {Mi, So, St, Mo <: SemEnsemble, O},
