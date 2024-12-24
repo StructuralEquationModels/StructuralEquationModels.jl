@@ -200,9 +200,9 @@ function evaluate!(
     end
 
     if !isnothing(gradient)
-        S = implied.S
-        F⨉I_A⁻¹ = implied.F⨉I_A⁻¹
-        I_A⁻¹ = implied.I_A⁻¹
+        S = parent(implied.S)
+        F⨉I_A⁻¹ = parent(implied.F⨉I_A⁻¹)
+        I_A⁻¹ = parent(implied.I_A⁻¹)
         ∇A = implied.∇A
         ∇S = implied.∇S
 
@@ -216,14 +216,14 @@ function evaluate!(
             F⨉I_A⁻¹',
             mul!(
                 semml.obsXvar_1,
-                Symmetric(mul!(semml.obsXobs_3, one_Σ⁻¹Σₒ, Σ⁻¹)),
+                mul!(semml.obsXobs_3, one_Σ⁻¹Σₒ, Σ⁻¹),
                 F⨉I_A⁻¹,
             ),
         )
         mul!(
             gradient,
             ∇A',
-            vec(mul!(semml.varXvar_3, Symmetric(C), mul!(semml.varXvar_2, S, I_A⁻¹'))),
+            vec(mul!(semml.varXvar_3, C, mul!(semml.varXvar_2, S, I_A⁻¹'))),
             2,
             0,
         )
