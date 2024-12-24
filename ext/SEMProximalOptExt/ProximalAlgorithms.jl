@@ -106,9 +106,9 @@ function Base.show(io::IO, struct_inst::SemOptimizerProximal)
 end
 
 function Base.show(io::IO, result::ProximalResult)
-    print(io, "Minimum:          $(round(result.minimum; digits = 2)) \n")
-    print(io, "No. evaluations:  $(result.n_iterations) \n")
-    print(io, "Operator:         $(nameof(typeof(result.optimizer.operator_g))) \n")
+    @printf(io, "Minimum:          %.4g\n", result.minimum)
+    print(io,   "No. evaluations:  $(result.n_iterations) \n")
+    print(io,   "Operator:         $(nameof(typeof(result.optimizer.operator_g))) \n")
     op_h = result.optimizer.operator_h
     isnothing(op_h) || print(io, "Second Operator:  $(nameof(typeof(op_h))) \n")
 end
