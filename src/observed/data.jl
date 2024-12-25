@@ -38,10 +38,11 @@ function SemObservedData(;
     data,
     observed_vars::Union{AbstractVector, Nothing} = nothing,
     specification::Union{SemSpecification, Nothing} = nothing,
+    observed_var_prefix::Union{Symbol, AbstractString} = :obs,
     kwargs...,
 )
     data, obs_vars, _ =
-        prepare_data(data, observed_vars, specification)
+        prepare_data(data, observed_vars, specification; observed_var_prefix)
     obs_mean, obs_cov = mean_and_cov(data, 1)
 
     return SemObservedData(data, obs_vars, obs_cov, vec(obs_mean), size(data, 1))

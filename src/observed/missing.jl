@@ -57,9 +57,11 @@ function SemObservedMissing(;
     data,
     observed_vars::Union{AbstractVector, Nothing} = nothing,
     specification::Union{SemSpecification, Nothing} = nothing,
+    observed_var_prefix::Union{Symbol, AbstractString} = :obs,
     kwargs...,
 )
-    data, obs_vars, _ = prepare_data(data, observed_vars, specification)
+    data, obs_vars, _ =
+        prepare_data(data, observed_vars, specification; observed_var_prefix)
     nsamples, nobs_vars = size(data)
 
     # detect all different missing patterns with their row indices
