@@ -9,6 +9,7 @@ function SemObservedCovariance(;
     observed_vars::Union{AbstractVector, Nothing} = nothing,
     specification::Union{SemSpecification, Nothing} = nothing,
     nsamples::Integer,
+    observed_var_prefix::Union{Symbol, AbstractString} = :obs,
     kwargs...,
 )
     nvars = size(obs_cov, 1)
@@ -37,7 +38,7 @@ function SemObservedCovariance(;
     end
 
     _, obs_vars, obs_vars_perm =
-        prepare_data(nothing, observed_vars, specification, nvars)
+        prepare_data(nothing, observed_vars, specification, nvars; observed_var_prefix)
 
     # reorder to match the specification
     if !isnothing(obs_vars_perm)

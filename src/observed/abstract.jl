@@ -16,6 +16,10 @@ observed_vars(observed::SemObserved) = observed.observed_vars
 ### Additional functions
 ############################################################################################
 
+# generate default observed variable names if none provided
+default_observed_vars(nobserved_vars::Integer, prefix::Union{Symbol, AbstractString}) =
+    Symbol.(prefix, 1:nobserved_vars)
+
 # compute the permutation that subsets and reorders source elements
 # to match the destination order.
 # if multiple identical elements are present in the source, the last one is used.
@@ -57,7 +61,8 @@ function prepare_data(
     data::Union{AbstractDataFrame, AbstractMatrix, Nothing},
     observed_vars::Union{AbstractVector, Nothing},
     spec::Union{SemSpecification, Nothing},
-    nobserved_vars::Union{Integer, Nothing} = nothing,
+    nobserved_vars::Union{Integer, Nothing} = nothing;
+    observed_var_prefix::Union{Symbol, AbstractString},
 )
     obs_vars = nothing
     obs_vars_perm = nothing
@@ -112,7 +117,7 @@ function prepare_data(
         else
             obs_vars =
                 obs_vars_reordered =
-                    [Symbol(i) for i in axes(data, 2)]
+                    default_observed_vars(size(data, 2), observed_var_prefix)
             data_ordered = data
         end
         # make sure data_mtx is a dense matrix (required for methods like mean_and_cov())
@@ -124,7 +129,7 @@ function prepare_data(
             if isnothing(obs_vars)
                 obs_vars =
                     obs_vars_reordered =
-                        [Symbol(i) for i in 1:nobserved_vars]
+                        default_observed_vars(nobserved_vars, observed_var_prefix)
             end
         else
             error("Cannot infer observed variables from provided inputs.")

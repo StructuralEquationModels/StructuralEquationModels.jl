@@ -123,7 +123,11 @@ end
     @test_throws UndefKeywordError(:data) SemObservedData(specification = spec)
 
     obs_data_nonames = SemObservedData(data = dat_matrix)
-    @test observed_vars(obs_data_nonames) == Symbol.(1:size(dat_matrix, 2))
+    @test observed_vars(obs_data_nonames) == Symbol.("obs", 1:size(dat_matrix, 2))
+
+    obs_data_nonames2 =
+        SemObservedData(data = dat_matrix, observed_var_prefix = "observed_")
+    @test observed_vars(obs_data_nonames2) == Symbol.("observed_", 1:size(dat_matrix, 2))
 
     @testset "meanstructure=$meanstructure" for meanstructure in (false, true)
         observed = SemObservedData(specification = spec, data = dat; meanstructure)
@@ -346,7 +350,11 @@ end # SemObservedCovariance
     @test_throws UndefKeywordError(:data) SemObservedMissing(specification = spec)
 
     observed_no_names = SemObservedMissing(data = dat_missing_matrix)
-    @test observed_vars(observed_no_names) == Symbol.(1:size(dat_missing_matrix, 2))
+    @test observed_vars(observed_no_names) == Symbol.(:obs, 1:size(dat_missing_matrix, 2))
+
+    observed_no_names2 =
+        SemObservedMissing(data = dat_missing_matrix, observed_var_prefix = "observed_")
+    @test observed_vars(observed_no_names2) == Symbol.("observed_", 1:size(dat_matrix, 2))
 
     @testset "meanstructure=$meanstructure" for meanstructure in (false, true)
         observed =
