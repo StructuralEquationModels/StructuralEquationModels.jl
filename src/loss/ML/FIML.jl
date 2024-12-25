@@ -61,9 +61,11 @@ function SemFIML(; observed, specification, kwargs...)
     imp_inv = zeros(nobs_vars, nobs_vars)
     mult = similar.(inverses)
 
-    ∇ind = vec(CartesianIndices(Array{Float64}(undef, nobs_vars, nobs_vars)))
-    ∇ind =
-        [findall(x -> !(x[1] ∈ ind || x[2] ∈ ind), ∇ind) for ind in patterns_not(observed)]
+    # linear indicies of co-observed variable pairs for each pattern
+    Σ_linind = LinearIndices((nobs_vars, nobs_vars))
+    ∇ind = map(patterns_not(observed)) do pat_vars
+        vec(Σ_linind[pat_vars, pat_vars])
+    end
 
     return SemFIML(
         ExactHessian(),
