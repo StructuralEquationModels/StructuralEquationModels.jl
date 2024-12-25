@@ -31,74 +31,33 @@ minus2ll(minimum::Number, obs, imp::Union{RAM, RAMSymbolic}, loss_ml::SemWLS) = 
 # compute likelihood for missing data - H0 -------------------------------------------------
 # -2ll = (∑ log(2π)*(nᵢ + mᵢ)) + F*n
 function minus2ll(minimum::Number, observed, imp::Union{RAM, RAMSymbolic}, loss_ml::SemFIML)
-    F = minimum
-    F *= nsamples(observed)
-    F += sum(log(2π) * observed.pattern_nsamples .* observed.pattern_nobs_vars)
+    F = minimum * nsamples(observed)
+    F += log(2π) * sum(pat -> nsamples(pat) * nmeasured_vars(pat), observed.patterns)
     return F
 end
 
 # compute likelihood for missing data - H1 -------------------------------------------------
 # -2ll =  ∑ log(2π)*(nᵢ + mᵢ) + ln(Σᵢ) + (mᵢ - μᵢ)ᵀ Σᵢ⁻¹ (mᵢ - μᵢ)) + tr(SᵢΣᵢ)
 function minus2ll(observed::SemObservedMissing)
-    if observed.em_model.fitted
-        minus2ll(
-            observed.em_model.μ,
-            observed.em_model.Σ,
-            nsamples(observed),
-            pattern_rows(observed),
-            observed.patterns,
-            observed.obs_mean,
-            observed.obs_cov,
-            observed.pattern_nsamples,
-            observed.pattern_nobs_vars,
-        )
-    else
-        em_mvn(observed)
-        minus2ll(
-            observed.em_model.μ,
-            observed.em_model.Σ,
-            nsamples(observed),
-            pattern_rows(observed),
-            observed.patterns,
-            observed.obs_mean,
-            observed.obs_cov,
-            observed.pattern_nsamples,
-            observed.pattern_nobs_vars,
-        )
-    end
-end
+    # fit EM-based mean and cov if not yet fitted
+    # FIXME EM could be very computationally expensive
+    observed.em_model.fitted || em_mvn(observed)
 
-function minus2ll(
-    μ,
-    Σ,
-    N,
-    rows,
-    patterns,
-    obs_mean,
-    obs_cov,
-    pattern_nsamples,
-    pattern_nobs_vars,
-)
-    F = 0.0
+    Σ = observed.em_model.Σ
+    μ = observed.em_model.μ
 
-    for i in 1:length(rows)
-        nᵢ = pattern_nsamples[i]
-        # missing pattern
-        pattern = patterns[i]
-        # observed data
-        Sᵢ = obs_cov[i]
-
+    F = sum(observed.patterns) do pat
         # implied covariance/mean
-        Σᵢ = Σ[pattern, pattern]
-        ld = logdet(Σᵢ)
-        Σᵢ⁻¹ = inv(cholesky(Σᵢ))
-        meandiffᵢ = obs_mean[i] - μ[pattern]
+        Σᵢ = Σ[pat.measured_mask, pat.measured_mask]
+        Σᵢ_chol = cholesky!(Σᵢ)
+        ld = logdet(Σᵢ_chol)
+        Σᵢ⁻¹ = LinearAlgebra.inv!(Σᵢ_chol)
+        meandiffᵢ = pat.measured_mean - μ[pat.measured_mask]
 
-        F += F_one_pattern(meandiffᵢ, Σᵢ⁻¹, Sᵢ, ld, nᵢ)
+        F_one_pattern(meandiffᵢ, Σᵢ⁻¹, pat.measured_cov, ld, nsamples(pat))
     end
 
-    F += sum(log(2π) * pattern_nsamples .* pattern_nobs_vars)
-    #F *= N
+    F += log(2π) * sum(pat -> nsamples(pat) * nmeasured_vars(pat), observed.patterns)
 
     return F
 end
