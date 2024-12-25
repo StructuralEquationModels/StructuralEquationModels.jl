@@ -43,6 +43,7 @@ include("frontend/pretty_printing.jl")
 include("observed/abstract.jl")
 include("observed/data.jl")
 include("observed/covariance.jl")
+include("observed/missing_pattern.jl")
 include("observed/missing.jl")
 include("observed/EM.jl")
 # constructor

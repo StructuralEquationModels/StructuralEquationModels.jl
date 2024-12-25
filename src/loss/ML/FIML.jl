@@ -47,23 +47,25 @@ end
 ### Constructors
 ############################################################################################
 
-function SemFIML(; observed, specification, kwargs...)
-    inverses = broadcast(x -> zeros(x, x), pattern_nobs_vars(observed))
+function SemFIML(; observed::SemObservedMissing, specification, kwargs...)
+    inverses =
+        [zeros(nmeasured_vars(pat), nmeasured_vars(pat)) for pat in observed.patterns]
     choleskys = Array{Cholesky{Float64, Array{Float64, 2}}, 1}(undef, length(inverses))
 
-    n_patterns = size(pattern_rows(observed), 1)
+    n_patterns = length(observed.patterns)
     logdets = zeros(n_patterns)
 
-    imp_mean = zeros.(pattern_nobs_vars(observed))
-    meandiff = zeros.(pattern_nobs_vars(observed))
+    imp_mean = [zeros(nmeasured_vars(pat)) for pat in observed.patterns]
+    meandiff = [zeros(nmeasured_vars(pat)) for pat in observed.patterns]
 
     nobs_vars = nobserved_vars(observed)
     imp_inv = zeros(nobs_vars, nobs_vars)
     mult = similar.(inverses)
 
-    # linear indicies of co-observed variable pairs for each pattern
+    # generate linear indicies of co-observed variable pairs for each pattern
     Σ_linind = LinearIndices((nobs_vars, nobs_vars))
-    ∇ind = map(patterns_not(observed)) do pat_vars
+    ∇ind = map(observed.patterns) do pat
+        pat_vars = findall(pat.measured_mask)
         vec(Σ_linind[pat_vars, pat_vars])
     end
 
@@ -106,10 +108,10 @@ function evaluate!(
     prepare_SemFIML!(semfiml, model)
 
     scale = inv(nsamples(observed(model)))
-    obs_rows = pattern_rows(observed(model))
-    isnothing(objective) || (objective = scale * F_FIML(obs_rows, semfiml, model, params))
+    isnothing(objective) ||
+        (objective = scale * F_FIML(observed(model), semfiml, model, params))
     isnothing(gradient) ||
-        (∇F_FIML!(gradient, obs_rows, semfiml, model); gradient .*= scale)
+        (∇F_FIML!(gradient, observed(model), semfiml, model); gradient .*= scale)
 
     return objective
 end
@@ -133,16 +135,16 @@ function F_one_pattern(meandiff, inverse, obs_cov, logdet, N)
     return F * N
 end
 
-function ∇F_one_pattern(μ_diff, Σ⁻¹, S, pattern, ∇ind, N, Jμ, JΣ, model)
+function ∇F_one_pattern(μ_diff, Σ⁻¹, S, obs_mask, ∇ind, N, Jμ, JΣ, model)
     diff⨉inv = μ_diff' * Σ⁻¹
 
     if N > one(N)
         JΣ[∇ind] .+= N * vec(Σ⁻¹ * (I - S * Σ⁻¹ - μ_diff * diff⨉inv))
-        @. Jμ[pattern] += (N * 2 * diff⨉inv)'
+        @. Jμ[obs_mask] += (N * 2 * diff⨉inv)'
 
     else
         JΣ[∇ind] .+= vec(Σ⁻¹ * (I - μ_diff * diff⨉inv))
-        @. Jμ[pattern] += (2 * diff⨉inv)'
+        @. Jμ[obs_mask] += (2 * diff⨉inv)'
     end
 end
 
@@ -165,32 +167,32 @@ function ∇F_fiml_outer!(G, JΣ, Jμ, imply, model, semfiml)
     mul!(G, ∇μ', Jμ, -1, 1)
 end
 
-function F_FIML(rows, semfiml, model, params)
+function F_FIML(observed::SemObservedMissing, semfiml, model, params)
     F = zero(eltype(params))
-    for i in 1:size(rows, 1)
+    for (i, pat) in enumerate(observed.patterns)
         F += F_one_pattern(
             semfiml.meandiff[i],
             semfiml.inverses[i],
-            obs_cov(observed(model))[i],
+            pat.measured_cov,
             semfiml.logdets[i],
-            pattern_nsamples(observed(model))[i],
+            nsamples(pat),
         )
     end
     return F
 end
 
-function ∇F_FIML!(G, rows, semfiml, model)
+function ∇F_FIML!(G, observed::SemObservedMissing, semfiml, model)
     Jμ = zeros(nobserved_vars(model))
     JΣ = zeros(nobserved_vars(model)^2)
 
-    for i in 1:size(rows, 1)
+    for (i, pat) in enumerate(observed.patterns)
         ∇F_one_pattern(
             semfiml.meandiff[i],
             semfiml.inverses[i],
-            obs_cov(observed(model))[i],
-            patterns(observed(model))[i],
+            pat.measured_cov,
+            pat.measured_mask,
             semfiml.∇ind[i],
-            pattern_nsamples(observed(model))[i],
+            nsamples(pat),
             Jμ,
             JΣ,
             model,
@@ -204,28 +206,20 @@ function prepare_SemFIML!(semfiml, model)
     batch_cholesky!(semfiml, model)
     #batch_sym_inv_update!(semfiml, model)
     batch_inv!(semfiml, model)
-    for i in 1:size(pattern_nsamples(observed(model)), 1)
-        semfiml.meandiff[i] .= obs_mean(observed(model))[i] - semfiml.imp_mean[i]
+    for (i, pat) in enumerate(observed(model).patterns)
+        semfiml.meandiff[i] .= pat.measured_mean .- semfiml.imp_mean[i]
     end
 end
 
-function copy_per_pattern!(inverses, source_inverses, means, source_means, patterns)
-    @views for i in 1:size(patterns, 1)
-        inverses[i] .= source_inverses[patterns[i], patterns[i]]
-    end
-
-    @views for i in 1:size(patterns, 1)
-        means[i] .= source_means[patterns[i]]
+function copy_per_pattern!(fiml::SemFIML, model::AbstractSem)
+    Σ = imply(model).Σ
+    μ = imply(model).μ
+    data = observed(model)
+    @inbounds @views for (i, pat) in enumerate(data.patterns)
+        fiml.inverses[i] .= Σ[pat.measured_mask, pat.measured_mask]
+        fiml.imp_mean[i] .= μ[pat.measured_mask]
     end
 end
-
-copy_per_pattern!(semfiml, model::M where {M <: AbstractSem}) = copy_per_pattern!(
-    semfiml.inverses,
-    imply(model).Σ,
-    semfiml.imp_mean,
-    imply(model).μ,
-    patterns(observed(model)),
-)
 
 function batch_cholesky!(semfiml, model)
     for i in 1:size(semfiml.inverses, 1)
