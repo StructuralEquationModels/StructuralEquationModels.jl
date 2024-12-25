@@ -7,10 +7,18 @@ spec = ParameterTable(
     latent_vars = [:ind60, :dem60, :dem65],
 )
 
+# specification with non-existent observed var z1
+wrong_spec = ParameterTable(
+    observed_vars = [:x1, :x2, :x3, :y1, :y2, :y3, :y4, :y5, :y6, :y7, :y8, :z1],
+    latent_vars = [:ind60, :dem60, :dem65],
+)
+
 ### data -----------------------------------------------------------------------------------
 
 dat = example_data("political_democracy")
 dat_missing = example_data("political_democracy_missing")[:, names(dat)]
+
+@assert Symbol.(names(dat)) == observed_vars(spec)
 
 dat_matrix = Matrix(dat)
 dat_missing_matrix = Matrix(dat_missing)
@@ -21,7 +29,12 @@ dat_mean = vcat(Statistics.mean(dat_matrix, dims = 1)...)
 # shuffle variables
 new_order = [3, 2, 7, 8, 5, 6, 9, 11, 1, 10, 4]
 
-shuffle_names = Symbol.(names(dat))[new_order]
+shuffle_names = names(dat)[new_order]
+
+shuffle_spec = ParameterTable(
+    observed_vars = Symbol.(shuffle_names),
+    latent_vars = [:ind60, :dem60, :dem65],
+)
 
 shuffle_dat = dat[:, new_order]
 shuffle_dat_missing = dat_missing[:, new_order]
@@ -29,8 +42,8 @@ shuffle_dat_missing = dat_missing[:, new_order]
 shuffle_dat_matrix = dat_matrix[:, new_order]
 shuffle_dat_missing_matrix = dat_missing_matrix[:, new_order]
 
-shuffle_dat_cov = Statistics.cov(shuffle_dat_matrix)
-shuffle_dat_mean = vcat(Statistics.mean(shuffle_dat_matrix, dims = 1)...)
+shuffle_dat_cov = cov(shuffle_dat_matrix)
+shuffle_dat_mean = vec(mean(shuffle_dat_matrix, dims = 1))
 
 # common tests for SemObserved subtypes
 function test_observed(
@@ -42,17 +55,16 @@ function test_observed(
     meanstructure::Bool,
     approx_cov::Bool = false,
 )
-    @test @inferred(nobserved_vars(observed)) == size(dat, 2)
-    # FIXME observed should provide names of observed variables
-    @test @inferred(observed_vars(observed)) == names(dat) broken = true
-    @test @inferred(nsamples(observed)) == size(dat, 1)
-
-    hasmissing =
-        !isnothing(dat_matrix) && any(ismissing, dat_matrix) ||
-        !isnothing(dat_cov) && any(ismissing, dat_cov)
+    if !isnothing(dat)
+        @test @inferred(nsamples(observed)) == size(dat, 1)
+        @test @inferred(nobserved_vars(observed)) == size(dat, 2)
+        @test @inferred(observed_vars(observed)) == Symbol.(names(dat))
+    end
 
     if !isnothing(dat_matrix)
-        if hasmissing
+        @test @inferred(nsamples(observed)) == size(dat_matrix, 1)
+
+        if any(ismissing, dat_matrix)
             @test isequal(@inferred(samples(observed)), dat_matrix)
         else
             @test @inferred(samples(observed)) == dat_matrix
@@ -60,7 +72,7 @@ function test_observed(
     end
 
     if !isnothing(dat_cov)
-        if hasmissing
+        if any(ismissing, dat_cov)
             @test isequal(@inferred(obs_cov(observed)), dat_cov)
         else
             if approx_cov
@@ -72,17 +84,17 @@ function test_observed(
     end
 
     # FIXME actually, SemObserved should not use meanstructure and always provide obs_mean()
-    # meanstructure is a part of SEM model
+    # since meanstructure belongs to the implied part of a SEM model
     if meanstructure
         if !isnothing(dat_mean)
-            if hasmissing
+            if any(ismissing, dat_mean)
                 @test isequal(@inferred(obs_mean(observed)), dat_mean)
             else
                 @test @inferred(obs_mean(observed)) == dat_mean
             end
         else
-            # FIXME if meanstructure is present, obs_mean() should provide something (currently Missing don't support it)
-            @test (@inferred(obs_mean(observed)) isa AbstractVector{Float64}) broken = true
+            # FIXME @inferred is broken for EM cov/mean since it may return nothing if EM was not run
+            @test @inferred(obs_mean(observed)) isa AbstractVector{Float64} broken = true # EM-based means
         end
     else
         @test @inferred(obs_mean(observed)) === nothing skip = true
@@ -93,32 +105,25 @@ end
 @testset "SemObservedData" begin
 
     # errors
-    @test_throws ArgumentError(
-        "You passed your data as a `DataFrame`, but also specified `obs_colnames`. " *
-        "Please make sure the column names of your data frame indicate the correct variables " *
-        "or pass your data in a different format.",
-    ) begin
-        SemObservedData(
-            specification = spec,
-            data = dat,
-            obs_colnames = Symbol.(names(dat)),
-        )
-    end
+    obs_data_redundant = SemObservedData(
+        specification = spec,
+        data = dat,
+        observed_vars = Symbol.(names(dat)),
+    )
+    @test observed_vars(obs_data_redundant) == Symbol.(names(dat))
+    @test observed_vars(obs_data_redundant) == observed_vars(spec)
 
-    @test_throws ArgumentError(
-        "Your `data` can not be indexed by symbols. " *
-        "Maybe you forgot to provide column names via the `obs_colnames = ...` argument.",
-    ) begin
-        SemObservedData(specification = spec, data = dat_matrix)
-    end
+    obs_data_spec = SemObservedData(specification = spec, data = dat_matrix)
+    @test observed_vars(obs_data_spec) == observed_vars(spec)
 
-    @test_throws ArgumentError("please specify `obs_colnames` as a vector of Symbols") begin
-        SemObservedData(specification = spec, data = dat_matrix, obs_colnames = names(dat))
-    end
+    obs_data_strnames =
+        SemObservedData(specification = spec, data = dat_matrix, observed_vars = names(dat))
+    @test observed_vars(obs_data_strnames) == Symbol.(names(dat))
 
     @test_throws UndefKeywordError(:data) SemObservedData(specification = spec)
 
-    @test_throws UndefKeywordError(:specification) SemObservedData(data = dat_matrix)
+    obs_data_nonames = SemObservedData(data = dat_matrix)
+    @test observed_vars(obs_data_nonames) == Symbol.(1:size(dat_matrix, 2))
 
     @testset "meanstructure=$meanstructure" for meanstructure in (false, true)
         observed = SemObservedData(specification = spec, data = dat; meanstructure)
@@ -128,35 +133,78 @@ end
         observed_nospec =
             SemObservedData(specification = nothing, data = dat_matrix; meanstructure)
 
-        test_observed(observed_nospec, dat, dat_matrix, dat_cov, dat_mean; meanstructure)
+        test_observed(
+            observed_nospec,
+            nothing,
+            dat_matrix,
+            dat_cov,
+            dat_mean;
+            meanstructure,
+        )
 
         observed_matrix = SemObservedData(
             specification = spec,
             data = dat_matrix,
-            obs_colnames = Symbol.(names(dat)),
-            meanstructure = meanstructure,
+            observed_vars = Symbol.(names(dat));
+            meanstructure,
         )
 
         test_observed(observed_matrix, dat, dat_matrix, dat_cov, dat_mean; meanstructure)
 
-        observed_shuffle =
-            SemObservedData(specification = spec, data = shuffle_dat; meanstructure)
+        # detect non-existing column
+        @test_throws "ArgumentError: column name \"z1\"" SemObservedData(
+            specification = wrong_spec,
+            data = shuffle_dat,
+        )
 
-        test_observed(observed_shuffle, dat, dat_matrix, dat_cov, dat_mean; meanstructure)
+        # detect non-existing observed_var
+        @test_throws "ArgumentError: observed_var \"z1\"" SemObservedData(
+            specification = wrong_spec,
+            data = shuffle_dat_matrix,
+            observed_vars = shuffle_names,
+        )
+
+        # spec takes precedence in obs_vars order
+        observed_spec = SemObservedData(
+            specification = spec,
+            data = shuffle_dat,
+            observed_vars = shuffle_names,
+        )
+
+        test_observed(
+            observed_spec,
+            dat,
+            dat_matrix,
+            dat_cov,
+            meanstructure ? dat_mean : nothing;
+            meanstructure,
+        )
+
+        observed_shuffle =
+            SemObservedData(specification = shuffle_spec, data = shuffle_dat; meanstructure)
+
+        test_observed(
+            observed_shuffle,
+            shuffle_dat,
+            shuffle_dat_matrix,
+            shuffle_dat_cov,
+            meanstructure ? shuffle_dat_mean : nothing;
+            meanstructure,
+        )
 
         observed_matrix_shuffle = SemObservedData(
-            specification = spec,
+            specification = shuffle_spec,
             data = shuffle_dat_matrix,
-            obs_colnames = shuffle_names;
+            observed_vars = shuffle_names;
             meanstructure,
         )
 
         test_observed(
             observed_matrix_shuffle,
-            dat,
-            dat_matrix,
-            dat_cov,
-            dat_mean;
+            shuffle_dat,
+            shuffle_dat_matrix,
+            shuffle_dat_cov,
+            meanstructure ? shuffle_dat_mean : nothing;
             meanstructure,
         )
     end # meanstructure
@@ -169,43 +217,6 @@ end # SemObservedData
     # errors
 
     @test_throws UndefKeywordError(:nsamples) SemObservedCovariance(obs_cov = dat_cov)
-
-    @test_throws ArgumentError("no `obs_colnames` were specified") begin
-        SemObservedCovariance(
-            specification = spec,
-            obs_cov = dat_cov,
-            nsamples = size(dat, 1),
-        )
-    end
-
-    @test_throws ArgumentError("observed means were passed, but `meanstructure = false`") begin
-        SemObservedCovariance(
-            specification = nothing,
-            obs_cov = dat_cov,
-            obs_mean = dat_mean,
-            nsamples = size(dat, 1),
-        )
-    end
-
-    @test_throws ArgumentError("please specify `obs_colnames` as a vector of Symbols") begin
-        SemObservedCovariance(
-            specification = spec,
-            obs_cov = dat_cov,
-            obs_colnames = names(dat),
-            nsamples = size(dat, 1),
-            meanstructure = false,
-        )
-    end
-
-    @test_throws ArgumentError("`meanstructure = true`, but no observed means were passed") begin
-        SemObservedCovariance(
-            specification = spec,
-            obs_cov = dat_cov,
-            obs_colnames = Symbol.(names(dat)),
-            meanstructure = true,
-            nsamples = size(dat, 1),
-        )
-    end
 
     @testset "meanstructure=$meanstructure" for meanstructure in (false, true)
 
@@ -225,7 +236,7 @@ end # SemObservedData
             specification = spec,
             obs_cov = dat_cov,
             obs_mean = meanstructure ? dat_mean : nothing,
-            obs_colnames = obs_colnames = Symbol.(names(dat)),
+            observed_vars = Symbol.(names(dat)),
             nsamples = size(dat, 1),
             meanstructure = meanstructure,
         )
@@ -252,7 +263,7 @@ end # SemObservedData
 
         test_observed(
             observed_nospec,
-            dat,
+            nothing,
             nothing,
             dat_cov,
             dat_mean;
@@ -262,30 +273,51 @@ end # SemObservedData
 
         @test @inferred(samples(observed_nospec)) === nothing
 
-        observed_shuffle = SemObservedCovariance(
+        # detect non-existing observed_var
+        @test_throws "ArgumentError: observed_var \"z1\"" SemObservedCovariance(
+            specification = wrong_spec,
+            obs_cov = shuffle_dat_cov,
+            observed_vars = shuffle_names,
+            nsamples = size(dat, 1),
+        )
+
+        # spec takes precedence in obs_vars order
+        observed_spec = SemObservedCovariance(
             specification = spec,
             obs_cov = shuffle_dat_cov,
-            obs_mean = meanstructure ? dat_mean[new_order] : nothing,
-            obs_colnames = shuffle_names,
+            obs_mean = meanstructure ? shuffle_dat_mean : nothing,
+            observed_vars = shuffle_names,
+            nsamples = size(dat, 1),
+        )
+
+        test_observed(
+            observed_spec,
+            dat,
+            nothing,
+            dat_cov,
+            meanstructure ? dat_mean : nothing;
+            meanstructure,
+            approx_cov = true,
+        )
+
+        observed_shuffle = SemObservedCovariance(
+            specification = shuffle_spec,
+            obs_cov = shuffle_dat_cov,
+            obs_mean = meanstructure ? shuffle_dat_mean : nothing,
+            observed_vars = shuffle_names,
             nsamples = size(dat, 1);
             meanstructure,
         )
 
         test_observed(
             observed_shuffle,
-            dat,
+            shuffle_dat,
             nothing,
-            dat_cov,
-            dat_mean;
+            shuffle_dat_cov,
+            meanstructure ? shuffle_dat_mean : nothing;
             meanstructure,
             approx_cov = true,
         )
-
-        @test @inferred(samples(observed_shuffle)) === nothing
-
-        # respect specification order
-        @test @inferred(obs_cov(observed_shuffle)) ≈ obs_cov(observed)
-        @test @inferred(observed_vars(observed_shuffle)) == shuffle_names broken = true
     end # meanstructure
 end # SemObservedCovariance
 
@@ -294,38 +326,27 @@ end # SemObservedCovariance
 @testset "SemObservedMissing" begin
 
     # errors
-    @test_throws ArgumentError(
-        "You passed your data as a `DataFrame`, but also specified `obs_colnames`. " *
-        "Please make sure the column names of your data frame indicate the correct variables " *
-        "or pass your data in a different format.",
-    ) begin
-        SemObservedMissing(
-            specification = spec,
-            data = dat_missing,
-            obs_colnames = Symbol.(names(dat)),
-        )
-    end
+    observed_redundant_names = SemObservedMissing(
+        specification = spec,
+        data = dat_missing,
+        observed_vars = Symbol.(names(dat)),
+    )
+    @test observed_vars(observed_redundant_names) == Symbol.(names(dat))
 
-    @test_throws ArgumentError(
-        "Your `data` can not be indexed by symbols. " *
-        "Maybe you forgot to provide column names via the `obs_colnames = ...` argument.",
-    ) begin
-        SemObservedMissing(specification = spec, data = dat_missing_matrix)
-    end
+    observed_spec_only = SemObservedMissing(specification = spec, data = dat_missing_matrix)
+    @test observed_vars(observed_spec_only) == observed_vars(spec)
 
-    @test_throws ArgumentError("please specify `obs_colnames` as a vector of Symbols") begin
-        SemObservedMissing(
-            specification = spec,
-            data = dat_missing_matrix,
-            obs_colnames = names(dat),
-        )
-    end
+    observed_str_colnames = SemObservedMissing(
+        specification = spec,
+        data = dat_missing_matrix,
+        observed_vars = names(dat),
+    )
+    @test observed_vars(observed_str_colnames) == Symbol.(names(dat))
 
     @test_throws UndefKeywordError(:data) SemObservedMissing(specification = spec)
 
-    @test_throws UndefKeywordError(:specification) SemObservedMissing(
-        data = dat_missing_matrix,
-    )
+    observed_no_names = SemObservedMissing(data = dat_missing_matrix)
+    @test observed_vars(observed_no_names) == Symbol.(1:size(dat_missing_matrix, 2))
 
     @testset "meanstructure=$meanstructure" for meanstructure in (false, true)
         observed =
@@ -353,7 +374,7 @@ end # SemObservedCovariance
 
         test_observed(
             observed_nospec,
-            dat_missing,
+            nothing,
             dat_missing_matrix,
             nothing,
             nothing;
@@ -363,7 +384,7 @@ end # SemObservedCovariance
         observed_matrix = SemObservedMissing(
             specification = spec,
             data = dat_missing_matrix,
-            obs_colnames = Symbol.(names(dat)),
+            observed_vars = Symbol.(names(dat)),
         )
 
         test_observed(
@@ -375,11 +396,28 @@ end # SemObservedCovariance
             meanstructure,
         )
 
-        observed_shuffle =
-            SemObservedMissing(specification = spec, data = shuffle_dat_missing)
+        # detect non-existing column
+        @test_throws "ArgumentError: column name \"z1\"" SemObservedMissing(
+            specification = wrong_spec,
+            data = shuffle_dat,
+        )
+
+        # detect non-existing observed_var
+        @test_throws "ArgumentError: observed_var \"z1\"" SemObservedMissing(
+            specification = wrong_spec,
+            data = shuffle_dat_missing_matrix,
+            observed_vars = shuffle_names,
+        )
+
+        # spec takes precedence in obs_vars order
+        observed_spec = SemObservedMissing(
+            specification = spec,
+            observed_vars = shuffle_names,
+            data = shuffle_dat_missing,
+        )
 
         test_observed(
-            observed_shuffle,
+            observed_spec,
             dat_missing,
             dat_missing_matrix,
             nothing,
@@ -387,16 +425,28 @@ end # SemObservedCovariance
             meanstructure,
         )
 
+        observed_shuffle =
+            SemObservedMissing(specification = shuffle_spec, data = shuffle_dat_missing)
+
+        test_observed(
+            observed_shuffle,
+            shuffle_dat_missing,
+            shuffle_dat_missing_matrix,
+            nothing,
+            nothing;
+            meanstructure,
+        )
+
         observed_matrix_shuffle = SemObservedMissing(
-            specification = spec,
+            specification = shuffle_spec,
             data = shuffle_dat_missing_matrix,
-            obs_colnames = shuffle_names,
+            observed_vars = shuffle_names,
         )
 
         test_observed(
             observed_matrix_shuffle,
-            dat_missing,
-            dat_missing_matrix,
+            shuffle_dat_missing,
+            shuffle_dat_missing_matrix,
             nothing,
             nothing;
             meanstructure,
