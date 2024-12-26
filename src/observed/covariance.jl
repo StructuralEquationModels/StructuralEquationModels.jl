@@ -1,38 +1,49 @@
 """
-Type alias for [SemObservedData](@ref) with no data, but with mean and covariance.
+Type alias for [`SemObservedData`](@ref) that has mean and covariance, but no actual data.
 """
-SemObservedCovariance{B, C} = SemObservedData{Nothing, B, C}
+const SemObservedCovariance = SemObservedData{Nothing}
 
 function SemObservedCovariance(;
-    specification::Union{SemSpecification, Nothing} = nothing,
     obs_cov::AbstractMatrix,
-    obs_colnames::Union{AbstractVector{Symbol}, Nothing} = nothing,
-    spec_colnames::Union{AbstractVector{Symbol}, Nothing} = nothing,
     obs_mean::Union{AbstractVector, Nothing} = nothing,
-    meanstructure::Bool = false,
+    observed_vars::Union{AbstractVector, Nothing} = nothing,
+    specification::Union{SemSpecification, Nothing} = nothing,
     nsamples::Integer,
     kwargs...,
 )
-    if !meanstructure && !isnothing(obs_mean)
-        throw(ArgumentError("observed means were passed, but `meanstructure = false`"))
-    elseif meanstructure && isnothing(obs_mean)
-        throw(ArgumentError("`meanstructure = true`, but no observed means were passed"))
+    nvars = size(obs_cov, 1)
+    size(obs_cov, 2) == nvars || throw(
+        DimensionMismatch(
+            "The covariance matrix should be square, $(size(obs_cov)) was found.",
+        ),
+    )
+
+    if isnothing(obs_mean)
+        obs_mean = zeros(nvars)
+    else
+        length(obs_mean) == nvars || throw(
+            DimensionMismatch(
+                "The length of the mean vector $(length(obs_mean)) does not match the size of the covariance matrix $(size(obs_cov))",
+            ),
+        )
     end
 
-    if isnothing(spec_colnames) && !isnothing(specification)
-        spec_colnames = observed_vars(specification)
+    if !isnothing(observed_vars)
+        length(observed_vars) == nvars || throw(
+            DimensionMismatch(
+                "The length of the observed_vars $(length(observed_vars)) does not match the size of the covariance matrix $(size(obs_cov))",
+            ),
+        )
     end
 
-    if !isnothing(spec_colnames) && isnothing(obs_colnames)
-        throw(ArgumentError("no `obs_colnames` were specified"))
+    _, obs_vars, obs_vars_perm =
+        prepare_data(nothing, observed_vars, specification, nvars)
+
+    # reorder to match the specification
+    if !isnothing(obs_vars_perm)
+        obs_cov = obs_cov[obs_vars_perm, obs_vars_perm]
+        obs_mean = obs_mean[obs_vars_perm]
     end
 
-    if !isnothing(spec_colnames)
-        obs2spec_perm = source_to_dest_perm(obs_colnames, spec_colnames)
-        obs_colnames = obs_colnames[obs2spec_perm]
-        obs_cov = obs_cov[obs2spec_perm, obs2spec_perm]
-        isnothing(obs_mean) || (obs_mean = obs_mean[obs2spec_perm])
-    end
-
-    return SemObservedData(nothing, Symbol.(obs_colnames), obs_cov, obs_mean, nsamples)
+    return SemObservedData(nothing, obs_vars, obs_cov, obs_mean, nsamples)
 end
