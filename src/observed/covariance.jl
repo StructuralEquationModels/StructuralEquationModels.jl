@@ -1,8 +1,33 @@
 """
 Type alias for [`SemObservedData`](@ref) that has mean and covariance, but no actual data.
+
+For instances of `SemObservedCovariance` [`samples`](@ref) returns `nothing`.
 """
 const SemObservedCovariance{S} = SemObservedData{Nothing, S}
 
+"""
+    SemObservedCovariance(;
+        specification,
+        obs_cov,
+        obs_colnames = nothing,
+        meanstructure = false,
+        obs_mean = nothing,
+        nsamples::Integer,
+        kwargs...)
+
+Construct [`SemObserved`](@ref) without providing the observations data,
+but with the covariations (`obs_cov`) and the means (`obs_means`) of the observed variables.
+
+Returns [`SemObservedCovariance`](@ref) object.
+
+# Arguments
+- `obs_cov`: pre-computed covariations of the observed variables
+- `obs_mean`: optional pre-computed means of the observed variables
+- `observed_vars::AbstractVector`: IDs of the observed variables (rows and columns of the `obs_cov` matrix)
+- `specification`: optional SEM specification ([`SemSpecification`](@ref))
+- `nsamples::Number`: number of samples (observed data points) used to compute `obs_cov` and `obs_means`
+   necessary for calculating fit statistics
+"""
 function SemObservedCovariance(;
     obs_cov::AbstractMatrix,
     obs_mean::Union{AbstractVector, Nothing} = nothing,
