@@ -121,8 +121,7 @@ function prepare_data(
             data_ordered = data
         end
         # make sure data_mtx is a dense matrix (required for methods like mean_and_cov())
-        data_mtx =
-            data_ordered isa DenseMatrix ? data_ordered : convert(Matrix, data_ordered)
+        data_mtx = convert(Matrix, data_ordered)
     elseif isnothing(data)
         data_mtx = nothing
         if !isnothing(nobserved_vars)
