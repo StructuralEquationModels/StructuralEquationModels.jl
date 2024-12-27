@@ -1,7 +1,7 @@
 """
 Type alias for [`SemObservedData`](@ref) that has mean and covariance, but no actual data.
 """
-const SemObservedCovariance = SemObservedData{Nothing}
+const SemObservedCovariance{S} = SemObservedData{Nothing, S}
 
 function SemObservedCovariance(;
     obs_cov::AbstractMatrix,
@@ -18,16 +18,21 @@ function SemObservedCovariance(;
             "The covariance matrix should be square, $(size(obs_cov)) was found.",
         ),
     )
+    S = eltype(obs_cov)
 
     if isnothing(obs_mean)
-        obs_mean = zeros(nvars)
+        obs_mean = zeros(S, nvars)
     else
         length(obs_mean) == nvars || throw(
             DimensionMismatch(
                 "The length of the mean vector $(length(obs_mean)) does not match the size of the covariance matrix $(size(obs_cov))",
             ),
         )
+        S = promote_type(S, eltype(obs_mean))
     end
+
+    obs_cov = convert(Matrix{S}, obs_cov)
+    obs_mean = convert(Vector{S}, obs_mean)
 
     if !isnothing(observed_vars)
         length(observed_vars) == nvars || throw(

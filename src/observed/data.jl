@@ -26,11 +26,11 @@ For observed data without missings.
 ## Implementation
 Subtype of `SemObserved`
 """
-struct SemObservedData{D <: Union{Nothing, AbstractMatrix}} <: SemObserved
+struct SemObservedData{D <: Union{Nothing, AbstractMatrix}, S <: Number} <: SemObserved
     data::D
     observed_vars::Vector{Symbol}
-    obs_cov::Matrix{Float64}
-    obs_mean::Vector{Float64}
+    obs_cov::Matrix{S}
+    obs_mean::Vector{S}
     nsamples::Int
 end
 
