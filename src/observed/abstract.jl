@@ -60,8 +60,7 @@ end
 function prepare_data(
     data::Union{AbstractDataFrame, AbstractMatrix, Nothing},
     observed_vars::Union{AbstractVector, Nothing},
-    spec::Union{SemSpecification, Nothing},
-    nobserved_vars::Union{Integer, Nothing} = nothing;
+    spec::Union{SemSpecification, Nothing};
     observed_var_prefix::Union{Symbol, AbstractString},
 )
     obs_vars = nothing
@@ -124,14 +123,10 @@ function prepare_data(
         data_mtx = convert(Matrix, data_ordered)
     elseif isnothing(data)
         data_mtx = nothing
-        if !isnothing(nobserved_vars)
-            if isnothing(obs_vars)
-                obs_vars =
-                    obs_vars_reordered =
-                        default_observed_vars(nobserved_vars, observed_var_prefix)
-            end
-        else
-            error("Cannot infer observed variables from provided inputs.")
+        if isnothing(obs_vars)
+            obs_vars =
+                obs_vars_reordered =
+                    default_observed_vars(nobserved_vars, observed_var_prefix)
         end
     else
         throw(ArgumentError("Unsupported data type: $(typeof(data))"))

@@ -43,9 +43,15 @@ function SemObservedData(;
 )
     data, obs_vars, _ =
         prepare_data(data, observed_vars, specification; observed_var_prefix)
-    obs_mean, obs_cov = mean_and_cov(data, 1)
-
-    return SemObservedData(data, obs_vars, obs_cov, vec(obs_mean), size(data, 1))
+    
+    if !isnothing(data)
+        obs_mean, obs_cov = mean_and_cov(data, 1)
+    else
+        n = length(obs_vars)
+        obs_mean, obs_cov = zeros(n), zeros(n, n)
+    end
+ 
+    return SemObservedData(data, obs_vars, obs_cov, vec(obs_mean), isnothing(data) ? 0 : size(data, 1))
 end
 
 ############################################################################################
