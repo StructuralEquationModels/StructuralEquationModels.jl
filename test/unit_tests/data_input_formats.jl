@@ -178,6 +178,12 @@ end
             @test observed_vars(observed_nodata) == Symbol.(names(dat))
         end
 
+        @test_warn "The order of variables in observed_vars" SemObservedData(
+            specification = spec,
+            data = shuffle_dat,
+            observed_vars = shuffle_names,
+        )
+
         # spec takes precedence in obs_vars order
         observed_spec = SemObservedData(
             specification = spec,

@@ -97,6 +97,9 @@ function prepare_data(
     if data isa AbstractDataFrame
         if !isnothing(obs_vars_reordered) # subset/reorder columns
             data = data[:, obs_vars_reordered]
+            if obs_vars_reordered != obs_vars
+                @warn "The order of variables in observed_vars argument does not match the order of observed_vars(specification). The specification order is used."
+            end
         else # default symbol names
             obs_vars = obs_vars_reordered = Symbol.(names(data))
         end
