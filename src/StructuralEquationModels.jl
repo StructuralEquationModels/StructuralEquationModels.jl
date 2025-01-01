@@ -41,8 +41,8 @@ include("frontend/fit/summary.jl")
 include("frontend/pretty_printing.jl")
 # observed
 include("observed/abstract.jl")
-include("observed/covariance.jl")
 include("observed/data.jl")
+include("observed/covariance.jl")
 include("observed/missing.jl")
 include("observed/EM.jl")
 # constructor

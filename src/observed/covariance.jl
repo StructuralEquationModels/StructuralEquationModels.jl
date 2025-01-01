@@ -1,4 +1,11 @@
 """
+Type alias for [`SemObservedData`](@ref) that has mean and covariance, but no actual data.
+
+For instances of `SemObservedCovariance` [`samples`](@ref) returns `nothing`.
+"""
+const SemObservedCovariance{B, C} = SemObservedData{Nothing, B, C}
+
+"""
 For observed covariance matrices and means.
 
 # Constructor
@@ -39,27 +46,19 @@ use this if you are sure your covariance matrix is in the right format.
 ## Additional keyword arguments:
 - `spec_colnames::Vector{Symbol} = nothing`: overwrites column names of the specification object
 """
-struct SemObservedCovariance{B, C} <: SemObserved
-    obs_cov::B
-    obs_mean::C
-    nobs_vars::Int
-    nsamples::Int
-end
-
 function SemObservedCovariance(;
     specification::Union{SemSpecification, Nothing} = nothing,
-    obs_cov,
-    obs_colnames = nothing,
-    spec_colnames = nothing,
-    obs_mean = nothing,
-    meanstructure = false,
+    obs_cov::AbstractMatrix,
+    obs_colnames::Union{AbstractVector{Symbol}, Nothing} = nothing,
+    spec_colnames::Union{AbstractVector{Symbol}, Nothing} = nothing,
+    obs_mean::Union{AbstractVector, Nothing} = nothing,
+    meanstructure::Bool = false,
     nsamples::Integer,
     kwargs...,
 )
-    if !meanstructure & !isnothing(obs_mean)
+    if !meanstructure && !isnothing(obs_mean)
         throw(ArgumentError("observed means were passed, but `meanstructure = false`"))
-
-    elseif meanstructure & isnothing(obs_mean)
+    elseif meanstructure && isnothing(obs_mean)
         throw(ArgumentError("`meanstructure = true`, but no observed means were passed"))
     end
 
@@ -67,11 +66,8 @@ function SemObservedCovariance(;
         spec_colnames = observed_vars(specification)
     end
 
-    if !isnothing(spec_colnames) & isnothing(obs_colnames)
+    if !isnothing(spec_colnames) && isnothing(obs_colnames)
         throw(ArgumentError("no `obs_colnames` were specified"))
-
-    elseif !isnothing(spec_colnames) & !(eltype(obs_colnames) <: Symbol)
-        throw(ArgumentError("please specify `obs_colnames` as a vector of Symbols"))
     end
 
     if !isnothing(spec_colnames)
@@ -80,22 +76,5 @@ function SemObservedCovariance(;
         isnothing(obs_mean) || (obs_mean = obs_mean[obs2spec_perm])
     end
 
-    return SemObservedCovariance(obs_cov, obs_mean, size(obs_cov, 1), nsamples)
+    return SemObservedData(nothing, obs_cov, obs_mean, size(obs_cov, 1), nsamples)
 end
-
-############################################################################################
-### Recommended methods
-############################################################################################
-
-nsamples(observed::SemObservedCovariance) = observed.nsamples
-nobserved_vars(observed::SemObservedCovariance) = observed.nobs_vars
-
-samples(observed::SemObservedCovariance) =
-    error("$(typeof(observed)) does not store data samples")
-
-############################################################################################
-### additional methods
-############################################################################################
-
-obs_cov(observed::SemObservedCovariance) = observed.obs_cov
-obs_mean(observed::SemObservedCovariance) = observed.obs_mean
