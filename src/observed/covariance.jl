@@ -3,79 +3,77 @@ Type alias for [`SemObservedData`](@ref) that has mean and covariance, but no ac
 
 For instances of `SemObservedCovariance` [`samples`](@ref) returns `nothing`.
 """
-const SemObservedCovariance{B, C} = SemObservedData{Nothing, B, C}
+const SemObservedCovariance{S} = SemObservedData{Nothing, S}
 
 """
-For observed covariance matrices and means.
-
-# Constructor
-
     SemObservedCovariance(;
         specification,
         obs_cov,
         obs_colnames = nothing,
         meanstructure = false,
         obs_mean = nothing,
-        nsamples = nothing,
+        nsamples::Integer,
         kwargs...)
 
+Construct [`SemObserved`](@ref) without providing the observations data,
+but with the covariations (`obs_cov`) and the means (`obs_means`) of the observed variables.
+
+Returns [`SemObservedCovariance`](@ref) object.
+
 # Arguments
-- `specification`: either a `RAMMatrices` or `ParameterTable` object (1)
-- `obs_cov`: observed covariance matrix
-- `obs_colnames::Vector{Symbol}`: column names of the covariance matrix
-- `meanstructure::Bool`: does the model have a meanstructure?
-- `obs_mean`: observed mean vector
-- `nsamples::Number`: number of samples (observed data points); necessary for fit statistics
-
-# Extended help
-## Interfaces
-- `nsamples(::SemObservedCovariance)`: number of samples (observed data points)
-- `n_man(::SemObservedCovariance)` -> number of manifest variables
-
-- `obs_cov(::SemObservedCovariance)` -> observed covariance matrix
-- `obs_mean(::SemObservedCovariance)` -> observed means
-
-## Implementation
-Subtype of `SemObserved`
-
-## Remarks
-(1) the `specification` argument can also be `nothing`, but this turns of checking whether
-the observed data/covariance columns are in the correct order! As a result, you should only
-use this if you are sure your covariance matrix is in the right format.
-
-## Additional keyword arguments:
-- `spec_colnames::Vector{Symbol} = nothing`: overwrites column names of the specification object
+- `obs_cov`: pre-computed covariations of the observed variables
+- `obs_mean`: optional pre-computed means of the observed variables
+- `observed_vars::AbstractVector`: IDs of the observed variables (rows and columns of the `obs_cov` matrix)
+- `specification`: optional SEM specification ([`SemSpecification`](@ref))
+- `nsamples::Number`: number of samples (observed data points) used to compute `obs_cov` and `obs_means`
+   necessary for calculating fit statistics
 """
 function SemObservedCovariance(;
-    specification::Union{SemSpecification, Nothing} = nothing,
     obs_cov::AbstractMatrix,
-    obs_colnames::Union{AbstractVector{Symbol}, Nothing} = nothing,
-    spec_colnames::Union{AbstractVector{Symbol}, Nothing} = nothing,
     obs_mean::Union{AbstractVector, Nothing} = nothing,
-    meanstructure::Bool = false,
+    observed_vars::Union{AbstractVector, Nothing} = nothing,
+    specification::Union{SemSpecification, Nothing} = nothing,
     nsamples::Integer,
     kwargs...,
 )
-    if !meanstructure && !isnothing(obs_mean)
-        throw(ArgumentError("observed means were passed, but `meanstructure = false`"))
-    elseif meanstructure && isnothing(obs_mean)
-        throw(ArgumentError("`meanstructure = true`, but no observed means were passed"))
+    nvars = size(obs_cov, 1)
+    size(obs_cov, 2) == nvars || throw(
+        DimensionMismatch(
+            "The covariance matrix should be square, $(size(obs_cov)) was found.",
+        ),
+    )
+    S = eltype(obs_cov)
+
+    if isnothing(obs_mean)
+        obs_mean = zeros(S, nvars)
+    else
+        length(obs_mean) == nvars || throw(
+            DimensionMismatch(
+                "The length of the mean vector $(length(obs_mean)) does not match the size of the covariance matrix $(size(obs_cov))",
+            ),
+        )
+        S = promote_type(S, eltype(obs_mean))
     end
 
-    if isnothing(spec_colnames) && !isnothing(specification)
-        spec_colnames = observed_vars(specification)
+    obs_cov = convert(Matrix{S}, obs_cov)
+    obs_mean = convert(Vector{S}, obs_mean)
+
+    if !isnothing(observed_vars)
+        length(observed_vars) == nvars || throw(
+            DimensionMismatch(
+                "The length of the observed_vars $(length(observed_vars)) does not match the size of the covariance matrix $(size(obs_cov))",
+            ),
+        )
     end
 
-    if !isnothing(spec_colnames) && isnothing(obs_colnames)
-        throw(ArgumentError("no `obs_colnames` were specified"))
+    _, obs_vars, obs_vars_perm =
+        prepare_data((nsamples, nvars), observed_vars, specification)
+
+    # reorder to match the specification
+    if !isnothing(obs_vars_perm)
+        obs_cov = obs_cov[obs_vars_perm, obs_vars_perm]
+        obs_mean = obs_mean[obs_vars_perm]
     end
 
-    if !isnothing(spec_colnames)
-        obs2spec_perm = source_to_dest_perm(obs_colnames, spec_colnames)
-        obs_colnames = obs_colnames[obs2spec_perm]
-        obs_cov = obs_cov[obs2spec_perm, obs2spec_perm]
-        isnothing(obs_mean) || (obs_mean = obs_mean[obs2spec_perm])
-    end
-
-    return SemObservedData(nothing, Symbol.(obs_colnames), obs_cov, obs_mean, nsamples)
+    return SemObservedData(nothing, obs_vars, obs_cov, obs_mean, nsamples)
 end

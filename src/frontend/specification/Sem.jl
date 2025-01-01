@@ -3,6 +3,7 @@
 ############################################################################################
 
 function Sem(;
+    specification = ParameterTable,
     observed::O = SemObservedData,
     imply::I = RAM,
     loss::L = SemML,
@@ -12,7 +13,7 @@ function Sem(;
 
     set_field_type_kwargs!(kwdict, observed, imply, loss, O, I)
 
-    observed, imply, loss = get_fields!(kwdict, observed, imply, loss)
+    observed, imply, loss = get_fields!(kwdict, specification, observed, imply, loss)
 
     sem = Sem(observed, imply, loss)
 
@@ -59,6 +60,7 @@ Returns the loss part of a model.
 loss(model::AbstractSemSingle) = model.loss
 
 function SemFiniteDiff(;
+    specification = ParameterTable,
     observed::O = SemObservedData,
     imply::I = RAM,
     loss::L = SemML,
@@ -68,7 +70,7 @@ function SemFiniteDiff(;
 
     set_field_type_kwargs!(kwdict, observed, imply, loss, O, I)
 
-    observed, imply, loss = get_fields!(kwdict, observed, imply, loss)
+    observed, imply, loss = get_fields!(kwdict, specification, observed, imply, loss)
 
     sem = SemFiniteDiff(observed, imply, loss)
 
@@ -96,23 +98,27 @@ function set_field_type_kwargs!(kwargs, observed, imply, loss, O, I)
 end
 
 # construct Sem fields
-function get_fields!(kwargs, observed, imply, loss)
+function get_fields!(kwargs, specification, observed, imply, loss)
+    if !isa(specification, SemSpecification)
+        specification = specification(; kwargs...)
+    end
+
     # observed
     if !isa(observed, SemObserved)
-        observed = observed(; kwargs...)
+        observed = observed(; specification, kwargs...)
     end
     kwargs[:observed] = observed
 
     # imply
     if !isa(imply, SemImply)
-        imply = imply(; kwargs...)
+        imply = imply(; specification, kwargs...)
     end
 
     kwargs[:imply] = imply
     kwargs[:nparams] = nparams(imply)
 
     # loss
-    loss = get_SemLoss(loss; kwargs...)
+    loss = get_SemLoss(loss; specification, kwargs...)
     kwargs[:loss] = loss
 
     return observed, imply, loss

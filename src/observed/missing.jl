@@ -19,40 +19,28 @@ For observed data with missing values.
 # Constructor
 
     SemObservedMissing(;
-        specification,
         data,
-        obs_colnames = nothing,
+        observed_vars = nothing,
+        specification = nothing,
         kwargs...)
 
 # Arguments
-- `specification`: either a `RAMMatrices` or `ParameterTable` object (1)
+- `specification`: optional SEM model specification ([`SemSpecification`](@ref))
 - `data`: observed data
-- `obs_colnames::Vector{Symbol}`: column names of the data (if the object passed as data does not have column names, i.e. is not a data frame)
+- `observed_vars::Vector{Symbol}`: column names of the data (if the object passed as data does not have column names, i.e. is not a data frame)
 
 # Extended help
 ## Interfaces
-- `nsamples(::SemObservedMissing)` -> number of observed data points
-- `nobserved_vars(::SemObservedMissing)` -> number of manifest variables
+- `nsamples(::SemObservedMissing)` -> number of samples (data points)
+- `nobserved_vars(::SemObservedMissing)` -> number of observed variables
 
-- `samples(::SemObservedMissing)` -> observed data
+- `samples(::SemObservedMissing)` -> data matrix (contains both measured and missing values)
 - `em_model(::SemObservedMissing)` -> `EmMVNModel` that contains the covariance matrix and mean vector found via expectation maximization
 
 ## Implementation
 Subtype of `SemObserved`
-
-## Remarks
-(1) the `specification` argument can also be `nothing`, but this turns of checking whether
-the observed data/covariance columns are in the correct order! As a result, you should only
-use this if you are sure your observed data is in the right format.
-
-## Additional keyword arguments:
-- `spec_colnames::Vector{Symbol} = nothing`: overwrites column names of the specification object
 """
-struct SemObservedMissing{
-    T <: Real,
-    S <: Real,
-    E <: EmMVNModel,
-} <: SemObserved
+struct SemObservedMissing{T <: Real, S <: Real, E <: EmMVNModel} <: SemObserved
     data::Matrix{Union{T, Missing}}
     observed_vars::Vector{Symbol}
     nsamples::Int
@@ -66,53 +54,12 @@ end
 ############################################################################################
 
 function SemObservedMissing(;
-    specification::Union{SemSpecification, Nothing},
     data,
-    obs_colnames = nothing,
-    spec_colnames = nothing,
+    observed_vars::Union{AbstractVector, Nothing} = nothing,
+    specification::Union{SemSpecification, Nothing} = nothing,
     kwargs...,
 )
-    if isnothing(spec_colnames) && !isnothing(specification)
-        spec_colnames = observed_vars(specification)
-    end
-
-    if !isnothing(spec_colnames)
-        if isnothing(obs_colnames)
-            try
-                data = data[:, spec_colnames]
-                obs_colnames = spec_colnames
-            catch
-                throw(
-                    ArgumentError(
-                        "Your `data` can not be indexed by symbols. " *
-                        "Maybe you forgot to provide column names via the `obs_colnames = ...` argument.",
-                    ),
-                )
-            end
-        else
-            if data isa DataFrame
-                throw(
-                    ArgumentError(
-                        "You passed your data as a `DataFrame`, but also specified `obs_colnames`. " *
-                        "Please make sure the column names of your data frame indicate the correct variables " *
-                        "or pass your data in a different format.",
-                    ),
-                )
-            end
-
-            if !(eltype(obs_colnames) <: Symbol)
-                throw(ArgumentError("please specify `obs_colnames` as a vector of Symbols"))
-            end
-
-            obs_colnames = obs_colnames[source_to_dest_perm(obs_colnames, spec_colnames)]
-            data = data[:, obs_colnames]
-        end
-    end
-
-    if data isa DataFrame
-        data = Matrix(data)
-    end
-
+    data, obs_vars, _ = prepare_data(data, observed_vars, specification)
     nsamples, nobs_vars = size(data)
 
     # detect all different missing patterns with their row indices
@@ -133,7 +80,13 @@ function SemObservedMissing(;
     # allocate EM model (but don't fit)
     em_model = EmMVNModel(zeros(nobs_vars, nobs_vars), zeros(nobs_vars), false)
 
-    return SemObservedMissing(data, Symbol.(obs_colnames), nsamples, patterns, em_model)
+    return SemObservedMissing(
+        convert(Matrix{Union{nonmissingtype(eltype(data)), Missing}}, data),
+        obs_vars,
+        nsamples,
+        patterns,
+        em_model,
+    )
 end
 
 ############################################################################################
