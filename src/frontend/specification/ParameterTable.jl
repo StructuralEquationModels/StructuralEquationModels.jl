@@ -27,9 +27,9 @@ empty_partable_columns(nrows::Integer = 0) = Dict{Symbol, Vector}(
     :param => fill(Symbol(), nrows),
 )
 
-# construct using the provided columns data or create and empty table
+# construct using the provided columns data or create an empty table
 function ParameterTable(
-    columns::Dict{Symbol, Vector} = empty_partable_columns();
+    columns::Dict{Symbol, Vector};
     observed_vars::Union{AbstractVector{Symbol}, Nothing} = nothing,
     latent_vars::Union{AbstractVector{Symbol}, Nothing} = nothing,
     params::Union{AbstractVector{Symbol}, Nothing} = nothing,
