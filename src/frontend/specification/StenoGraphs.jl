@@ -130,6 +130,17 @@ function ParameterTable(
 end
 
 ############################################################################################
+### keyword only constructor (for call in `Sem` constructor)
+############################################################################################
+
+# FIXME: this kw-only ctor conflicts with the empty ParTable constructor;
+#        it is left here for compatibility with the current Sem construction API,
+#        the proper fix would be to move away from kw-only ctors in general
+ParameterTable(; graph::Union{AbstractStenoGraph, Nothing} = nothing, kwargs...) =
+    !isnothing(graph) ? ParameterTable(graph; kwargs...) :
+    ParameterTable(empty_partable_columns(); kwargs...)
+
+############################################################################################
 ### constructor for EnsembleParameterTable from graph
 ############################################################################################
 

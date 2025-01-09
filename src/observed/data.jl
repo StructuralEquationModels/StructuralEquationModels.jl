@@ -4,17 +4,15 @@ For observed data without missings.
 # Constructor
 
     SemObservedData(;
-        specification,
         data,
-        meanstructure = false,
-        obs_colnames = nothing,
+        observed_vars = nothing,
+        specification = nothing,
         kwargs...)
 
 # Arguments
-- `specification`: either a `RAMMatrices` or `ParameterTable` object (1)
-- `data`: observed data
-- `meanstructure::Bool`: does the model have a meanstructure?
-- `obs_colnames::Vector{Symbol}`: column names of the data (if the object passed as data does not have column names, i.e. is not a data frame)
+- `specification`: optional SEM specification ([`SemSpecification`](@ref))
+- `data`: observed data -- *DataFrame* or *Matrix*
+- `observed_vars::Vector{Symbol}`: column names of the data (if the object passed as data does not have column names, i.e. is not a data frame)
 
 # Extended help
 ## Interfaces
@@ -27,93 +25,32 @@ For observed data without missings.
 
 ## Implementation
 Subtype of `SemObserved`
-
-## Remarks
-(1) the `specification` argument can also be `nothing`, but this turns of checking whether
-the observed data/covariance columns are in the correct order! As a result, you should only
-use this if you are sure your observed data is in the right format.
-
-## Additional keyword arguments:
-- `spec_colnames::Vector{Symbol} = nothing`: overwrites column names of the specification object
-- `compute_covariance::Bool ) = true`: should the covariance of `data` be computed and stored?
 """
-struct SemObservedData{A, B, C} <: SemObserved
-    data::A
-    obs_cov::B
-    obs_mean::C
-    nobs_vars::Int
+struct SemObservedData{D <: Union{Nothing, AbstractMatrix}, S <: Number} <: SemObserved
+    data::D
+    observed_vars::Vector{Symbol}
+    obs_cov::Matrix{S}
+    obs_mean::Vector{S}
     nsamples::Int
 end
 
-# error checks
-function check_arguments_SemObservedData(kwargs...)
-    # data is a data frame,
-
-end
-
 function SemObservedData(;
-    specification::Union{SemSpecification, Nothing},
     data,
-    obs_colnames = nothing,
-    spec_colnames = nothing,
-    meanstructure = false,
-    compute_covariance = true,
+    observed_vars::Union{AbstractVector, Nothing} = nothing,
+    specification::Union{SemSpecification, Nothing} = nothing,
+    observed_var_prefix::Union{Symbol, AbstractString} = :obs,
     kwargs...,
 )
-    if isnothing(spec_colnames) && !isnothing(specification)
-        spec_colnames = observed_vars(specification)
-    end
+    data, obs_vars, _ =
+        prepare_data(data, observed_vars, specification; observed_var_prefix)
+    obs_mean, obs_cov = mean_and_cov(data, 1)
 
-    if !isnothing(spec_colnames)
-        if isnothing(obs_colnames)
-            try
-                data = data[:, spec_colnames]
-            catch
-                throw(
-                    ArgumentError(
-                        "Your `data` can not be indexed by symbols. " *
-                        "Maybe you forgot to provide column names via the `obs_colnames = ...` argument.",
-                    ),
-                )
-            end
-        else
-            if data isa DataFrame
-                throw(
-                    ArgumentError(
-                        "You passed your data as a `DataFrame`, but also specified `obs_colnames`. " *
-                        "Please make sure the column names of your data frame indicate the correct variables " *
-                        "or pass your data in a different format.",
-                    ),
-                )
-            end
-
-            if !(eltype(obs_colnames) <: Symbol)
-                throw(ArgumentError("please specify `obs_colnames` as a vector of Symbols"))
-            end
-
-            data = reorder_data(data, spec_colnames, obs_colnames)
-        end
-    end
-
-    if data isa DataFrame
-        data = Matrix(data)
-    end
-
-    return SemObservedData(
-        data,
-        compute_covariance ? Statistics.cov(data) : nothing,
-        meanstructure ? vec(Statistics.mean(data, dims = 1)) : nothing,
-        size(data, 2),
-        size(data, 1),
-    )
+    return SemObservedData(data, obs_vars, obs_cov, vec(obs_mean), size(data, 1))
 end
 
 ############################################################################################
 ### Recommended methods
 ############################################################################################
-
-nsamples(observed::SemObservedData) = observed.nsamples
-nobserved_vars(observed::SemObservedData) = observed.nobs_vars
 
 ############################################################################################
 ### additional methods
@@ -121,18 +58,3 @@ nobserved_vars(observed::SemObservedData) = observed.nobs_vars
 
 obs_cov(observed::SemObservedData) = observed.obs_cov
 obs_mean(observed::SemObservedData) = observed.obs_mean
-
-############################################################################################
-### Additional functions
-############################################################################################
-
-# reorder data -----------------------------------------------------------------------------
-function reorder_data(data::AbstractArray, spec_colnames, obs_colnames)
-    if spec_colnames == obs_colnames
-        return data
-    else
-        obs_positions = Dict(col => i for (i, col) in enumerate(obs_colnames))
-        new_positions = [obs_positions[col] for col in spec_colnames]
-        return data[:, new_positions]
-    end
-end
