@@ -49,7 +49,7 @@ include("observed/EM.jl")
 # constructor
 include("frontend/specification/Sem.jl")
 include("frontend/specification/documentation.jl")
-# imply
+# implied
 include("imply/abstract.jl")
 include("imply/RAM/symbolic.jl")
 include("imply/RAM/generic.jl")
@@ -95,11 +95,11 @@ export AbstractSem,
     HessianEval,
     ExactHessian,
     ApproxHessian,
-    SemImply,
+    SemImplied,
     RAMSymbolic,
     RAM,
-    ImplyEmpty,
-    imply,
+    ImpliedEmpty,
+    implied,
     start_val,
     start_fabin3,
     start_simple,
