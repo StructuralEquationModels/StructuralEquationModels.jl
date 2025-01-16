@@ -265,3 +265,30 @@ function params_range(arr::ParamsArray; allow_gaps::Bool = false)
 
     return first_i:last_i
 end
+
+"""
+    filter_used_params([linearindex_test], arr::ParamsArray)
+
+Filter the parameters that are referenced in the `arr`, and
+the linear indices of the corresponding parameters pass the
+optional `linearindex_test`.
+
+Returns the indices of the used parameters.
+"""
+function filter_used_params(linearindex_test, arr::ParamsArray)
+    inds = Vector{Int}()
+    for i in 1:nparams(arr)
+        par_range = SEM.param_occurences_range(arr, i)
+        isempty(par_range) && continue # not relevant
+        @inbounds for j in par_range
+            lin_ind = arr.linear_indices[j]
+            if isnothing(linearindex_test) || linearindex_test(lin_ind)
+                push!(inds, i)
+                break
+            end
+        end
+    end
+    return inds
+end
+
+filter_used_params(arr::ParamsArray) = filter_used_params(nothing, arr)
