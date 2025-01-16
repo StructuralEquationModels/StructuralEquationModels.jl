@@ -154,11 +154,18 @@ function prepare_start_params(start_val::AbstractVector, model::AbstractSem; kwa
             "The length of `start_val` vector ($(length(start_val))) does not match the number of model parameters ($(nparams(model))).",
         ),
     )
+    (eltype(start_val) <: Number) || throw(
+        TypeError(
+            :prepare_start_params, "start_val elements must be numeric",
+            Number, eltype(start_val),
+        ),
+    )
     return start_val
 end
 
 function prepare_start_params(start_val::AbstractDict, model::AbstractSem; kwargs...)
-    return [start_val[param] for param in params(model)] # convert to a vector
+    # convert to a vector
+    return prepare_start_params([start_val[param] for param in params(model)], model; kwargs...)
 end
 
 # get from the ParameterTable (potentially from a different model with match param names)
