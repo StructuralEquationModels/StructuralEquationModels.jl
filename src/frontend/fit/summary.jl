@@ -1,9 +1,4 @@
-function details(
-    sem_fit::SemFit;
-    show_fitmeasures = false,
-    color = :light_cyan,
-    digits = 2,
-)
+function details(sem_fit::SemFit; show_fitmeasures = false, color = :light_cyan, digits = 2)
     print("\n")
     println("Fitted Structural Equation Model")
     print("\n")
@@ -51,7 +46,7 @@ function details(
     secondary_color = :light_yellow,
     digits = 2,
     show_variables = true,
-    show_columns = nothing
+    show_columns = nothing,
 )
     if show_variables
         print("\n")
@@ -150,7 +145,8 @@ function details(
         check_round(partable.columns[c][regression_indices]; digits = digits) for
         c in regression_columns
     )
-    regression_columns[2] = regression_columns[2] == :relation ? Symbol("") : regression_columns[2]
+    regression_columns[2] =
+        regression_columns[2] == :relation ? Symbol("") : regression_columns[2]
 
     print("\n")
     pretty_table(
@@ -222,7 +218,8 @@ function details(
         printstyled("Means: \n"; color = color)
 
         if isnothing(show_columns)
-            sorted_columns = [:from, :relation, :to, :estimate, :param, :value_fixed, :start]
+            sorted_columns =
+                [:from, :relation, :to, :estimate, :param, :value_fixed, :start]
             mean_columns = sort_partially(sorted_columns, columns)
         else
             mean_columns = copy(show_columns)
@@ -256,7 +253,7 @@ function details(
     secondary_color = :light_yellow,
     digits = 2,
     show_variables = true,
-    show_columns = nothing
+    show_columns = nothing,
 )
     if show_variables
         print("\n")
@@ -297,7 +294,7 @@ function details(
             secondary_color = secondary_color,
             digits = digits,
             show_variables = false,
-            show_columns = show_columns
+            show_columns = show_columns,
         )
     end
 

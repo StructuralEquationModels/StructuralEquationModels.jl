@@ -61,7 +61,6 @@ function ProximalAlgorithms.value_and_gradient(model::AbstractSem, params)
     return obj, grad
 end
 
-
 mutable struct ProximalResult
     result::Any
 end

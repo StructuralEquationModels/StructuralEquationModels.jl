@@ -161,7 +161,9 @@ function ∇F_fiml_outer!(G, JΣ, Jμ, implied, model, semfiml)
 
     ∇Σ = P * (implied.∇S + Q * implied.∇A)
 
-    ∇μ = implied.F⨉I_A⁻¹ * implied.∇M + kron((implied.I_A⁻¹ * implied.M)', implied.F⨉I_A⁻¹) * implied.∇A
+    ∇μ =
+        implied.F⨉I_A⁻¹ * implied.∇M +
+        kron((implied.I_A⁻¹ * implied.M)', implied.F⨉I_A⁻¹) * implied.∇A
 
     mul!(G, ∇Σ', JΣ) # actually transposed
     mul!(G, ∇μ', Jμ, -1, 1)
