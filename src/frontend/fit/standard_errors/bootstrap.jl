@@ -7,7 +7,7 @@ Only works for single models.
 # Arguments
 - `n_boot`: number of boostrap samples
 - `data`: data to sample from. Only needed if different than the data from `sem_fit`
-- `kwargs...`: passed down to `swap_observed`
+- `kwargs...`: passed down to `replace_observed`
 """
 function se_bootstrap(
     semfit::SemFit;
@@ -42,7 +42,7 @@ function se_bootstrap(
 
     for _ in 1:n_boot
         sample_data = bootstrap_sample(data)
-        new_model = swap_observed(
+        new_model = replace_observed(
             model(semfit);
             data = sample_data,
             specification = specification,

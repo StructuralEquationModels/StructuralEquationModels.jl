@@ -7,12 +7,12 @@
 ## Swap observed data
 In simulation studies, a common task is fitting the same model to many different datasets.
 It would be a waste of resources to reconstruct the complete model for each dataset.
-We therefore provide the function `swap_observed` to change the `observed` part of a model,
+We therefore provide the function `replace_observed` to change the `observed` part of a model,
 without necessarily reconstructing the other parts.
 
 For the [A first model](@ref), you would use it as
 
-```@setup swap_observed
+```@setup replace_observed
 using StructuralEquationModels
 
 observed_vars = [:x1, :x2, :x3, :y1, :y2, :y3, :y4, :y5, :y6, :y7, :y8]
@@ -49,7 +49,7 @@ partable = ParameterTable(
 )
 ```
 
-```@example swap_observed
+```@example replace_observed
 data = example_data("political_democracy")
 
 data_1 = data[1:30, :]
@@ -61,7 +61,7 @@ model = Sem(
     data = data_1
 )
 
-model_updated = swap_observed(model; data = data_2, specification = partable)
+model_updated = replace_observed(model; data = data_2, specification = partable)
 ```
 
 !!! danger "Thread safety"
@@ -76,7 +76,7 @@ model_updated = swap_observed(model; data = data_2, specification = partable)
 If you are building your models by parts, you can also update each part seperately with the function `update_observed`.
 For example,
 
-```@example swap_observed
+```@example replace_observed
 
 new_observed = SemObservedData(;data = data_2, specification = partable)
 
@@ -88,6 +88,6 @@ new_optimizer = update_observed(my_optimizer, new_observed)
 ## API
 
 ```@docs
-swap_observed
+replace_observed
 update_observed
 ```

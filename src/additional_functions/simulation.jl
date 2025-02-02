@@ -1,7 +1,7 @@
 """
-    (1) swap_observed(model::AbstractSemSingle; kwargs...)
+    (1) replace_observed(model::AbstractSemSingle; kwargs...)
 
-    (2) swap_observed(model::AbstractSemSingle, observed; kwargs...)
+    (2) replace_observed(model::AbstractSemSingle, observed; kwargs...)
 
 Return a new model with swaped observed part.
 
@@ -13,7 +13,7 @@ Return a new model with swaped observed part.
 # Examples
 See the online documentation on [Swap observed data](@ref).
 """
-function swap_observed end
+function replace_observed end
 
 """
     update_observed(to_update, observed::SemObserved; kwargs...)
@@ -34,15 +34,15 @@ function update_observed end
 ############################################################################################
 
 # use the same observed type as before
-swap_observed(model::AbstractSemSingle; kwargs...) =
-    swap_observed(model, typeof(observed(model)).name.wrapper; kwargs...)
+replace_observed(model::AbstractSemSingle; kwargs...) =
+    replace_observed(model, typeof(observed(model)).name.wrapper; kwargs...)
 
 # construct a new observed type
-swap_observed(model::AbstractSemSingle, observed_type; kwargs...) =
-    swap_observed(model, observed_type(; kwargs...); kwargs...)
+replace_observed(model::AbstractSemSingle, observed_type; kwargs...) =
+    replace_observed(model, observed_type(; kwargs...); kwargs...)
 
-swap_observed(model::AbstractSemSingle, new_observed::SemObserved; kwargs...) =
-    swap_observed(
+replace_observed(model::AbstractSemSingle, new_observed::SemObserved; kwargs...) =
+    replace_observed(
         model,
         observed(model),
         imply(model),
@@ -51,7 +51,7 @@ swap_observed(model::AbstractSemSingle, new_observed::SemObserved; kwargs...) =
         kwargs...,
     )
 
-function swap_observed(
+function replace_observed(
     model::AbstractSemSingle,
     old_observed,
     imply,

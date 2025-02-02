@@ -195,7 +195,7 @@ end
 ### Update observed data
 
 If you are planing a simulation study where you have to fit the **same model** to many **different datasets**, it is computationally beneficial to not build the whole model completely new everytime you change your data.
-Therefore, we provide a function to update the data of your model, `swap_observed(model(semfit); data = new_data)`. However, we can not know beforehand in what way your loss function depends on the specific datasets. The solution is to provide a method for `update_observed`. Since `Ridge` does not depend on the data at all, this is quite easy:
+Therefore, we provide a function to update the data of your model, `replace_observed(model(semfit); data = new_data)`. However, we can not know beforehand in what way your loss function depends on the specific datasets. The solution is to provide a method for `update_observed`. Since `Ridge` does not depend on the data at all, this is quite easy:
 
 ```julia
 import StructuralEquationModels: update_observed

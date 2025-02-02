@@ -169,13 +169,13 @@ end
     Random.seed!(83472834)
     colnames = Symbol.(names(example_data("political_democracy")))
     # simulate data
-    model_ml_new = swap_observed(
+    model_ml_new = replace_observed(
         model_ml,
         data = rand(model_ml, params, 1_000_000),
         specification = spec,
         obs_colnames = colnames,
     )
-    model_ml_sym_new = swap_observed(
+    model_ml_sym_new = replace_observed(
         model_ml_sym,
         data = rand(model_ml_sym, params, 1_000_000),
         specification = spec,
@@ -366,14 +366,14 @@ end
     Random.seed!(83472834)
     colnames = Symbol.(names(example_data("political_democracy")))
     # simulate data
-    model_ml_new = swap_observed(
+    model_ml_new = replace_observed(
         model_ml,
         data = rand(model_ml, params, 1_000_000),
         specification = spec,
         obs_colnames = colnames,
         meanstructure = true,
     )
-    model_ml_sym_new = swap_observed(
+    model_ml_sym_new = replace_observed(
         model_ml_sym,
         data = rand(model_ml_sym, params, 1_000_000),
         specification = spec,
