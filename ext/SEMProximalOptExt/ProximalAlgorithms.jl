@@ -61,7 +61,6 @@ function ProximalAlgorithms.value_and_gradient(model::AbstractSem, params)
     return obj, grad
 end
 
-#ProximalCore.prox!(y, f, x, gamma) = ProximalOperators.prox!(y, f, x, gamma)
 
 mutable struct ProximalResult
     result::Any
