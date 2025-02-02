@@ -52,7 +52,7 @@ model_fit = sem_fit(model)
 
 update_estimate!(partable, model_fit)
 
-sem_summary(partable)
+details(partable)
 ```
 
 ### Define the constraints
@@ -165,7 +165,7 @@ update_partable!(
     solution(model_fit_constrained), 
     )
 
-sem_summary(partable)
+details(partable)
 ```
 
 As we can see, the constrained solution is very close to the original solution (compare the columns estimate and estimate_constr), with the difference that the constrained parameters fulfill their constraints. 

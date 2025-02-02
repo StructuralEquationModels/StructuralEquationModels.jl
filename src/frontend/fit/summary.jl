@@ -1,4 +1,4 @@
-function sem_summary(
+function details(
     sem_fit::SemFit;
     show_fitmeasures = false,
     color = :light_cyan,
@@ -45,7 +45,7 @@ function sem_summary(
     print("\n")
 end
 
-function sem_summary(
+function details(
     partable::ParameterTable;
     color = :light_cyan,
     secondary_color = :light_yellow,
@@ -250,7 +250,7 @@ function sem_summary(
 
 end
 
-function sem_summary(
+function details(
     partable::EnsembleParameterTable;
     color = :light_cyan,
     secondary_color = :light_yellow,
@@ -291,7 +291,7 @@ function sem_summary(
         print("\n")
         printstyled(rpad(" Group: $k", 78), reverse = true)
         print("\n")
-        sem_summary(
+        details(
             partable.tables[k];
             color = color,
             secondary_color = secondary_color,
@@ -333,9 +333,9 @@ function Base.findall(fun::Function, partable::ParameterTable)
 end
 
 """
-    (1) sem_summary(sem_fit::SemFit; show_fitmeasures = false)
+    (1) details(sem_fit::SemFit; show_fitmeasures = false)
 
-    (2) sem_summary(partable::AbstractParameterTable; ...)
+    (2) details(partable::AbstractParameterTable; ...)
 
 Print information about (1) a fitted SEM or (2) a parameter table to stdout.
 
@@ -347,4 +347,4 @@ Print information about (1) a fitted SEM or (2) a parameter table to stdout.
 - `show_variables = true`
 - `show_columns = nothing`: columns names to include in the output e.g.`[:from, :to, :estimate]`)
 """
-function sem_summary end
+function details end
