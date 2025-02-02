@@ -119,10 +119,10 @@ and compute fit measures as
 fit_measures(model_fit)
 ```
 
-We can also get a bit more information about the fitted model via the `sem_summary()` function:
+We can also get a bit more information about the fitted model via the `details()` function:
 
 ```@example high_level; ansicolor = true
-sem_summary(model_fit)
+details(model_fit)
 ```
 
 To investigate the parameter estimates, we can update our `partable` object to contain the new estimates:
@@ -134,7 +134,7 @@ update_estimate!(partable, model_fit)
 and investigate the solution with
 
 ```@example high_level; ansicolor = true
-sem_summary(partable)
+details(partable)
 ```
 
 Congratulations, you fitted and inspected your very first model! 

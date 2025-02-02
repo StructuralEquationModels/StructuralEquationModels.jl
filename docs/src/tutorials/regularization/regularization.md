@@ -148,7 +148,7 @@ update_estimate!(partable, fit)
 
 update_partable!(partable, :estimate_lasso, params(fit_lasso), solution(fit_lasso))
 
-sem_summary(partable)
+details(partable)
 ```
 
 ## Second example - mixed l1 and l0 regularization
@@ -182,5 +182,5 @@ Let's again compare the different results:
 ```@example reg
 update_partable!(partable, :estimate_mixed, params(fit_mixed), solution(fit_mixed))
 
-sem_summary(partable)
+details(partable)
 ```

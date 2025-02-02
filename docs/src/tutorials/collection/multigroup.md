@@ -83,7 +83,7 @@ We now fit the model and inspect the parameter estimates:
 ```@example mg; ansicolor = true
 solution = sem_fit(model_ml_multigroup)
 update_estimate!(partable, solution)
-sem_summary(partable)
+details(partable)
 ```
 
 Other things you can query about your fitted model (fit measures, standard errors, etc.) are described in the section [Model inspection](@ref) and work the same way for multigroup models.
