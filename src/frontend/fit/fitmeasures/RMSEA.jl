@@ -3,18 +3,10 @@
 
 Return the RMSEA.
 """
-function RMSEA end
-
 RMSEA(fit::SemFit) = RMSEA(fit, fit.model)
 
-RMSEA(fit::SemFit, model::AbstractSemSingle) =
-    RMSEA(dof(fit), χ²(fit), nsamples(fit))
+RMSEA(fit::SemFit, model::AbstractSem) =
+    sqrt(nsem_terms(model)) * RMSEA(dof(fit), χ²(fit), nsamples(fit))
 
-RMSEA(fit::SemFit, model::SemEnsemble) =
-    sqrt(length(model.sems)) * RMSEA(dof(fit), χ²(fit), nsamples(fit))
-
-function RMSEA(dof, chi2, nsamples)
-    rmsea = (chi2 - dof) / (nsamples * dof)
-    rmsea > 0 ? nothing : rmsea = 0
-    return sqrt(rmsea)
-end
+RMSEA(dof::Number, chi2::Number, nsamples::Number) =
+    sqrt(max((chi2 - dof) / (nsamples * dof), 0.0))

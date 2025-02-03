@@ -1,5 +1,5 @@
 using StructuralEquationModels, Test, FiniteDiff, Suppressor
-using LinearAlgebra: diagind, LowerTriangular
+using LinearAlgebra: diagind, LowerTriangular, isposdef, logdet, tr
 
 const SEM = StructuralEquationModels
 

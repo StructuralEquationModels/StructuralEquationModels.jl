@@ -4,22 +4,17 @@ const SEM = StructuralEquationModels
 # ML estimation
 ############################################################################################
 
-model_g1 = Sem(specification = specification_g1, data = dat_g1, implied = RAMSymbolic)
+obs_g1 = SemObservedData(data = dat_g1, observed_vars = SEM.observed_vars(specification_g1))
+obs_g2 = SemObservedData(data = dat_g2, observed_vars = SEM.observed_vars(specification_g2))
 
-model_g2 = Sem(specification = specification_g2, data = dat_g2, implied = RAM)
+model_ml_multigroup =
+    Sem(SemML(obs_g1, RAMSymbolic(specification_g1)), SemML(obs_g2, RAM(specification_g2)))
 
-@test SEM.param_labels(model_g1.implied.ram_matrices) ==
-      SEM.param_labels(model_g2.implied.ram_matrices)
-
-# test the different constructors
-model_ml_multigroup = SemEnsemble(model_g1, model_g2)
-model_ml_multigroup2 = SemEnsemble(
-    specification = partable,
-    data = dat,
-    column = :school,
-    groups = [:Pasteur, :Grant_White],
-    loss = SemML,
-)
+@testset "Sem API" begin
+    @test SEM.nsamples(model_ml_multigroup) == nsamples(obs_g1) + nsamples(obs_g2)
+    @test SEM.nsem_terms(model_ml_multigroup) == 2
+    @test length(SEM.sem_terms(model_ml_multigroup)) == 2
+end
 
 model_ml_multigroup3 = replace_observed(
     model_ml_multigroup2,
@@ -31,20 +26,11 @@ model_ml_multigroup3 = replace_observed(
 # gradients
 @testset "ml_gradients_multigroup" begin
     test_gradient(model_ml_multigroup, start_test; atol = 1e-9)
-    test_gradient(model_ml_multigroup2, start_test; atol = 1e-9)
 end
 
 # fit
 @testset "ml_solution_multigroup" begin
     solution = fit(semoptimizer, model_ml_multigroup)
-    update_estimate!(partable, solution)
-    test_estimates(
-        partable,
-        solution_lav[:parameter_estimates_ml];
-        atol = 1e-4,
-        lav_groups = Dict(:Pasteur => 1, :Grant_White => 2),
-    )
-    solution = fit(semoptimizer, model_ml_multigroup2)
     update_estimate!(partable, solution)
     test_estimates(
         partable,
@@ -61,7 +47,7 @@ end
 end
 
 @testset "fitmeasures/se_ml" begin
-    solution_ml = fit(model_ml_multigroup)
+    solution_ml = fit(semoptimizer, model_ml_multigroup)
     test_fitmeasures(
         fit_measures(solution_ml),
         solution_lav[:fitmeasures_ml];
@@ -103,15 +89,19 @@ end
 partable_s = sort_vars(partable)
 
 specification_s = convert(Dict{Symbol, RAMMatrices}, partable_s)
+obs_g1_s = SemObservedData(
+    data = dat_g1,
+    observed_vars = SEM.observed_vars(specification_s[:Pasteur]),
+)
+obs_g2_s = SemObservedData(
+    data = dat_g2,
+    observed_vars = SEM.observed_vars(specification_s[:Grant_White]),
+)
 
-specification_g1_s = specification_s[:Pasteur]
-specification_g2_s = specification_s[:Grant_White]
-
-model_g1 = Sem(specification = specification_g1_s, data = dat_g1, implied = RAMSymbolic)
-
-model_g2 = Sem(specification = specification_g2_s, data = dat_g2, implied = RAM)
-
-model_ml_multigroup = SemEnsemble(model_g1, model_g2; optimizer = semoptimizer)
+model_ml_multigroup = Sem(
+    SemML(obs_g1_s, RAMSymbolic(specification_s[:Pasteur])),
+    SemML(obs_g2_s, RAM(specification_s[:Grant_White])),
+)
 
 # gradients
 @testset "ml_gradients_multigroup | sorted" begin
@@ -127,7 +117,7 @@ grad_fd = FiniteDiff.finite_difference_gradient(
 
 # fit
 @testset "ml_solution_multigroup | sorted" begin
-    solution = fit(model_ml_multigroup)
+    solution = fit(semoptimizer, model_ml_multigroup)
     update_estimate!(partable_s, solution)
     test_estimates(
         partable_s,
@@ -138,7 +128,7 @@ grad_fd = FiniteDiff.finite_difference_gradient(
 end
 
 @testset "fitmeasures/se_ml | sorted" begin
-    solution_ml = fit(model_ml_multigroup)
+    solution_ml = fit(semoptimizer, model_ml_multigroup)
     test_fitmeasures(
         fit_measures(solution_ml),
         solution_lav[:fitmeasures_ml];
@@ -158,28 +148,26 @@ end
 end
 
 @testset "sorted | LowerTriangular A" begin
-    @test implied(model_ml_multigroup.sems[2]).A isa LowerTriangular
+    @test implied(SEM.sem_terms(model_ml_multigroup)[2]).A isa LowerTriangular
 end
 
 ############################################################################################
 # ML estimation - user defined loss function
 ############################################################################################
 
-struct UserSemML <: SemLossFunction
+struct UserSemML{O, I} <: SemLoss{O, I}
     hessianeval::ExactHessian
 
-    UserSemML() = new(ExactHessian())
+    observed::O
+    implied::I
+
+    UserSemML(observed::SemObserved, implied::SemImplied) =
+        new{typeof(observed), typeof(implied)}(ExactHessian(), observed, implied)
 end
 
-############################################################################################
-### functors
-############################################################################################
-
-using LinearAlgebra: isposdef, logdet, tr, inv
-
-function SEM.objective(ml::UserSemML, model::AbstractSem, params)
-    Σ = implied(model).Σ
-    Σₒ = SEM.obs_cov(observed(model))
+function SEM.objective(ml::UserSemML, params)
+    Σ = implied(ml).Σ
+    Σₒ = SEM.obs_cov(observed(ml))
     if !isposdef(Σ)
         return Inf
     else
@@ -188,16 +176,10 @@ function SEM.objective(ml::UserSemML, model::AbstractSem, params)
 end
 
 # models
-model_g1 = Sem(specification = specification_g1, data = dat_g1, implied = RAMSymbolic)
-
-model_g2 = SemFiniteDiff(
-    specification = specification_g2,
-    data = dat_g2,
-    implied = RAMSymbolic,
-    loss = UserSemML(),
+model_ml_multigroup = Sem(
+    SemML(obs_g1, RAMSymbolic(specification_g1)),
+    SEM.FiniteDiffWrapper(UserSemML(obs_g2, RAMSymbolic(specification_g2))),
 )
-
-model_ml_multigroup = SemEnsemble(model_g1, model_g2; optimizer = semoptimizer)
 
 @testset "gradients_user_defined_loss" begin
     test_gradient(model_ml_multigroup, start_test; atol = 1e-9)
@@ -205,7 +187,7 @@ end
 
 # fit
 @testset "solution_user_defined_loss" begin
-    solution = fit(model_ml_multigroup)
+    solution = fit(semoptimizer, model_ml_multigroup)
     update_estimate!(partable, solution)
     test_estimates(
         partable,
@@ -219,28 +201,17 @@ end
 # GLS estimation
 ############################################################################################
 
-model_ls_g1 = Sem(
-    specification = specification_g1,
-    data = dat_g1,
-    implied = RAMSymbolic,
-    loss = SemWLS,
+model_ls_multigroup = Sem(
+    SemWLS(obs_g1, RAMSymbolic(specification_g1, vech = true)),
+    SemWLS(obs_g2, RAMSymbolic(specification_g2, vech = true)),
 )
-
-model_ls_g2 = Sem(
-    specification = specification_g2,
-    data = dat_g2,
-    implied = RAMSymbolic,
-    loss = SemWLS,
-)
-
-model_ls_multigroup = SemEnsemble(model_ls_g1, model_ls_g2; optimizer = semoptimizer)
 
 @testset "ls_gradients_multigroup" begin
     test_gradient(model_ls_multigroup, start_test; atol = 1e-9)
 end
 
 @testset "ls_solution_multigroup" begin
-    solution = fit(model_ls_multigroup)
+    solution = sem_fit(semoptimizer, model_ls_multigroup)
     update_estimate!(partable, solution)
     test_estimates(
         partable,
@@ -251,7 +222,7 @@ end
 end
 
 @testset "fitmeasures/se_ls" begin
-    solution_ls = fit(model_ls_multigroup)
+    solution_ls = fit(semoptimizer, model_ls_multigroup)
     test_fitmeasures(
         fit_measures(solution_ls),
         solution_lav[:fitmeasures_ls];
@@ -276,33 +247,21 @@ end
 ############################################################################################
 
 if !isnothing(specification_miss_g1)
-    model_g1 = Sem(
-        specification = specification_miss_g1,
-        observed = SemObservedMissing,
-        loss = SemFIML,
-        data = dat_miss_g1,
-        implied = RAM,
-        meanstructure = true,
-    )
-
-    model_g2 = Sem(
-        specification = specification_miss_g2,
-        observed = SemObservedMissing,
-        loss = SemFIML,
-        data = dat_miss_g2,
-        implied = RAM,
-        meanstructure = true,
-    )
-
-    model_ml_multigroup = SemEnsemble(model_g1, model_g2)
-    model_ml_multigroup2 = SemEnsemble(
-        specification = partable_miss,
-        data = dat_missing,
-        column = :school,
-        groups = [:Pasteur, :Grant_White],
-        loss = SemFIML,
-        observed = SemObservedMissing,
-        meanstructure = true,
+    model_ml_multigroup = Sem(
+        SemFIML(
+            SemObservedMissing(
+                data = dat_miss_g1,
+                observed_vars = SEM.observed_vars(specification_miss_g1),
+            ),
+            RAM(specification_miss_g1),
+        ),
+        SemFIML(
+            SemObservedMissing(
+                data = dat_miss_g2,
+                observed_vars = SEM.observed_vars(specification_miss_g2),
+            ),
+            RAM(specification_miss_g2),
+        ),
     )
 
     ############################################################################################
@@ -331,19 +290,10 @@ if !isnothing(specification_miss_g1)
 
     @testset "fiml_gradients_multigroup" begin
         test_gradient(model_ml_multigroup, start_test; atol = 1e-7)
-        test_gradient(model_ml_multigroup2, start_test; atol = 1e-7)
     end
 
     @testset "fiml_solution_multigroup" begin
         solution = fit(semoptimizer, model_ml_multigroup)
-        update_estimate!(partable_miss, solution)
-        test_estimates(
-            partable_miss,
-            solution_lav[:parameter_estimates_fiml];
-            atol = 1e-4,
-            lav_groups = Dict(:Pasteur => 1, :Grant_White => 2),
-        )
-        solution = fit(semoptimizer, model_ml_multigroup2)
         update_estimate!(partable_miss, solution)
         test_estimates(
             partable_miss,
@@ -361,23 +311,7 @@ if !isnothing(specification_miss_g1)
             rtol = 1e-3,
             atol = 0,
         )
-        update_se_hessian!(partable_miss, solution)
-        test_estimates(
-            partable_miss,
-            solution_lav[:parameter_estimates_fiml];
-            atol = 1e-3,
-            col = :se,
-            lav_col = :se,
-            lav_groups = Dict(:Pasteur => 1, :Grant_White => 2),
-        )
 
-        solution = fit(semoptimizer, model_ml_multigroup2)
-        test_fitmeasures(
-            fit_measures(solution),
-            solution_lav[:fitmeasures_fiml];
-            rtol = 1e-3,
-            atol = 0,
-        )
         update_se_hessian!(partable_miss, solution)
         test_estimates(
             partable_miss,

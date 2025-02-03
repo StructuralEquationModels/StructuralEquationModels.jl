@@ -75,23 +75,27 @@ Can handle observed data with missing values.
 
 # Constructor
 
-    SemFIML(; observed::SemObservedMissing, implied::SemImplied, kwargs...)
+    SemFIML(observed::SemObservedMissing, implied::SemImplied)
 
 # Arguments
 - `observed::SemObservedMissing`: the observed part of the model
   (see [`SemObservedMissing`](@ref))
 - `implied::SemImplied`: the implied part of the model
+  (see [`SemImplied`](@ref))
 
 # Examples
 ```julia
-my_fiml = SemFIML(observed = my_observed, implied = my_implied)
+my_fiml = SemFIML(my_observed, my_implied)
 ```
 
 # Interfaces
 Analytic gradients are available.
 """
-struct SemFIML{T, W} <: SemLossFunction
+struct SemFIML{O, I, T, W} <: SemLoss{O, I}
     hessianeval::ExactHessian
+
+    observed::O
+    implied::I
     patterns::Vector{SemFIMLPattern{T}}
 
     imp_inv::Matrix{T}  # implied inverse
@@ -105,13 +109,11 @@ end
 ### Constructors
 ############################################################################################
 
-function SemFIML(;
-    observed::SemObservedMissing,
-    implied::SemImplied,
-    kwargs...,
-)
+function SemFIML(observed::SemObservedMissing, implied::SemImplied; kwargs...)
     return SemFIML(
         ExactHessian(),
+        observed,
+        implied,
         [SemFIMLPattern(pat) for pat in observed.patterns],
         zeros(nobserved_vars(observed), nobserved_vars(observed)),
         CommutationMatrix(nvars(implied)),
@@ -123,30 +125,28 @@ end
 ### methods
 ############################################################################################
 
-function evaluate!(
-    objective,
-    gradient,
-    hessian,
-    fiml::SemFIML,
-    implied::SemImplied,
-    model::AbstractSemSingle,
-    params,
-)
+function evaluate!(objective, gradient, hessian, fiml::SemFIML, params)
     isnothing(hessian) || error("Hessian not implemented for FIML")
 
-    if !check(fiml, model)
+    implied = SEM.implied(fiml)
+    observed = SEM.observed(fiml)
+
+    copyto!(fiml.imp_inv, implied.Σ)
+    Σ_chol = cholesky!(Symmetric(fiml.imp_inv); check = false)
+
+    if !isposdef(Σ_chol)
         isnothing(objective) || (objective = non_posdef_return(params))
         isnothing(gradient) || fill!(gradient, 1)
         return objective
     end
 
-    prepare!(fiml, model)
+    @inbounds for (pat_fiml, pat) in zip(fiml.patterns, observed.patterns)
+        prepare!(pat_fiml, pat, implied)
+    end
 
-    scale = inv(nsamples(observed(model)))
-    isnothing(objective) ||
-        (objective = scale * F_FIML(eltype(params), fiml, observed(model), model))
-    isnothing(gradient) ||
-        (∇F_FIML!(gradient, fiml, observed(model), model); gradient .*= scale)
+    scale = inv(nsamples(observed))
+    isnothing(objective) || (objective = scale * F_FIML(eltype(params), fiml))
+    isnothing(gradient) || (∇F_FIML!(gradient, fiml); gradient .*= scale)
 
     return objective
 end
@@ -162,28 +162,14 @@ update_observed(lossfun::SemFIML, observed::SemObserved; kwargs...) =
 ### additional functions
 ############################################################################################
 
-function prepare!(fiml::SemFIML, observed::SemObservedMissing, implied::SemImplied)
-    @inbounds for (pat_fiml, pat) in zip(fiml.patterns, observed.patterns)
-        prepare!(pat_fiml, pat, implied.Σ, implied.μ)
-    end
-    #batch_sym_inv_update!(fiml, model)
+function ∇F_fiml_outer!(G, JΣ, Jμ, fiml::SemFIML{O, I}) where {O, I <: SemImpliedSymbolic}
+    mul!(G, fiml.implied.∇Σ', JΣ) # should be transposed
+    mul!(G, fiml.implied.∇μ', Jμ, -1, 1)
 end
 
-prepare!(fiml::SemFIML, model::AbstractSemSingle) =
-    prepare!(fiml, observed(model), implied(model))
+function ∇F_fiml_outer!(G, JΣ, Jμ, fiml::SemFIML)
+    implied = fiml.implied
 
-function check(fiml::SemFIML, model::AbstractSemSingle)
-    copyto!(fiml.imp_inv, implied(model).Σ)
-    a = cholesky!(Symmetric(fiml.imp_inv); check = false)
-    return isposdef(a)
-end
-
-function ∇F_fiml_outer!(G, JΣ, Jμ, fiml::SemFIML, implied::SemImpliedSymbolic, model)
-    mul!(G, implied.∇Σ', JΣ) # should be transposed
-    mul!(G, implied.∇μ', Jμ, -1, 1)
-end
-
-function ∇F_fiml_outer!(G, JΣ, Jμ, fiml::SemFIML, implied, model)
     I_A⁻¹ = parent(implied.I_A⁻¹)
     F⨉I_A⁻¹ = parent(implied.F * I_A⁻¹)
     S = parent(implied.S)
@@ -201,25 +187,20 @@ function ∇F_fiml_outer!(G, JΣ, Jμ, fiml::SemFIML, implied, model)
     mul!(G, ∇μ', Jμ, -1, 1)
 end
 
-function F_FIML(
-    ::Type{T},
-    fiml::SemFIML,
-    observed::SemObservedMissing,
-    model::AbstractSemSingle,
-) where {T}
+function F_FIML(::Type{T}, fiml::SemFIML) where {T}
     F = zero(T)
-    for (pat_fiml, pat) in zip(fiml.patterns, observed.patterns)
+    for (pat_fiml, pat) in zip(fiml.patterns, fiml.observed.patterns)
         F += objective(pat_fiml, pat)
     end
     return F
 end
 
-function ∇F_FIML!(G, fiml::SemFIML, observed::SemObservedMissing, model::AbstractSemSingle)
-    Jμ = zeros(nobserved_vars(model))
-    JΣ = zeros(nobserved_vars(model)^2)
+function ∇F_FIML!(G, fiml::SemFIML)
+    Jμ = zeros(nobserved_vars(fiml))
+    JΣ = zeros(nobserved_vars(fiml)^2)
 
-    for (pat_fiml, pat) in zip(fiml.patterns, observed.patterns)
+    for (pat_fiml, pat) in zip(fiml.patterns, fiml.observed.patterns)
         gradient!(JΣ, Jμ, pat_fiml, pat)
     end
-    ∇F_fiml_outer!(G, JΣ, Jμ, fiml, implied(model), model)
+    ∇F_fiml_outer!(G, JΣ, Jμ, fiml)
 end

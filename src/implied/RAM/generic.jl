@@ -159,16 +159,11 @@ end
 ### methods
 ############################################################################################
 
-function update!(
-    targets::EvaluationTargets,
-    implied::RAM,
-    model::AbstractSemSingle,
-    param_labels,
-)
-    materialize!(implied.A, implied.ram_matrices.A, param_labels)
-    materialize!(implied.S, implied.ram_matrices.S, param_labels)
+function update!(targets::EvaluationTargets, implied::RAM, params)
+    materialize!(implied.A, implied.ram_matrices.A, params)
+    materialize!(implied.S, implied.ram_matrices.S, params)
     if !isnothing(implied.M)
-        materialize!(implied.M, implied.ram_matrices.M, param_labels)
+        materialize!(implied.M, implied.ram_matrices.M, params)
     end
 
     parent(implied.I_A) .= .-implied.A

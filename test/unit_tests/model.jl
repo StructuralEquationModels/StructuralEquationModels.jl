@@ -68,9 +68,8 @@ end
     test_vars_api(implied(model), ram_matrices)
     test_params_api(implied(model), ram_matrices)
 
-    @test @inferred(loss(model)) isa SemLoss
-    semloss = loss(model).functions[1]
-    @test semloss isa SemML
+    @test @inferred(sem_term(model)) isa SemLoss
+    @test sem_term(model) isa losstype
 
     @test @inferred(nsamples(model)) == nsamples(obs)
 end
