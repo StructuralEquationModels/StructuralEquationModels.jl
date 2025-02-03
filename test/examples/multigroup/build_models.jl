@@ -17,9 +17,8 @@ model_ml_multigroup2 = SemEnsemble(
     data = dat,
     column = :school,
     groups = [:Pasteur, :Grant_White],
-    loss = SemML
+    loss = SemML,
 )
-
 
 # gradients
 @testset "ml_gradients_multigroup" begin
@@ -206,11 +205,19 @@ end
 # GLS estimation
 ############################################################################################
 
-model_ls_g1 =
-    Sem(specification = specification_g1, data = dat_g1, implied = RAMSymbolic, loss = SemWLS)
+model_ls_g1 = Sem(
+    specification = specification_g1,
+    data = dat_g1,
+    implied = RAMSymbolic,
+    loss = SemWLS,
+)
 
-model_ls_g2 =
-    Sem(specification = specification_g2, data = dat_g2, implied = RAMSymbolic, loss = SemWLS)
+model_ls_g2 = Sem(
+    specification = specification_g2,
+    data = dat_g2,
+    implied = RAMSymbolic,
+    loss = SemWLS,
+)
 
 model_ls_multigroup = SemEnsemble(model_ls_g1, model_ls_g2; optimizer = semoptimizer)
 
@@ -239,7 +246,7 @@ end
         atol = 1e-5,
     )
 
-    update_se_hessian!(partable, solution_ls)
+    @suppress update_se_hessian!(partable, solution_ls)
     test_estimates(
         partable,
         solution_lav[:parameter_estimates_ls];
@@ -283,7 +290,7 @@ if !isnothing(specification_miss_g1)
         groups = [:Pasteur, :Grant_White],
         loss = SemFIML,
         observed = SemObservedMissing,
-        meanstructure = true
+        meanstructure = true,
     )
 
     ############################################################################################

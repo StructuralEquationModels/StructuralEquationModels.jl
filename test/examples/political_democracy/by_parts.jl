@@ -133,7 +133,7 @@ end
     )
     @test (fm[:AIC] === missing) & (fm[:BIC] === missing) & (fm[:minus2ll] === missing)
 
-    update_se_hessian!(partable, solution_ls)
+    @suppress update_se_hessian!(partable, solution_ls)
     test_estimates(
         partable,
         solution_lav[:parameter_estimates_ls];
@@ -158,7 +158,8 @@ if opt_engine == :Optim
         ),
     )
 
-    implied_sym_hessian_vech = RAMSymbolic(specification = spec, vech = true, hessian = true)
+    implied_sym_hessian_vech =
+        RAMSymbolic(specification = spec, vech = true, hessian = true)
 
     implied_sym_hessian = RAMSymbolic(specification = spec, hessian = true)
 
@@ -294,7 +295,7 @@ end
     )
     @test (fm[:AIC] === missing) & (fm[:BIC] === missing) & (fm[:minus2ll] === missing)
 
-    update_se_hessian!(partable_mean, solution_ls)
+    @suppress update_se_hessian!(partable_mean, solution_ls)
     test_estimates(
         partable_mean,
         solution_lav[:parameter_estimates_ls_mean];

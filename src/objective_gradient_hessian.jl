@@ -28,7 +28,15 @@ evaluate!(objective, gradient, hessian, loss::SemLossFunction, model::AbstractSe
     evaluate!(objective, gradient, hessian, loss, implied(model), model, params)
 
 # fallback method
-function evaluate!(obj, grad, hess, loss::SemLossFunction, implied::SemImplied, model, params)
+function evaluate!(
+    obj,
+    grad,
+    hess,
+    loss::SemLossFunction,
+    implied::SemImplied,
+    model,
+    params,
+)
     isnothing(obj) || (obj = objective(loss, implied, model, params))
     isnothing(grad) || copyto!(grad, gradient(loss, implied, model, params))
     isnothing(hess) || copyto!(hess, hessian(loss, implied, model, params))
@@ -36,8 +44,10 @@ function evaluate!(obj, grad, hess, loss::SemLossFunction, implied::SemImplied, 
 end
 
 # fallback methods
-objective(f::SemLossFunction, implied::SemImplied, model, params) = objective(f, model, params)
-gradient(f::SemLossFunction, implied::SemImplied, model, params) = gradient(f, model, params)
+objective(f::SemLossFunction, implied::SemImplied, model, params) =
+    objective(f, model, params)
+gradient(f::SemLossFunction, implied::SemImplied, model, params) =
+    gradient(f, model, params)
 hessian(f::SemLossFunction, implied::SemImplied, model, params) = hessian(f, model, params)
 
 # fallback method for SemImplied that calls update_xxx!() methods

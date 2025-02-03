@@ -141,7 +141,7 @@ end
     )
     @test ismissing(fm[:AIC]) && ismissing(fm[:BIC]) && ismissing(fm[:minus2ll])
 
-    update_se_hessian!(partable, solution_ls)
+    @suppress update_se_hessian!(partable, solution_ls)
     test_estimates(
         partable,
         solution_lav[:parameter_estimates_ls];
@@ -337,7 +337,7 @@ end
     )
     @test ismissing(fm[:AIC]) && ismissing(fm[:BIC]) && ismissing(fm[:minus2ll])
 
-    update_se_hessian!(partable_mean, solution_ls)
+    @suppress update_se_hessian!(partable_mean, solution_ls)
     test_estimates(
         partable_mean,
         solution_lav[:parameter_estimates_ls_mean];

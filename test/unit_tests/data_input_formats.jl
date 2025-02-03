@@ -1,4 +1,4 @@
-using StructuralEquationModels, Test, Statistics
+using StructuralEquationModels, Test, Statistics, Suppressor
 
 ### model specification --------------------------------------------------------------------
 
@@ -189,7 +189,7 @@ end
         )
 
         # spec takes precedence in obs_vars order
-        observed_spec = SemObservedData(
+        observed_spec = @suppress SemObservedData(
             specification = spec,
             data = shuffle_dat,
             observed_vars = shuffle_names,
@@ -451,7 +451,7 @@ end # SemObservedCovariance
         )
 
         # spec takes precedence in obs_vars order
-        observed_spec = SemObservedMissing(
+        observed_spec = @suppress SemObservedMissing(
             specification = spec,
             observed_vars = shuffle_names,
             data = shuffle_dat_missing,

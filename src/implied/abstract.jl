@@ -25,8 +25,9 @@ function check_acyclic(A::AbstractMatrix; verbose::Bool = false)
         # check if non-triangular matrix is acyclic
         acyclic = isone(det(I - A))
         if acyclic
-            verbose && @info "The matrix is acyclic. Reordering variables in the model to make the A matrix either Upper or Lower Triangular can significantly improve performance.\n" maxlog =
-                1
+            verbose &&
+                @info "The matrix is acyclic. Reordering variables in the model to make the A matrix either Upper or Lower Triangular can significantly improve performance.\n" maxlog =
+                    1
         end
         return A
     end

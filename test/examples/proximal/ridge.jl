@@ -1,4 +1,4 @@
-using StructuralEquationModels, Test, ProximalAlgorithms, ProximalOperators
+using StructuralEquationModels, Test, ProximalAlgorithms, ProximalOperators, Suppressor
 
 # load data
 dat = example_data("political_democracy")
@@ -54,7 +54,7 @@ solution_ridge = sem_fit(model_ridge)
 
 model_prox = Sem(specification = partable, data = dat, loss = SemML)
 
-solution_prox = sem_fit(model_prox, engine = :Proximal, operator_g = SqrNormL2(λ))
+solution_prox = @suppress sem_fit(model_prox, engine = :Proximal, operator_g = SqrNormL2(λ))
 
 @testset "ridge_solution" begin
     @test isapprox(solution_prox.solution, solution_ridge.solution; rtol = 1e-4)
