@@ -112,8 +112,7 @@ optimizer_lasso = SemOptimizerProximal(
 
 model_lasso = Sem(
     specification = partable,
-    data = data,
-    optimizer = optimizer_lasso
+    data = data
 )
 ```
 
@@ -121,7 +120,7 @@ Let's fit the regularized model
 
 ```@example reg
 
-fit_lasso = sem_fit(model_lasso)
+fit_lasso = sem_fit(optimizer_lasso, model_lasso)
 ```
 
 and compare the solution to unregularizted estimates:
@@ -134,6 +133,12 @@ update_estimate!(partable, fit)
 update_partable!(partable, :estimate_lasso, params(fit_lasso), solution(fit_lasso))
 
 details(partable)
+```
+
+Instead of explicitely defining a `SemOptimizerProximal` object, you can also pass `engine = :Proximal` and additional keyword arguments to `sem_fit`:
+
+```@example reg
+fit = sem_fit(model; engine = :Proximal, operator_g = NormL1(λ))
 ```
 
 ## Second example - mixed l1 and l0 regularization
@@ -150,16 +155,14 @@ To define a sup of separable proximal operators (i.e. no parameter is penalized 
 we can use [`SlicedSeparableSum`](https://juliafirstorder.github.io/ProximalOperators.jl/stable/calculus/#ProximalOperators.SlicedSeparableSum) from the `ProximalOperators` package:
 
 ```@example reg
-prox_operator = SlicedSeparableSum((NormL1(0.02), NormL0(20.0), NormL0(0.0)), ([ind], [12:22], [vcat(1:11, 23:25)]))
+prox_operator = SlicedSeparableSum((NormL0(20.0), NormL1(0.02), NormL0(0.0)), ([ind], [9:11], [vcat(1:8, 12:25)]))
 
 model_mixed = Sem(
     specification = partable,
-    data = data,
-    optimizer = SemOptimizerProximal,
-    operator_g = prox_operator
+    data = data,    
 )
 
-fit_mixed = sem_fit(model_mixed)
+fit_mixed = sem_fit(model_mixed; engine = :Proximal, operator_g = prox_operator)
 ```
 
 Let's again compare the different results:
