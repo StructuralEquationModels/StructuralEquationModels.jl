@@ -62,3 +62,8 @@ struct SemOptimizerNLopt{A, A2, B, B2, C} <: SemOptimizer{:NLopt}
     equality_constraints::C
     inequality_constraints::C
 end
+
+Base.@kwdef struct NLoptConstraint
+    f::Any
+    tol = 0.0
+end

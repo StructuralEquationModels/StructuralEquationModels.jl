@@ -1,8 +1,3 @@
-Base.@kwdef struct NLoptConstraint
-    f::Any
-    tol = 0.0
-end
-
 Base.convert(
     ::Type{NLoptConstraint},
     tuple::NamedTuple{(:f, :tol), Tuple{F, T}},
