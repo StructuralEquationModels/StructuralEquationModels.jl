@@ -122,6 +122,8 @@ In NLopt, vector-valued constraints are also possible, but we refer to the docum
 We now have everything together to specify and fit our model. First, we specify our optimizer backend as
 
 ```@example constraints
+using NLopt
+
 constrained_optimizer = SemOptimizerNLopt(
     algorithm = :AUGLAG,
     options = Dict(:upper_bounds => upper_bounds, :xtol_abs => 1e-4),

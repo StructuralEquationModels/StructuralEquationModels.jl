@@ -72,6 +72,8 @@ SemObserved
 SemObservedData
 SemObservedCovariance
 SemObservedMissing
+samples
+SemSpecification
 ```
 
 ## implied

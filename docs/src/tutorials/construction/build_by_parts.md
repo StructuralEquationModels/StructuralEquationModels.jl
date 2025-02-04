@@ -59,7 +59,7 @@ ml = SemML(observed = observed)
 loss_ml = SemLoss(ml)
 
 # optimizer -------------------------------------------------------------------------------------
-optimizer = SemOptimizerOptim(algorithm = BFGS())
+optimizer = SemOptimizerOptim()
 
 # model ------------------------------------------------------------------------------------
 

@@ -130,6 +130,7 @@ df
 minus2ll
 nobserved_vars
 nsamples
+params
 nparams
 p_value
 RMSEA
