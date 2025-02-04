@@ -21,7 +21,7 @@ Structural Equation Model
 
 The output of this call tells you exactly what model you just constructed (i.e. what the loss functions, observed, implied and optimizer parts are).
 
-As you can see, by default, we use maximum likelihood estimation, the RAM implied type and the `Optim.jl` optimization backend.
+As you can see, by default, we use maximum likelihood estimation abd the RAM implied type.
 To choose something different, you can provide it as a keyword argument:
 
 ```julia
@@ -31,11 +31,10 @@ model = Sem(
     observed = ...,
     implied = ...,
     loss = ...,
-    optimizer = ...
 )
 ```
 
-For example, to construct a model for weighted least squares estimation that uses symbolic precomputation and the Optim backend, write
+For example, to construct a model for weighted least squares estimation that uses symbolic precomputation, write
 
 ```julia
 model = Sem(

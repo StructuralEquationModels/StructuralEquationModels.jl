@@ -25,17 +25,17 @@ model per group and an additional model with `ImpliedEmpty` and `SemRidge` for t
 ## Implementation
 Subtype of `SemImplied`.
 """
-struct ImpliedEmpty{V2} <: SemImplied
-    hessianeval::ExactHessian
-    meanstruct::NoMeanStruct
-    ram_matrices::V2
+struct ImpliedEmpty{A, B, C} <: SemImplied
+    hessianeval::A
+    meanstruct::B
+    ram_matrices::C
 end
 
 ############################################################################################
 ### Constructors
 ############################################################################################
 
-function ImpliedEmpty(; specification, kwargs...)
+function ImpliedEmpty(;specification, meanstruct = NoMeanStruct(), hessianeval = ExactHessian(), kwargs...)
     return ImpliedEmpty(hessianeval, meanstruct, convert(RAMMatrices, specification))
 end
 

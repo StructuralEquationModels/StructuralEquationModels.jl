@@ -86,7 +86,7 @@ start_test = [
     fill(0.05, 3)
     fill(0.01, 3)
 ]
-semoptimizer = SemOptimizerOptim
+semoptimizer = SemOptimizerOptim()
 
 @testset "RAMMatrices | constructor | Optim" begin
     include("build_models.jl")
@@ -137,7 +137,7 @@ graph = @StenoGraph begin
     _(observed_vars) ↔ _(observed_vars)
     _(latent_vars) ⇔ _(latent_vars)
 
-    Symbol("1") → _(observed_vars)
+    Symbol(1) → _(observed_vars)
 end
 
 partable_miss = EnsembleParameterTable(
@@ -169,7 +169,7 @@ start_test = [
     0.01
     0.05
 ]
-semoptimizer = SemOptimizerOptim
+semoptimizer = SemOptimizerOptim()
 
 @testset "Graph → Partable → RAMMatrices | constructor | Optim" begin
     include("build_models.jl")

@@ -148,11 +148,10 @@ In this example, we set both tolerances to `1e-8`.
 ```@example constraints
 model_constrained = Sem(
     specification = partable,
-    data = data,
-    optimizer = constrained_optimizer
+    data = data
 )
 
-model_fit_constrained = sem_fit(model_constrained)
+model_fit_constrained = sem_fit(constrained_optimizer, model_constrained)
 ```
 
 As you can see, the optimizer converged (`:XTOL_REACHED`) and investigating the solution yields

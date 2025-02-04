@@ -212,7 +212,7 @@ function details(
     )
     print("\n")
 
-    mean_indices = findall(r -> (r.relation == :→) && (r.from == Symbol("1")), partable)
+    mean_indices = findall(r -> (r.relation == :→) && (r.from == Symbol(1)), partable)
 
     if length(mean_indices) > 0
         printstyled("Means: \n"; color = color)
