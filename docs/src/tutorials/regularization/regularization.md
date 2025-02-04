@@ -5,40 +5,23 @@
 For ridge regularization, you can simply use `SemRidge` as an additional loss function 
 (for example, a model with the loss functions `SemML` and `SemRidge` corresponds to ridge-regularized maximum likelihood estimation).
 
-For lasso, elastic net and (far) beyond, we provide the `ProximalSEM` package. You can install it and load it alongside `StructuralEquationModels`:
+For lasso, elastic net and (far) beyond, you can load the `ProximalAlgorithms.jl` and `ProximalOperators.jl` packages alongside `StructuralEquationModels`:
 
 ```@setup reg
-import Pkg
-Pkg.add(url = "https://github.com/StructuralEquationModels/ProximalSEM.jl")
-
-using StructuralEquationModels, ProximalSEM
+using StructuralEquationModels, ProximalAlgorithms, ProximalOperators
 ```
 
 ```julia
-import Pkg
-Pkg.add(url = "https://github.com/StructuralEquationModels/ProximalSEM.jl")
-
-using StructuralEquationModels, ProximalSEM
-```
-
-!!! warning "ProximalSEM is still WIP"
-    The ProximalSEM package does not have any releases yet, and is not well tested - until the first release, use at your own risk and expect interfaces to change without prior notice.
-
-Additionally, you need to install and load `ProximalOperators.jl`:
-
-```@setup reg
-using ProximalOperators
-```
-
-```julia
+using Pkg
+Pkg.add("ProximalAlgorithms")
 Pkg.add("ProximalOperators")
 
-using ProximalOperators
+using StructuralEquationModels, ProximalAlgorithms, ProximalOperators
 ```
 
 ## `SemOptimizerProximal`
 
-`ProximalSEM` provides a new "building block" for the optimizer part of a model, called `SemOptimizerProximal`.
+To estimate regularized models, we provide a "building block" for the optimizer part, called `SemOptimizerProximal`.
 It connects our package to the [`ProximalAlgorithms.jl`](https://github.com/JuliaFirstOrder/ProximalAlgorithms.jl) optimization backend, providing so-called proximal optimization algorithms. 
 Those can handle, amongst other things, various forms of regularization.
 
@@ -102,7 +85,9 @@ model = Sem(
 We labeled the covariances between the items because we want to regularize those:
 
 ```@example reg
-ind = param_indices([:cov_15, :cov_24, :cov_26, :cov_37, :cov_48, :cov_68], model)
+ind = getindex.(
+    [param_indices(model)], 
+    [:cov_15, :cov_24, :cov_26, :cov_37, :cov_48, :cov_68])
 ```
 
 In the following, we fit the same model with lasso regularization of those covariances.
