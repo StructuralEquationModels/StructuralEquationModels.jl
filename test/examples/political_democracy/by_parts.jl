@@ -11,7 +11,7 @@ implied_ram = RAM(specification = spec)
 implied_ram_sym = RAMSymbolic(specification = spec)
 
 # loss functions ---------------------------------------------------------------------------
-ml = SemML(observed = observed)
+ml = SemML(specification = spec, observed = observed)
 
 wls = SemWLS(observed = observed)
 
@@ -206,7 +206,7 @@ implied_ram = RAM(specification = spec_mean, meanstructure = true)
 implied_ram_sym = RAMSymbolic(specification = spec_mean, meanstructure = true)
 
 # loss functions ---------------------------------------------------------------------------
-ml = SemML(observed = observed, meanstructure = true)
+ml = SemML(observed = observed, specification = spec_mean, meanstructure = true)
 
 wls = SemWLS(observed = observed, meanstructure = true)
 
