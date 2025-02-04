@@ -73,6 +73,7 @@ SemObservedData
 SemObservedCovariance
 SemObservedMissing
 samples
+observed_vars
 SemSpecification
 ```
 
