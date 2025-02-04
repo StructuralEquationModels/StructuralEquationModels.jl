@@ -10,8 +10,7 @@ At the moment only available with the `RAMSymbolic` implied type.
 # Constructor
 
     SemWLS(;
-        observed,
-        meanstructure = false,
+        observed, implied,
         wls_weight_matrix = nothing,
         wls_weight_matrix_mean = nothing,
         approximate_hessian = false,
@@ -19,7 +18,7 @@ At the moment only available with the `RAMSymbolic` implied type.
 
 # Arguments
 - `observed`: the `SemObserved` part of the model
-- `meanstructure::Bool`: does the model have a meanstructure?
+- `implied::SemImplied`: the implied part of the model
 - `approximate_hessian::Bool`: should the hessian be swapped for an approximation
 - `wls_weight_matrix`: the weight matrix for weighted least squares.
     Defaults to GLS estimation (``0.5*(D^T*kron(S,S)*D)`` where D is the duplication matrix
@@ -29,7 +28,7 @@ At the moment only available with the `RAMSymbolic` implied type.
 
 # Examples
 ```julia
-my_wls = SemWLS(observed = my_observed)
+my_wls = SemWLS(observed = my_observed, implied = my_implied)
 ```
 
 # Interfaces
@@ -50,21 +49,19 @@ SemWLS{HE}(args...) where {HE <: HessianEval} =
     SemWLS{HE, map(typeof, args)...}(HE(), args...)
 
 function SemWLS(;
-    observed,
-    implied,
-    wls_weight_matrix = nothing,
-    wls_weight_matrix_mean = nothing,
-    approximate_hessian = false,
-    meanstructure = false,
+    observed::SemObserved,
+    implied::SemImplied,
+    wls_weight_matrix::Union{AbstractMatrix, Nothing} = nothing,
+    wls_weight_matrix_mean::Union{AbstractMatrix, Nothing} = nothing,
+    approximate_hessian::Bool = false,
     kwargs...,
 )
-
     if observed isa SemObservedMissing
         throw(ArgumentError(
             "WLS estimation can't be used with `SemObservedMissing`.
-            Use full information maximum likelihood (FIML) estimation or remove missing 
+            Use full information maximum likelihood (FIML) estimation or remove missing
             values in your data.
-            A FIML model can be constructed with 
+            A FIML model can be constructed with
             Sem(
                 ...,
                 observed = SemObservedMissing,
@@ -73,13 +70,17 @@ function SemWLS(;
             )"))
     end
 
-    if !(implied isa RAMSymbolic) 
+    if !(implied isa RAMSymbolic)
         throw(ArgumentError(
             "WLS estimation is only available with the implied type RAMSymbolic at the moment."))
     end
 
     nobs_vars = nobserved_vars(observed)
     s = vech(obs_cov(observed))
+    size(s) == size(implied.Σ) ||
+        throw(DimensionMismatch("SemWLS requires implied covariance to be in vech-ed form " *
+                                "(vectorized lower triangular part of Σ matrix): $(size(s)) expected, $(size(implied.Σ)) found.\n" *
+                                "$(nameof(typeof(implied))) must be constructed with vech=true."))
 
     # compute V here
     if isnothing(wls_weight_matrix)
@@ -93,9 +94,12 @@ function SemWLS(;
                 "wls_weight_matrix has to be of size $(length(tril_ind))×$(length(tril_ind))",
             )
     end
+    size(wls_weight_matrix) == (length(s), length(s)) ||
+        DimensionMismatch("wls_weight_matrix has to be of size $(length(s))×$(length(s))")
 
-    if meanstructure
+    if MeanStruct(implied) == HasMeanStruct
         if isnothing(wls_weight_matrix_mean)
+        	@warn "Computing WLS weight matrix for the meanstructure using obs_cov()"
             wls_weight_matrix_mean = inv(obs_cov(observed))
         else
             size(wls_weight_matrix_mean) == (nobs_vars, nobs_vars) || DimensionMismatch(

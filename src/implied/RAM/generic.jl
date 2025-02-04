@@ -6,14 +6,10 @@ Model implied covariance and means via RAM notation.
 
 # Constructor
 
-    RAM(;specification,
-        meanstructure = false,
-        gradient = true,
-        kwargs...)
+    RAM(; specification, gradient = true, kwargs...)
 
 # Arguments
 - `specification`: either a `RAMMatrices` or `ParameterTable` object
-- `meanstructure::Bool`: does the model have a meanstructure?
 - `gradient::Bool`: is gradient-based optimization used
 
 # Extended help
@@ -53,9 +49,9 @@ Vector of indices of each parameter in the respective RAM matrix:
 - `ram.M_indices`
 
 Additional interfaces
-- `ram.F⨉I_A⁻¹` -> ``F(I-A)^{-1}``
-- `ram.F⨉I_A⁻¹S` -> ``F(I-A)^{-1}S``
-- `ram.I_A` -> ``I-A``
+- `F⨉I_A⁻¹(::RAM)` -> ``F(I-A)^{-1}``
+- `F⨉I_A⁻¹S(::RAM)` -> ``F(I-A)^{-1}S``
+- `I_A(::RAM)` -> ``I-A``
 
 Only available in gradient! calls:
 - `ram.I_A⁻¹` -> ``(I-A)^{-1}``
@@ -90,14 +86,14 @@ end
 ### Constructors
 ############################################################################################
 
-function RAM(;
-    specification::SemSpecification,
+function RAM(
+    spec::SemSpecification;
+    #vech = false,
     gradient_required = true,
-    meanstructure = false,
     sparse_S::Bool = true,
     kwargs...,
 )
-    ram_matrices = convert(RAMMatrices, specification)
+    ram_matrices = convert(RAMMatrices, spec)
 
     check_meanstructure_specification(meanstructure, ram_matrices)
 
@@ -129,7 +125,7 @@ function RAM(;
     end
 
     # μ
-    if meanstructure
+    if !isnothing(ram_matrices.M)
         MS = HasMeanStruct
         M_pre = materialize(ram_matrices.M, rand_params)
         ∇M = gradient_required ? sparse_gradient(ram_matrices.M) : nothing

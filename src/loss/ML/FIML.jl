@@ -75,15 +75,16 @@ Can handle observed data with missing values.
 
 # Constructor
 
-    SemFIML(; observed::SemObservedMissing, specification, kwargs...)
+    SemFIML(; observed::SemObservedMissing, implied::SemImplied, kwargs...)
 
 # Arguments
-- `observed`: the observed data with missing values (see [`SemObservedMissing`](@ref))
-- `specification`: [`SemSpecification`](@ref) object
+- `observed::SemObservedMissing`: the observed part of the model
+  (see [`SemObservedMissing`](@ref))
+- `implied::SemImplied`: the implied part of the model
 
 # Examples
 ```julia
-my_fiml = SemFIML(observed = my_observed, specification = my_parameter_table)
+my_fiml = SemFIML(observed = my_observed, implied = my_implied)
 ```
 
 # Interfaces
@@ -104,12 +105,16 @@ end
 ### Constructors
 ############################################################################################
 
-function SemFIML(; observed::SemObservedMissing, specification, kwargs...)
+function SemFIML(;
+    observed::SemObservedMissing,
+    implied::SemImplied,
+    kwargs...,
+)
     return SemFIML(
         ExactHessian(),
         [SemFIMLPattern(pat) for pat in observed.patterns],
         zeros(nobserved_vars(observed), nobserved_vars(observed)),
-        CommutationMatrix(nvars(specification)),
+        CommutationMatrix(nvars(implied)),
         nothing,
     )
 end
