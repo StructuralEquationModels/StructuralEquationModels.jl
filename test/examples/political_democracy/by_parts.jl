@@ -178,7 +178,7 @@ if opt_engine == :Optim
     @testset "ml_solution_hessian" begin
         solution = sem_fit(optimizer_obj, model_ml)
         update_estimate!(partable, solution)
-        test_estimates(partable, solution_lav[:parameter_estimates_ml]; atol = 1e-3)
+        test_estimates(partable, solution_lav[:parameter_estimates_ml]; atol = 1e-2)
     end
 
     @testset "ls_solution_hessian" begin

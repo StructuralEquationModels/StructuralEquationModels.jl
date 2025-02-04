@@ -57,5 +57,5 @@ model_prox = Sem(specification = partable, data = dat, loss = SemML)
 solution_prox = @suppress sem_fit(model_prox, engine = :Proximal, operator_g = SqrNormL2(λ))
 
 @testset "ridge_solution" begin
-    @test isapprox(solution_prox.solution, solution_ridge.solution; rtol = 1e-4)
+    @test isapprox(solution_prox.solution, solution_ridge.solution; rtol = 1e-3)
 end

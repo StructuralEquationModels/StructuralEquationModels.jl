@@ -86,7 +86,6 @@ include("frontend/fit/standard_errors/bootstrap.jl")
 include("package_extensions/SEMNLOptExt.jl")
 include("package_extensions/SEMProximalOptExt.jl")
 
-
 export AbstractSem,
     AbstractSemSingle,
     AbstractSemCollection,

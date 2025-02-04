@@ -35,7 +35,12 @@ end
 ### Constructors
 ############################################################################################
 
-function ImpliedEmpty(;specification, meanstruct = NoMeanStruct(), hessianeval = ExactHessian(), kwargs...)
+function ImpliedEmpty(;
+    specification,
+    meanstruct = NoMeanStruct(),
+    hessianeval = ExactHessian(),
+    kwargs...,
+)
     return ImpliedEmpty(hessianeval, meanstruct, convert(RAMMatrices, specification))
 end
 
