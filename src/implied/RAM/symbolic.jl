@@ -2,7 +2,7 @@
 ### Types
 ############################################################################################
 @doc raw"""
-Subtype of `SemImply` that implements the RAM notation with symbolic precomputation.
+Subtype of `SemImplied` that implements the RAM notation with symbolic precomputation.
 
 # Constructor
 
@@ -26,11 +26,11 @@ Subtype of `SemImply` that implements the RAM notation with symbolic precomputat
 # Extended help
 
 ## Implementation
-Subtype of `SemImply`.
+Subtype of `SemImplied`.
 
 ## Interfaces
-- `identifier(::RAMSymbolic) `-> Dict containing the parameter labels and their position
-- `n_par(::RAMSymbolic)` -> Number of parameters
+- `params(::RAMSymbolic) `-> vector of parameter ids
+- `nparams(::RAMSymbolic)` -> number of parameters
 
 - `Σ(::RAMSymbolic)` -> model implied covariance matrix
 - `μ(::RAMSymbolic)` -> model implied mean vector
@@ -62,8 +62,10 @@ and for models with a meanstructure, the model implied means are computed as
     \mu = F(I-A)^{-1}M
 ```
 """
-struct RAMSymbolic{F1, F2, F3, A1, A2, A3, S1, S2, S3, V, V2, F4, A4, F5, A5, D1, B} <:
-       SemImplySymbolic
+struct RAMSymbolic{MS, F1, F2, F3, A1, A2, A3, S1, S2, S3, V2, F4, A4, F5, A5} <:
+       SemImpliedSymbolic
+    meanstruct::MS
+    hessianeval::ExactHessian
     Σ_function::F1
     ∇Σ_function::F2
     ∇²Σ_function::F3
@@ -73,14 +75,14 @@ struct RAMSymbolic{F1, F2, F3, A1, A2, A3, S1, S2, S3, V, V2, F4, A4, F5, A5, D1
     Σ_symbolic::S1
     ∇Σ_symbolic::S2
     ∇²Σ_symbolic::S3
-    n_par::V
     ram_matrices::V2
     μ_function::F4
     μ::A4
     ∇μ_function::F5
     ∇μ::A5
-    identifier::D1
-    has_meanstructure::B
+
+    RAMSymbolic{MS}(args...) where {MS <: MeanStruct} =
+        new{MS, map(typeof, args)...}(MS(), ExactHessian(), args...)
 end
 
 ############################################################################################
@@ -88,42 +90,34 @@ end
 ############################################################################################
 
 function RAMSymbolic(;
-    specification,
+    specification::SemSpecification,
     loss_types = nothing,
     vech = false,
+    simplify_symbolics = false,
     gradient = true,
     hessian = false,
     meanstructure = false,
     approximate_hessian = false,
     kwargs...,
 )
-    ram_matrices = RAMMatrices(specification)
-    identifier = StructuralEquationModels.identifier(ram_matrices)
+    ram_matrices = convert(RAMMatrices, specification)
 
-    n_par = length(ram_matrices.parameters)
-    n_var, n_nod = ram_matrices.size_F
-
+    n_par = nparams(ram_matrices)
     par = (Symbolics.@variables θ[1:n_par])[1]
 
-    A = zeros(Num, n_nod, n_nod)
-    S = zeros(Num, n_nod, n_nod)
-    !isnothing(ram_matrices.M_ind) ? M = zeros(Num, n_nod) : M = nothing
-    F = zeros(ram_matrices.size_F)
-    F[CartesianIndex.(1:n_var, ram_matrices.F_ind)] .= 1.0
+    A = sparse_materialize(Num, ram_matrices.A, par)
+    S = sparse_materialize(Num, ram_matrices.S, par)
+    M = !isnothing(ram_matrices.M) ? materialize(Num, ram_matrices.M, par) : nothing
+    F = ram_matrices.F
 
-    set_RAMConstants!(A, S, M, ram_matrices.constants)
-    fill_A_S_M!(A, S, M, ram_matrices.A_ind, ram_matrices.S_ind, ram_matrices.M_ind, par)
-
-    A, S, F = sparse(A), sparse(S), sparse(F)
-
-    if !isnothing(loss_types)
-        any(loss_types .<: SemWLS) ? vech = true : nothing
+    if !isnothing(loss_types) && any(T -> T <: SemWLS, loss_types)
+        vech = true
     end
 
     I_A⁻¹ = neumann_series(A)
 
     # Σ
-    Σ_symbolic = eval_Σ_symbolic(S, I_A⁻¹, F; vech = vech)
+    Σ_symbolic = eval_Σ_symbolic(S, I_A⁻¹, F; vech = vech, simplify = simplify_symbolics)
     #print(Symbolics.build_function(Σ_symbolic)[2])
     Σ_function = Symbolics.build_function(Σ_symbolic, par, expression = Val{false})[2]
     Σ = zeros(size(Σ_symbolic))
@@ -142,9 +136,8 @@ function RAMSymbolic(;
         ∇Σ = nothing
     end
 
-    if hessian & !approximate_hessian
+    if hessian && !approximate_hessian
         n_sig = length(Σ_symbolic)
-        n_par = size(par, 1)
         ∇²Σ_symbolic_vec = [Symbolics.sparsehessian(σᵢ, [par...]) for σᵢ in vec(Σ_symbolic)]
 
         @variables J[1:n_sig]
@@ -164,8 +157,8 @@ function RAMSymbolic(;
 
     # μ
     if meanstructure
-        has_meanstructure = Val(true)
-        μ_symbolic = eval_μ_symbolic(M, I_A⁻¹, F)
+        MS = HasMeanStruct
+        μ_symbolic = eval_μ_symbolic(M, I_A⁻¹, F; simplify = simplify_symbolics)
         μ_function = Symbolics.build_function(μ_symbolic, par, expression = Val{false})[2]
         μ = zeros(size(μ_symbolic))
         if gradient
@@ -178,14 +171,14 @@ function RAMSymbolic(;
             ∇μ = nothing
         end
     else
-        has_meanstructure = Val(false)
+        MS = NoMeanStruct
         μ_function = nothing
         μ = nothing
         ∇μ_function = nothing
         ∇μ = nothing
     end
 
-    return RAMSymbolic(
+    return RAMSymbolic{MS}(
         Σ_function,
         ∇Σ_function,
         ∇²Σ_function,
@@ -195,14 +188,11 @@ function RAMSymbolic(;
         Σ_symbolic,
         ∇Σ_symbolic,
         ∇²Σ_symbolic,
-        n_par,
         ram_matrices,
         μ_function,
         μ,
         ∇μ_function,
         ∇μ,
-        identifier,
-        has_meanstructure,
     )
 end
 
@@ -210,88 +200,62 @@ end
 ### objective, gradient, hessian
 ############################################################################################
 
-# dispatch on meanstructure
-objective!(imply::RAMSymbolic, par, model) =
-    objective!(imply, par, model, imply.has_meanstructure)
-gradient!(imply::RAMSymbolic, par, model) =
-    gradient!(imply, par, model, imply.has_meanstructure)
+function update!(
+    targets::EvaluationTargets,
+    implied::RAMSymbolic,
+    model::AbstractSemSingle,
+    par,
+)
+    implied.Σ_function(implied.Σ, par)
+    if MeanStruct(implied) === HasMeanStruct
+        implied.μ_function(implied.μ, par)
+    end
 
-# objective
-function objective!(imply::RAMSymbolic, par, model, has_meanstructure::Val{T}) where {T}
-    imply.Σ_function(imply.Σ, par)
-    T && imply.μ_function(imply.μ, par)
+    if is_gradient_required(targets) || is_hessian_required(targets)
+        implied.∇Σ_function(implied.∇Σ, par)
+        if MeanStruct(implied) === HasMeanStruct
+            implied.∇μ_function(implied.∇μ, par)
+        end
+    end
 end
-
-# gradient
-function gradient!(imply::RAMSymbolic, par, model, has_meanstructure::Val{T}) where {T}
-    objective!(imply, par, model, imply.has_meanstructure)
-    imply.∇Σ_function(imply.∇Σ, par)
-    T && imply.∇μ_function(imply.∇μ, par)
-end
-
-# other methods
-hessian!(imply::RAMSymbolic, par, model) = gradient!(imply, par, model)
-objective_gradient!(imply::RAMSymbolic, par, model) = gradient!(imply, par, model)
-objective_hessian!(imply::RAMSymbolic, par, model) = gradient!(imply, par, model)
-gradient_hessian!(imply::RAMSymbolic, par, model) = gradient!(imply, par, model)
-objective_gradient_hessian!(imply::RAMSymbolic, par, model) = gradient!(imply, par, model)
 
 ############################################################################################
 ### Recommended methods
 ############################################################################################
 
-identifier(imply::RAMSymbolic) = imply.identifier
-n_par(imply::RAMSymbolic) = imply.n_par
-
-function update_observed(imply::RAMSymbolic, observed::SemObserved; kwargs...)
-    if n_man(observed) == size(imply.Σ, 1)
-        return imply
+function update_observed(implied::RAMSymbolic, observed::SemObserved; kwargs...)
+    if nobserved_vars(observed) == size(implied.Σ, 1)
+        return implied
     else
         return RAMSymbolic(; observed = observed, kwargs...)
     end
 end
 
 ############################################################################################
-### additional methods
-############################################################################################
-
-Σ(imply::RAMSymbolic) = imply.Σ
-∇Σ(imply::RAMSymbolic) = imply.∇Σ
-∇²Σ(imply::RAMSymbolic) = imply.∇²Σ
-
-μ(imply::RAMSymbolic) = imply.μ
-∇μ(imply::RAMSymbolic) = imply.∇μ
-
-Σ_function(imply::RAMSymbolic) = imply.Σ_function
-∇Σ_function(imply::RAMSymbolic) = imply.∇Σ_function
-∇²Σ_function(imply::RAMSymbolic) = imply.∇²Σ_function
-
-has_meanstructure(imply::RAMSymbolic) = imply.has_meanstructure
-
-ram_matrices(imply::RAMSymbolic) = imply.ram_matrices
-
-############################################################################################
 ### additional functions
 ############################################################################################
 
 # expected covariations of observed vars
-function eval_Σ_symbolic(S, I_A⁻¹, F; vech = false)
+function eval_Σ_symbolic(S, I_A⁻¹, F; vech = false, simplify = false)
     Σ = F * I_A⁻¹ * S * permutedims(I_A⁻¹) * permutedims(F)
     Σ = Array(Σ)
     vech && (Σ = Σ[tril(trues(size(F, 1), size(F, 1)))])
-    # Σ = Symbolics.simplify.(Σ)
-    Threads.@threads for i in eachindex(Σ)
-        Σ[i] = Symbolics.simplify(Σ[i])
+    if simplify
+        Threads.@threads for i in eachindex(Σ)
+            Σ[i] = Symbolics.simplify(Σ[i])
+        end
     end
     return Σ
 end
 
 # expected means of observed vars
-function eval_μ_symbolic(M, I_A⁻¹, F)
+function eval_μ_symbolic(M, I_A⁻¹, F; simplify = false)
     μ = F * I_A⁻¹ * M
     μ = Array(μ)
-    Threads.@threads for i in eachindex(μ)
-        μ[i] = Symbolics.simplify(μ[i])
+    if simplify
+        Threads.@threads for i in eachindex(μ)
+            μ[i] = Symbolics.simplify(μ[i])
+        end
     end
     return μ
 end

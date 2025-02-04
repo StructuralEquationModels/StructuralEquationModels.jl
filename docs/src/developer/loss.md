@@ -20,17 +20,22 @@ end
 ```
 We store the hyperparameter α and the indices I of the parameters we want to regularize.
 
-Additionaly, we need to define a *method* to compute the objective:
+Additionaly, we need to define a *method* of the function `evaluate!` to compute the objective:
 
 ```@example loss
-import StructuralEquationModels: objective!
+import StructuralEquationModels: evaluate!
 
-objective!(ridge::Ridge, par, model::AbstractSemSingle) = ridge.α*sum(par[ridge.I].^2)
+evaluate!(objective::Number, gradient::Nothing, hessian::Nothing, ridge::Ridge, model::AbstractSem, par) = 
+  ridge.α * sum(i -> par[i]^2, ridge.I)
 ```
+
+The function `evaluate!` recognizes by the types of the arguments `objective`, `gradient` and `hessian` whether it should compute the objective value, gradient or hessian of the model w.r.t. the parameters.
+In this case, `gradient` and `hessian` are of type `Nothing`, signifying that they should not be computed, but only the objective value.
 
 That's all we need to make it work! For example, we can now fit [A first model](@ref) with ridge regularization:
 
 We first give some parameters labels to be able to identify them as targets for the regularization:
+
 ```@example loss
 observed_vars = [:x1, :x2, :x3, :y1, :y2, :y3, :y4, :y5, :y6, :y7, :y8]
 latent_vars = [:ind60, :dem60, :dem65]
@@ -60,11 +65,12 @@ graph = @StenoGraph begin
 end
 
 partable = ParameterTable(
+    graph,
     latent_vars = latent_vars,
-    observed_vars = observed_vars,
-    graph = graph)
+    observed_vars = observed_vars
+)
 
-parameter_indices  = get_identifier_indices([:a, :b, :c], partable)
+parameter_indices = getindex.([param_indices(partable)], [:a, :b, :c])
 myridge = Ridge(0.01, parameter_indices)
 
 model = SemFiniteDiff(
@@ -85,14 +91,22 @@ Note that the last argument to the `objective!` method is the whole model. There
 By far the biggest improvements in performance will result from specifying analytical gradients. We can do this for our example:
 
 ```@example loss
-import StructuralEquationModels: gradient!
-
-function gradient!(ridge::Ridge, par, model::AbstractSemSingle)
-    gradient = zero(par)
-    gradient[ridge.I] .= 2*ridge.α*par[ridge.I]
-    return gradient
+function evaluate!(objective, gradient, hessian::Nothing, ridge::Ridge, model::AbstractSem, par)
+    # compute gradient
+    if !isnothing(gradient)
+        fill!(gradient, 0)
+        gradient[ridge.I] .= 2 * ridge.α * par[ridge.I]
+    end
+    # compute objective
+    if !isnothing(objective) 
+        return ridge.α * sum(i -> par[i]^2, ridge.I)
+    end
 end
 ```
+
+As you can see, in this method definition, both `objective` and `gradient` can be different from `nothing`.
+We then check whether to compute the objective value and/or the gradient with `isnothing(objective)`/`isnothing(gradient)`.
+This syntax makes it possible to compute objective value and gradient at the same time, which is beneficial when the the objective and gradient share common computations.
 
 Now, instead of specifying a `SemFiniteDiff`, we can use the normal `Sem` constructor:
 
@@ -118,46 +132,7 @@ using BenchmarkTools
 
 The exact results of those benchmarks are of course highly depended an your system (processor, RAM, etc.), but you should see that the median computation time with analytical gradients drops to about 5% of the computation without analytical gradients.
 
-Additionally, you may provide analytic hessians by writing a method of the form
-
-```julia
-function hessian!(ridge::Ridge, par, model::AbstractSemSingle)
-    ...
-    return hessian
-end
-```
-
-however, this will only matter if you use an optimization algorithm that makes use of the hessians. Our default algorithmn `LBFGS` from the package `Optim.jl` does not use hessians (for example, the `Newton` algorithmn from the same package does).
-
-To improve performance even more, you can write a method of the form
-
-```julia
-function objective_gradient!(ridge::Ridge, par, model::AbstractSemSingle)
-    ...
-    return objective, gradient
-end
-```
-
-This is beneficial when the computation of the objective and gradient share common computations. For example, in maximum likelihood estimation, the model implied covariance matrix has to be inverted to both compute the objective and gradient. Whenever the optimization algorithmn asks for the objective value and gradient at the same point, we call `objective_gradient!` and only have to do the shared computations - in this case the matrix inversion - once.
-
-If you want to do hessian-based optimization, there are also the following methods:
-
-```julia
-function objective_hessian!(ridge::Ridge, par, model::AbstractSemSingle)
-    ...
-    return objective, hessian
-end
-
-function gradient_hessian!(ridge::Ridge, par, model::AbstractSemSingle)
-    ...
-    return gradient, hessian
-end
-
-function objective_gradient_hessian!(ridge::Ridge, par, model::AbstractSemSingle)
-    ...
-    return objective, gradient, hessian
-end
-```
+Additionally, you may provide analytic hessians by writing a respective method for `evaluate!`. However, this will only matter if you use an optimization algorithm that makes use of the hessians. Our default algorithmn `LBFGS` from the package `Optim.jl` does not use hessians (for example, the `Newton` algorithmn from the same package does).
 
 ## Convenient
 
@@ -170,7 +145,7 @@ function MyLoss(;arg1 = ..., arg2, kwargs...)
 end
 ```
 
-All keyword arguments that a user passes to the Sem constructor are passed to your loss function. In addition, all previously constructed parts of the model (imply and observed part) are passed as keyword arguments as well as the number of parameters `n_par = ...`, so your constructor may depend on those. For example, the constructor for `SemML` in our package depends on the additional argument `meanstructure` as well as the observed part of the model to pre-allocate arrays of the same size as the observed covariance matrix and the observed mean vector: 
+All keyword arguments that a user passes to the Sem constructor are passed to your loss function. In addition, all previously constructed parts of the model (implied and observed part) are passed as keyword arguments as well as the number of parameters `n_par = ...`, so your constructor may depend on those. For example, the constructor for `SemML` in our package depends on the additional argument `meanstructure` as well as the observed part of the model to pre-allocate arrays of the same size as the observed covariance matrix and the observed mean vector:
 
 ```julia
 function SemML(;observed, meanstructure = false, approx_H = false, kwargs...)
@@ -194,7 +169,7 @@ end
 ### Update observed data
 
 If you are planing a simulation study where you have to fit the **same model** to many **different datasets**, it is computationally beneficial to not build the whole model completely new everytime you change your data.
-Therefore, we provide a function to update the data of your model, `swap_observed(model(semfit); data = new_data)`. However, we can not know beforehand in what way your loss function depends on the specific datasets. The solution is to provide a method for `update_observed`. Since `Ridge` does not depend on the data at all, this is quite easy:
+Therefore, we provide a function to update the data of your model, `replace_observed(model(semfit); data = new_data)`. However, we can not know beforehand in what way your loss function depends on the specific datasets. The solution is to provide a method for `update_observed`. Since `Ridge` does not depend on the data at all, this is quite easy:
 
 ```julia
 import StructuralEquationModels: update_observed
@@ -220,9 +195,9 @@ To keep it simple, we only cover models without a meanstructure. The maximum lik
 F_{ML} = \log \det \Sigma_i + \mathrm{tr}\left(\Sigma_{i}^{-1} \Sigma_o \right)
 ```
 
-where ``\Sigma_i`` is the model implied covariance matrix and ``\Sigma_o`` is the observed covariance matrix. We can query the model implied covariance matrix from the `imply` par of our model, and the observed covariance matrix from the `observed` path of our model.
+where ``\Sigma_i`` is the model implied covariance matrix and ``\Sigma_o`` is the observed covariance matrix. We can query the model implied covariance matrix from the `implied` par of our model, and the observed covariance matrix from the `observed` path of our model.
 
-To get information on what we can access from a certain `imply` or `observed` type, we can check it`s documentation an the pages [API - model parts](@ref) or via the help mode of the REPL:
+To get information on what we can access from a certain `implied` or `observed` type, we can check it`s documentation an the pages [API - model parts](@ref) or via the help mode of the REPL:
 
 ```julia
 julia>?
@@ -232,7 +207,7 @@ help?> RAM
 help?> SemObservedCommon
 ```
 
-We see that the model implied covariance matrix can be assessed as `Σ(imply)` and the observed covariance matrix as `obs_cov(observed)`.
+We see that the model implied covariance matrix can be assessed as `Σ(implied)` and the observed covariance matrix as `obs_cov(observed)`.
 
 With this information, we write can implement maximum likelihood optimization as
 
@@ -240,11 +215,11 @@ With this information, we write can implement maximum likelihood optimization as
 struct MaximumLikelihood <: SemLossFunction end
 
 using LinearAlgebra
-import StructuralEquationModels: Σ, obs_cov, objective!
+import StructuralEquationModels: obs_cov, evaluate!
 
-function objective!(semml::MaximumLikelihood, parameters, model::AbstractSem)
+function evaluate!(objective::Number, gradient::Nothing, hessian::Nothing, semml::MaximumLikelihood, model::AbstractSem, par)
     # access the model implied and observed covariance matrices
-    Σᵢ = Σ(imply(model))
+    Σᵢ = implied(model).Σ
     Σₒ = obs_cov(observed(model))
     # compute the objective
     if isposdef(Symmetric(Σᵢ)) # is the model implied covariance matrix positive definite?
@@ -269,4 +244,4 @@ model_ml = SemFiniteDiff(
 model_fit = sem_fit(model_ml)
 ```
 
-If you want to differentiate your own loss functions via automatic differentiation, check out the [AutoDiffSEM](https://github.com/StructuralEquationModels/AutoDiffSEM) package (spoiler allert: it's really easy).
+If you want to differentiate your own loss functions via automatic differentiation, check out the [AutoDiffSEM](https://github.com/StructuralEquationModels/AutoDiffSEM) package.

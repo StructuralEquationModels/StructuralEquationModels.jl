@@ -40,7 +40,7 @@ A = [
     0 0 0 0 0 0 0    0
 ]
 
-ram_matrices = RAMMatrices(; A = A, S = S, F = F, parameters = x, colnames = nothing)
+ram_matrices = RAMMatrices(; A = A, S = S, F = F, params = x, vars = nothing)
 
 true_val = [
     repeat([1], 8)
@@ -53,25 +53,26 @@ start = [
     repeat([0.5], 4)
 ]
 
-imply_ml = RAMSymbolic(; specification = ram_matrices, start_val = start)
+implied_ml = RAMSymbolic(; specification = ram_matrices, start_val = start)
 
-imply_ml.Σ_function(imply_ml.Σ, true_val)
+implied_ml.Σ_function(implied_ml.Σ, true_val)
 
-true_dist = MultivariateNormal(imply_ml.Σ)
+true_dist = MultivariateNormal(implied_ml.Σ)
 
 Random.seed!(1234)
-x = transpose(rand(true_dist, 100000))
+x = transpose(rand(true_dist, 100_000))
 semobserved = SemObservedData(data = x, specification = nothing)
 
-loss_ml = SemLoss(SemML(; observed = semobserved, n_par = length(start)))
+loss_ml = SemLoss(SemML(; observed = semobserved, nparams = length(start)))
+
+model_ml = Sem(semobserved, implied_ml, loss_ml)
+objective!(model_ml, true_val)
 
 optimizer = SemOptimizerOptim(
     BFGS(; linesearch = BackTracking(order = 3), alphaguess = InitialHagerZhang()),# m = 100),
     Optim.Options(; f_tol = 1e-10, x_tol = 1.5e-8),
 )
 
-model_ml = Sem(semobserved, imply_ml, loss_ml, optimizer)
-objective!(model_ml, true_val)
-solution_ml = sem_fit(model_ml)
+solution_ml = sem_fit(optimizer, model_ml)
 
 @test true_val ≈ solution(solution_ml) atol = 0.05

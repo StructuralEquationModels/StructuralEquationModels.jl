@@ -15,8 +15,8 @@ using StructuralEquationModels
 We then first define the graph of our model in a syntax which is similar to the R-package `lavaan`:
 
 ```@setup high_level
-observed_vars = [:x1, :x2, :x3, :y1, :y2, :y3, :y4, :y5, :y6, :y7, :y8]
-latent_vars = [:ind60, :dem60, :dem65]
+obs_vars = [:x1, :x2, :x3, :y1, :y2, :y3, :y4, :y5, :y6, :y7, :y8]
+lat_vars = [:ind60, :dem60, :dem65]
 
 graph = @StenoGraph begin
 
@@ -31,8 +31,8 @@ graph = @StenoGraph begin
     ind60 → dem65
 
     # variances
-    _(observed_vars) ↔ _(observed_vars)
-    _(latent_vars) ↔ _(latent_vars)
+    _(obs_vars) ↔ _(obs_vars)
+    _(lat_vars) ↔ _(lat_vars)
 
     # covariances
     y1 ↔ y5
@@ -44,8 +44,8 @@ end
 ```
 
 ```julia
-observed_vars = [:x1, :x2, :x3, :y1, :y2, :y3, :y4, :y5, :y6, :y7, :y8]
-latent_vars = [:ind60, :dem60, :dem65]
+obs_vars = [:x1, :x2, :x3, :y1, :y2, :y3, :y4, :y5, :y6, :y7, :y8]
+lat_vars = [:ind60, :dem60, :dem65]
 
 graph = @StenoGraph begin
 
@@ -60,8 +60,8 @@ graph = @StenoGraph begin
     ind60 → dem65
 
     # variances
-    _(observed_vars) ↔ _(observed_vars)
-    _(latent_vars) ↔ _(latent_vars)
+    _(obs_vars) ↔ _(obs_vars)
+    _(lat_vars) ↔ _(lat_vars)
 
     # covariances
     y1 ↔ y5
@@ -83,9 +83,9 @@ We then use this graph to define a `ParameterTable` object
 
 ```@example high_level; ansicolor = true
 partable = ParameterTable(
-    latent_vars = latent_vars, 
-    observed_vars = observed_vars, 
-    graph = graph)
+    graph,
+    latent_vars = lat_vars, 
+    observed_vars = obs_vars)
 ```
 
 load the example data
@@ -119,10 +119,10 @@ and compute fit measures as
 fit_measures(model_fit)
 ```
 
-We can also get a bit more information about the fitted model via the `sem_summary()` function:
+We can also get a bit more information about the fitted model via the `details()` function:
 
 ```@example high_level; ansicolor = true
-sem_summary(model_fit)
+details(model_fit)
 ```
 
 To investigate the parameter estimates, we can update our `partable` object to contain the new estimates:
@@ -134,7 +134,7 @@ update_estimate!(partable, model_fit)
 and investigate the solution with
 
 ```@example high_level; ansicolor = true
-sem_summary(partable)
+details(partable)
 ```
 
 Congratulations, you fitted and inspected your very first model! 

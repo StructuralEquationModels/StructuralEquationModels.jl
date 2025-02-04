@@ -10,24 +10,18 @@
         start_covariances_obs_lat = 0.0,
         start_means = 0.0,
         kwargs...)
-    
+
 Return a vector of simple starting values.
 """
 function start_simple end
 
 # Single Models ----------------------------------------------------------------------------
 function start_simple(model::AbstractSemSingle; kwargs...)
-    return start_simple(
-        model.observed,
-        model.imply,
-        model.optimizer,
-        model.loss.functions...,
-        kwargs...,
-    )
+    return start_simple(model.observed, model.implied, model.loss.functions...; kwargs...)
 end
 
-function start_simple(observed, imply, optimizer, args...; kwargs...)
-    return start_simple(imply.ram_matrices; kwargs...)
+function start_simple(observed, implied, args...; kwargs...)
+    return start_simple(implied.ram_matrices; kwargs...)
 end
 
 # Ensemble Models --------------------------------------------------------------------------
@@ -62,22 +56,24 @@ function start_simple(
     start_means = 0.0,
     kwargs...,
 )
-    A_ind, S_ind, F_ind, M_ind, parameters = ram_matrices.A_ind,
-    ram_matrices.S_ind,
-    ram_matrices.F_ind,
-    ram_matrices.M_ind,
-    ram_matrices.parameters
+    A, S, F_ind, M, n_par = ram_matrices.A,
+    ram_matrices.S,
+    observed_var_indices(ram_matrices),
+    ram_matrices.M,
+    nparams(ram_matrices)
 
-    n_par = length(parameters)
     start_val = zeros(n_par)
-    n_var, n_nod = ram_matrices.size_F
+    n_obs = nobserved_vars(ram_matrices)
+    n_var = nvars(ram_matrices)
 
-    C_indices = CartesianIndices((n_nod, n_nod))
+    C_indices = CartesianIndices((n_var, n_var))
 
     for i in 1:n_par
-        if length(S_ind[i]) != 0
+        Si_ind = param_occurences(S, i)
+        Ai_ind = param_occurences(A, i)
+        if length(Si_ind) != 0
             # use the first occurence of the parameter to determine starting value
-            c_ind = C_indices[S_ind[i][1]]
+            c_ind = C_indices[Si_ind[1]]
             if c_ind[1] == c_ind[2]
                 if c_ind[1] ∈ F_ind
                     start_val[i] = start_variances_observed
@@ -95,14 +91,14 @@ function start_simple(
                     start_val[i] = start_covariances_obs_lat
                 end
             end
-        elseif length(A_ind[i]) != 0
-            c_ind = C_indices[A_ind[i][1]]
+        elseif length(Ai_ind) != 0
+            c_ind = C_indices[Ai_ind[1]]
             if (c_ind[1] ∈ F_ind) & !(c_ind[2] ∈ F_ind)
                 start_val[i] = start_loadings
             else
                 start_val[i] = start_regressions
             end
-        elseif !isnothing(M_ind) && (length(M_ind[i]) != 0)
+        elseif !isnothing(M) && (length(param_occurences(M, i)) != 0)
             start_val[i] = start_means
         end
     end

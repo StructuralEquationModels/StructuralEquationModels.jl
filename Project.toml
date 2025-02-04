@@ -1,7 +1,7 @@
 name = "StructuralEquationModels"
 uuid = "383ca8c5-e4ff-4104-b0a9-f7b279deed53"
 authors = ["Maximilian Ernst", "Aaron Peikert"]
-version = "0.2.4"
+version = "0.3.0"
 
 [deps]
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
@@ -12,7 +12,6 @@ LazyArtifacts = "4af54fe1-eca0-43a8-85a7-787d91b784e3"
 LineSearches = "d3d80556-e9d4-5f37-9878-2ab0fcc64255"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 NLSolversBase = "d41bc354-129a-5804-8e4c-c37616107c6c"
-NLopt = "76087f3c-5699-56af-9a33-bf431cd00edd"
 Optim = "429524aa-4258-5aef-a3af-852621145aeb"
 Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
 PrettyTables = "08abe8d2-0d0c-5749-adfa-8a2ac140af0d"
@@ -22,10 +21,11 @@ Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 StenoGraphs = "78862bba-adae-4a83-bb4d-33c106177f81"
 Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7"
+SymbolicUtils = "d1185830-fcd6-423d-90d6-eec64667417b"
 
 [compat]
-julia = "1.9, 1.10"
-StenoGraphs = "0.2"
+julia = "1.9, 1.10, 1.11"
+StenoGraphs = "0.2 - 0.3, 0.4.1 - 0.5"
 DataFrames = "1"
 Distributions = "0.25"
 FiniteDiff = "2"
@@ -34,11 +34,21 @@ NLSolversBase = "7"
 NLopt = "0.6, 1"
 Optim = "1"
 PrettyTables = "2"
+ProximalAlgorithms = "0.7"
 StatsBase = "0.33, 0.34"
-Symbolics = "4, 5"
+Symbolics = "4, 5, 6"
+SymbolicUtils = "1.4 - 1.5, 1.7, 2, 3"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
 test = ["Test"]
+
+[weakdeps]
+NLopt = "76087f3c-5699-56af-9a33-bf431cd00edd"
+ProximalAlgorithms = "140ffc9f-1907-541a-a177-7475e0a401e9"
+
+[extensions]
+SEMNLOptExt = "NLopt"
+SEMProximalOptExt = "ProximalAlgorithms"

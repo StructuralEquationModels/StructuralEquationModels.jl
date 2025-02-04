@@ -32,7 +32,7 @@ For examples of how to use the package, see the Tutorials.
 Models you can fit out of the box include
 - Linear SEM that can be specified in RAM notation
 - ML, GLS and FIML estimation
-- Ridge Regularization
+- Ridge/Lasso/... Regularization
 - Multigroup SEM
 - Sums of arbitrary loss functions (everything the optimizer can handle)
 

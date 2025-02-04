@@ -2,59 +2,56 @@
 ### Types
 ############################################################################################
 """
-Empty placeholder for models that don't need an imply part.
+Empty placeholder for models that don't need an implied part.
 (For example, models that only regularize parameters.)
 
 # Constructor
 
-    ImplyEmpty(;specification, kwargs...)
+    ImpliedEmpty(;specification, kwargs...)
 
 # Arguments
 - `specification`: either a `RAMMatrices` or `ParameterTable` object
 
 # Examples
 A multigroup model with ridge regularization could be specified as a `SemEnsemble` with one
-model per group and an additional model with `ImplyEmpty` and `SemRidge` for the regularization part.
+model per group and an additional model with `ImpliedEmpty` and `SemRidge` for the regularization part.
 
 # Extended help
 
 ## Interfaces
-- `identifier(::RAMSymbolic) `-> Dict containing the parameter labels and their position
-- `n_par(::RAMSymbolic)` -> Number of parameters
+- `params(::RAMSymbolic) `-> Vector of parameter labels
+- `nparams(::RAMSymbolic)` -> Number of parameters
 
 ## Implementation
-Subtype of `SemImply`.
+Subtype of `SemImplied`.
 """
-struct ImplyEmpty{V, V2} <: SemImply
-    identifier::V2
-    n_par::V
+struct ImpliedEmpty{A, B, C} <: SemImplied
+    hessianeval::A
+    meanstruct::B
+    ram_matrices::C
 end
 
 ############################################################################################
 ### Constructors
 ############################################################################################
 
-function ImplyEmpty(; specification, kwargs...)
-    ram_matrices = RAMMatrices(specification)
-
-    n_par = length(ram_matrices.parameters)
-
-    return ImplyEmpty(identifier(ram_matrices), n_par)
+function ImpliedEmpty(;
+    specification,
+    meanstruct = NoMeanStruct(),
+    hessianeval = ExactHessian(),
+    kwargs...,
+)
+    return ImpliedEmpty(hessianeval, meanstruct, convert(RAMMatrices, specification))
 end
 
 ############################################################################################
 ### methods
 ############################################################################################
 
-objective!(imply::ImplyEmpty, par, model) = nothing
-gradient!(imply::ImplyEmpty, par, model) = nothing
-hessian!(imply::ImplyEmpty, par, model) = nothing
+update!(targets::EvaluationTargets, implied::ImpliedEmpty, par, model) = nothing
 
 ############################################################################################
 ### Recommended methods
 ############################################################################################
 
-identifier(imply::ImplyEmpty) = imply.identifier
-n_par(imply::ImplyEmpty) = imply.n_par
-
-update_observed(imply::ImplyEmpty, observed::SemObserved; kwargs...) = imply
+update_observed(implied::ImpliedEmpty, observed::SemObserved; kwargs...) = implied
