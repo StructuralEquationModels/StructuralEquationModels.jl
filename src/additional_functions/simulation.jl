@@ -11,7 +11,7 @@ Return a new model with swaped observed part.
 - `observed`: Either an object of subtype of `SemObserved` or a subtype of `SemObserved`
 
 # Examples
-See the online documentation on [Swap observed data](@ref).
+See the online documentation on [Replace observed data](@ref).
 """
 function replace_observed end
 
@@ -21,7 +21,7 @@ function replace_observed end
 Update a `SemImplied`, `SemLossFunction` or `SemOptimizer` object to use a `SemObserved` object.
 
 # Examples
-See the online documentation on [Swap observed data](@ref).
+See the online documentation on [Replace observed data](@ref).
 
 # Implementation
 You can provide a method for this function when defining a new type, for more information

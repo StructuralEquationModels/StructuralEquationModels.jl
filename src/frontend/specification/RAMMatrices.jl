@@ -154,16 +154,16 @@ function RAMMatrices(
     S_consts = Vector{Pair{Int, T}}()
     # is there a meanstructure?
     M_inds =
-        any(==(Symbol("1")), partable.columns[:from]) ?
+        any(==(Symbol(1)), partable.columns[:from]) ?
         [Vector{Int64}() for _ in 1:length(params)] : nothing
     M_consts = !isnothing(M_inds) ? Vector{Pair{Int, T}}() : nothing
 
     for r in partable
         row_ind = vars_index[r.to]
-        col_ind = r.from != Symbol("1") ? vars_index[r.from] : nothing
+        col_ind = r.from != Symbol(1) ? vars_index[r.from] : nothing
 
         if !r.free
-            if (r.relation == :→) && (r.from == Symbol("1"))
+            if (r.relation == :→) && (r.from == Symbol(1))
                 push!(M_consts, row_ind => r.value_fixed)
             elseif r.relation == :→
                 push!(
@@ -186,7 +186,7 @@ function RAMMatrices(
             end
         else
             par_ind = params_index[r.param]
-            if (r.relation == :→) && (r.from == Symbol("1"))
+            if (r.relation == :→) && (r.from == Symbol(1))
                 push!(M_inds[par_ind], row_ind)
             elseif r.relation == :→
                 push!(A_inds[par_ind], A_lin_ixs[CartesianIndex(row_ind, col_ind)])
@@ -328,7 +328,7 @@ function partable_row(
 
     # variable names
     if matrix == :M
-        from = Symbol("1")
+        from = Symbol(1)
         to = varnames[index]
     else
         from = varnames[index[2]]

@@ -43,7 +43,29 @@ Structural Equation Model
     ∇f(x) calls:   524
 ```
 
-You may optionally specify [Starting values](@ref).
+## Choosing an optimizer
+
+To choose a different optimizer, you can call `sem_fit` with the keyword argument `engine = ...`, and pass additional keyword arguments:
+
+```julia
+using Optim
+
+model_fit = sem_fit(model; engine = :Optim, algorithm = BFGS())
+```
+
+Available options for engine are `:Optim`, `:NLopt` and `:Proximal`, where `:NLopt` and `:Proximal` are only available if the `NLopt.jl` and `ProximalAlgorithms.jl` packages are loaded respectively.
+
+The available keyword arguments are listed in the sections [Using Optim.jl](@ref), [Using NLopt.jl](@ref) and [Regularization](@ref).
+
+Alternative, you can also explicitely define a `SemOptimizer` and pass it as the first argument to `sem_fit`:
+
+```julia
+my_optimizer = SemOptimizerOptim(algorithm = BFGS())
+
+sem_fit(my_optimizer, model)
+```
+
+You may also optionally specify [Starting values](@ref).
 
 # API - model fitting
 

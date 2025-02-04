@@ -197,7 +197,7 @@ function sort_vars!(partable::ParameterTable)
             partable.columns[:relation],
             partable.columns[:from],
             partable.columns[:to],
-        ) if (rel == :→) && (from != Symbol("1"))
+        ) if (rel == :→) && (from != Symbol(1))
     ]
     sort!(edges, by = last) # sort edges by target
 
@@ -492,7 +492,7 @@ function lavaan_param_values!(
     )
         lav_ind = nothing
 
-        if from == Symbol("1")
+        if from == Symbol(1)
             lav_ind = findallrows(
                 r ->
                     r[:lhs] == String(to) &&

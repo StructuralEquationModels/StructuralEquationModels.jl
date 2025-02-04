@@ -81,8 +81,8 @@ model_ml_multigroup = SemEnsemble(
 We now fit the model and inspect the parameter estimates:
 
 ```@example mg; ansicolor = true
-solution = sem_fit(model_ml_multigroup)
-update_estimate!(partable, solution)
+fit = sem_fit(model_ml_multigroup)
+update_estimate!(partable, fit)
 details(partable)
 ```
 

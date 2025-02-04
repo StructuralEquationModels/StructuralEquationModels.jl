@@ -20,17 +20,22 @@ end
 ```
 We store the hyperparameter α and the indices I of the parameters we want to regularize.
 
-Additionaly, we need to define a *method* to compute the objective:
+Additionaly, we need to define a *method* of the function `evaluate!` to compute the objective:
 
 ```@example loss
-import StructuralEquationModels: objective!
+import StructuralEquationModels: evaluate!
 
-objective!(ridge::Ridge, par, model::AbstractSemSingle) = ridge.α*sum(par[ridge.I].^2)
+evaluate!(objective::Number, gradient::Nothing, hessian::Nothing, ridge::Ridge, model::AbstractSem, par) = 
+  ridge.α * sum(i -> par[i]^2, ridge.I)
 ```
+
+The function `evaluate!` recognizes by the types of the arguments `objective`, `gradient` and `hessian` whether it should compute the objective value, gradient or hessian of the model w.r.t. the parameters.
+In this case, `gradient` and `hessian` are of type `Nothing`, signifying that they should not be computed, but only the objective value.
 
 That's all we need to make it work! For example, we can now fit [A first model](@ref) with ridge regularization:
 
 We first give some parameters labels to be able to identify them as targets for the regularization:
+
 ```@example loss
 observed_vars = [:x1, :x2, :x3, :y1, :y2, :y3, :y4, :y5, :y6, :y7, :y8]
 latent_vars = [:ind60, :dem60, :dem65]
@@ -65,7 +70,7 @@ partable = ParameterTable(
     observed_vars = observed_vars
 )
 
-parameter_indices  = param_indices([:a, :b, :c], partable)
+parameter_indices = getindex.([param_indices(partable)], [:a, :b, :c])
 myridge = Ridge(0.01, parameter_indices)
 
 model = SemFiniteDiff(
@@ -86,14 +91,22 @@ Note that the last argument to the `objective!` method is the whole model. There
 By far the biggest improvements in performance will result from specifying analytical gradients. We can do this for our example:
 
 ```@example loss
-import StructuralEquationModels: gradient!
-
-function gradient!(ridge::Ridge, par, model::AbstractSemSingle)
-    gradient = zero(par)
-    gradient[ridge.I] .= 2*ridge.α*par[ridge.I]
-    return gradient
+function evaluate!(objective, gradient, hessian::Nothing, ridge::Ridge, model::AbstractSem, par)
+    # compute gradient
+    if !isnothing(gradient)
+        fill!(gradient, 0)
+        gradient[ridge.I] .= 2 * ridge.α * par[ridge.I]
+    end
+    # compute objective
+    if !isnothing(objective) 
+        return ridge.α * sum(i -> par[i]^2, ridge.I)
+    end
 end
 ```
+
+As you can see, in this method definition, both `objective` and `gradient` can be different from `nothing`.
+We then check whether to compute the objective value and/or the gradient with `isnothing(objective)`/`isnothing(gradient)`.
+This syntax makes it possible to compute objective value and gradient at the same time, which is beneficial when the the objective and gradient share common computations.
 
 Now, instead of specifying a `SemFiniteDiff`, we can use the normal `Sem` constructor:
 
@@ -119,46 +132,7 @@ using BenchmarkTools
 
 The exact results of those benchmarks are of course highly depended an your system (processor, RAM, etc.), but you should see that the median computation time with analytical gradients drops to about 5% of the computation without analytical gradients.
 
-Additionally, you may provide analytic hessians by writing a method of the form
-
-```julia
-function hessian!(ridge::Ridge, par, model::AbstractSemSingle)
-    ...
-    return hessian
-end
-```
-
-however, this will only matter if you use an optimization algorithm that makes use of the hessians. Our default algorithmn `LBFGS` from the package `Optim.jl` does not use hessians (for example, the `Newton` algorithmn from the same package does).
-
-To improve performance even more, you can write a method of the form
-
-```julia
-function objective_gradient!(ridge::Ridge, par, model::AbstractSemSingle)
-    ...
-    return objective, gradient
-end
-```
-
-This is beneficial when the computation of the objective and gradient share common computations. For example, in maximum likelihood estimation, the model implied covariance matrix has to be inverted to both compute the objective and gradient. Whenever the optimization algorithmn asks for the objective value and gradient at the same point, we call `objective_gradient!` and only have to do the shared computations - in this case the matrix inversion - once.
-
-If you want to do hessian-based optimization, there are also the following methods:
-
-```julia
-function objective_hessian!(ridge::Ridge, par, model::AbstractSemSingle)
-    ...
-    return objective, hessian
-end
-
-function gradient_hessian!(ridge::Ridge, par, model::AbstractSemSingle)
-    ...
-    return gradient, hessian
-end
-
-function objective_gradient_hessian!(ridge::Ridge, par, model::AbstractSemSingle)
-    ...
-    return objective, gradient, hessian
-end
-```
+Additionally, you may provide analytic hessians by writing a respective method for `evaluate!`. However, this will only matter if you use an optimization algorithm that makes use of the hessians. Our default algorithmn `LBFGS` from the package `Optim.jl` does not use hessians (for example, the `Newton` algorithmn from the same package does).
 
 ## Convenient
 
@@ -241,11 +215,11 @@ With this information, we write can implement maximum likelihood optimization as
 struct MaximumLikelihood <: SemLossFunction end
 
 using LinearAlgebra
-import StructuralEquationModels: Σ, obs_cov, objective!
+import StructuralEquationModels: obs_cov, evaluate!
 
-function objective!(semml::MaximumLikelihood, parameters, model::AbstractSem)
+function evaluate!(objective::Number, gradient::Nothing, hessian::Nothing, semml::MaximumLikelihood, model::AbstractSem, par)
     # access the model implied and observed covariance matrices
-    Σᵢ = Σ(implied(model))
+    Σᵢ = implied(model).Σ
     Σₒ = obs_cov(observed(model))
     # compute the objective
     if isposdef(Symmetric(Σᵢ)) # is the model implied covariance matrix positive definite?

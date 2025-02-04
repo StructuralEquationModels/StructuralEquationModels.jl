@@ -1,6 +1,6 @@
 # Extending the package
 
-As discussed in the section on [Model Construction](@ref), every Structural Equation Model (`Sem`) consists of four parts:
+As discussed in the section on [Model Construction](@ref), every Structural Equation Model (`Sem`) consists of three (four with the optimizer) parts:
 
 ![SEM concept typed](../assets/concept_typed.svg)
 

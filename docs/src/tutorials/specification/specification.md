@@ -10,8 +10,8 @@ This leads to the following chart:
 You can enter model specification at each point, but in general (and especially if you come from `lavaan`), it is the easiest to follow the red arrows: specify a graph object, convert it to a prameter table, and use this parameter table to construct your models ( just like we did in [A first model](@ref)):
 
 ```julia
-observed_vars = ...
-latent_vars   = ...
+obs_vars = ...
+lat_vars   = ...
 
 graph = @StenoGraph begin
     ...
@@ -19,8 +19,8 @@ end
 
 partable = ParameterTable(
     graph,
-    latent_vars = latent_vars, 
-    observed_vars = observed_vars)
+    latent_vars = lat_vars, 
+    observed_vars = obs_vars)
 
 model = Sem(
     specification = partable,

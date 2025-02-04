@@ -11,7 +11,7 @@ model_g2 = Sem(specification = specification_g2, data = dat_g2, implied = RAM)
 @test SEM.params(model_g1.implied.ram_matrices) == SEM.params(model_g2.implied.ram_matrices)
 
 # test the different constructors
-model_ml_multigroup = SemEnsemble(model_g1, model_g2; optimizer = semoptimizer)
+model_ml_multigroup = SemEnsemble(model_g1, model_g2)
 model_ml_multigroup2 = SemEnsemble(
     specification = partable,
     data = dat,
@@ -28,7 +28,7 @@ end
 
 # fit
 @testset "ml_solution_multigroup" begin
-    solution = sem_fit(model_ml_multigroup)
+    solution = sem_fit(semoptimizer, model_ml_multigroup)
     update_estimate!(partable, solution)
     test_estimates(
         partable,
@@ -36,7 +36,7 @@ end
         atol = 1e-4,
         lav_groups = Dict(:Pasteur => 1, :Grant_White => 2),
     )
-    solution = sem_fit(model_ml_multigroup2)
+    solution = sem_fit(semoptimizer, model_ml_multigroup2)
     update_estimate!(partable, solution)
     test_estimates(
         partable,
@@ -268,7 +268,6 @@ if !isnothing(specification_miss_g1)
         loss = SemFIML,
         data = dat_miss_g1,
         implied = RAM,
-        optimizer = SemOptimizerEmpty(),
         meanstructure = true,
     )
 
@@ -278,11 +277,10 @@ if !isnothing(specification_miss_g1)
         loss = SemFIML,
         data = dat_miss_g2,
         implied = RAM,
-        optimizer = SemOptimizerEmpty(),
         meanstructure = true,
     )
 
-    model_ml_multigroup = SemEnsemble(model_g1, model_g2; optimizer = semoptimizer)
+    model_ml_multigroup = SemEnsemble(model_g1, model_g2)
     model_ml_multigroup2 = SemEnsemble(
         specification = partable_miss,
         data = dat_missing,
@@ -323,7 +321,7 @@ if !isnothing(specification_miss_g1)
     end
 
     @testset "fiml_solution_multigroup" begin
-        solution = sem_fit(model_ml_multigroup)
+        solution = sem_fit(semoptimizer, model_ml_multigroup)
         update_estimate!(partable_miss, solution)
         test_estimates(
             partable_miss,
@@ -331,7 +329,7 @@ if !isnothing(specification_miss_g1)
             atol = 1e-4,
             lav_groups = Dict(:Pasteur => 1, :Grant_White => 2),
         )
-        solution = sem_fit(model_ml_multigroup2)
+        solution = sem_fit(semoptimizer, model_ml_multigroup2)
         update_estimate!(partable_miss, solution)
         test_estimates(
             partable_miss,
@@ -342,7 +340,7 @@ if !isnothing(specification_miss_g1)
     end
 
     @testset "fitmeasures/se_fiml" begin
-        solution = sem_fit(model_ml_multigroup)
+        solution = sem_fit(semoptimizer, model_ml_multigroup)
         test_fitmeasures(
             fit_measures(solution),
             solution_lav[:fitmeasures_fiml];
@@ -359,7 +357,7 @@ if !isnothing(specification_miss_g1)
             lav_groups = Dict(:Pasteur => 1, :Grant_White => 2),
         )
 
-        solution = sem_fit(model_ml_multigroup2)
+        solution = sem_fit(semoptimizer, model_ml_multigroup2)
         test_fitmeasures(
             fit_measures(solution),
             solution_lav[:fitmeasures_fiml];

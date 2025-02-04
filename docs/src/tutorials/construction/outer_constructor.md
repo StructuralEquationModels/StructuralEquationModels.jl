@@ -21,7 +21,7 @@ Structural Equation Model
 
 The output of this call tells you exactly what model you just constructed (i.e. what the loss functions, observed, implied and optimizer parts are).
 
-As you can see, by default, we use maximum likelihood estimation, the RAM implied type and the `Optim.jl` optimization backend.
+As you can see, by default, we use maximum likelihood estimation abd the RAM implied type.
 To choose something different, you can provide it as a keyword argument:
 
 ```julia
@@ -31,11 +31,10 @@ model = Sem(
     observed = ...,
     implied = ...,
     loss = ...,
-    optimizer = ...
 )
 ```
 
-For example, to construct a model for weighted least squares estimation that uses symbolic precomputation and the NLopt backend, write
+For example, to construct a model for weighted least squares estimation that uses symbolic precomputation, write
 
 ```julia
 model = Sem(
@@ -43,7 +42,7 @@ model = Sem(
     data = data,
     implied = RAMSymbolic,
     loss = SemWLS,
-    optimizer = SemOptimizerNLopt
+    optimizer = SemOptimizerOptim
 )
 ```
 
@@ -92,25 +91,29 @@ help>SemObservedMissing
   For observed data with missing values.
 
   Constructor
-  ≡≡≡≡≡≡≡≡≡≡≡≡≡
+  ≡≡≡≡≡≡≡≡≡≡≡
 
   SemObservedMissing(;
-      specification,
       data,
-      obs_colnames = nothing,
+      observed_vars = nothing,
+      specification = nothing,
       kwargs...)
 
   Arguments
-  ≡≡≡≡≡≡≡≡≡≡≡
+  ≡≡≡≡≡≡≡≡≡
 
-    •  specification: either a RAMMatrices or ParameterTable object (1)
+    •  specification: optional SEM model specification
+       (SemSpecification)
 
     •  data: observed data
 
-    •  obs_colnames::Vector{Symbol}: column names of the data (if the object passed as data does not have column names, i.e. is not a data frame)
+    •  observed_vars::Vector{Symbol}: column names of the data (if
+       the object passed as data does not have column names, i.e. is
+       not a data frame)
 
-  ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-Extended help is available with `??`
+  ────────────────────────────────────────────────────────────────────────
+
+Extended help is available with `??SemObservedMissing`
 ```
 
 ## Optimize loss functions without analytic gradient
@@ -118,7 +121,6 @@ Extended help is available with `??`
 For loss functions without analytic gradients, it is possible to use finite difference approximation or automatic differentiation.
 All loss functions provided in the package do have analytic gradients (and some even hessians or approximations thereof), so there is no need do use this feature if you are only working with them.
 However, if you implement your own loss function, you do not have to provide analytic gradients.
-This page is a about finite difference approximation. For information about how to use automatic differentiation, see the documentation of the [AutoDiffSEM](https://github.com/StructuralEquationModels/AutoDiffSEM) package.
 
 To use finite difference approximation, you may construct your model just as before, but swap the `Sem` constructor for `SemFiniteDiff`. For example
 

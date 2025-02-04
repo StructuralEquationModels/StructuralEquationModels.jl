@@ -10,78 +10,89 @@ struct MyImplied <: SemImplied
 end
 ```
 
-and at least a method to compute the objective
+and a method to update!:
 
 ```julia
 import StructuralEquationModels: objective!
 
-function objective!(implied::MyImplied, par, model::AbstractSemSingle)
-    ...
-    return nothing
+function update!(targets::EvaluationTargets, implied::MyImplied, model::AbstractSemSingle, params)
+
+    if is_objective_required(targets)
+        ...
+    end
+
+    if is_gradient_required(targets)
+        ...
+    end
+    if is_hessian_required(targets)
+        ...
+    end
+
 end
 ```
 
-This method should compute and store things you want to make available to the loss functions, and returns `nothing`. For example, as we have seen in [Second example - maximum likelihood](@ref), the `RAM` implied type computes the model-implied covariance matrix and makes it available via `Σ(implied)`.
-To make stored computations available to loss functions, simply write a function - for example, for the `RAM` implied type we defined
+As you can see, `update` gets passed as a first argument `targets`, which is telling us whether the objective value, gradient, and/or hessian are needed.
+We can then use the functions `is_..._required` and conditional on what the optimizer needs, we can compute and store things we want to make available to the loss functions. For example, as we have seen in [Second example - maximum likelihood](@ref), the `RAM` implied type computes the model-implied covariance matrix and makes it available via `implied.Σ`.
 
-```julia
-Σ(implied::RAM) = implied.Σ
-```
 
-Additionally, you can specify methods for `gradient` and `hessian` as well as the combinations described in [Custom loss functions](@ref).
-
-The last thing nedded to make it work is a method for `nparams` that takes your implied type and returns the number of parameters of the model:
-
-```julia
-nparams(implied::MyImplied) = ...
-```
 
 Just as described in [Custom loss functions](@ref), you may define a constructor. Typically, this will depend on the `specification = ...` argument that can be a `ParameterTable` or a `RAMMatrices` object.
 
 We implement an `ImpliedEmpty` type in our package that does nothing but serving as an `implied` field in case you are using a loss function that does not need any implied type at all. You may use it as a template for defining your own implied type, as it also shows how to handle the specification objects:
 
 ```julia
-############################################################################
+############################################################################################
 ### Types
-############################################################################
+############################################################################################
+"""
+Empty placeholder for models that don't need an implied part.
+(For example, models that only regularize parameters.)
 
-struct ImpliedEmpty{V, V2} <: SemImplied
-    identifier::V2
-    n_par::V
+# Constructor
+
+    ImpliedEmpty(;specification, kwargs...)
+
+# Arguments
+- `specification`: either a `RAMMatrices` or `ParameterTable` object
+
+# Examples
+A multigroup model with ridge regularization could be specified as a `SemEnsemble` with one
+model per group and an additional model with `ImpliedEmpty` and `SemRidge` for the regularization part.
+
+# Extended help
+
+## Interfaces
+- `params(::RAMSymbolic) `-> Vector of parameter labels
+- `nparams(::RAMSymbolic)` -> Number of parameters
+
+## Implementation
+Subtype of `SemImplied`.
+"""
+struct ImpliedEmpty{A, B, C} <: SemImplied
+    hessianeval::A
+    meanstruct::B
+    ram_matrices::C
 end
 
-############################################################################
+############################################################################################
 ### Constructors
-############################################################################
+############################################################################################
 
-function ImpliedEmpty(;
-        specification,
-        kwargs...)
-
-        ram_matrices = RAMMatrices(specification)
-        identifier = StructuralEquationModels.identifier(ram_matrices)
-
-        n_par = length(ram_matrices.parameters)
-
-        return ImpliedEmpty(identifier, n_par)
+function ImpliedEmpty(;specification, meanstruct = NoMeanStruct(), hessianeval = ExactHessian(), kwargs...)
+    return ImpliedEmpty(hessianeval, meanstruct, convert(RAMMatrices, specification))
 end
 
-############################################################################
+############################################################################################
 ### methods
-############################################################################
+############################################################################################
 
-objective!(implied::ImpliedEmpty, par, model) = nothing
-gradient!(implied::ImpliedEmpty, par, model) = nothing
-hessian!(implied::ImpliedEmpty, par, model) = nothing
+update!(targets::EvaluationTargets, implied::ImpliedEmpty, par, model) = nothing
 
-############################################################################
+############################################################################################
 ### Recommended methods
-############################################################################
-
-identifier(implied::ImpliedEmpty) = implied.identifier
-n_par(implied::ImpliedEmpty) = implied.n_par
+############################################################################################
 
 update_observed(implied::ImpliedEmpty, observed::SemObserved; kwargs...) = implied
 ```
 
-As you see, similar to [Custom loss functions](@ref) we implement a method for `update_observed`. Additionally, you should store the `identifier` from the specification object and write a method for `identifier`, as this will make it possible to access parameter indices by label.
+As you see, similar to [Custom loss functions](@ref) we implement a method for `update_observed`.
