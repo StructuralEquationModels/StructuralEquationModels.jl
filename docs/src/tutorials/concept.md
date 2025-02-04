@@ -1,12 +1,13 @@
 # Our Concept of a Structural Equation Model
 
-In our package, every Structural Equation Model (`Sem`) consists of four parts:
+In our package, every Structural Equation Model (`Sem`) consists of three parts (four, if you count the optimizer):
 
 ![SEM concept](../assets/concept.svg)
 
 Those parts are interchangable building blocks (like 'Legos'), i.e. there are different pieces available you can choose as the `observed` slot of the model, and stick them together with other pieces that can serve as the `implied` part.
 
-The `observed` part is for observed data, the `implied` part is what the model implies about your data (e.g. the model implied covariance matrix), the loss part compares the observed data and implied properties (e.g. weighted least squares difference between the observed and implied covariance matrix) and the optimizer part connects to the optimization backend (e.g. the type of optimization algorithm used).
+The `observed` part is for observed data, the `implied` part is what the model implies about your data (e.g. the model implied covariance matrix), and the loss part compares the observed data and implied properties (e.g. weighted least squares difference between the observed and implied covariance matrix).
+The optimizer part is not part of the model itself, but it is needed to fit the model as it connects to the optimization backend (e.g. the type of optimization algorithm used).
 
 For example, to build a model for maximum likelihood estimation with the NLopt optimization suite as a backend you would choose `SemML` as a loss function and `SemOptimizerNLopt` as the optimizer.
 
@@ -51,12 +52,12 @@ Available loss functions are
 ## The optimizer part aka `SemOptimizer`
 The optimizer part of a model connects to the numerical optimization backend used to fit the model. 
 It can be used to control options like the optimization algorithm, linesearch, stopping criteria, etc. 
-There are currently two available backends, [`SemOptimizerOptim`](@ref) connecting to the [Optim.jl](https://github.com/JuliaNLSolvers/Optim.jl) backend, and [`SemOptimizerNLopt`](@ref) connecting to the [NLopt.jl](https://github.com/JuliaOpt/NLopt.jl) backend.
-For more information about the available options see also the tutorials about [Using Optim.jl](@ref) and [Using NLopt.jl](@ref), as well as [Constrained optimization](@ref).
+There are currently three available backends, [`SemOptimizerOptim`](@ref) connecting to the [Optim.jl](https://github.com/JuliaNLSolvers/Optim.jl) backend, [`SemOptimizerNLopt`](@ref) connecting to the [NLopt.jl](https://github.com/JuliaOpt/NLopt.jl) backend and [`SemOptimizerProximal`](@ref) connecting to [ProximalAlgorithms.jl](https://github.com/JuliaFirstOrder/ProximalAlgorithms.jl).
+For more information about the available options see also the tutorials about [Using Optim.jl](@ref) and [Using NLopt.jl](@ref), as well as [Constrained optimization](@ref) and [Regularization](@ref) .
 
 # What to do next
 
-You now have an understanding about our representation of structural equation models.
+You now have an understanding of our representation of structural equation models.
 
 To learn more about how to use the package, you may visit the remaining tutorials.
 
@@ -100,4 +101,5 @@ SemConstant
 SemOptimizer
 SemOptimizerOptim
 SemOptimizerNLopt
+SemOptimizerProximal
 ```

@@ -1,6 +1,7 @@
 # Using NLopt.jl
 
 [`SemOptimizerNLopt`](@ref) implements the connection to `NLopt.jl`.
+It is only available if the `NLopt` package is loaded alongside `StructuralEquationModel.jl` in the running Julia session.
 It takes a bunch of arguments:
 
 ```julia
@@ -22,6 +23,8 @@ The defaults are LBFGS as the optimization algorithm and the standard options fr
 We can choose something different:
 
 ```julia
+using NLopt
+
 my_optimizer = SemOptimizerNLopt(;
     algorithm = :AUGLAG,
     options = Dict(:maxeval => 200),
