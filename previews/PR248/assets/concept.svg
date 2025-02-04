@@ -6,6 +6,7 @@
    stroke="none"
    stroke-linecap="square"
    stroke-miterlimit="10"
+<<<<<<< Updated upstream
    id="svg23"
    sodipodi:docname="Unbenannte Präsentation (2).svg"
    width="921600"
@@ -34,6 +35,22 @@
        margin="0"
        bleed="0" />
   </sodipodi:namedview>
+=======
+   id="svg57"
+   width="610.56537"
+   height="300.26614"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs61" />
+  <clipPath
+     id="g130a49aab5f_0_0.0">
+    <path
+       d="M 0,0 H 960 V 540 H 0 Z"
+       clip-rule="nonzero"
+       id="path2" />
+  </clipPath>
+>>>>>>> Stashed changes
   <path
      fill="#000000"
      fill-opacity="0"
