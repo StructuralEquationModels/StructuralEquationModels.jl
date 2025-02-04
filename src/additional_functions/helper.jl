@@ -14,12 +14,6 @@ function neumann_series(mat::SparseMatrixCSC; maxiter::Integer = size(mat, 1))
     return inverse
 end
 
-function batch_inv!(fun, model)
-    for i in 1:size(fun.inverses, 1)
-        fun.inverses[i] .= LinearAlgebra.inv!(fun.choleskys[i])
-    end
-end
-
 # computes A*S*B -> C, where ind gives the entries of S that are 1
 function sparse_outer_mul!(C, A, B, ind)
     fill!(C, 0.0)
