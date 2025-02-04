@@ -82,6 +82,10 @@ include("frontend/fit/fitmeasures/fit_measures.jl")
 # standard errors
 include("frontend/fit/standard_errors/hessian.jl")
 include("frontend/fit/standard_errors/bootstrap.jl")
+# extensions
+include("package_extensions/SEMNLOptExt.jl")
+include("package_extensions/SEMProximalOptExt.jl")
+
 
 export AbstractSem,
     AbstractSemSingle,
@@ -183,5 +187,7 @@ export AbstractSem,
     →,
     ←,
     ↔,
-    ⇔
+    ⇔,
+    SemOptimizerNLopt,
+    SemOptimizerProximal
 end
