@@ -2,8 +2,7 @@ module SEMProximalOptExt
 
 using StructuralEquationModels
 using ProximalAlgorithms
-
-export SemOptimizerProximal
+using StructuralEquationModels: SemOptimizerProximal
 
 SEM = StructuralEquationModels
 
