@@ -1,7 +1,7 @@
 name = "StructuralEquationModels"
 uuid = "383ca8c5-e4ff-4104-b0a9-f7b279deed53"
 authors = ["Maximilian Ernst", "Aaron Peikert"]
-version = "0.2.4"
+version = "0.3.0"
 
 [deps]
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
@@ -24,7 +24,7 @@ Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7"
 SymbolicUtils = "d1185830-fcd6-423d-90d6-eec64667417b"
 
 [compat]
-julia = "1.9, 1.10"
+julia = "1.9, 1.10, 1.11"
 StenoGraphs = "0.2 - 0.3, 0.4.1 - 0.5"
 DataFrames = "1"
 Distributions = "0.25"
