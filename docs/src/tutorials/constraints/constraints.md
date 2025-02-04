@@ -52,7 +52,7 @@ model_fit = sem_fit(model)
 
 update_estimate!(partable, model_fit)
 
-sem_summary(partable)
+details(partable)
 ```
 
 ### Define the constraints
@@ -122,6 +122,8 @@ In NLopt, vector-valued constraints are also possible, but we refer to the docum
 We now have everything together to specify and fit our model. First, we specify our optimizer backend as
 
 ```@example constraints
+using NLopt
+
 constrained_optimizer = SemOptimizerNLopt(
     algorithm = :AUGLAG,
     options = Dict(:upper_bounds => upper_bounds, :xtol_abs => 1e-4),
@@ -148,11 +150,10 @@ In this example, we set both tolerances to `1e-8`.
 ```@example constraints
 model_constrained = Sem(
     specification = partable,
-    data = data,
-    optimizer = constrained_optimizer
+    data = data
 )
 
-model_fit_constrained = sem_fit(model_constrained)
+model_fit_constrained = sem_fit(constrained_optimizer, model_constrained)
 ```
 
 As you can see, the optimizer converged (`:XTOL_REACHED`) and investigating the solution yields
@@ -165,7 +166,7 @@ update_partable!(
     solution(model_fit_constrained), 
     )
 
-sem_summary(partable)
+details(partable)
 ```
 
 As we can see, the constrained solution is very close to the original solution (compare the columns estimate and estimate_constr), with the difference that the constrained parameters fulfill their constraints. 

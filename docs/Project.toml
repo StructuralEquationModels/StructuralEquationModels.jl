@@ -1,4 +1,6 @@
 [deps]
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+NLopt = "76087f3c-5699-56af-9a33-bf431cd00edd"
+ProximalAlgorithms = "140ffc9f-1907-541a-a177-7475e0a401e9"
 ProximalOperators = "a725b495-10eb-56fe-b38b-717eba820537"

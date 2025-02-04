@@ -11,7 +11,7 @@ It is still *in development*.
 Models you can fit include
 - Linear SEM that can be specified in RAM (or LISREL) notation
 - ML, GLS and FIML estimation
-- Regularization
+- Regularized SEM (Ridge, Lasso, L0, ...)
 - Multigroup SEM
 - Sums of arbitrary loss functions (everything the optimizer can handle).
 
@@ -35,6 +35,7 @@ The package makes use of
 - Symbolics.jl for symbolically precomputing parts of the objective and gradients to generate fast, specialized functions.
 - SparseArrays.jl to speed up symbolic computations.
 - Optim.jl and NLopt.jl to provide a range of different Optimizers/Linesearches.
+- ProximalAlgorithms.jl for regularization.
 - FiniteDiff.jl and ForwardDiff.jl to provide gradients for user-defined loss functions.
 
 # At the moment, we are still working on:

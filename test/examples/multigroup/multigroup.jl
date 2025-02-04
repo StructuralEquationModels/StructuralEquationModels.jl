@@ -1,4 +1,4 @@
-using StructuralEquationModels, Test, FiniteDiff
+using StructuralEquationModels, Test, FiniteDiff, Suppressor
 using LinearAlgebra: diagind, LowerTriangular
 
 const SEM = StructuralEquationModels
@@ -60,7 +60,7 @@ specification_g1 = RAMMatrices(;
     S = S1,
     F = F,
     params = x,
-    colnames = [:x1, :x2, :x3, :x4, :x5, :x6, :x7, :x8, :x9, :visual, :textual, :speed],
+    vars = [:x1, :x2, :x3, :x4, :x5, :x6, :x7, :x8, :x9, :visual, :textual, :speed],
 )
 
 specification_g2 = RAMMatrices(;
@@ -68,13 +68,11 @@ specification_g2 = RAMMatrices(;
     S = S2,
     F = F,
     params = x,
-    colnames = [:x1, :x2, :x3, :x4, :x5, :x6, :x7, :x8, :x9, :visual, :textual, :speed],
+    vars = [:x1, :x2, :x3, :x4, :x5, :x6, :x7, :x8, :x9, :visual, :textual, :speed],
 )
 
-partable = EnsembleParameterTable(
-    :Pasteur => specification_g1,
-    :Grant_White => specification_g2
-)
+partable =
+    EnsembleParameterTable(:Pasteur => specification_g1, :Grant_White => specification_g2)
 
 specification_miss_g1 = nothing
 specification_miss_g2 = nothing
@@ -88,7 +86,7 @@ start_test = [
     fill(0.05, 3)
     fill(0.01, 3)
 ]
-semoptimizer = SemOptimizerOptim
+semoptimizer = SemOptimizerOptim()
 
 @testset "RAMMatrices | constructor | Optim" begin
     include("build_models.jl")
@@ -139,7 +137,7 @@ graph = @StenoGraph begin
     _(observed_vars) ↔ _(observed_vars)
     _(latent_vars) ⇔ _(latent_vars)
 
-    Symbol("1") → _(observed_vars)
+    Symbol(1) → _(observed_vars)
 end
 
 partable_miss = EnsembleParameterTable(
@@ -171,7 +169,7 @@ start_test = [
     0.01
     0.05
 ]
-semoptimizer = SemOptimizerOptim
+semoptimizer = SemOptimizerOptim()
 
 @testset "Graph → Partable → RAMMatrices | constructor | Optim" begin
     include("build_models.jl")

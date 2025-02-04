@@ -21,14 +21,14 @@ function make_onelement_array(A)
 end
  =#
 
-function semvec(observed, imply, loss, optimizer)
+function semvec(observed, implied, loss, optimizer)
     observed = make_onelement_array(observed)
-    imply = make_onelement_array(imply)
+    implied = make_onelement_array(implied)
     loss = make_onelement_array(loss)
     optimizer = make_onelement_array(optimizer)
 
-    #sem_vec = Array{AbstractSem}(undef, maximum(length.([observed, imply, loss, optimizer])))
-    sem_vec = Sem.(observed, imply, loss, optimizer)
+    #sem_vec = Array{AbstractSem}(undef, maximum(length.([observed, implied, loss, optimizer])))
+    sem_vec = Sem.(observed, implied, loss, optimizer)
 
     return sem_vec
 end
@@ -96,11 +96,6 @@ function sparse_outer_mul!(C, A, B::Vector, ind) #computes A*S*B -> C, where ind
     @views @inbounds for i in 1:length(ind)
         C .+= B[ind[i][2]] .* A[:, ind[i][1]]
     end
-end
-
-function cov_and_mean(rows; corrected = false)
-    obs_mean, obs_cov = StatsBase.mean_and_cov(reduce(hcat, rows), 2, corrected = corrected)
-    return obs_cov, vec(obs_mean)
 end
 
 # n²×(n(n+1)/2) matrix to transform a vector of lower

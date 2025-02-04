@@ -1,6 +1,12 @@
 using LinearAlgebra: norm
 
+function is_extended_tests()
+    return lowercase(get(ENV, "JULIA_EXTENDED_TESTS", "false")) == "true"
+end
+
 function test_gradient(model, params; rtol = 1e-10, atol = 0)
+    @test nparams(model) == length(params)
+
     true_grad = FiniteDiff.finite_difference_gradient(Base.Fix1(objective!, model), params)
     gradient = similar(params)
 

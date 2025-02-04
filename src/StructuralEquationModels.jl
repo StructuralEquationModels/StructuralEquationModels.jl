@@ -7,7 +7,6 @@ using LinearAlgebra,
     StatsBase,
     SparseArrays,
     Symbolics,
-    NLopt,
     FiniteDiff,
     PrettyTables,
     Distributions,
@@ -26,6 +25,7 @@ include("objective_gradient_hessian.jl")
 
 # helper objects and functions
 include("additional_functions/commutation_matrix.jl")
+include("additional_functions/params_array.jl")
 
 # fitted objects
 include("frontend/fit/SemFit.jl")
@@ -41,18 +41,19 @@ include("frontend/fit/summary.jl")
 include("frontend/pretty_printing.jl")
 # observed
 include("observed/abstract.jl")
-include("observed/covariance.jl")
 include("observed/data.jl")
+include("observed/covariance.jl")
+include("observed/missing_pattern.jl")
 include("observed/missing.jl")
 include("observed/EM.jl")
 # constructor
 include("frontend/specification/Sem.jl")
 include("frontend/specification/documentation.jl")
-# imply
-include("imply/abstract.jl")
-include("imply/RAM/symbolic.jl")
-include("imply/RAM/generic.jl")
-include("imply/empty.jl")
+# implied
+include("implied/abstract.jl")
+include("implied/RAM/symbolic.jl")
+include("implied/RAM/generic.jl")
+include("implied/empty.jl")
 # loss
 include("loss/ML/ML.jl")
 include("loss/ML/FIML.jl")
@@ -60,19 +61,12 @@ include("loss/regularization/ridge.jl")
 include("loss/WLS/WLS.jl")
 include("loss/constant/constant.jl")
 # optimizer
-include("diff/optim.jl")
-include("diff/NLopt.jl")
-include("diff/Empty.jl")
-# optimizer
-include("optimizer/documentation.jl")
+include("optimizer/abstract.jl")
+include("optimizer/Empty.jl")
 include("optimizer/optim.jl")
-include("optimizer/NLopt.jl")
 # helper functions
 include("additional_functions/helper.jl")
-include("additional_functions/parameters.jl")
-include("additional_functions/start_val/start_val.jl")
 include("additional_functions/start_val/start_fabin3.jl")
-include("additional_functions/start_val/start_partable.jl")
 include("additional_functions/start_val/start_simple.jl")
 include("additional_functions/artifacts.jl")
 include("additional_functions/simulation.jl")
@@ -88,6 +82,10 @@ include("frontend/fit/fitmeasures/fit_measures.jl")
 # standard errors
 include("frontend/fit/standard_errors/hessian.jl")
 include("frontend/fit/standard_errors/bootstrap.jl")
+# extensions
+include("package_extensions/SEMNLOptExt.jl")
+include("package_extensions/SEMProximalOptExt.jl")
+
 
 export AbstractSem,
     AbstractSemSingle,
@@ -101,15 +99,14 @@ export AbstractSem,
     HessianEval,
     ExactHessian,
     ApproxHessian,
-    SemImply,
+    SemImplied,
     RAMSymbolic,
     RAM,
-    ImplyEmpty,
-    imply,
+    ImpliedEmpty,
+    implied,
     start_val,
     start_fabin3,
     start_simple,
-    start_parameter_table,
     SemLoss,
     SemLossFunction,
     SemML,
@@ -122,8 +119,6 @@ export AbstractSem,
     SemOptimizer,
     SemOptimizerEmpty,
     SemOptimizerOptim,
-    SemOptimizerNLopt,
-    NLoptConstraint,
     optimizer,
     n_iterations,
     convergence,
@@ -140,7 +135,7 @@ export AbstractSem,
     SemFit,
     minimum,
     solution,
-    sem_summary,
+    details,
     objective!,
     gradient!,
     hessian!,
@@ -186,11 +181,14 @@ export AbstractSem,
     se_hessian,
     se_bootstrap,
     example_data,
-    swap_observed,
+    replace_observed,
     update_observed,
     @StenoGraph,
     →,
     ←,
     ↔,
-    ⇔
+    ⇔,
+    SemOptimizerNLopt,
+    NLoptConstraint,
+    SemOptimizerProximal
 end

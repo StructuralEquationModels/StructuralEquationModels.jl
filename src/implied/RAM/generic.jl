@@ -20,7 +20,7 @@ Model implied covariance and means via RAM notation.
 # Extended help
 
 ## Implementation
-Subtype of `SemImply`.
+Subtype of `SemImplied`.
 
 ## RAM notation
 
@@ -65,26 +65,7 @@ Additional interfaces
 Only available in gradient! calls:
 - `I_A⁻¹(::RAM)` -> ``(I-A)^{-1}``
 """
-mutable struct RAM{
-    MS,
-    A1,
-    A2,
-    A3,
-    A4,
-    A5,
-    A6,
-    V2,
-    I1,
-    I2,
-    I3,
-    M1,
-    M2,
-    M3,
-    M4,
-    S1,
-    S2,
-    S3,
-} <: SemImply
+mutable struct RAM{MS, A1, A2, A3, A4, A5, A6, V2, M1, M2, M3, M4, S1, S2, S3} <: SemImplied
     meanstruct::MS
     hessianeval::ExactHessian
 
@@ -96,10 +77,6 @@ mutable struct RAM{
     M::A6
 
     ram_matrices::V2
-
-    A_indices::I1
-    S_indices::I2
-    M_indices::I3
 
     F⨉I_A⁻¹::M1
     F⨉I_A⁻¹S::M2
@@ -131,22 +108,12 @@ function RAM(;
     n_par = nparams(ram_matrices)
     n_obs = nobserved_vars(ram_matrices)
     n_var = nvars(ram_matrices)
-    F = zeros(ram_matrices.size_F)
-    F[CartesianIndex.(1:n_obs, ram_matrices.F_ind)] .= 1.0
-
-    # get indices
-    A_indices = copy(ram_matrices.A_ind)
-    S_indices = copy(ram_matrices.S_ind)
-    M_indices = !isnothing(ram_matrices.M_ind) ? copy(ram_matrices.M_ind) : nothing
 
     #preallocate arrays
-    A_pre = zeros(n_var, n_var)
-    S_pre = zeros(n_var, n_var)
-    M_pre = !isnothing(M_indices) ? zeros(n_var) : nothing
-
-    set_RAMConstants!(A_pre, S_pre, M_pre, ram_matrices.constants)
-
-    A_pre = check_acyclic(A_pre, n_par, A_indices)
+    rand_params = randn(Float64, n_par)
+    A_pre = check_acyclic(materialize(ram_matrices.A, rand_params))
+    S_pre = materialize(ram_matrices.S, rand_params)
+    F = copy(ram_matrices.F)
 
     # pre-allocate some matrices
     Σ = zeros(n_obs, n_obs)
@@ -155,8 +122,8 @@ function RAM(;
     I_A = similar(A_pre)
 
     if gradient_required
-        ∇A = matrix_gradient(A_indices, n_var^2)
-        ∇S = matrix_gradient(S_indices, n_var^2)
+        ∇A = sparse_gradient(ram_matrices.A)
+        ∇S = sparse_gradient(ram_matrices.S)
     else
         ∇A = nothing
         ∇S = nothing
@@ -165,16 +132,16 @@ function RAM(;
     # μ
     if meanstructure
         MS = HasMeanStruct
-        !isnothing(M_indices) || throw(
+        !isnothing(ram_matrices.M) || throw(
             ArgumentError(
                 "You set `meanstructure = true`, but your model specification contains no mean parameters.",
             ),
         )
-        ∇M = gradient_required ? matrix_gradient(M_indices, n_var) : nothing
+        M_pre = materialize(ram_matrices.M, rand_params)
+        ∇M = gradient_required ? sparse_gradient(ram_matrices.M) : nothing
         μ = zeros(n_obs)
     else
         MS = NoMeanStruct
-        M_indices = nothing
         M_pre = nothing
         μ = nothing
         ∇M = nothing
@@ -188,9 +155,6 @@ function RAM(;
         μ,
         M_pre,
         ram_matrices,
-        A_indices,
-        S_indices,
-        M_indices,
         F⨉I_A⁻¹,
         F⨉I_A⁻¹S,
         I_A,
@@ -205,33 +169,29 @@ end
 ### methods
 ############################################################################################
 
-function update!(targets::EvaluationTargets, imply::RAM, model::AbstractSemSingle, params)
-    fill_A_S_M!(
-        imply.A,
-        imply.S,
-        imply.M,
-        imply.A_indices,
-        imply.S_indices,
-        imply.M_indices,
-        params,
-    )
-
-    @. imply.I_A = -imply.A
-    @view(imply.I_A[diagind(imply.I_A)]) .+= 1
-
-    if is_gradient_required(targets) || is_hessian_required(targets)
-        imply.I_A⁻¹ = LinearAlgebra.inv!(factorize(imply.I_A))
-        mul!(imply.F⨉I_A⁻¹, imply.F, imply.I_A⁻¹)
-    else
-        copyto!(imply.F⨉I_A⁻¹, imply.F)
-        rdiv!(imply.F⨉I_A⁻¹, factorize(imply.I_A))
+function update!(targets::EvaluationTargets, implied::RAM, model::AbstractSemSingle, params)
+    materialize!(implied.A, implied.ram_matrices.A, params)
+    materialize!(implied.S, implied.ram_matrices.S, params)
+    if !isnothing(implied.M)
+        materialize!(implied.M, implied.ram_matrices.M, params)
     end
 
-    mul!(imply.F⨉I_A⁻¹S, imply.F⨉I_A⁻¹, imply.S)
-    mul!(imply.Σ, imply.F⨉I_A⁻¹S, imply.F⨉I_A⁻¹')
+    parent(implied.I_A) .= .-implied.A
+    @view(implied.I_A[diagind(implied.I_A)]) .+= 1
 
-    if MeanStruct(imply) === HasMeanStruct
-        mul!(imply.μ, imply.F⨉I_A⁻¹, imply.M)
+    if is_gradient_required(targets) || is_hessian_required(targets)
+        implied.I_A⁻¹ = LinearAlgebra.inv!(factorize(implied.I_A))
+        mul!(implied.F⨉I_A⁻¹, implied.F, implied.I_A⁻¹)
+    else
+        copyto!(implied.F⨉I_A⁻¹, implied.F)
+        rdiv!(implied.F⨉I_A⁻¹, factorize(implied.I_A))
+    end
+
+    mul!(implied.F⨉I_A⁻¹S, implied.F⨉I_A⁻¹, implied.S)
+    mul!(parent(implied.Σ), implied.F⨉I_A⁻¹S, implied.F⨉I_A⁻¹')
+
+    if MeanStruct(implied) === HasMeanStruct
+        mul!(implied.μ, implied.F⨉I_A⁻¹, implied.M)
     end
 end
 
@@ -239,37 +199,10 @@ end
 ### Recommended methods
 ############################################################################################
 
-function update_observed(imply::RAM, observed::SemObserved; kwargs...)
-    if nobserved_vars(observed) == size(imply.Σ, 1)
-        return imply
+function update_observed(implied::RAM, observed::SemObserved; kwargs...)
+    if nobserved_vars(observed) == size(implied.Σ, 1)
+        return implied
     else
         return RAM(; observed = observed, kwargs...)
     end
-end
-
-############################################################################################
-### additional functions
-############################################################################################
-
-function check_acyclic(A_pre, n_par, A_indices)
-    # fill copy of A-matrix with random parameters
-    A_rand = copy(A_pre)
-    randpar = rand(n_par)
-
-    fill_matrix!(A_rand, A_indices, randpar)
-
-    # check if the model is acyclic
-    acyclic = isone(det(I - A_rand))
-
-    # check if A is lower or upper triangular
-    if istril(A_rand)
-        A_pre = LowerTriangular(A_pre)
-    elseif istriu(A_rand)
-        A_pre = UpperTriangular(A_pre)
-    elseif acyclic
-        @info "Your model is acyclic, specifying the A Matrix as either Upper or Lower Triangular can have great performance benefits.\n" maxlog =
-            1
-    end
-
-    return A_pre
 end

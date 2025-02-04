@@ -27,9 +27,9 @@ empty_partable_columns(nrows::Integer = 0) = Dict{Symbol, Vector}(
     :param => fill(Symbol(), nrows),
 )
 
-# construct using the provided columns data or create and empty table
+# construct using the provided columns data or create an empty table
 function ParameterTable(
-    columns::Dict{Symbol, Vector} = empty_partable_columns();
+    columns::Dict{Symbol, Vector};
     observed_vars::Union{AbstractVector{Symbol}, Nothing} = nothing,
     latent_vars::Union{AbstractVector{Symbol}, Nothing} = nothing,
     params::Union{AbstractVector{Symbol}, Nothing} = nothing,
@@ -54,8 +54,8 @@ function ParameterTable(
 
     return ParameterTable(
         Dict(col => copy(values) for (col, values) in pairs(partable.columns)),
-        observed_vars = copy(partable.observed_vars),
-        latent_vars = copy(partable.latent_vars),
+        observed_vars = copy(observed_vars(partable)),
+        latent_vars = copy(latent_vars(partable)),
         params = params,
     )
 end
@@ -128,7 +128,7 @@ end
 
 # Equality --------------------------------------------------------------------------------
 function Base.:(==)(p1::ParameterTable, p2::ParameterTable)
-    out = 
+    out =
         (p1.columns == p2.columns) &&
         (p1.observed_vars == p2.observed_vars) &&
         (p1.latent_vars == p2.latent_vars) &&
@@ -197,7 +197,7 @@ function sort_vars!(partable::ParameterTable)
             partable.columns[:relation],
             partable.columns[:from],
             partable.columns[:to],
-        ) if (rel == :→) && (from != Symbol("1"))
+        ) if (rel == :→) && (from != Symbol(1))
     ]
     sort!(edges, by = last) # sort edges by target
 
@@ -309,10 +309,10 @@ function update_partable!(
             "The length of `params` ($(length(params))) and their `values` ($(length(values))) must be the same",
         ),
     )
+    dup_params = nonunique(params)
+    isempty(dup_params) ||
+        throw(ArgumentError("Duplicate parameters detected: $(join(dup_params, ", "))"))
     param_values = Dict(zip(params, values))
-    if length(param_values) != length(params)
-        throw(ArgumentError("Duplicate parameter names in `params`"))
-    end
     update_partable!(partable, column, param_values, default)
 end
 
@@ -492,7 +492,7 @@ function lavaan_param_values!(
     )
         lav_ind = nothing
 
-        if from == Symbol("1")
+        if from == Symbol(1)
             lav_ind = findallrows(
                 r ->
                     r[:lhs] == String(to) &&

@@ -1,6 +1,6 @@
 # Build by parts
 
-You can always build a model by parts - that is, you construct the observed, imply, loss and optimizer part seperately.
+You can always build a model by parts - that is, you construct the observed, implied, loss and optimizer part seperately.
 
 As an example on how this works, we will build [A first model](@ref) in parts.
 
@@ -11,8 +11,8 @@ using StructuralEquationModels
 
 data = example_data("political_democracy")
 
-observed_vars = [:x1, :x2, :x3, :y1, :y2, :y3, :y4, :y5, :y6, :y7, :y8]
-latent_vars = [:ind60, :dem60, :dem65]
+obs_vars = [:x1, :x2, :x3, :y1, :y2, :y3, :y4, :y5, :y6, :y7, :y8]
+lat_vars = [:ind60, :dem60, :dem65]
 
 graph = @StenoGraph begin
 
@@ -27,8 +27,8 @@ graph = @StenoGraph begin
     ind60 → dem65
 
     # variances
-    _(observed_vars) ↔ _(observed_vars)
-    _(latent_vars) ↔ _(latent_vars)
+    _(obs_vars) ↔ _(obs_vars)
+    _(lat_vars) ↔ _(lat_vars)
 
     # covariances
     y1 ↔ y5
@@ -40,8 +40,8 @@ end
 
 partable = ParameterTable(
     graph,
-    latent_vars = latent_vars, 
-    observed_vars = observed_vars)
+    latent_vars = lat_vars, 
+    observed_vars = obs_vars)
 ```
 
 Now, we construct the different parts:
@@ -50,8 +50,8 @@ Now, we construct the different parts:
 # observed ---------------------------------------------------------------------------------
 observed = SemObservedData(specification = partable, data = data)
 
-# imply ------------------------------------------------------------------------------------
-imply_ram = RAM(specification = partable)
+# implied ------------------------------------------------------------------------------------
+implied_ram = RAM(specification = partable)
 
 # loss -------------------------------------------------------------------------------------
 ml = SemML(observed = observed)
@@ -63,5 +63,7 @@ optimizer = SemOptimizerOptim()
 
 # model ------------------------------------------------------------------------------------
 
-model_ml = Sem(observed, imply_ram, loss_ml, optimizer)
+model_ml = Sem(observed, implied_ram, loss_ml)
+
+sem_fit(optimizer, model_ml)
 ```

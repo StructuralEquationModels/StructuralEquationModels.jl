@@ -35,7 +35,7 @@ graph = @StenoGraph begin
     y8 ↔ y4 + y6
 
     # means
-    Symbol("1") → _(observed_vars)
+    Symbol(1) → _(observed_vars)
 end
 
 partable = ParameterTable(
@@ -73,7 +73,7 @@ graph = @StenoGraph begin
     y8 ↔ y4 + y6
 
     # means
-    Symbol("1") → _(observed_vars)
+    Symbol(1) → _(observed_vars)
 end
 
 partable = ParameterTable(
@@ -99,18 +99,18 @@ model = Sem(
 sem_fit(model)
 ```
 
-If we build the model by parts, we have to pass the `meanstructure = true` argument to every part that requires it (when in doubt, simply comsult the documentation for the respective part).
+If we build the model by parts, we have to pass the `meanstructure = true` argument to every part that requires it (when in doubt, simply consult the documentation for the respective part).
 
 For our example,
 
 ```@example meanstructure
 observed = SemObservedData(specification = partable, data = data, meanstructure = true)
 
-imply_ram = RAM(specification = partable, meanstructure = true)
+implied_ram = RAM(specification = partable, meanstructure = true)
 
 ml = SemML(observed = observed, meanstructure = true)
 
-model = Sem(observed, imply_ram, SemLoss(ml), SemOptimizerOptim())
+model = Sem(observed, implied_ram, SemLoss(ml))
 
 sem_fit(model)
 ```

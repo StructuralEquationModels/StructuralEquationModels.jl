@@ -1,9 +1,4 @@
-function sem_summary(
-    sem_fit::SemFit;
-    show_fitmeasures = false,
-    color = :light_cyan,
-    digits = 2,
-)
+function details(sem_fit::SemFit; show_fitmeasures = false, color = :light_cyan, digits = 2)
     print("\n")
     println("Fitted Structural Equation Model")
     print("\n")
@@ -45,13 +40,13 @@ function sem_summary(
     print("\n")
 end
 
-function sem_summary(
+function details(
     partable::ParameterTable;
     color = :light_cyan,
     secondary_color = :light_yellow,
     digits = 2,
     show_variables = true,
-    show_columns = nothing
+    show_columns = nothing,
 )
     if show_variables
         print("\n")
@@ -150,7 +145,8 @@ function sem_summary(
         check_round(partable.columns[c][regression_indices]; digits = digits) for
         c in regression_columns
     )
-    regression_columns[2] = regression_columns[2] == :relation ? Symbol("") : regression_columns[2]
+    regression_columns[2] =
+        regression_columns[2] == :relation ? Symbol("") : regression_columns[2]
 
     print("\n")
     pretty_table(
@@ -216,13 +212,14 @@ function sem_summary(
     )
     print("\n")
 
-    mean_indices = findall(r -> (r.relation == :→) && (r.from == Symbol("1")), partable)
+    mean_indices = findall(r -> (r.relation == :→) && (r.from == Symbol(1)), partable)
 
     if length(mean_indices) > 0
         printstyled("Means: \n"; color = color)
 
         if isnothing(show_columns)
-            sorted_columns = [:from, :relation, :to, :estimate, :param, :value_fixed, :start]
+            sorted_columns =
+                [:from, :relation, :to, :estimate, :param, :value_fixed, :start]
             mean_columns = sort_partially(sorted_columns, columns)
         else
             mean_columns = copy(show_columns)
@@ -250,13 +247,13 @@ function sem_summary(
 
 end
 
-function sem_summary(
+function details(
     partable::EnsembleParameterTable;
     color = :light_cyan,
     secondary_color = :light_yellow,
     digits = 2,
     show_variables = true,
-    show_columns = nothing
+    show_columns = nothing,
 )
     if show_variables
         print("\n")
@@ -291,13 +288,13 @@ function sem_summary(
         print("\n")
         printstyled(rpad(" Group: $k", 78), reverse = true)
         print("\n")
-        sem_summary(
+        details(
             partable.tables[k];
             color = color,
             secondary_color = secondary_color,
             digits = digits,
             show_variables = false,
-            show_columns = show_columns
+            show_columns = show_columns,
         )
     end
 
@@ -333,9 +330,9 @@ function Base.findall(fun::Function, partable::ParameterTable)
 end
 
 """
-    (1) sem_summary(sem_fit::SemFit; show_fitmeasures = false)
+    (1) details(sem_fit::SemFit; show_fitmeasures = false)
 
-    (2) sem_summary(partable::AbstractParameterTable; ...)
+    (2) details(partable::AbstractParameterTable; ...)
 
 Print information about (1) a fitted SEM or (2) a parameter table to stdout.
 
@@ -347,4 +344,4 @@ Print information about (1) a fitted SEM or (2) a parameter table to stdout.
 - `show_variables = true`
 - `show_columns = nothing`: columns names to include in the output e.g.`[:from, :to, :estimate]`)
 """
-function sem_summary end
+function details end
