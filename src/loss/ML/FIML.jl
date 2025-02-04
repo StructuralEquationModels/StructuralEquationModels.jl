@@ -34,7 +34,7 @@ function prepare!(fiml::SemFIMLPattern, pat::SemObservedMissingPattern, Σ::Abst
     return fiml
 end
 
-prepare!(fiml::SemFIMLPattern, pat::SemObservedMissingPattern, implied::SemImply) =
+prepare!(fiml::SemFIMLPattern, pat::SemObservedMissingPattern, implied::SemImplied) =
 	prepare!(fiml, pat, implied.Σ, implied.μ)
 
 function objective(fiml::SemFIMLPattern{T}, pat::SemObservedMissingPattern) where {T}
@@ -67,15 +67,15 @@ Full information maximum likelihood estimation. Can handle observed data with mi
 
 # Constructor
 
-    SemFIML(;observed, specification, kwargs...)
+    SemFIML(; observed, implied, kwargs...)
 
 # Arguments
 - `observed::SemObservedMissing`: the observed part of the model
-- `specification`: either a `RAMMatrices` or `ParameterTable` object
+- `implied::SemImplied`: the implied part of the model
 
 # Examples
 ```julia
-my_fiml = SemFIML(observed = my_observed, specification = my_parameter_table)
+my_fiml = SemFIML(observed = my_observed, implied = my_implied)
 ```
 
 # Interfaces
@@ -100,12 +100,16 @@ end
 ### Constructors
 ############################################################################################
 
-function SemFIML(; observed::SemObservedMissing, specification, kwargs...)
+function SemFIML(;
+    observed::SemObservedMissing,
+    implied::SemImplied,
+    kwargs...,
+)
     return SemFIML(
         ExactHessian(),
         [SemFIMLPattern(pat) for pat in observed.patterns],
         zeros(nobserved_vars(observed), nobserved_vars(observed)),
-        CommutationMatrix(nvars(specification)),
+        CommutationMatrix(nvars(implied)),
         nothing,
     )
 end

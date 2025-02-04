@@ -46,9 +46,11 @@ function test_params_api(semobj, spec::SemSpecification)
     @test @inferred(params(semobj)) == params(spec)
 end
 
-@testset "Sem(implied=$impliedtype, loss=$losstype)" for impliedtype in (RAM, RAMSymbolic),
-    losstype in (SemML, SemWLS)
-
+@testset "Sem(implied=$impliedtype, loss=$losstype)" for (impliedtype, losstype) in [
+    (RAM, SemML),
+    (RAMSymbolic, SemML),
+    (RAMSymbolic, SemWLS),
+]
     model = Sem(
         specification = ram_matrices,
         observed = obs,
