@@ -8,13 +8,11 @@ Model implied covariance and means via RAM notation.
 
     RAM(;
         specification,
-        meanstructure = false,
         gradient = true,
         kwargs...)
 
 # Arguments
 - `specification`: either a `RAMMatrices` or `ParameterTable` object
-- `meanstructure::Bool`: does the model have a meanstructure?
 - `gradient::Bool`: is gradient-based optimization used
 
 # Extended help
@@ -60,7 +58,6 @@ Additional interfaces
 - `F⨉I_A⁻¹(::RAM)` -> ``F(I-A)^{-1}``
 - `F⨉I_A⁻¹S(::RAM)` -> ``F(I-A)^{-1}S``
 - `I_A(::RAM)` -> ``I-A``
-- `has_meanstructure(::RAM)` -> `Val{Bool}` does the model have a meanstructure?
 
 Only available in gradient! calls:
 - `I_A⁻¹(::RAM)` -> ``(I-A)^{-1}``
@@ -95,14 +92,14 @@ end
 ### Constructors
 ############################################################################################
 
-function RAM(;
-    specification::SemSpecification,
+function RAM(
+    spec::SemSpecification;
     #vech = false,
     gradient_required = true,
-    meanstructure = false,
+    sparse_S::Bool = true,
     kwargs...,
 )
-    ram_matrices = convert(RAMMatrices, specification)
+    ram_matrices = convert(RAMMatrices, spec)
 
     # get dimensions of the model
     n_par = nparams(ram_matrices)
@@ -112,7 +109,9 @@ function RAM(;
     #preallocate arrays
     rand_params = randn(Float64, n_par)
     A_pre = check_acyclic(materialize(ram_matrices.A, rand_params))
-    S_pre = materialize(ram_matrices.S, rand_params)
+    S_pre = Symmetric(
+        (sparse_S ? sparse_materialize : materialize)(ram_matrices.S, rand_params),
+    )
     F = copy(ram_matrices.F)
 
     # pre-allocate some matrices
@@ -130,13 +129,8 @@ function RAM(;
     end
 
     # μ
-    if meanstructure
+    if !isnothing(ram_matrices.M)
         MS = HasMeanStruct
-        !isnothing(ram_matrices.M) || throw(
-            ArgumentError(
-                "You set `meanstructure = true`, but your model specification contains no mean parameters.",
-            ),
-        )
         M_pre = materialize(ram_matrices.M, rand_params)
         ∇M = gradient_required ? sparse_gradient(ram_matrices.M) : nothing
         μ = zeros(n_obs)
@@ -158,7 +152,7 @@ function RAM(;
         F⨉I_A⁻¹,
         F⨉I_A⁻¹S,
         I_A,
-        copy(I_A),
+        similar(I_A),
         ∇A,
         ∇S,
         ∇M,
@@ -169,7 +163,7 @@ end
 ### methods
 ############################################################################################
 
-function update!(targets::EvaluationTargets, implied::RAM, model::AbstractSemSingle, params)
+function update!(targets::EvaluationTargets, implied::RAM, params)
     materialize!(implied.A, implied.ram_matrices.A, params)
     materialize!(implied.S, implied.ram_matrices.S, params)
     if !isnothing(implied.M)

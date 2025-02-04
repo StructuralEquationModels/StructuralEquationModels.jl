@@ -1,6 +1,7 @@
 module StructuralEquationModels
 
 using LinearAlgebra,
+    Printf,
     Optim,
     NLSolversBase,
     Statistics,
@@ -13,7 +14,8 @@ using LinearAlgebra,
     StenoGraphs,
     LazyArtifacts,
     DelimitedFiles,
-    DataFrames
+    DataFrames,
+    PackageExtensionCompat
 
 export StenoGraphs, @StenoGraph, meld
 
@@ -25,6 +27,7 @@ include("objective_gradient_hessian.jl")
 
 # helper objects and functions
 include("additional_functions/commutation_matrix.jl")
+include("additional_functions/sparse_utils.jl")
 include("additional_functions/params_array.jl")
 
 # fitted objects
@@ -37,6 +40,8 @@ include("frontend/specification/RAMMatrices.jl")
 include("frontend/specification/EnsembleParameterTable.jl")
 include("frontend/specification/StenoGraphs.jl")
 include("frontend/fit/summary.jl")
+include("frontend/finite_diff.jl")
+include("frontend/predict.jl")
 # pretty printing
 include("frontend/pretty_printing.jl")
 # observed
@@ -55,6 +60,7 @@ include("implied/RAM/symbolic.jl")
 include("implied/RAM/generic.jl")
 include("implied/empty.jl")
 # loss
+include("loss/ML/abstract.jl")
 include("loss/ML/ML.jl")
 include("loss/ML/FIML.jl")
 include("loss/regularization/ridge.jl")
@@ -66,6 +72,7 @@ include("optimizer/Empty.jl")
 include("optimizer/optim.jl")
 # helper functions
 include("additional_functions/helper.jl")
+include("additional_functions/start_val/common.jl")
 include("additional_functions/start_val/start_fabin3.jl")
 include("additional_functions/start_val/start_simple.jl")
 include("additional_functions/artifacts.jl")
@@ -103,8 +110,8 @@ export AbstractSem,
     start_val,
     start_fabin3,
     start_simple,
+    AbstractLoss,
     SemLoss,
-    SemLossFunction,
     SemML,
     SemFIML,
     em_mvn,
@@ -112,6 +119,9 @@ export AbstractSem,
     SemConstant,
     SemWLS,
     loss,
+    nsem_terms,
+    sem_terms,
+    sem_term,
     SemOptimizer,
     SemOptimizerEmpty,
     SemOptimizerOptim,
@@ -184,4 +194,9 @@ export AbstractSem,
     ←,
     ↔,
     ⇔
+
+function __init__()
+    @require_extensions
+end
+
 end
