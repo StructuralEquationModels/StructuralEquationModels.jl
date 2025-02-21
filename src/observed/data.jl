@@ -41,7 +41,7 @@ function SemObservedData(;
 
     data, obs_vars, _ =
         prepare_data(data, observed_vars, specification; observed_var_prefix)
-    obs_mean, obs_cov = mean_and_cov(data, 1)
+    obs_mean, obs_cov = mean_and_cov(convert(Matrix, data), 1)
 
     if any(ismissing.(data))
         throw(ArgumentError(
