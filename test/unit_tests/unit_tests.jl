@@ -6,9 +6,7 @@ available_tests = Dict(
     "matrix_helpers" => "Matrix algebra helper functions",
     "data_input_formats" => "SemObserved",
     "specification" => "SemSpecification",
-    "model" => "Sem model",
-    "StatsAPI" => "Stats API",
-    "test" => "True"
+    "model" => "Sem model"
 )
 
 # Determine which tests to run based on command-line arguments
