@@ -19,7 +19,7 @@ model per group and an additional model with `ImpliedEmpty` and `SemRidge` for t
 # Extended help
 
 ## Interfaces
-- `params(::RAMSymbolic) `-> Vector of parameter labels
+- `param_labels(::RAMSymbolic) `-> Vector of parameter labels
 - `nparams(::RAMSymbolic)` -> Number of parameters
 
 ## Implementation

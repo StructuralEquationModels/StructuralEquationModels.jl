@@ -7,7 +7,7 @@ struct ParameterTable{C} <: AbstractParameterTable
     observed_vars::Vector{Symbol}
     latent_vars::Vector{Symbol}
     sorted_vars::Vector{Symbol}
-    params::Vector{Symbol}
+    param_labels::Vector{Symbol}
 end
 
 ############################################################################################
@@ -32,31 +32,31 @@ function ParameterTable(
     columns::Dict{Symbol, Vector};
     observed_vars::Union{AbstractVector{Symbol}, Nothing} = nothing,
     latent_vars::Union{AbstractVector{Symbol}, Nothing} = nothing,
-    params::Union{AbstractVector{Symbol}, Nothing} = nothing,
+    param_labels::Union{AbstractVector{Symbol}, Nothing} = nothing,
 )
-    params = isnothing(params) ? unique!(filter(!=(:const), columns[:param])) : copy(params)
-    check_params(params, columns[:param])
+    param_labels = isnothing(param_labels) ? unique!(filter(!=(:const), columns[:param])) : copy(param_labels)
+    check_param_labels(param_labels, columns[:param])
     return ParameterTable(
         columns,
         !isnothing(observed_vars) ? copy(observed_vars) : Vector{Symbol}(),
         !isnothing(latent_vars) ? copy(latent_vars) : Vector{Symbol}(),
         Vector{Symbol}(),
-        params,
+        param_labels,
     )
 end
 
 # new parameter table with different parameters order
 function ParameterTable(
     partable::ParameterTable;
-    params::Union{AbstractVector{Symbol}, Nothing} = nothing,
+    param_labels::Union{AbstractVector{Symbol}, Nothing} = nothing,
 )
-    isnothing(params) || check_params(params, partable.columns[:param])
+    isnothing(param_labels) || check_param_labels(param_labels, partable.columns[:param])
 
     return ParameterTable(
         Dict(col => copy(values) for (col, values) in pairs(partable.columns)),
         observed_vars = copy(observed_vars(partable)),
         latent_vars = copy(latent_vars(partable)),
-        params = params,
+        param_labels = param_labels,
     )
 end
 
@@ -80,10 +80,10 @@ end
 function Base.convert(
     ::Type{ParameterTable},
     partable::ParameterTable;
-    params::Union{AbstractVector{Symbol}, Nothing} = nothing,
+    param_labels::Union{AbstractVector{Symbol}, Nothing} = nothing,
 )
-    return isnothing(params) || partable.params == params ? partable :
-           ParameterTable(partable; params)
+    return isnothing(param_labels) || partable.param_labels == param_labels ? partable :
+           ParameterTable(partable; param_labels)
 end
 
 function DataFrames.DataFrame(
@@ -133,7 +133,7 @@ function Base.:(==)(p1::ParameterTable, p2::ParameterTable)
         (p1.observed_vars == p2.observed_vars) &&
         (p1.latent_vars == p2.latent_vars) &&
         (p1.sorted_vars == p2.sorted_vars) &&
-        (p1.params == p2.params)
+        (p1.param_labels == p2.param_labels)
     return out
 end
 
@@ -163,7 +163,6 @@ Base.eltype(::Type{<:ParameterTable}) = ParameterTableRow
 Base.iterate(partable::ParameterTable, i::Integer = 1) =
     i > length(partable) ? nothing : (partable[i], i + 1)
 
-params(partable::ParameterTable) = partable.params
 nparams(partable::ParameterTable) = length(params(partable))
 
 # Sorting ----------------------------------------------------------------------------------
@@ -289,30 +288,28 @@ function update_partable!(
 end
 
 """
-    update_partable!(partable::AbstractParameterTable, params::Vector{Symbol}, values, column)
+    update_partable!(partable::AbstractParameterTable, param_labels::Vector{Symbol}, params, column)
 
 Write parameter `values` into `column` of `partable`.
 
-The `params` and `values` vectors define the pairs of value
+The `param_labels` and `params` vectors define the pairs of 
 parameters, which are being matched to the `:param` column
 of the `partable`.
 """
 function update_partable!(
     partable::ParameterTable,
     column::Symbol,
-    params::AbstractVector{Symbol},
-    values::AbstractVector,
+    param_labels::AbstractVector{Symbol},
+    params::AbstractVector,
     default::Any = nothing,
 )
-    length(params) == length(values) || throw(
+    length(param_labels) == length(params) || throw(
         ArgumentError(
-            "The length of `params` ($(length(params))) and their `values` ($(length(values))) must be the same",
+            "The length of `param_labels` ($(length(param_labels))) and their `params` ($(length(param_labels))) must be the same",
         ),
     )
-    dup_params = nonunique(params)
-    isempty(dup_params) ||
-        throw(ArgumentError("Duplicate parameters detected: $(join(dup_params, ", "))"))
-    param_values = Dict(zip(params, values))
+    check_param_labels(param_labels, nothing)
+    param_values = Dict(zip(param_labels, values))
     update_partable!(partable, column, param_values, default)
 end
 
@@ -327,14 +324,14 @@ Write parameter estimates from `fit` to the `:estimate` column of `partable`
 update_estimate!(partable::ParameterTable, fit::SemFit) = update_partable!(
     partable,
     :estimate,
-    params(fit),
+    param_labels(fit),
     fit.solution,
     partable.columns[:value_fixed],
 )
 
 # fallback method for ensemble
 update_estimate!(partable::AbstractParameterTable, fit::SemFit) =
-    update_partable!(partable, :estimate, params(fit), fit.solution)
+    update_partable!(partable, :estimate, param_labels(fit), fit.solution)
 
 # update starting values -------------------------------------------------------------------
 """
@@ -351,7 +348,7 @@ Write starting values from `fit` or `start_val` to the `:start` column of `parta
 update_start!(partable::AbstractParameterTable, fit::SemFit) = update_partable!(
     partable,
     :start,
-    params(fit),
+    param_labels(fit),
     fit.start_val,
     partable.columns[:value_fixed],
 )
@@ -365,7 +362,7 @@ function update_start!(
     if !(start_val isa Vector)
         start_val = start_val(model; kwargs...)
     end
-    return update_partable!(partable, :start, params(model), start_val)
+    return update_partable!(partable, :start, param_labels(model), start_val)
 end
 
 # update partable standard errors ----------------------------------------------------------
@@ -389,64 +386,9 @@ function update_se_hessian!(
     method = :finitediff,
 )
     se = se_hessian(fit; method)
-    return update_partable!(partable, :se, params(fit), se)
+    return update_partable!(partable, :se, param_labels(fit), se)
 end
 
-"""
-    param_values!(out::AbstractVector, partable::ParameterTable,
-                  col::Symbol = :estimate)
-
-Extract parameter values from the `col` column of `partable`
-into the `out` vector.
-
-The `out` vector should be of `nparams(partable)` length.
-The *i*-th element of the `out` vector will contain the
-value of the *i*-th parameter from `params(partable)`.
-
-Note that the function combines the duplicate occurences of the
-same parameter in `partable` and will raise an error if the
-values do not match.
-"""
-function param_values!(
-    out::AbstractVector,
-    partable::ParameterTable,
-    col::Symbol = :estimate,
-)
-    (length(out) == nparams(partable)) || throw(
-        DimensionMismatch(
-            "The length of parameter values vector ($(length(out))) does not match the number of parameters ($(nparams(partable)))",
-        ),
-    )
-    param_index = Dict(param => i for (i, param) in enumerate(params(partable)))
-    param_values_col = partable.columns[col]
-    for (i, param) in enumerate(partable.columns[:param])
-        (param == :const) && continue
-        param_ind = get(param_index, param, nothing)
-        @assert !isnothing(param_ind) "Parameter table contains unregistered parameter :$param at row #$i"
-        val = param_values_col[i]
-        if !isnan(out[param_ind])
-            @assert isequal(out[param_ind], val) "Parameter :$param value at row #$i ($val) differs from the earlier encountered value ($(out[param_ind]))"
-        else
-            out[param_ind] = val
-        end
-    end
-    return out
-end
-
-"""
-    param_values(out::AbstractVector, col::Symbol = :estimate)
-
-Extract parameter values from the `col` column of `partable`.
-
-Returns the values vector. The *i*-th element corresponds to
-the value of *i*-th parameter from `params(partable)`.
-
-Note that the function combines the duplicate occurences of the
-same parameter in `partable` and will raise an error if the
-values do not match.
-"""
-param_values(partable::ParameterTable, col::Symbol = :estimate) =
-    param_values!(fill(NaN, nparams(partable)), partable, col)
 
 """
     lavaan_param_values!(out::AbstractVector, partable_lav,
@@ -457,7 +399,7 @@ Extract parameter values from the `partable_lav` lavaan model that
 match the parameters of `partable` into the `out` vector.
 
 The method sets the *i*-th element of the `out` vector to
-the value of *i*-th parameter from `params(partable)`.
+the value of *i*-th parameter from `param_labels(partable)`.
 
 Note that the lavaan and `partable` models are matched by the
 the names of variables in the tables (`from` and `to` columns)
@@ -481,7 +423,7 @@ function lavaan_param_values!(
         ),
     )
     partable_mask = findall(partable.columns[:free])
-    param_index = Dict(param => i for (i, param) in enumerate(params(partable)))
+    param_index = param_indices(partable)
 
     lav_values = partable_lav[:, lav_col]
     for (from, to, type, id) in zip(
@@ -570,7 +512,7 @@ match the parameters of `partable`.
 
 The `out` vector should be of `nparams(partable)` length.
 The *i*-th element of the `out` vector will contain the
-value of the *i*-th parameter from `params(partable)`.
+value of the *i*-th parameter from `param_labels(partable)`.
 
 Note that the lavaan and `partable` models are matched by the
 the names of variables in the tables (`from` and `to` columns),

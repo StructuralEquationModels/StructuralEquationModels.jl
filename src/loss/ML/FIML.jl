@@ -95,12 +95,12 @@ function evaluate!(
     semfiml::SemFIML,
     implied::SemImplied,
     model::AbstractSemSingle,
-    params,
+    param_labels,
 )
     isnothing(hessian) || error("Hessian not implemented for FIML")
 
     if !check_fiml(semfiml, model)
-        isnothing(objective) || (objective = non_posdef_return(params))
+        isnothing(objective) || (objective = non_posdef_return(param_labels))
         isnothing(gradient) || fill!(gradient, 1)
         return objective
     end
@@ -109,7 +109,7 @@ function evaluate!(
 
     scale = inv(nsamples(observed(model)))
     isnothing(objective) ||
-        (objective = scale * F_FIML(observed(model), semfiml, model, params))
+        (objective = scale * F_FIML(observed(model), semfiml, model, param_labels))
     isnothing(gradient) ||
         (∇F_FIML!(gradient, observed(model), semfiml, model); gradient .*= scale)
 
@@ -169,8 +169,8 @@ function ∇F_fiml_outer!(G, JΣ, Jμ, implied, model, semfiml)
     mul!(G, ∇μ', Jμ, -1, 1)
 end
 
-function F_FIML(observed::SemObservedMissing, semfiml, model, params)
-    F = zero(eltype(params))
+function F_FIML(observed::SemObservedMissing, semfiml, model, param_labels)
+    F = zero(eltype(param_labels))
     for (i, pat) in enumerate(observed.patterns)
         F += F_one_pattern(
             semfiml.meandiff[i],

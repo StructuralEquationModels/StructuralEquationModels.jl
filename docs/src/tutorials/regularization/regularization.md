@@ -130,7 +130,7 @@ fit = sem_fit(model)
 
 update_estimate!(partable, fit)
 
-update_partable!(partable, :estimate_lasso, params(fit_lasso), solution(fit_lasso))
+update_partable!(partable, :estimate_lasso, param_labels(fit_lasso), solution(fit_lasso))
 
 details(partable)
 ```
@@ -168,7 +168,7 @@ fit_mixed = sem_fit(model_mixed; engine = :Proximal, operator_g = prox_operator)
 Let's again compare the different results:
 
 ```@example reg
-update_partable!(partable, :estimate_mixed, params(fit_mixed), solution(fit_mixed))
+update_partable!(partable, :estimate_mixed, param_labels(fit_mixed), solution(fit_mixed))
 
 details(partable)
 ```

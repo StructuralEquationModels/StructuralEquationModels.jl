@@ -40,7 +40,7 @@ function ParameterTable(
     graph::AbstractStenoGraph;
     observed_vars::AbstractVector{Symbol},
     latent_vars::AbstractVector{Symbol},
-    params::Union{AbstractVector{Symbol}, Nothing} = nothing,
+    param_labels::Union{AbstractVector{Symbol}, Nothing} = nothing,
     group::Union{Integer, Nothing} = nothing,
     param_prefix::Symbol = :θ,
 )
@@ -126,7 +126,7 @@ function ParameterTable(
         end
     end
 
-    return ParameterTable(columns; latent_vars, observed_vars, params)
+    return ParameterTable(columns; latent_vars, observed_vars, param_labels)
 end
 
 ############################################################################################
@@ -148,7 +148,7 @@ function EnsembleParameterTable(
     graph::AbstractStenoGraph;
     observed_vars::AbstractVector{Symbol},
     latent_vars::AbstractVector{Symbol},
-    params::Union{AbstractVector{Symbol}, Nothing} = nothing,
+    param_labels::Union{AbstractVector{Symbol}, Nothing} = nothing,
     groups,
 )
     graph = unique(graph)
@@ -158,11 +158,11 @@ function EnsembleParameterTable(
             graph;
             observed_vars,
             latent_vars,
-            params,
+            param_labels,
             group = i,
             param_prefix = Symbol(:g, group),
         ) for (i, group) in enumerate(groups)
     )
 
-    return EnsembleParameterTable(partables; params)
+    return EnsembleParameterTable(partables; param_labels)
 end

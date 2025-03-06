@@ -19,3 +19,7 @@ end
 @safetestset "Sem model" begin
     include("model.jl")
 end
+
+@safetestset "Stats API" begin
+    include("StatsAPI.jl")
+end

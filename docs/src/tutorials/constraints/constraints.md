@@ -162,7 +162,7 @@ As you can see, the optimizer converged (`:XTOL_REACHED`) and investigating the 
 update_partable!(
     partable,
     :estimate_constr,
-    params(model_fit_constrained), 
+    param_labels(model_fit_constrained), 
     solution(model_fit_constrained), 
     )
 

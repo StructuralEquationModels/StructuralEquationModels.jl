@@ -4,7 +4,7 @@
 
 struct EnsembleParameterTable <: AbstractParameterTable
     tables::Dict{Symbol, ParameterTable}
-    params::Vector{Symbol}
+    param_labels::Vector{Symbol}
 end
 
 ############################################################################################
@@ -12,35 +12,35 @@ end
 ############################################################################################
 
 # constuct an empty table
-EnsembleParameterTable(::Nothing; params::Union{Nothing, Vector{Symbol}} = nothing) =
+EnsembleParameterTable(::Nothing; param_labels::Union{Nothing, Vector{Symbol}} = nothing) =
     EnsembleParameterTable(
         Dict{Symbol, ParameterTable}(),
-        isnothing(params) ? Symbol[] : copy(params),
+        isnothing(param_labels) ? Symbol[] : copy(param_labels),
     )
 
 # convert pairs to dict
-EnsembleParameterTable(ps::Pair{K, V}...; params = nothing) where {K, V} =
-    EnsembleParameterTable(Dict(ps...); params = params)
+EnsembleParameterTable(ps::Pair{K, V}...; param_labels = nothing) where {K, V} =
+    EnsembleParameterTable(Dict(ps...); param_labels = param_labels)
 
 # dictionary of SEM specifications
 function EnsembleParameterTable(
     spec_ensemble::AbstractDict{K, V};
-    params::Union{Nothing, Vector{Symbol}} = nothing,
+    param_labels::Union{Nothing, Vector{Symbol}} = nothing,
 ) where {K, V <: SemSpecification}
-    params = if isnothing(params)
+    param_labels = if isnothing(param_labels)
         # collect all SEM parameters in ensemble if not specified
         # and apply the set to all partables
-        unique(mapreduce(SEM.params, vcat, values(spec_ensemble), init = Vector{Symbol}()))
+        unique(mapreduce(SEM.param_labels, vcat, values(spec_ensemble), init = Vector{Symbol}()))
     else
-        copy(params)
+        copy(param_labels)
     end
 
     # convert each model specification to ParameterTable
     partables = Dict{Symbol, ParameterTable}(
-        Symbol(group) => convert(ParameterTable, spec; params) for
+        Symbol(group) => convert(ParameterTable, spec; param_labels) for
         (group, spec) in pairs(spec_ensemble)
     )
-    return EnsembleParameterTable(partables, params)
+    return EnsembleParameterTable(partables, param_labels)
 end
 
 ############################################################################################
@@ -54,12 +54,12 @@ end
 function Base.convert(
     ::Type{Dict{K, RAMMatrices}},
     partables::EnsembleParameterTable;
-    params::Union{AbstractVector{Symbol}, Nothing} = nothing,
+    param_labels::Union{AbstractVector{Symbol}, Nothing} = nothing,
 ) where {K}
-    isnothing(params) || (params = SEM.params(partables))
+    isnothing(param_labels) || (param_labels = SEM.param_labels(partables))
 
     return Dict{K, RAMMatrices}(
-        K(key) => RAMMatrices(partable; params = params) for
+        K(key) => RAMMatrices(partable; param_labels = param_labels) for
         (key, partable) in pairs(partables.tables)
     )
 end
@@ -136,11 +136,11 @@ end
 function update_partable!(
     partables::EnsembleParameterTable,
     column::Symbol,
-    params::AbstractVector{Symbol},
+    param_labels::AbstractVector{Symbol},
     values::AbstractVector,
     default::Any = nothing,
 )
-    return update_partable!(partables, column, Dict(zip(params, values)), default)
+    return update_partable!(partables, column, Dict(zip(param_labels, values)), default)
 end
 
 ############################################################################################
@@ -148,6 +148,6 @@ end
 ############################################################################################
 
 function Base.:(==)(p1::EnsembleParameterTable, p2::EnsembleParameterTable)
-    out = (p1.tables == p2.tables) && (p1.params == p2.params)
+    out = (p1.tables == p2.tables) && (p1.param_labels == p2.param_labels)
     return out
 end
