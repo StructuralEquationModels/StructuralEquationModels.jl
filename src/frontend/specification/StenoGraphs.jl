@@ -54,7 +54,7 @@ function ParameterTable(
     free = columns[:free]
     value_fixed = columns[:value_fixed]
     start = columns[:start]
-    param_refs = columns[:param]
+    param_refs = columns[:label]
     # group = Vector{Symbol}(undef, n)
 
     for (i, element) in enumerate(graph)

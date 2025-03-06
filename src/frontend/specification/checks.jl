@@ -3,7 +3,7 @@ function check_param_labels(
     param_labels::AbstractVector{Symbol},
     param_refs::Union{AbstractVector{Symbol}, Nothing},
 )
-    dup_params = nonunique(param_labels)
+    dup_param_labels = nonunique(param_labels)
     isempty(dup_param_labels) ||
         throw(ArgumentError("Duplicate parameter labels detected: $(join(dup_param_labels, ", "))"))
     any(==(:const), param_labels) &&

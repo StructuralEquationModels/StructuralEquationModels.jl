@@ -25,15 +25,15 @@ function params!(
     )
     param_index = param_indices(partable)
     param_values_col = partable.columns[col]
-    for (i, param) in enumerate(partable.columns[:param])
-        (param == :const) && continue
-        param_ind = get(param_index, param, nothing)
+    for (i, label) in enumerate(partable.columns[:label])
+        (label == :const) && continue
+        param_ind = get(param_index, label, nothing)
         @assert !isnothing(param_ind) "Parameter table contains unregistered parameter :$param at row #$i"
-        val = param_values_col[i]
+        param = param_values_col[i]
         if !isnan(out[param_ind])
-            @assert isequal(out[param_ind], val) "Parameter :$param value at row #$i ($val) differs from the earlier encountered value ($(out[param_ind]))"
+            @assert isequal(out[param_ind], param) "Parameter :$label value at row #$i ($param) differs from the earlier encountered value ($(out[param_ind]))"
         else
-            out[param_ind] = val
+            out[param_ind] = param
         end
     end
     return out
@@ -53,3 +53,4 @@ values do not match.
 """
 params(partable::ParameterTable, col::Symbol = :estimate) =
     params!(fill(NaN, nparams(partable)), partable, col)
+

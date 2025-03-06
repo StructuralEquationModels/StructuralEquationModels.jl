@@ -52,7 +52,7 @@ parind[:param_name]
 
 See also [`params`](@ref).
 """
-param_indices(semobj) = Dict(par => i for (i, par) in enumerate(params(semobj)))
+param_indices(semobj) = Dict(par => i for (i, par) in enumerate(param_labels(semobj)))
 
 """
     nsamples(semobj)

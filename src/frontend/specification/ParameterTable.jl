@@ -24,7 +24,7 @@ empty_partable_columns(nrows::Integer = 0) = Dict{Symbol, Vector}(
     :value_fixed => fill(NaN, nrows),
     :start => fill(NaN, nrows),
     :estimate => fill(NaN, nrows),
-    :param => fill(Symbol(), nrows),
+    :label => fill(Symbol(), nrows),
 )
 
 # construct using the provided columns data or create an empty table
@@ -34,8 +34,8 @@ function ParameterTable(
     latent_vars::Union{AbstractVector{Symbol}, Nothing} = nothing,
     param_labels::Union{AbstractVector{Symbol}, Nothing} = nothing,
 )
-    param_labels = isnothing(param_labels) ? unique!(filter(!=(:const), columns[:param])) : copy(param_labels)
-    check_param_labels(param_labels, columns[:param])
+    param_labels = isnothing(param_labels) ? unique!(filter(!=(:const), columns[:label])) : copy(param_labels)
+    check_param_labels(param_labels, columns[:label])
     return ParameterTable(
         columns,
         !isnothing(observed_vars) ? copy(observed_vars) : Vector{Symbol}(),
@@ -50,7 +50,7 @@ function ParameterTable(
     partable::ParameterTable;
     param_labels::Union{AbstractVector{Symbol}, Nothing} = nothing,
 )
-    isnothing(param_labels) || check_param_labels(param_labels, partable.columns[:param])
+    isnothing(param_labels) || check_param_labels(param_labels, partable.columns[:label])
 
     return ParameterTable(
         Dict(col => copy(values) for (col, values) in pairs(partable.columns)),
@@ -102,7 +102,7 @@ end
 
 function Base.show(io::IO, partable::ParameterTable)
     relevant_columns =
-        [:from, :relation, :to, :free, :value_fixed, :start, :estimate, :se, :param]
+        [:from, :relation, :to, :free, :value_fixed, :start, :estimate, :se, :label]
     shown_columns = filter!(
         col -> haskey(partable.columns, col) && length(partable.columns[col]) > 0,
         relevant_columns,
@@ -163,7 +163,7 @@ Base.eltype(::Type{<:ParameterTable}) = ParameterTableRow
 Base.iterate(partable::ParameterTable, i::Integer = 1) =
     i > length(partable) ? nothing : (partable[i], i + 1)
 
-nparams(partable::ParameterTable) = length(params(partable))
+nparams(partable::ParameterTable) = length(param_labels(partable))
 
 # Sorting ----------------------------------------------------------------------------------
 
