@@ -270,7 +270,7 @@ function update_partable!(
 
     isvec_def = (default isa AbstractVector) && (length(default) == length(partable))
 
-    for (i, par) in enumerate(partable.columns[:param])
+    for (i, par) in enumerate(partable.columns[:label])
         if par == :const
             coldata[i] = !isnothing(default) ? (isvec_def ? default[i] : default) : zero(T)
         elseif haskey(param_values, par)
@@ -309,7 +309,7 @@ function update_partable!(
         ),
     )
     check_param_labels(param_labels, nothing)
-    param_values = Dict(zip(param_labels, values))
+    param_values = Dict(zip(param_labels, params))
     update_partable!(partable, column, param_values, default)
 end
 
