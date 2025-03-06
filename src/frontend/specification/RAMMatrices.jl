@@ -4,10 +4,10 @@
 ############################################################################################
 
 struct RAMMatrices <: SemSpecification
-    A::param_labelsMatrix{Float64}
-    S::param_labelsMatrix{Float64}
+    A::ParamsMatrix{Float64}
+    S::ParamsMatrix{Float64}
     F::SparseMatrixCSC{Float64}
-    M::Union{param_labelsVector{Float64}, Nothing}
+    M::Union{ParamsVector{Float64}, Nothing}
     param_labels::Vector{Symbol}
     vars::Union{Vector{Symbol}, Nothing}    # better call it "variables": it's a mixture of observed and latent (and it gets confusing with get_vars())
 end
@@ -103,9 +103,9 @@ function RAMMatrices(;
     end
     check_param_labels(param_labels, nothing)
 
-    A = param_labelsMatrix{Float64}(A, param_labels)
-    S = param_labelsMatrix{Float64}(S, param_labels)
-    M = !isnothing(M) ? param_labelsVector{Float64}(M, param_labels) : nothing
+    A = ParamsMatrix{Float64}(A, param_labels)
+    S = ParamsMatrix{Float64}(S, param_labels)
+    M = !isnothing(M) ? ParamsMatrix{Float64}(M, param_labels) : nothing
     spF = sparse(F)
     if any(!isone, spF.nzval)
         throw(ArgumentError("F should contain only 0s and 1s"))
@@ -349,7 +349,7 @@ end
 
 function append_rows!(
     partable::ParameterTable,
-    arr::param_labelsArray,
+    arr::ParamsArray,
     arr_name::Symbol,
     param_labels::AbstractVector,
     varnames::AbstractVector{Symbol};
