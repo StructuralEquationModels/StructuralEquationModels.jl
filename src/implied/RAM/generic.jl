@@ -34,7 +34,7 @@ and for models with a meanstructure, the model implied means are computed as
 ```
 
 ## Interfaces
-- `params(::RAM) `-> vector of parameter labels
+- `param_labels(::RAM) `-> vector of parameter labels
 - `nparams(::RAM)` -> number of parameters
 
 - `Σ(::RAM)` -> model implied covariance matrix
@@ -169,11 +169,11 @@ end
 ### methods
 ############################################################################################
 
-function update!(targets::EvaluationTargets, implied::RAM, model::AbstractSemSingle, params)
-    materialize!(implied.A, implied.ram_matrices.A, params)
-    materialize!(implied.S, implied.ram_matrices.S, params)
+function update!(targets::EvaluationTargets, implied::RAM, model::AbstractSemSingle, param_labels)
+    materialize!(implied.A, implied.ram_matrices.A, param_labels)
+    materialize!(implied.S, implied.ram_matrices.S, param_labels)
     if !isnothing(implied.M)
-        materialize!(implied.M, implied.ram_matrices.M, params)
+        materialize!(implied.M, implied.ram_matrices.M, param_labels)
     end
 
     parent(implied.I_A) .= .-implied.A

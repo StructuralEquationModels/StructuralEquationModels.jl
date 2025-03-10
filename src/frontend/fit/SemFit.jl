@@ -46,7 +46,7 @@ end
 # additional methods
 ############################################################################################
 
-params(fit::SemFit) = params(fit.model)
+param_labels(fit::SemFit) = param_labels(fit.model)
 nparams(fit::SemFit) = nparams(fit.model)
 nsamples(fit::SemFit) = nsamples(fit.model)
 

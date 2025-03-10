@@ -188,13 +188,13 @@ Returns a SemEnsemble with fields
 - `n::Int`: Number of models.
 - `sems::Tuple`: `AbstractSem`s.
 - `weights::Vector`: Weights for each model.
-- `params::Vector`: Stores parameter labels and their position.
+- `param_labels::Vector`: Stores parameter labels and their position.
 """
 struct SemEnsemble{N, T <: Tuple, V <: AbstractVector, I} <: AbstractSemCollection
     n::N
     sems::T
     weights::V
-    params::I
+    param_labels::I
 end
 
 # constructor from multiple models
@@ -209,16 +209,16 @@ function SemEnsemble(models...; weights = nothing, kwargs...)
     end
 
     # check parameters equality
-    params = SEM.params(models[1])
+    param_labels = SEM.param_labels(models[1])
     for model in models
-        if params != SEM.params(model)
+        if param_labels != SEM.param_labels(model)
             throw(ErrorException("The parameters of your models do not match. \n
             Maybe you tried to specify models of an ensemble via ParameterTables. \n
             In that case, you may use RAMMatrices instead."))
         end
     end
 
-    return SemEnsemble(n, models, weights, params)
+    return SemEnsemble(n, models, weights, param_labels)
 end
 
 # constructor from EnsembleParameterTable and data set
@@ -239,7 +239,7 @@ function SemEnsemble(; specification, data, groups, column = :group, kwargs...)
     return SemEnsemble(models...; weights = nothing, kwargs...)
 end
 
-params(ensemble::SemEnsemble) = ensemble.params
+param_labels(ensemble::SemEnsemble) = ensemble.param_labels
 
 """
     n_models(ensemble::SemEnsemble) -> Integer

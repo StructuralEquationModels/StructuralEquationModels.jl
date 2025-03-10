@@ -8,7 +8,7 @@ nvars(implied::SemImplied) = nvars(implied.ram_matrices)
 nobserved_vars(implied::SemImplied) = nobserved_vars(implied.ram_matrices)
 nlatent_vars(implied::SemImplied) = nlatent_vars(implied.ram_matrices)
 
-params(implied::SemImplied) = params(implied.ram_matrices)
+param_labels(implied::SemImplied) = param_labels(implied.ram_matrices)
 nparams(implied::SemImplied) = nparams(implied.ram_matrices)
 
 # checks if the A matrix is acyclic

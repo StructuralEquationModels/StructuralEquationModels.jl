@@ -59,7 +59,7 @@ specification_g1 = RAMMatrices(;
     A = A,
     S = S1,
     F = F,
-    params = x,
+    param_labels = x,
     vars = [:x1, :x2, :x3, :x4, :x5, :x6, :x7, :x8, :x9, :visual, :textual, :speed],
 )
 
@@ -67,7 +67,7 @@ specification_g2 = RAMMatrices(;
     A = A,
     S = S2,
     F = F,
-    params = x,
+    param_labels = x,
     vars = [:x1, :x2, :x3, :x4, :x5, :x6, :x7, :x8, :x9, :visual, :textual, :speed],
 )
 

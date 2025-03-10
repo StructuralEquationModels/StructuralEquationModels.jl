@@ -77,13 +77,13 @@ spec = RAMMatrices(;
     A = A,
     S = S,
     F = F,
-    params = x,
+    param_labels = x,
     vars = [:x1, :x2, :x3, :y1, :y2, :y3, :y4, :y5, :y6, :y7, :y8, :ind60, :dem60, :dem65],
 )
 
 partable = ParameterTable(spec)
 
-@test SEM.params(spec) == SEM.params(partable)
+@test SEM.param_labels(spec) == SEM.param_labels(partable)
 
 # w. meanstructure -------------------------------------------------------------------------
 
@@ -94,13 +94,13 @@ spec_mean = RAMMatrices(;
     S = S,
     F = F,
     M = M,
-    params = [SEM.params(spec); Symbol.("x", string.(32:38))],
+    param_labels = [SEM.param_labels(spec); Symbol.("x", string.(32:38))],
     vars = [:x1, :x2, :x3, :y1, :y2, :y3, :y4, :y5, :y6, :y7, :y8, :ind60, :dem60, :dem65],
 )
 
 partable_mean = ParameterTable(spec_mean)
 
-@test SEM.params(partable_mean) == SEM.params(spec_mean)
+@test SEM.param_labels(partable_mean) == SEM.param_labels(spec_mean)
 
 start_test = [fill(1.0, 11); fill(0.05, 3); fill(0.05, 6); fill(0.5, 8); fill(0.05, 3)]
 start_test_mean =
@@ -138,7 +138,7 @@ end
 spec = ParameterTable(spec)
 spec_mean = ParameterTable(spec_mean)
 
-@test SEM.params(spec) == SEM.params(partable)
+@test SEM.param_labels(spec) == SEM.param_labels(partable)
 
 partable = spec
 partable_mean = spec_mean

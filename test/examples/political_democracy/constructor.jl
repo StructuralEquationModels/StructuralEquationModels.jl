@@ -8,7 +8,7 @@ using Random, NLopt
 semoptimizer = SemOptimizer(engine = opt_engine)
 
 model_ml = Sem(specification = spec, data = dat)
-@test SEM.params(model_ml.implied.ram_matrices) == SEM.params(spec)
+@test SEM.param_labels(model_ml.implied.ram_matrices) == SEM.param_labels(spec)
 
 model_ml_cov = Sem(
     specification = spec,

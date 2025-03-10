@@ -37,6 +37,7 @@ include("frontend/specification/RAMMatrices.jl")
 include("frontend/specification/EnsembleParameterTable.jl")
 include("frontend/specification/StenoGraphs.jl")
 include("frontend/fit/summary.jl")
+include("frontend/StatsAPI.jl")
 # pretty printing
 include("frontend/pretty_printing.jl")
 # observed
@@ -165,8 +166,10 @@ export AbstractSem,
     sort_vars!,
     sort_vars,
     params,
+    params!,
     nparams,
     param_indices,
+    param_labels,
     fit_measures,
     AIC,
     BIC,

@@ -25,6 +25,7 @@ graph = @StenoGraph begin
     y8 ↔ y4 + y6
 end
 
+
 ram_matrices =
     RAMMatrices(ParameterTable(graph, observed_vars = obs_vars, latent_vars = lat_vars))
 
@@ -43,7 +44,7 @@ end
 
 function test_params_api(semobj, spec::SemSpecification)
     @test @inferred(nparams(semobj)) == nparams(spec)
-    @test @inferred(params(semobj)) == params(spec)
+    @test @inferred(param_labels(semobj)) == param_labels(spec)
 end
 
 @testset "Sem(implied=$impliedtype, loss=$losstype)" for impliedtype in (RAM, RAMSymbolic),
