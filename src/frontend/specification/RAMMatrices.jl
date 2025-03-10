@@ -105,7 +105,7 @@ function RAMMatrices(;
 
     A = ParamsMatrix{Float64}(A, param_labels)
     S = ParamsMatrix{Float64}(S, param_labels)
-    M = !isnothing(M) ? ParamsMatrix{Float64}(M, param_labels) : nothing
+    M = !isnothing(M) ? ParamsVector{Float64}(M, param_labels) : nothing
     spF = sparse(F)
     if any(!isone, spF.nzval)
         throw(ArgumentError("F should contain only 0s and 1s"))

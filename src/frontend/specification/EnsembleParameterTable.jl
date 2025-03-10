@@ -124,11 +124,11 @@ Base.getindex(partable::EnsembleParameterTable, group) = partable.tables[group]
 function update_partable!(
     partables::EnsembleParameterTable,
     column::Symbol,
-    param_values::AbstractDict{Symbol},
+    params::AbstractDict{Symbol},
     default::Any = nothing,
 )
     for partable in values(partables.tables)
-        update_partable!(partable, column, param_values, default)
+        update_partable!(partable, column, params, default)
     end
     return partables
 end

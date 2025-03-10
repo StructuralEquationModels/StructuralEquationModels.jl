@@ -24,12 +24,12 @@ function params!(
         ),
     )
     param_index = param_indices(partable)
-    param_values_col = partable.columns[col]
+    params_col = partable.columns[col]
     for (i, label) in enumerate(partable.columns[:label])
         (label == :const) && continue
         param_ind = get(param_index, label, nothing)
         @assert !isnothing(param_ind) "Parameter table contains unregistered parameter :$param at row #$i"
-        param = param_values_col[i]
+        param = params_col[i]
         if !isnan(out[param_ind])
             @assert isequal(out[param_ind], param) "Parameter :$label value at row #$i ($param) differs from the earlier encountered value ($(out[param_ind]))"
         else

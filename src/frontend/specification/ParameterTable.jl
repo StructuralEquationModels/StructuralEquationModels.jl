@@ -263,7 +263,7 @@ end
 function update_partable!(
     partable::ParameterTable,
     column::Symbol,
-    param_values::AbstractDict{Symbol, T},
+    params::AbstractDict{Symbol, T},
     default::Any = nothing,
 ) where {T}
     coldata = get!(() -> Vector{T}(undef, length(partable)), partable.columns, column)
@@ -273,8 +273,8 @@ function update_partable!(
     for (i, par) in enumerate(partable.columns[:label])
         if par == :const
             coldata[i] = !isnothing(default) ? (isvec_def ? default[i] : default) : zero(T)
-        elseif haskey(param_values, par)
-            coldata[i] = param_values[par]
+        elseif haskey(params, par)
+            coldata[i] = params[par]
         else
             if isnothing(default)
                 throw(KeyError(par))
@@ -309,8 +309,8 @@ function update_partable!(
         ),
     )
     check_param_labels(param_labels, nothing)
-    param_values = Dict(zip(param_labels, params))
-    update_partable!(partable, column, param_values, default)
+    params = Dict(zip(param_labels, params))
+    update_partable!(partable, column, params, default)
 end
 
 # update estimates -------------------------------------------------------------------------
@@ -391,7 +391,7 @@ end
 
 
 """
-    lavaan_param_values!(out::AbstractVector, partable_lav,
+    lavaan_params!(out::AbstractVector, partable_lav,
                          partable::ParameterTable,
                          lav_col::Symbol = :est, lav_group = nothing)
 
@@ -406,7 +406,7 @@ the names of variables in the tables (`from` and `to` columns)
 as well as the type of their relationship (`relation` column),
 and not by the names of the model parameters.
 """
-function lavaan_param_values!(
+function lavaan_params!(
     out::AbstractVector,
     partable_lav,
     partable::ParameterTable,
@@ -429,7 +429,7 @@ function lavaan_param_values!(
     for (from, to, type, id) in zip(
         [
             view(partable.columns[k], partable_mask) for
-            k in [:from, :to, :relation, :param]
+            k in [:from, :to, :relation, :label]
         ]...,
     )
         lav_ind = nothing
@@ -504,7 +504,7 @@ function lavaan_param_values!(
 end
 
 """
-    lavaan_param_values(partable_lav, partable::ParameterTable,
+    lavaan_params(partable_lav, partable::ParameterTable,
                         lav_col::Symbol = :est, lav_group = nothing)
 
 Extract parameter values from the `partable_lav` lavaan model that
@@ -519,12 +519,12 @@ the names of variables in the tables (`from` and `to` columns),
 and the type of their relationship (`relation` column),
 but not by the ids of the model parameters.
 """
-lavaan_param_values(
+lavaan_params(
     partable_lav,
     partable::ParameterTable,
     lav_col::Symbol = :est,
     lav_group = nothing,
-) = lavaan_param_values!(
+) = lavaan_params!(
     fill(NaN, nparams(partable)),
     partable_lav,
     partable,
