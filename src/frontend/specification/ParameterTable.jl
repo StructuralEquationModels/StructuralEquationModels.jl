@@ -153,10 +153,10 @@ Base.getindex(partable::ParameterTable, i::Integer) = (
     to = partable.columns[:to][i],
     free = partable.columns[:free][i],
     value_fixed = partable.columns[:value_fixed][i],
-    param = partable.columns[:param][i],
+    param = partable.columns[:label][i],
 )
 
-Base.length(partable::ParameterTable) = length(partable.columns[:param])
+Base.length(partable::ParameterTable) = length(partable.columns[:label])
 Base.eachindex(partable::ParameterTable) = Base.OneTo(length(partable))
 
 Base.eltype(::Type{<:ParameterTable}) = ParameterTableRow

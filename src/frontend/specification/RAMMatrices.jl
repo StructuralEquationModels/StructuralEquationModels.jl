@@ -122,8 +122,8 @@ function RAMMatrices(
     param_labels::Union{AbstractVector{Symbol}, Nothing} = nothing,
 )
     param_labels = copy(isnothing(param_labels) ? SEM.param_labels(partable) : param_labels)
-    check_param_labels(param_labels, partable.columns[:param])
-    param_labels_index = param_indices(partable, nothing)
+    check_param_labels(param_labels, partable.columns[:label])
+    param_labels_index = param_indices(partable)
 
     n_observed = length(partable.observed_vars)
     n_latent = length(partable.latent_vars)
@@ -219,8 +219,8 @@ function RAMMatrices(
     end
 
     return RAMMatrices(
-        param_labelsMatrix{T}(A_inds, A_consts, (n_vars, n_vars)),
-        param_labelsMatrix{T}(S_inds, S_consts, (n_vars, n_vars)),
+        ParamsMatrix{T}(A_inds, A_consts, (n_vars, n_vars)),
+        ParamsMatrix{T}(S_inds, S_consts, (n_vars, n_vars)),
         sparse(
             1:n_observed,
             [vars_index[var] for var in partable.observed_vars],
@@ -228,7 +228,7 @@ function RAMMatrices(
             n_observed,
             n_vars,
         ),
-        !isnothing(M_inds) ? param_labelsVector{T}(M_inds, M_consts, (n_vars,)) : nothing,
+        !isnothing(M_inds) ? ParamsVector{T}(M_inds, M_consts, (n_vars,)) : nothing,
         param_labels,
         vars_sorted,
     )
