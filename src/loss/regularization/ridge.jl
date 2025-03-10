@@ -59,7 +59,7 @@ function SemRidge(;
                 ),
             )
         else
-            par2ind = param
+            par2ind = param_indices(implied)
             which_ridge = getindex.(Ref(par2ind), which_ridge)
         end
     end
