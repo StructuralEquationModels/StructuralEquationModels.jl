@@ -276,7 +276,7 @@ function ParameterTable(
         append_rows!(partable, ram.M, :M, ram.param_labels, vars)
     end
 
-    check_param_labels(SEM.param_labels(partable), partable.columns[:param])
+    check_param_labels(SEM.param_labels(partable), partable.columns[:label])
 
     return partable
 end
@@ -343,7 +343,7 @@ function partable_row(
         value_fixed = free ? 0.0 : val,
         start = 0.0,
         estimate = 0.0,
-        param = free ? val : :const,
+        label = free ? val : :const,
     )
 end
 

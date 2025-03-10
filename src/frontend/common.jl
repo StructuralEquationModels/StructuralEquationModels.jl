@@ -14,7 +14,7 @@ Return the number of parameters in a SEM model associated with `semobj`.
 
 See also [`params`](@ref).
 """
-nparams(semobj) = length(params(semobj))
+nparams(semobj) = length(param_labels(semobj))
 
 """
     nvars(semobj)
