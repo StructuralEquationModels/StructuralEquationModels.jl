@@ -4,6 +4,7 @@ using LinearAlgebra,
     Optim,
     NLSolversBase,
     Statistics,
+    StatsAPI,
     StatsBase,
     SparseArrays,
     Symbolics,
@@ -14,6 +15,8 @@ using LinearAlgebra,
     LazyArtifacts,
     DelimitedFiles,
     DataFrames
+
+import StatsAPI: params, coef, coefnames
 
 export StenoGraphs, @StenoGraph, meld
 
@@ -90,6 +93,8 @@ include("package_extensions/SEMProximalOptExt.jl")
 export AbstractSem,
     AbstractSemSingle,
     AbstractSemCollection,
+    coef,
+    coefnames,
     Sem,
     SemFiniteDiff,
     SemEnsemble,

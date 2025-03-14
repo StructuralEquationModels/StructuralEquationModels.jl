@@ -40,7 +40,7 @@ function params!(
 end
 
 """
-    params(out::AbstractVector, col::Symbol = :estimate)
+    params(x::ParameterTable, col::Symbol = :estimate)
 
 Extract parameter values from the `col` column of `partable`.
 
@@ -54,3 +54,16 @@ values do not match.
 params(partable::ParameterTable, col::Symbol = :estimate) =
     params!(fill(NaN, nparams(partable)), partable, col)
 
+"""
+    coef(x::ParameterTable)
+
+For a `SEM`, this function is equivalent to `params(x)`.
+It returns the parameters for the given model.
+"""
+coef(x::ParameterTable) = params(x)
+
+"""
+    coefnames(x::ParameterTable)
+To maintain compatibility with the `lavaan` package, this function is a synonym for `param_labels(x)`.
+"""
+coefnames(x::ParameterTable) = param_labels(x)
