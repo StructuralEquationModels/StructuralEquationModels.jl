@@ -51,7 +51,7 @@ end
 fitmeasure_names_ml = Dict(
     :AIC => "aic",
     :BIC => "bic",
-    :df => "df",
+    :dof => "df",
     :χ² => "chisq",
     :p_value => "pvalue",
     :nparams => "npar",
@@ -59,7 +59,7 @@ fitmeasure_names_ml = Dict(
 )
 
 fitmeasure_names_ls = Dict(
-    :df => "df",
+    :dof => "df",
     :χ² => "chisq",
     :p_value => "pvalue",
     :nparams => "npar",

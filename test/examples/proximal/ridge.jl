@@ -35,7 +35,7 @@ ram_mat = RAMMatrices(partable)
 
 model = Sem(specification = partable, data = dat, loss = SemML)
 
-fit = sem_fit(model)
+sem_fit = fit(model)
 
 # use ridge from StructuralEquationModels
 model_ridge = Sem(
@@ -46,7 +46,7 @@ model_ridge = Sem(
     which_ridge = 16:20,
 )
 
-solution_ridge = sem_fit(model_ridge)
+solution_ridge = fit(model_ridge)
 
 # use ridge from ProximalSEM; SqrNormL2 uses λ/2 as penalty
 λ = zeros(31);
@@ -54,7 +54,7 @@ solution_ridge = sem_fit(model_ridge)
 
 model_prox = Sem(specification = partable, data = dat, loss = SemML)
 
-solution_prox = @suppress sem_fit(model_prox, engine = :Proximal, operator_g = SqrNormL2(λ))
+solution_prox = @suppress fit(model_prox, engine = :Proximal, operator_g = SqrNormL2(λ))
 
 @testset "ridge_solution" begin
     @test isapprox(solution_prox.solution, solution_ridge.solution; rtol = 1e-3)

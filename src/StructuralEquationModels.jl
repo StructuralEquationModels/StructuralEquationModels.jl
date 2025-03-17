@@ -16,7 +16,7 @@ using LinearAlgebra,
     DelimitedFiles,
     DataFrames
 
-import StatsAPI: params, coef, coefnames
+import StatsAPI: params, coef, coefnames, dof, fit, nobs, coeftable
 
 export StenoGraphs, @StenoGraph, meld
 
@@ -78,7 +78,7 @@ include("additional_functions/simulation.jl")
 include("frontend/fit/fitmeasures/AIC.jl")
 include("frontend/fit/fitmeasures/BIC.jl")
 include("frontend/fit/fitmeasures/chi2.jl")
-include("frontend/fit/fitmeasures/df.jl")
+include("frontend/fit/fitmeasures/dof.jl")
 include("frontend/fit/fitmeasures/minus2ll.jl")
 include("frontend/fit/fitmeasures/p.jl")
 include("frontend/fit/fitmeasures/RMSEA.jl")
@@ -95,6 +95,7 @@ export AbstractSem,
     AbstractSemCollection,
     coef,
     coefnames,
+    coeftable,
     Sem,
     SemFiniteDiff,
     SemEnsemble,
@@ -135,8 +136,9 @@ export AbstractSem,
     obs_cov,
     obs_mean,
     nsamples,
+    nobs,
     samples,
-    sem_fit,
+    fit,
     SemFit,
     minimum,
     solution,
@@ -179,7 +181,7 @@ export AbstractSem,
     AIC,
     BIC,
     χ²,
-    df,
+    dof,
     fit_measures,
     minus2ll,
     p_value,

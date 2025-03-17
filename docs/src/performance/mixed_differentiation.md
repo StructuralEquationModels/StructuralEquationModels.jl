@@ -19,7 +19,7 @@ model_ridge = SemFiniteDiff(
 
 model_ml_ridge = SemEnsemble(model_ml, model_ridge)
 
-model_ml_ridge_fit = sem_fit(model_ml_ridge)
+model_ml_ridge_fit = fit(model_ml_ridge)
 ```
 
 The results of both methods will be the same, but we can verify that the computation costs differ (the package `BenchmarkTools` has to be installed for this):
@@ -27,7 +27,7 @@ The results of both methods will be the same, but we can verify that the computa
 ```julia
 using BenchmarkTools
 
-@benchmark sem_fit(model)
+@benchmark fit(model)
 
-@benchmark sem_fit(model_ml_ridge)
+@benchmark fit(model_ml_ridge)
 ```

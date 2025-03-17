@@ -40,7 +40,7 @@ mutable struct ProximalResult
     result::Any
 end
 
-function SEM.sem_fit(
+function SEM.fit(
     optim::SemOptimizerProximal,
     model::AbstractSem,
     start_params::AbstractVector;

@@ -11,7 +11,7 @@ Source code is in the `"src"` folder:
 - `"types.jl"` defines all abstract types and the basic type hierarchy
 - `"objective_gradient_hessian.jl"` contains methods for computing objective, gradient and hessian values for different model types as well as generic fallback methods
 - The four folders `"observed"`, `"implied"`, `"loss"` and `"diff"` contain implementations of specific subtypes (for example, the `"loss"` folder contains a file `"ML.jl"` that implements the `SemML` loss function).
-- `"optimizer"` contains connections to different optimization backends (aka methods for `sem_fit`)
+- `"optimizer"` contains connections to different optimization backends (aka methods for `fit`)
     - `"optim.jl"`: connection to the `Optim.jl` package
 - `"frontend"` contains user-facing functions
     - `"specification"` contains functionality for model specification

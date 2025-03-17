@@ -34,7 +34,7 @@ algorithm(optimizer::SemOptimizerName) = optimizer.algorithm
 options(optimizer::SemOptimizerName) = optimizer.options
 ```
 
-Note that your optimizer is a subtype of `SemOptimizer{:Name}`, where you can choose a `:Name` that can later be used as a keyword argument to `sem_fit(engine = :Name)`.
+Note that your optimizer is a subtype of `SemOptimizer{:Name}`, where you can choose a `:Name` that can later be used as a keyword argument to `fit(engine = :Name)`.
 Similarly, `SemOptimizer{:Name}(args...; kwargs...) = SemOptimizerName(args...; kwargs...)` should be defined as well as a constructor that uses only keyword arguments:
 
 ´´´julia
@@ -46,10 +46,10 @@ SemOptimizerName(;
 ´´´
 A method for `update_observed` and additional methods might be usefull, but are not necessary.
 
-Now comes the substantive part: We need to provide a method for `sem_fit`:
+Now comes the substantive part: We need to provide a method for `fit`:
 
 ```julia
-function sem_fit(
+function fit(
     optim::SemOptimizerName,
     model::AbstractSem,
     start_params::AbstractVector;

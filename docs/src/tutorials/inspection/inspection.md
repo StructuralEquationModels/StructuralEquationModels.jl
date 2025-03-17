@@ -42,13 +42,13 @@ model = Sem(
     data = data
 )
 
-model_fit = sem_fit(model)
+model_fit = fit(model)
 ```
 
 After you fitted a model,
 
 ```julia
-model_fit = sem_fit(model)
+model_fit = fit(model)
 ```
 
 you end up with an object of type [`SemFit`](@ref).
@@ -126,7 +126,7 @@ fit_measures
 AIC
 BIC
 χ²
-df
+dof
 minus2ll
 nobserved_vars
 nsamples

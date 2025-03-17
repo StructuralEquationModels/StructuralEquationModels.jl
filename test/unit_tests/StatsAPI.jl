@@ -9,7 +9,7 @@ model = Sem(
     specification = partable,
     data = data
 )
-model_fit = sem_fit(model)
+model_fit = fit(model)
 
 @testset "params" begin
     out = [NaN]
@@ -20,3 +20,10 @@ end
     @test param_labels(partable) == [:θ_1] == coefnames(partable)
 end
 
+@testset "nobs" begin
+    @test nobs(model) == nsamples(model)
+end
+
+@testset "coeftable" begin
+    @test_throws "StructuralEquationModels does not support" coeftable(model) 
+end

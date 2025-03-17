@@ -45,6 +45,11 @@ Returns the [*observed*](@ref SemObserved) part of a model.
 """
 observed(model::AbstractSemSingle) = model.observed
 
+"""
+    nsamples(model::AbstractSem) -> Int
+
+Returns the number of samples from the [*observed*](@ref SemObserved) part of a model.
+"""
 nsamples(model::AbstractSemSingle) = nsamples(observed(model))
 
 """
