@@ -75,4 +75,4 @@ Synonymous to [`nsamples`](@ref).
 """
 nobs(model::AbstractSem) = nsamples(model)
 
-coeftable(model::AbstractSem; level::Real=0.95) = throw(MethodError(x, "StructuralEquationModels does not support the `CoefTable` interface; see [`ParameterTable`](@ref) instead."))
+coeftable(model::AbstractSem; level::Real=0.95) = throw(ArgumentError("StructuralEquationModels does not support the `CoefTable` interface; see [`ParameterTable`](@ref) instead."))
