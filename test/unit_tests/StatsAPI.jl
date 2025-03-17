@@ -25,5 +25,5 @@ end
 end
 
 @testset "coeftable" begin
-    @test_throws coeftable(model) MethodError "StructuralEquationModels does not support"
+    @test_throws "StructuralEquationModels does not support" coeftable(model) 
 end
