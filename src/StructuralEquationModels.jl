@@ -78,7 +78,7 @@ include("additional_functions/simulation.jl")
 include("frontend/fit/fitmeasures/AIC.jl")
 include("frontend/fit/fitmeasures/BIC.jl")
 include("frontend/fit/fitmeasures/chi2.jl")
-include("frontend/fit/fitmeasures/df.jl")
+include("frontend/fit/fitmeasures/dof.jl")
 include("frontend/fit/fitmeasures/minus2ll.jl")
 include("frontend/fit/fitmeasures/p.jl")
 include("frontend/fit/fitmeasures/RMSEA.jl")
@@ -179,7 +179,7 @@ export AbstractSem,
     AIC,
     BIC,
     χ²,
-    df,
+    dof,
     fit_measures,
     minus2ll,
     p_value,

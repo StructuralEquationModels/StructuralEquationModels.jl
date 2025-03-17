@@ -126,7 +126,7 @@ fit_measures
 AIC
 BIC
 χ²
-df
+dof
 minus2ll
 nobserved_vars
 nsamples
