@@ -96,7 +96,7 @@ model = Sem(
     meanstructure = true
 )
 
-sem_fit(model)
+fit(model)
 ```
 
 If we build the model by parts, we have to pass the `meanstructure = true` argument to every part that requires it (when in doubt, simply consult the documentation for the respective part).
@@ -112,5 +112,5 @@ ml = SemML(observed = observed, meanstructure = true)
 
 model = Sem(observed, implied_ram, SemLoss(ml))
 
-sem_fit(model)
+fit(model)
 ```

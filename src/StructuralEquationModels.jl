@@ -4,6 +4,7 @@ using LinearAlgebra,
     Optim,
     NLSolversBase,
     Statistics,
+    StatsAPI,
     StatsBase,
     SparseArrays,
     Symbolics,
@@ -14,6 +15,8 @@ using LinearAlgebra,
     LazyArtifacts,
     DelimitedFiles,
     DataFrames
+
+import StatsAPI: params, coef, coefnames, dof, fit, nobs, coeftable
 
 export StenoGraphs, @StenoGraph, meld
 
@@ -37,6 +40,7 @@ include("frontend/specification/RAMMatrices.jl")
 include("frontend/specification/EnsembleParameterTable.jl")
 include("frontend/specification/StenoGraphs.jl")
 include("frontend/fit/summary.jl")
+include("frontend/StatsAPI.jl")
 # pretty printing
 include("frontend/pretty_printing.jl")
 # observed
@@ -74,7 +78,7 @@ include("additional_functions/simulation.jl")
 include("frontend/fit/fitmeasures/AIC.jl")
 include("frontend/fit/fitmeasures/BIC.jl")
 include("frontend/fit/fitmeasures/chi2.jl")
-include("frontend/fit/fitmeasures/df.jl")
+include("frontend/fit/fitmeasures/dof.jl")
 include("frontend/fit/fitmeasures/minus2ll.jl")
 include("frontend/fit/fitmeasures/p.jl")
 include("frontend/fit/fitmeasures/RMSEA.jl")
@@ -89,6 +93,9 @@ include("package_extensions/SEMProximalOptExt.jl")
 export AbstractSem,
     AbstractSemSingle,
     AbstractSemCollection,
+    coef,
+    coefnames,
+    coeftable,
     Sem,
     SemFiniteDiff,
     SemEnsemble,
@@ -129,8 +136,9 @@ export AbstractSem,
     obs_cov,
     obs_mean,
     nsamples,
+    nobs,
     samples,
-    sem_fit,
+    fit,
     SemFit,
     minimum,
     solution,
@@ -165,13 +173,15 @@ export AbstractSem,
     sort_vars!,
     sort_vars,
     params,
+    params!,
     nparams,
     param_indices,
+    param_labels,
     fit_measures,
     AIC,
     BIC,
     χ²,
-    df,
+    dof,
     fit_measures,
     minus2ll,
     p_value,

@@ -27,9 +27,9 @@ To check the performance implications for fitting a SEM, you can use the [`Bench
 ```julia
 using BenchmarkTools
 
-@benchmark sem_fit($your_model)
+@benchmark fit($your_model)
 
 using MKL
 
-@benchmark sem_fit($your_model)
+@benchmark fit($your_model)
 ```

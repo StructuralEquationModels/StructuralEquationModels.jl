@@ -29,7 +29,7 @@ Subtype of `SemImplied` that implements the RAM notation with symbolic precomput
 Subtype of `SemImplied`.
 
 ## Interfaces
-- `params(::RAMSymbolic) `-> vector of parameter ids
+- `param_labels(::RAMSymbolic) `-> vector of parameter ids
 - `nparams(::RAMSymbolic)` -> number of parameters
 
 - `Σ(::RAMSymbolic)` -> model implied covariance matrix
