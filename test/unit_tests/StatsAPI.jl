@@ -21,7 +21,7 @@ end
 end
 
 @testset "nobs" begin
-    @test nobs(model) == nsample(model)
+    @test nobs(model) == nsamples(model)
 end
 
 @testset "coeftable" begin
