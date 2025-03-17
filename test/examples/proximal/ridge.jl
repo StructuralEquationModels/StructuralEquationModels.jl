@@ -35,7 +35,7 @@ ram_mat = RAMMatrices(partable)
 
 model = Sem(specification = partable, data = dat, loss = SemML)
 
-fit = fit(model)
+sem_fit = fit(model)
 
 # use ridge from StructuralEquationModels
 model_ridge = Sem(

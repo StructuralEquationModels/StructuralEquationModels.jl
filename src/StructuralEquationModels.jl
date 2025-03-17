@@ -16,7 +16,7 @@ using LinearAlgebra,
     DelimitedFiles,
     DataFrames
 
-import StatsAPI: params, coef, coefnames, dof, fit
+import StatsAPI: params, coef, coefnames, dof, fit, nobs
 
 export StenoGraphs, @StenoGraph, meld
 

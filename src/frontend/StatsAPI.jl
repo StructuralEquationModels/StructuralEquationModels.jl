@@ -67,3 +67,10 @@ coef(x::ParameterTable) = params(x)
 To maintain compatibility with the `lavaan` package, this function is a synonym for `param_labels(x)`.
 """
 coefnames(x::ParameterTable) = param_labels(x)
+
+"""
+    nobs(model::AbstractSem) -> Int
+
+Synonymous to [*nsamples*](@ref nsamples).
+"""
+nobs(model::AbstractSem) = nsamples(model)
