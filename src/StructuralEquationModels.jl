@@ -16,7 +16,7 @@ using LinearAlgebra,
     DelimitedFiles,
     DataFrames
 
-import StatsAPI: params, coef, coefnames, dof
+import StatsAPI: params, coef, coefnames, dof, fit
 
 export StenoGraphs, @StenoGraph, meld
 
@@ -136,7 +136,7 @@ export AbstractSem,
     obs_mean,
     nsamples,
     samples,
-    sem_fit,
+    fit,
     SemFit,
     minimum,
     solution,

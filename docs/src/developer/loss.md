@@ -79,7 +79,7 @@ model = SemFiniteDiff(
     loss = (SemML, myridge)
 )
 
-model_fit = sem_fit(model)
+model_fit = fit(model)
 ```
 
 This is one way of specifying the model - we now have **one model** with **multiple loss functions**. Because we did not provide a gradient for `Ridge`, we have to specify a `SemFiniteDiff` model that computes numerical gradients with finite difference approximation.
@@ -117,7 +117,7 @@ model_new = Sem(
     loss = (SemML, myridge)
 )
 
-model_fit = sem_fit(model_new)
+model_fit = fit(model_new)
 ```
 
 The results are the same, but we can verify that the computational costs are way lower (for this, the julia package `BenchmarkTools` has to be installed):
@@ -125,9 +125,9 @@ The results are the same, but we can verify that the computational costs are way
 ```julia
 using BenchmarkTools
 
-@benchmark sem_fit(model)
+@benchmark fit(model)
 
-@benchmark sem_fit(model_new)
+@benchmark fit(model_new)
 ```
 
 The exact results of those benchmarks are of course highly depended an your system (processor, RAM, etc.), but you should see that the median computation time with analytical gradients drops to about 5% of the computation without analytical gradients.
@@ -241,7 +241,7 @@ model_ml = SemFiniteDiff(
     loss = MaximumLikelihood()
 )
 
-model_fit = sem_fit(model_ml)
+model_fit = fit(model_ml)
 ```
 
 If you want to differentiate your own loss functions via automatic differentiation, check out the [AutoDiffSEM](https://github.com/StructuralEquationModels/AutoDiffSEM) package.

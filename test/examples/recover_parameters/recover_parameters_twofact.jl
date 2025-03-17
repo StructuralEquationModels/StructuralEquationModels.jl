@@ -73,6 +73,6 @@ optimizer = SemOptimizerOptim(
     Optim.Options(; f_tol = 1e-10, x_tol = 1.5e-8),
 )
 
-solution_ml = sem_fit(optimizer, model_ml)
+solution_ml = fit(optimizer, model_ml)
 
 @test true_val ≈ solution(solution_ml) atol = 0.05

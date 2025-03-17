@@ -28,7 +28,7 @@ end
 
 # fit
 @testset "ml_solution_multigroup" begin
-    solution = sem_fit(semoptimizer, model_ml_multigroup)
+    solution = fit(semoptimizer, model_ml_multigroup)
     update_estimate!(partable, solution)
     test_estimates(
         partable,
@@ -36,7 +36,7 @@ end
         atol = 1e-4,
         lav_groups = Dict(:Pasteur => 1, :Grant_White => 2),
     )
-    solution = sem_fit(semoptimizer, model_ml_multigroup2)
+    solution = fit(semoptimizer, model_ml_multigroup2)
     update_estimate!(partable, solution)
     test_estimates(
         partable,
@@ -47,7 +47,7 @@ end
 end
 
 @testset "fitmeasures/se_ml" begin
-    solution_ml = sem_fit(model_ml_multigroup)
+    solution_ml = fit(model_ml_multigroup)
     test_fitmeasures(
         fit_measures(solution_ml),
         solution_lav[:fitmeasures_ml];
@@ -64,7 +64,7 @@ end
         lav_groups = Dict(:Pasteur => 1, :Grant_White => 2),
     )
 
-    solution_ml = sem_fit(model_ml_multigroup2)
+    solution_ml = fit(model_ml_multigroup2)
     test_fitmeasures(
         fit_measures(solution_ml),
         solution_lav[:fitmeasures_ml];
@@ -113,7 +113,7 @@ grad_fd = FiniteDiff.finite_difference_gradient(
 
 # fit
 @testset "ml_solution_multigroup | sorted" begin
-    solution = sem_fit(model_ml_multigroup)
+    solution = fit(model_ml_multigroup)
     update_estimate!(partable_s, solution)
     test_estimates(
         partable_s,
@@ -124,7 +124,7 @@ grad_fd = FiniteDiff.finite_difference_gradient(
 end
 
 @testset "fitmeasures/se_ml | sorted" begin
-    solution_ml = sem_fit(model_ml_multigroup)
+    solution_ml = fit(model_ml_multigroup)
     test_fitmeasures(
         fit_measures(solution_ml),
         solution_lav[:fitmeasures_ml];
@@ -191,7 +191,7 @@ end
 
 # fit
 @testset "solution_user_defined_loss" begin
-    solution = sem_fit(model_ml_multigroup)
+    solution = fit(model_ml_multigroup)
     update_estimate!(partable, solution)
     test_estimates(
         partable,
@@ -226,7 +226,7 @@ model_ls_multigroup = SemEnsemble(model_ls_g1, model_ls_g2; optimizer = semoptim
 end
 
 @testset "ls_solution_multigroup" begin
-    solution = sem_fit(model_ls_multigroup)
+    solution = fit(model_ls_multigroup)
     update_estimate!(partable, solution)
     test_estimates(
         partable,
@@ -237,7 +237,7 @@ end
 end
 
 @testset "fitmeasures/se_ls" begin
-    solution_ls = sem_fit(model_ls_multigroup)
+    solution_ls = fit(model_ls_multigroup)
     test_fitmeasures(
         fit_measures(solution_ls),
         solution_lav[:fitmeasures_ls];
@@ -321,7 +321,7 @@ if !isnothing(specification_miss_g1)
     end
 
     @testset "fiml_solution_multigroup" begin
-        solution = sem_fit(semoptimizer, model_ml_multigroup)
+        solution = fit(semoptimizer, model_ml_multigroup)
         update_estimate!(partable_miss, solution)
         test_estimates(
             partable_miss,
@@ -329,7 +329,7 @@ if !isnothing(specification_miss_g1)
             atol = 1e-4,
             lav_groups = Dict(:Pasteur => 1, :Grant_White => 2),
         )
-        solution = sem_fit(semoptimizer, model_ml_multigroup2)
+        solution = fit(semoptimizer, model_ml_multigroup2)
         update_estimate!(partable_miss, solution)
         test_estimates(
             partable_miss,
@@ -340,7 +340,7 @@ if !isnothing(specification_miss_g1)
     end
 
     @testset "fitmeasures/se_fiml" begin
-        solution = sem_fit(semoptimizer, model_ml_multigroup)
+        solution = fit(semoptimizer, model_ml_multigroup)
         test_fitmeasures(
             fit_measures(solution),
             solution_lav[:fitmeasures_fiml];
@@ -357,7 +357,7 @@ if !isnothing(specification_miss_g1)
             lav_groups = Dict(:Pasteur => 1, :Grant_White => 2),
         )
 
-        solution = sem_fit(semoptimizer, model_ml_multigroup2)
+        solution = fit(semoptimizer, model_ml_multigroup2)
         test_fitmeasures(
             fit_measures(solution),
             solution_lav[:fitmeasures_fiml];

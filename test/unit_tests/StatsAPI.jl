@@ -9,7 +9,7 @@ model = Sem(
     specification = partable,
     data = data
 )
-model_fit = sem_fit(model)
+model_fit = fit(model)
 
 @testset "params" begin
     out = [NaN]

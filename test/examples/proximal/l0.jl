@@ -35,7 +35,7 @@ ram_mat = RAMMatrices(partable)
 
 model = Sem(specification = partable, data = dat, loss = SemML)
 
-fit = sem_fit(model)
+fit = fit(model)
 
 # use l0 from ProximalSEM
 # regularized
@@ -44,7 +44,7 @@ prox_operator =
 
 model_prox = Sem(specification = partable, data = dat, loss = SemML)
 
-fit_prox = sem_fit(model_prox, engine = :Proximal, operator_g = prox_operator)
+fit_prox = fit(model_prox, engine = :Proximal, operator_g = prox_operator)
 
 @testset "l0 | solution_unregularized" begin
     @test fit_prox.optimization_result.result[:iterations] < 1000
@@ -56,7 +56,7 @@ prox_operator = SlicedSeparableSum((NormL0(0.0), NormL0(100.0)), ([1:30], [31]))
 
 model_prox = Sem(specification = partable, data = dat, loss = SemML)
 
-fit_prox = sem_fit(model_prox, engine = :Proximal, operator_g = prox_operator)
+fit_prox = fit(model_prox, engine = :Proximal, operator_g = prox_operator)
 
 @testset "l0 | solution_regularized" begin
     @test fit_prox.optimization_result.result[:iterations] < 1000

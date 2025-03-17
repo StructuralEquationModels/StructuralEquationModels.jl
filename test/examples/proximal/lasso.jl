@@ -35,14 +35,14 @@ ram_mat = RAMMatrices(partable)
 
 model = Sem(specification = partable, data = dat, loss = SemML)
 
-fit = sem_fit(model)
+fit = fit(model)
 
 # use lasso from ProximalSEM
 λ = zeros(31)
 
 model_prox = Sem(specification = partable, data = dat, loss = SemML)
 
-fit_prox = sem_fit(model_prox, engine = :Proximal, operator_g = NormL1(λ))
+fit_prox = fit(model_prox, engine = :Proximal, operator_g = NormL1(λ))
 
 @testset "lasso | solution_unregularized" begin
     @test fit_prox.optimization_result.result[:iterations] < 1000
@@ -54,7 +54,7 @@ end
 
 model_prox = Sem(specification = partable, data = dat, loss = SemML)
 
-fit_prox = sem_fit(model_prox, engine = :Proximal, operator_g = NormL1(λ))
+fit_prox = fit(model_prox, engine = :Proximal, operator_g = NormL1(λ))
 
 @testset "lasso | solution_regularized" begin
     @test fit_prox.optimization_result.result[:iterations] < 1000

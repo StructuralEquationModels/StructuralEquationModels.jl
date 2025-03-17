@@ -48,7 +48,7 @@ model = Sem(
     data = data
 )
 
-model_fit = sem_fit(model)
+model_fit = fit(model)
 
 update_estimate!(partable, model_fit)
 
@@ -153,7 +153,7 @@ model_constrained = Sem(
     data = data
 )
 
-model_fit_constrained = sem_fit(constrained_optimizer, model_constrained)
+model_fit_constrained = fit(constrained_optimizer, model_constrained)
 ```
 
 As you can see, the optimizer converged (`:XTOL_REACHED`) and investigating the solution yields

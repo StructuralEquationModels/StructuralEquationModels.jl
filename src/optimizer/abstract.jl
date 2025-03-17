@@ -1,5 +1,5 @@
 """
-    sem_fit([optim::SemOptimizer], model::AbstractSem;
+    fit([optim::SemOptimizer], model::AbstractSem;
             [engine::Symbol], start_val = start_val, kwargs...)
 
 Return the fitted `model`.
@@ -20,25 +20,25 @@ the online documentation on [Starting values](@ref).
 
 # Examples
 ```julia
-sem_fit(
+fit(
     my_model;
     start_val = start_simple,
     start_covariances_latent = 0.5)
 ```
 """
-function sem_fit(optim::SemOptimizer, model::AbstractSem; start_val = nothing, kwargs...)
+function fit(optim::SemOptimizer, model::AbstractSem; start_val = nothing, kwargs...)
     start_params = prepare_start_params(start_val, model; kwargs...)
     @assert start_params isa AbstractVector
     @assert length(start_params) == nparams(model)
 
-    sem_fit(optim, model, start_params; kwargs...)
+    fit(optim, model, start_params; kwargs...)
 end
 
-sem_fit(model::AbstractSem; engine::Symbol = :Optim, start_val = nothing, kwargs...) =
-    sem_fit(SemOptimizer(; engine, kwargs...), model; start_val, kwargs...)
+fit(model::AbstractSem; engine::Symbol = :Optim, start_val = nothing, kwargs...) =
+fit(SemOptimizer(; engine, kwargs...), model; start_val, kwargs...)
 
 # fallback method
-sem_fit(optim::SemOptimizer, model::AbstractSem, start_params; kwargs...) =
+fit(optim::SemOptimizer, model::AbstractSem, start_params; kwargs...) =
     error("Optimizer $(optim) support not implemented.")
 
 # FABIN3 is the default method for single models

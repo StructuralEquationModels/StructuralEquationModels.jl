@@ -102,7 +102,7 @@ optimizer(res::Optim.MultivariateOptimizationResults) = Optim.summary(res)
 n_iterations(res::Optim.MultivariateOptimizationResults) = Optim.iterations(res)
 convergence(res::Optim.MultivariateOptimizationResults) = Optim.converged(res)
 
-function sem_fit(
+function fit(
     optim::SemOptimizerOptim,
     model::AbstractSem,
     start_params::AbstractVector;
