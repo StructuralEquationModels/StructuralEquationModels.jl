@@ -110,7 +110,7 @@ model = Sem(
 We can now fit the model via
 
 ```@example high_level; ansicolor = true
-model_fit = sem_fit(model)
+model_fit = fit(model)
 ```
 
 and compute fit measures as

@@ -14,7 +14,7 @@ Return the number of parameters in a SEM model associated with `semobj`.
 
 See also [`params`](@ref).
 """
-nparams(semobj) = length(params(semobj))
+nparams(semobj) = length(param_labels(semobj))
 
 """
     nvars(semobj)
@@ -52,7 +52,7 @@ parind[:param_name]
 
 See also [`params`](@ref).
 """
-param_indices(semobj) = Dict(par => i for (i, par) in enumerate(params(semobj)))
+param_indices(semobj) = Dict(par => i for (i, par) in enumerate(param_labels(semobj)))
 
 """
     nsamples(semobj)

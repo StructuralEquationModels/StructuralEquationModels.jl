@@ -51,7 +51,7 @@ end
 fitmeasure_names_ml = Dict(
     :AIC => "aic",
     :BIC => "bic",
-    :df => "df",
+    :dof => "df",
     :χ² => "chisq",
     :p_value => "pvalue",
     :nparams => "npar",
@@ -59,7 +59,7 @@ fitmeasure_names_ml = Dict(
 )
 
 fitmeasure_names_ls = Dict(
-    :df => "df",
+    :dof => "df",
     :χ² => "chisq",
     :p_value => "pvalue",
     :nparams => "npar",
@@ -89,8 +89,8 @@ function test_estimates(
     lav_group = nothing,
     skip::Bool = false,
 )
-    actual = StructuralEquationModels.param_values(partable, col)
-    expected = StructuralEquationModels.lavaan_param_values(
+    actual = StructuralEquationModels.params(partable, col)
+    expected = StructuralEquationModels.lavaan_params(
         partable_lav,
         partable,
         lav_col,
@@ -120,8 +120,8 @@ function test_estimates(
     actual = fill(NaN, nparams(ens_partable))
     expected = fill(NaN, nparams(ens_partable))
     for (key, partable) in pairs(ens_partable.tables)
-        StructuralEquationModels.param_values!(actual, partable, col)
-        StructuralEquationModels.lavaan_param_values!(
+        StructuralEquationModels.params!(actual, partable, col)
+        StructuralEquationModels.lavaan_params!(
             expected,
             partable_lav,
             partable,

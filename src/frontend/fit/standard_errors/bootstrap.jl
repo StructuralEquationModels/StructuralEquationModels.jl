@@ -1,5 +1,5 @@
 """
-    se_bootstrap(semfit::SemFit; n_boot = 3000, data = nothing, kwargs...)
+    se_bootstrap(sem_fit::SemFit; n_boot = 3000, data = nothing, kwargs...)
 
 Return boorstrap standard errors.
 Only works for single models.
@@ -52,7 +52,7 @@ function se_bootstrap(
         new_solution .= 0.0
 
         try
-            new_solution = solution(sem_fit(new_model; start_val = start))
+            new_solution = solution(fit(new_model; start_val = start))
         catch
             n_failed += 1
         end

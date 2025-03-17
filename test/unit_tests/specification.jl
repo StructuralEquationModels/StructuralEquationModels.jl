@@ -58,8 +58,8 @@ end
         @test nvars(partable) == length(obs_vars) + length(lat_vars)
         @test issetequal(vars(partable), [obs_vars; lat_vars])
 
-        # params API
-        @test params(partable) == [[:θ_1, :a₁, :λ₉]; Symbol.("θ_", 2:16)]
+        # param_labels API
+        @test param_labels(partable) == [[:θ_1, :a₁, :λ₉]; Symbol.("θ_", 2:16)]
         @test nparams(partable) == 18
 
         # don't allow constructing ParameterTable from a graph for an ensemble
@@ -116,7 +116,7 @@ end
 
     @test nparams(enspartable) == 36
     @test issetequal(
-        params(enspartable),
+        param_labels(enspartable),
         [Symbol.("gPasteur_", 1:16); Symbol.("gGrant_White_", 1:17); [:a₁, :a₂, :λ₉]],
     )
 end
@@ -135,7 +135,7 @@ end
     @test nvars(ram_matrices) == length(obs_vars) + length(lat_vars)
     @test issetequal(vars(ram_matrices), [obs_vars; lat_vars])
 
-    # params API
+    # param_labels API
     @test nparams(ram_matrices) == nparams(partable)
-    @test params(ram_matrices) == params(partable)
+    @test param_labels(ram_matrices) == param_labels(partable)
 end

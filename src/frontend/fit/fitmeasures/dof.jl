@@ -1,14 +1,14 @@
 """
-    df(sem_fit::SemFit)
-    df(model::AbstractSem)
+    dof(sem_fit::SemFit)
+    dof(model::AbstractSem)
 
 Return the degrees of freedom.
 """
-function df end
+function dof end
 
-df(sem_fit::SemFit) = df(sem_fit.model)
+dof(sem_fit::SemFit) = dof(sem_fit.model)
 
-df(model::AbstractSem) = n_dp(model) - nparams(model)
+dof(model::AbstractSem) = n_dp(model) - nparams(model)
 
 function n_dp(model::AbstractSemSingle)
     nvars = nobserved_vars(model)
