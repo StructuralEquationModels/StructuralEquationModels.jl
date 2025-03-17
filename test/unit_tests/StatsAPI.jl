@@ -20,3 +20,10 @@ end
     @test param_labels(partable) == [:θ_1] == coefnames(partable)
 end
 
+@testset "nobs" begin
+    @test nobs(model) == nsample(model)
+end
+
+@testset "coeftable" begin
+    @test_throws coeftable(model) MethodError "StructuralEquationModels does not support"
+end

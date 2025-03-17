@@ -74,3 +74,5 @@ coefnames(x::ParameterTable) = param_labels(x)
 Synonymous to [*nsamples*](@ref nsamples).
 """
 nobs(model::AbstractSem) = nsamples(model)
+
+coeftable(model::AbstractSem; level::Real=0.95) = throw(MethodError(x, "StructuralEquationModels does not support the `CoefTable` interface; see [`ParameterTable`](@ref) instead."))
