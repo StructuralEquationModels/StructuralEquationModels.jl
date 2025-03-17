@@ -57,21 +57,21 @@ params(partable::ParameterTable, col::Symbol = :estimate) =
 """
     coef(x::ParameterTable)
 
-For a `SEM`, this function is equivalent to `params(x)`.
-It returns the parameters for the given model.
+For a `ParameterTable`, this function is synonymous to [`params`](@ref).
 """
 coef(x::ParameterTable) = params(x)
 
 """
     coefnames(x::ParameterTable)
-To maintain compatibility with the `lavaan` package, this function is a synonym for `param_labels(x)`.
+
+Synonymous to [`param_labels`](@ref param_labels).
 """
 coefnames(x::ParameterTable) = param_labels(x)
 
 """
     nobs(model::AbstractSem) -> Int
 
-Synonymous to [*nsamples*](@ref nsamples).
+Synonymous to [`nsamples`](@ref).
 """
 nobs(model::AbstractSem) = nsamples(model)
 
