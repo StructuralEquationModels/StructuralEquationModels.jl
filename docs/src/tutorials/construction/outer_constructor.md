@@ -131,4 +131,4 @@ model = SemFiniteDiff(
 )
 ```
 
-constructs a model that will use finite difference approximation if you estimate the parameters via `sem_fit(model)`.
+constructs a model that will use finite difference approximation if you estimate the parameters via `fit(model)`.

@@ -42,13 +42,13 @@ model = Sem(
     data = data
 )
 
-model_fit = sem_fit(model)
+model_fit = fit(model)
 ```
 
 After you fitted a model,
 
 ```julia
-model_fit = sem_fit(model)
+model_fit = fit(model)
 ```
 
 you end up with an object of type [`SemFit`](@ref).
@@ -87,8 +87,8 @@ We can also update the `ParameterTable` object with other information via [`upda
 se_bs = se_bootstrap(model_fit; n_boot = 20)
 se_he = se_hessian(model_fit)
 
-update_partable!(partable, :se_hessian, params(model_fit), se_he)
-update_partable!(partable, :se_bootstrap, params(model_fit), se_bs)
+update_partable!(partable, :se_hessian, param_labels(model_fit), se_he)
+update_partable!(partable, :se_bootstrap, param_labels(model_fit), se_bs)
 
 details(partable)
 ```
@@ -117,6 +117,11 @@ Additional functions that can be used to extract information from a `SemFit` obj
 
 ```@docs
 SemFit
+params
+param_labels
+nparams
+nsamples
+nobserved_vars
 ```
 
 ## Fit measures
@@ -126,12 +131,8 @@ fit_measures
 AIC
 BIC
 χ²
-df
+dof
 minus2ll
-nobserved_vars
-nsamples
-params
-nparams
 p_value
 RMSEA
 ```

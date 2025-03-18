@@ -39,14 +39,14 @@ constrained_optimizer = SemOptimizer(;
 ############################################################################################
 
 @testset "ml_solution_maxeval" begin
-    solution_maxeval = sem_fit(model_ml, engine = :NLopt, options = Dict(:maxeval => 10))
+    solution_maxeval = fit(model_ml, engine = :NLopt, options = Dict(:maxeval => 10))
 
     @test solution_maxeval.optimization_result.problem.numevals == 10
     @test solution_maxeval.optimization_result.result[3] == :MAXEVAL_REACHED
 end
 
 @testset "ml_solution_constrained" begin
-    solution_constrained = sem_fit(constrained_optimizer, model_ml)
+    solution_constrained = fit(constrained_optimizer, model_ml)
 
     @test solution_constrained.solution[31] * solution_constrained.solution[30] >=
           (0.6 - 1e-8)

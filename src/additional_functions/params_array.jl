@@ -102,17 +102,17 @@ param_occurences(arr::ParamsArray, i::Integer) =
 
 """
     materialize!(dest::AbstractArray{<:Any, N}, src::ParamsArray{<:Any, N},
-                 param_values::AbstractVector;
+                 params::AbstractVector;
                  set_constants::Bool = true,
                  set_zeros::Bool = false)
 
 Materialize the parameterized array `src` into `dest` by substituting the parameter
-references with the parameter values from `param_values`.
+references with the parameter values from `params`.
 """
 function materialize!(
     dest::AbstractArray{<:Any, N},
     src::ParamsArray{<:Any, N},
-    param_values::AbstractVector;
+    params::AbstractVector;
     set_constants::Bool = true,
     set_zeros::Bool = false,
 ) where {N}
@@ -121,9 +121,9 @@ function materialize!(
             "Parameters ($(size(params_arr))) and destination ($(size(dest))) array sizes don't match",
         ),
     )
-    nparams(src) == length(param_values) || throw(
+    nparams(src) == length(params) || throw(
         DimensionMismatch(
-            "Number of values ($(length(param_values))) does not match the number of parameters ($(nparams(src)))",
+            "Number of values ($(length(params))) does not match the number of parameters ($(nparams(src)))",
         ),
     )
     Z = eltype(dest) <: Number ? eltype(dest) : eltype(src)
@@ -133,7 +133,7 @@ function materialize!(
             dest[i] = val
         end
     end
-    @inbounds for (i, val) in enumerate(param_values)
+    @inbounds for (i, val) in enumerate(params)
         for j in param_occurences_range(src, i)
             dest[src.linear_indices[j]] = val
         end
@@ -144,7 +144,7 @@ end
 function materialize!(
     dest::SparseMatrixCSC,
     src::ParamsMatrix,
-    param_values::AbstractVector;
+    params::AbstractVector;
     set_constants::Bool = true,
     set_zeros::Bool = false,
 )
@@ -154,9 +154,9 @@ function materialize!(
             "Parameters ($(size(params_arr))) and destination ($(size(dest))) array sizes don't match",
         ),
     )
-    nparams(src) == length(param_values) || throw(
+    nparams(src) == length(params) || throw(
         DimensionMismatch(
-            "Number of values ($(length(param_values))) does not match the number of parameters ($(nparams(src)))",
+            "Number of values ($(length(params))) does not match the number of parameters ($(nparams(src)))",
         ),
     )
 
@@ -170,7 +170,7 @@ function materialize!(
             dest.nzval[j] = val
         end
     end
-    @inbounds for (i, val) in enumerate(param_values)
+    @inbounds for (i, val) in enumerate(params)
         for j in param_occurences_range(src, i)
             dest.nzval[src.nz_indices[j]] = val
         end
@@ -180,33 +180,33 @@ end
 
 """
     materialize([T], src::ParamsArray{<:Any, N},
-                param_values::AbstractVector{T}) where T
+                params::AbstractVector{T}) where T
 
 Materialize the parameterized array `src` into a new array of type `T`
-by substituting the parameter references with the parameter values from `param_values`.
+by substituting the parameter references with the parameter values from `params`.
 """
-materialize(::Type{T}, arr::ParamsArray, param_values::AbstractVector) where {T} =
-    materialize!(similar(arr, T), arr, param_values, set_constants = true, set_zeros = true)
+materialize(::Type{T}, arr::ParamsArray, params::AbstractVector) where {T} =
+    materialize!(similar(arr, T), arr, params, set_constants = true, set_zeros = true)
 
-materialize(arr::ParamsArray, param_values::AbstractVector{T}) where {T} =
-    materialize(Union{T, eltype(arr)}, arr, param_values)
+materialize(arr::ParamsArray, params::AbstractVector{T}) where {T} =
+    materialize(Union{T, eltype(arr)}, arr, params)
 
 # the hack to update the structured matrix (should be fine since the structure is imposed by ParamsMatrix)
 materialize!(
     dest::Union{Symmetric, LowerTriangular, UpperTriangular},
     src::ParamsMatrix{<:Any},
-    param_values::AbstractVector;
+    params::AbstractVector;
     kwargs...,
-) = materialize!(parent(dest), src, param_values; kwargs...)
+) = materialize!(parent(dest), src, params; kwargs...)
 
 function sparse_materialize(
     ::Type{T},
     arr::ParamsMatrix,
-    param_values::AbstractVector,
+    params::AbstractVector,
 ) where {T}
-    nparams(arr) == length(param_values) || throw(
+    nparams(arr) == length(params) || throw(
         DimensionMismatch(
-            "Number of values ($(length(param_values))) does not match the number of parameter ($(nparams(arr)))",
+            "Number of values ($(length(params))) does not match the number of parameter ($(nparams(arr)))",
         ),
     )
 
@@ -218,7 +218,7 @@ function sparse_materialize(
         nz_lininds[nz_ind] = lin_ind
     end
     # fill parameters
-    @inbounds for (i, val) in enumerate(param_values)
+    @inbounds for (i, val) in enumerate(params)
         for j in param_occurences_range(arr, i)
             nz_ind = arr.nz_indices[j]
             nz_vals[nz_ind] = val

@@ -18,7 +18,7 @@ Models you can fit include
 - Multigroup SEM
 - Sums of arbitrary loss functions (everything the optimizer can handle).
 
-# What are the merrits?
+# What are the merits?
 
 We provide fast objective functions, gradients, and for some cases hessians as well as approximations thereof.
 As a user, you can easily define custom loss functions.

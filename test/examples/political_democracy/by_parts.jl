@@ -70,7 +70,7 @@ solution_names = Symbol.("parameter_estimates_" .* ["ml", "ls", "ml", "ml"])
 for (model, name, solution_name) in zip(models, model_names, solution_names)
     try
         @testset "$(name)_solution" begin
-            solution = sem_fit(optimizer_obj, model)
+            solution = fit(optimizer_obj, model)
             update_estimate!(partable, solution)
             test_estimates(partable, solution_lav[solution_name]; atol = 1e-2)
         end
@@ -79,9 +79,9 @@ for (model, name, solution_name) in zip(models, model_names, solution_names)
 end
 
 @testset "ridge_solution" begin
-    solution_ridge = sem_fit(optimizer_obj, model_ridge)
-    solution_ml = sem_fit(optimizer_obj, model_ml)
-    # solution_ridge_id = sem_fit(optimizer_obj, model_ridge_id)
+    solution_ridge = fit(optimizer_obj, model_ridge)
+    solution_ml = fit(optimizer_obj, model_ml)
+    # solution_ridge_id = fit(optimizer_obj, model_ridge_id)
     @test solution_ridge.minimum < solution_ml.minimum + 1
 end
 
@@ -97,8 +97,8 @@ end
 end
 
 @testset "ml_solution_weighted" begin
-    solution_ml = sem_fit(optimizer_obj, model_ml)
-    solution_ml_weighted = sem_fit(optimizer_obj, model_ml_weighted)
+    solution_ml = fit(optimizer_obj, model_ml)
+    solution_ml_weighted = fit(optimizer_obj, model_ml_weighted)
     @test solution(solution_ml) ≈ solution(solution_ml_weighted) rtol = 1e-3
     @test nsamples(model_ml) * StructuralEquationModels.minimum(solution_ml) ≈
           StructuralEquationModels.minimum(solution_ml_weighted) rtol = 1e-6
@@ -109,7 +109,7 @@ end
 ############################################################################################
 
 @testset "fitmeasures/se_ml" begin
-    solution_ml = sem_fit(optimizer_obj, model_ml)
+    solution_ml = fit(optimizer_obj, model_ml)
     test_fitmeasures(fit_measures(solution_ml), solution_lav[:fitmeasures_ml]; atol = 1e-3)
 
     update_se_hessian!(partable, solution_ml)
@@ -123,7 +123,7 @@ end
 end
 
 @testset "fitmeasures/se_ls" begin
-    solution_ls = sem_fit(optimizer_obj, model_ls_sym)
+    solution_ls = fit(optimizer_obj, model_ls_sym)
     fm = fit_measures(solution_ls)
     test_fitmeasures(
         fm,
@@ -176,13 +176,13 @@ if opt_engine == :Optim
     end
 
     @testset "ml_solution_hessian" begin
-        solution = sem_fit(optimizer_obj, model_ml)
+        solution = fit(optimizer_obj, model_ml)
         update_estimate!(partable, solution)
         test_estimates(partable, solution_lav[:parameter_estimates_ml]; atol = 1e-2)
     end
 
     @testset "ls_solution_hessian" begin
-        solution = sem_fit(optimizer_obj, model_ls)
+        solution = fit(optimizer_obj, model_ls)
         update_estimate!(partable, solution)
         test_estimates(
             partable,
@@ -254,7 +254,7 @@ solution_names = Symbol.("parameter_estimates_" .* ["ml", "ls", "ml"] .* "_mean"
 for (model, name, solution_name) in zip(models, model_names, solution_names)
     try
         @testset "$(name)_solution_mean" begin
-            solution = sem_fit(optimizer_obj, model)
+            solution = fit(optimizer_obj, model)
             update_estimate!(partable_mean, solution)
             test_estimates(partable_mean, solution_lav[solution_name]; atol = 1e-2)
         end
@@ -267,7 +267,7 @@ end
 ############################################################################################
 
 @testset "fitmeasures/se_ml_mean" begin
-    solution_ml = sem_fit(optimizer_obj, model_ml)
+    solution_ml = fit(optimizer_obj, model_ml)
     test_fitmeasures(
         fit_measures(solution_ml),
         solution_lav[:fitmeasures_ml_mean];
@@ -285,7 +285,7 @@ end
 end
 
 @testset "fitmeasures/se_ls_mean" begin
-    solution_ls = sem_fit(optimizer_obj, model_ls)
+    solution_ls = fit(optimizer_obj, model_ls)
     fm = fit_measures(solution_ls)
     test_fitmeasures(
         fm,
@@ -336,13 +336,13 @@ end
 ############################################################################################
 
 @testset "fiml_solution" begin
-    solution = sem_fit(optimizer_obj, model_ml)
+    solution = fit(optimizer_obj, model_ml)
     update_estimate!(partable_mean, solution)
     test_estimates(partable_mean, solution_lav[:parameter_estimates_fiml]; atol = 1e-2)
 end
 
 @testset "fiml_solution_symbolic" begin
-    solution = sem_fit(optimizer_obj, model_ml_sym)
+    solution = fit(optimizer_obj, model_ml_sym)
     update_estimate!(partable_mean, solution)
     test_estimates(partable_mean, solution_lav[:parameter_estimates_fiml]; atol = 1e-2)
 end
@@ -352,7 +352,7 @@ end
 ############################################################################################
 
 @testset "fitmeasures/se_fiml" begin
-    solution_ml = sem_fit(optimizer_obj, model_ml)
+    solution_ml = fit(optimizer_obj, model_ml)
     test_fitmeasures(
         fit_measures(solution_ml),
         solution_lav[:fitmeasures_fiml];

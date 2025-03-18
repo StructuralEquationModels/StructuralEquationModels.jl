@@ -1,4 +1,9 @@
-params(spec::SemSpecification) = spec.params
+"""
+    param_labels(semobj) -> Vector{Symbol}
+
+Return the vector of parameter labels (in the same order as [`params`](@ref)).
+"""
+param_labels(spec::SemSpecification) = spec.param_labels
 
 """
     vars(semobj) -> Vector{Symbol}
@@ -65,7 +70,7 @@ function ParameterTable end
 
     (1) EnsembleParameterTable(;graph, observed_vars, latent_vars, groups)
 
-    (2) EnsembleParameterTable(ps::Pair...; params = nothing)
+    (2) EnsembleParameterTable(ps::Pair...; param_labels = nothing)
 
 Return an `EnsembleParameterTable` constructed from (1) a graph or (2) multiple specifications.
 
@@ -73,7 +78,7 @@ Return an `EnsembleParameterTable` constructed from (1) a graph or (2) multiple 
 - `graph`: graph defined via `@StenoGraph`
 - `observed_vars::Vector{Symbol}`: observed variable names
 - `latent_vars::Vector{Symbol}`: latent variable names
-- `params::Vector{Symbol}`: (optional) a vector of parameter names
+- `param_labels::Vector{Symbol}`: (optional) a vector of parameter names
 - `ps::Pair...`: `:group_name => specification`, where `specification` is either a `ParameterTable` or `RAMMatrices`
 
 # Examples
@@ -88,7 +93,7 @@ function EnsembleParameterTable end
 
     (1) RAMMatrices(partable::ParameterTable)
 
-    (2) RAMMatrices(;A, S, F, M = nothing, params, vars)
+    (2) RAMMatrices(;A, S, F, M = nothing, param_labels, vars)
 
     (3) RAMMatrices(partable::EnsembleParameterTable)
 
@@ -102,7 +107,7 @@ Return `RAMMatrices` constructed from (1) a parameter table or (2) individual ma
 - `S`: matrix of undirected effects
 - `F`: filter matrix
 - `M`: vector of mean effects
-- `params::Vector{Symbol}`: parameter labels
+- `param_labels::Vector{Symbol}`: parameter labels
 - `vars::Vector{Symbol}`: variable names corresponding to the A, S and F matrix columns
 
 # Examples

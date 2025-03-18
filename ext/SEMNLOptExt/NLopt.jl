@@ -71,8 +71,8 @@ function SemFit_NLopt(optimization_result, model::AbstractSem, start_val, opt)
     )
 end
 
-# sem_fit method
-function SEM.sem_fit(
+# fit method
+function SEM.fit(
     optim::SemOptimizerNLopt,
     model::AbstractSem,
     start_params::AbstractVector;

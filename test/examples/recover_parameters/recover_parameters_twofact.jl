@@ -40,7 +40,7 @@ A = [
     0 0 0 0 0 0 0    0
 ]
 
-ram_matrices = RAMMatrices(; A = A, S = S, F = F, params = x, vars = nothing)
+ram_matrices = RAMMatrices(; A = A, S = S, F = F, param_labels = x, vars = nothing)
 
 true_val = [
     repeat([1], 8)
@@ -73,6 +73,6 @@ optimizer = SemOptimizerOptim(
     Optim.Options(; f_tol = 1e-10, x_tol = 1.5e-8),
 )
 
-solution_ml = sem_fit(optimizer, model_ml)
+solution_ml = fit(optimizer, model_ml)
 
 @test true_val ≈ solution(solution_ml) atol = 0.05

@@ -120,25 +120,25 @@ Let's fit the regularized model
 
 ```@example reg
 
-fit_lasso = sem_fit(optimizer_lasso, model_lasso)
+fit_lasso = fit(optimizer_lasso, model_lasso)
 ```
 
 and compare the solution to unregularizted estimates:
 
 ```@example reg
-fit = sem_fit(model)
+sem_fit = fit(model)
 
-update_estimate!(partable, fit)
+update_estimate!(partable, sem_fit)
 
-update_partable!(partable, :estimate_lasso, params(fit_lasso), solution(fit_lasso))
+update_partable!(partable, :estimate_lasso, param_labels(fit_lasso), solution(fit_lasso))
 
 details(partable)
 ```
 
-Instead of explicitely defining a `SemOptimizerProximal` object, you can also pass `engine = :Proximal` and additional keyword arguments to `sem_fit`:
+Instead of explicitely defining a `SemOptimizerProximal` object, you can also pass `engine = :Proximal` and additional keyword arguments to `fit`:
 
 ```@example reg
-fit = sem_fit(model; engine = :Proximal, operator_g = NormL1(λ))
+sem_fit = fit(model; engine = :Proximal, operator_g = NormL1(λ))
 ```
 
 ## Second example - mixed l1 and l0 regularization
@@ -162,13 +162,13 @@ model_mixed = Sem(
     data = data,    
 )
 
-fit_mixed = sem_fit(model_mixed; engine = :Proximal, operator_g = prox_operator)
+fit_mixed = fit(model_mixed; engine = :Proximal, operator_g = prox_operator)
 ```
 
 Let's again compare the different results:
 
 ```@example reg
-update_partable!(partable, :estimate_mixed, params(fit_mixed), solution(fit_mixed))
+update_partable!(partable, :estimate_mixed, param_labels(fit_mixed), solution(fit_mixed))
 
 details(partable)
 ```

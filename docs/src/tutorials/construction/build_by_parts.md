@@ -65,5 +65,5 @@ optimizer = SemOptimizerOptim()
 
 model_ml = Sem(observed, implied_ram, loss_ml)
 
-sem_fit(optimizer, model_ml)
+fit(optimizer, model_ml)
 ```

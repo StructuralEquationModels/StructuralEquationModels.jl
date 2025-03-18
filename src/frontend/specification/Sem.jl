@@ -35,7 +35,7 @@ vars(model::AbstractSemSingle) = vars(implied(model))
 observed_vars(model::AbstractSemSingle) = observed_vars(implied(model))
 latent_vars(model::AbstractSemSingle) = latent_vars(implied(model))
 
-params(model::AbstractSemSingle) = params(implied(model))
+param_labels(model::AbstractSemSingle) = param_labels(implied(model))
 nparams(model::AbstractSemSingle) = nparams(implied(model))
 
 """
@@ -45,6 +45,11 @@ Returns the [*observed*](@ref SemObserved) part of a model.
 """
 observed(model::AbstractSemSingle) = model.observed
 
+"""
+    nsamples(model::AbstractSem) -> Int
+
+Returns the number of samples from the [*observed*](@ref SemObserved) part of a model.
+"""
 nsamples(model::AbstractSemSingle) = nsamples(observed(model))
 
 """

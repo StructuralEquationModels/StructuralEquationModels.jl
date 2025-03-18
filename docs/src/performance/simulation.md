@@ -100,7 +100,7 @@ models = [model1, model2]
 fits = Vector{SemFit}(undef, 2)
 
 Threads.@threads for i in 1:2
-    fits[i] = sem_fit(models[i])
+    fits[i] = fit(models[i])
 end
 ```
 
