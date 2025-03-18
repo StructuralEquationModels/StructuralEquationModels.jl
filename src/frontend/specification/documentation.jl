@@ -1,3 +1,8 @@
+"""
+    param_labels(semobj) -> Vector{Symbol}
+
+Return the vector of parameter labels (in the same order as [`params`](@ref)).
+"""
 param_labels(spec::SemSpecification) = spec.param_labels
 
 """
