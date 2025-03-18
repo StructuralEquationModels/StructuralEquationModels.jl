@@ -4,6 +4,9 @@
 |:-------------------------------------------------------------------------------:|:-----------------------------------------------------------------------------------------------:|:-----------------------------------------------------------------------------------------------:|
 | [![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://structuralequationmodels.github.io/StructuralEquationModels.jl/) [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://structuralequationmodels.github.io/StructuralEquationModels.jl/dev/) | [![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active) [![Github Action CI](https://github.com/StructuralEquationModels/StructuralEquationModels.jl/workflows/CI_extended/badge.svg)](https://github.com/StructuralEquationModels/StructuralEquationModels.jl/actions/) [![codecov](https://codecov.io/gh/StructuralEquationModels/StructuralEquationModels.jl/branch/main/graph/badge.svg?token=P2kjzpvM4V)](https://codecov.io/gh/StructuralEquationModels/StructuralEquationModels.jl) | [![DOI](https://zenodo.org/badge/228649704.svg)](https://zenodo.org/badge/latestdoi/228649704) |
 
+> [!NOTE]  
+> Check out our [preprint](https://formal-methods-mpi.github.io/pkgmanuscript/manuscript.pdf) on the package!
+
 # What is this Package for?
 
 This is a package for Structural Equation Modeling.
