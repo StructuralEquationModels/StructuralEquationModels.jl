@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Regularization · StructuralEquationModels.jl</title><meta name="title" content="Regularization · StructuralEquationModels.jl"/><meta property="og:title" content="Regularization · StructuralEquationModels.jl"/><meta property="twitter:title" content="Regularization · StructuralEquationModels.jl"/><meta name="description" content="Documentation for StructuralEquationModels.jl."/><meta property="og:description" content="Documentation for StructuralEquationModels.jl."/><meta property="twitter:description" content="Documentation for StructuralEquationModels.jl."/><script data-outdated-warner src="../../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../../assets/documenter.js"></script><script src="../../../search_index.js"></script><script src="../../../siteinfo.js"></script><script src="../../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../../assets/themeswap.js"></script><link href="../../../assets/favicon_zeta.ico" rel="icon" type="image/x-icon"/></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../../../"><img src="../../../assets/logo.svg" alt="StructuralEquationModels.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href="../../../">StructuralEquationModels.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../../../">A fast and flexible SEM framework</a></li><li><input class="collapse-toggle" id="menuitem-2" type="checkbox"/><label class="tocitem" for="menuitem-2"><span class="docs-label">Tutorials</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../first_model/">A first model</a></li><li><a class="tocitem" href="../../concept/">Our Concept of a Structural Equation Model</a></li><li><input class="collapse-toggle" id="menuitem-2-3" type="checkbox"/><label class="tocitem" for="menuitem-2-3"><span class="docs-label">Model Specification</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../specification/specification/">Model specification</a></li><li><a class="tocitem" href="../../specification/graph_interface/">Graph interface</a></li><li><a class="tocitem" href="../../specification/ram_matrices/">RAMMatrices interface</a></li><li><a class="tocitem" href="../../specification/parameter_table/">ParameterTable interface</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-2-4" type="checkbox"/><label class="tocitem" for="menuitem-2-4"><span class="docs-label">Model Construction</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../construction/construction/">Model Construction</a></li><li><a class="tocitem" href="../../construction/outer_constructor/">Outer Constructor</a></li><li><a class="tocitem" href="../../construction/build_by_parts/">Build by parts</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-2-5" type="checkbox"/><label class="tocitem" for="menuitem-2-5"><span class="docs-label">Optimization Backends</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../backends/optim/">Using Optim.jl</a></li><li><a class="tocitem" href="../../backends/nlopt/">Using NLopt.jl</a></li></ul></li><li><a class="tocitem" href="../../fitting/fitting/">Model Fitting</a></li><li><a class="tocitem" href="../../inspection/inspection/">Model Inspection</a></li><li><a class="tocitem" href="../../meanstructure/">Mean Structures</a></li><li><input class="collapse-toggle" id="menuitem-2-9" type="checkbox"/><label class="tocitem" for="menuitem-2-9"><span class="docs-label">Collections</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../collection/collection/">Collections</a></li><li><a class="tocitem" href="../../collection/multigroup/">Multigroup models</a></li></ul></li><li><a class="tocitem" href="../../constraints/constraints/">Constraints</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-3" type="checkbox"/><label class="tocitem" for="menuitem-3"><span class="docs-label">Developer documentation</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../developer/extending/">Extending the package</a></li><li><a class="tocitem" href="../../../developer/loss/">Custom loss functions</a></li><li><a class="tocitem" href="../../../developer/implied/">Custom implied types</a></li><li><a class="tocitem" href="../../../developer/optimizer/">Custom optimizer types</a></li><li><a class="tocitem" href="../../../developer/observed/">Custom observed types</a></li><li><a class="tocitem" href="../../../developer/sem/">Custom model types</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-4" type="checkbox" checked/><label class="tocitem" for="menuitem-4"><span class="docs-label">Advanced tutorials</span><i class="docs-chevron"></i></label><ul class="collapsed"><li class="is-active"><a class="tocitem" href>Regularization</a><ul class="internal"><li><a class="tocitem" href="#Setup"><span>Setup</span></a></li><li><a class="tocitem" href="#SemOptimizerProximal"><span><code>SemOptimizerProximal</code></span></a></li><li><a class="tocitem" href="#First-example-lasso"><span>First example - lasso</span></a></li><li><a class="tocitem" href="#Second-example-mixed-l1-and-l0-regularization"><span>Second example - mixed l1 and l0 regularization</span></a></li></ul></li></ul></li><li><input class="collapse-toggle" id="menuitem-5" type="checkbox"/><label class="tocitem" for="menuitem-5"><span class="docs-label">Performance tips</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../performance/sorting/">Model sorting</a></li><li><a class="tocitem" href="../../../performance/mkl/">MKL</a></li><li><a class="tocitem" href="../../../performance/simulation/">Simulation studies</a></li><li><a class="tocitem" href="../../../performance/symbolic/">Symbolic precomputation</a></li><li><a class="tocitem" href="../../../performance/starting_values/">Starting values</a></li><li><a class="tocitem" href="../../../performance/parametric/">Parametric Types</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-6" type="checkbox"/><label class="tocitem" for="menuitem-6"><span class="docs-label">Internals and design</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../internals/internals/">Internals and design</a></li><li><a class="tocitem" href="../../../internals/files/">files</a></li><li><a class="tocitem" href="../../../internals/types/">types</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-7" type="checkbox"/><label class="tocitem" for="menuitem-7"><span class="docs-label">Complementary material</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../../complementary/maths/">Mathematical appendix</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Advanced tutorials</a></li><li class="is-active"><a href>Regularization</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Regularization</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/StructuralEquationModels/StructuralEquationModels.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/StructuralEquationModels/StructuralEquationModels.jl/blob/main/docs/src/tutorials/regularization/regularization.md" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Regularization"><a class="docs-heading-anchor" href="#Regularization">Regularization</a><a id="Regularization-1"></a><a class="docs-heading-anchor-permalink" href="#Regularization" title="Permalink"></a></h1><h2 id="Setup"><a class="docs-heading-anchor" href="#Setup">Setup</a><a id="Setup-1"></a><a class="docs-heading-anchor-permalink" href="#Setup" title="Permalink"></a></h2><p>For ridge regularization, you can simply use <code>SemRidge</code> as an additional loss function  (for example, a model with the loss functions <code>SemML</code> and <code>SemRidge</code> corresponds to ridge-regularized maximum likelihood estimation).</p><p>For lasso, elastic net and (far) beyond, you can load the <code>ProximalAlgorithms.jl</code> and <code>ProximalOperators.jl</code> packages alongside <code>StructuralEquationModels</code>:</p><pre><code class="language-julia hljs">using Pkg
+Pkg.add(&quot;ProximalAlgorithms&quot;)
+Pkg.add(&quot;ProximalOperators&quot;)
+
+using StructuralEquationModels, ProximalAlgorithms, ProximalOperators</code></pre><h2 id="SemOptimizerProximal"><a class="docs-heading-anchor" href="#SemOptimizerProximal"><code>SemOptimizerProximal</code></a><a id="SemOptimizerProximal-1"></a><a class="docs-heading-anchor-permalink" href="#SemOptimizerProximal" title="Permalink"></a></h2><p>To estimate regularized models, we provide a &quot;building block&quot; for the optimizer part, called <code>SemOptimizerProximal</code>. It connects our package to the <a href="https://github.com/JuliaFirstOrder/ProximalAlgorithms.jl"><code>ProximalAlgorithms.jl</code></a> optimization backend, providing so-called proximal optimization algorithms.  Those can handle, amongst other things, various forms of regularization.</p><p>It can be used as</p><pre><code class="language-julia hljs">SemOptimizerProximal(
+    algorithm = ProximalAlgorithms.PANOC(),
+    options = Dict{Symbol, Any}(),
+    operator_g,
+    operator_h = nothing
+    )</code></pre><p>The proximal operator (aka the regularization function) can be passed as <code>operator_g</code>, available options are listed <a href="https://juliafirstorder.github.io/ProximalOperators.jl/stable/functions/">here</a>. The available Algorithms are listed <a href="https://juliafirstorder.github.io/ProximalAlgorithms.jl/stable/guide/implemented_algorithms/">here</a>.</p><h2 id="First-example-lasso"><a class="docs-heading-anchor" href="#First-example-lasso">First example - lasso</a><a id="First-example-lasso-1"></a><a class="docs-heading-anchor-permalink" href="#First-example-lasso" title="Permalink"></a></h2><p>To show how it works, let&#39;s revisit <a href="../../first_model/#A-first-model">A first model</a>:</p><pre><code class="language-julia hljs">observed_vars = [:x1, :x2, :x3, :y1, :y2, :y3, :y4, :y5, :y6, :y7, :y8]
+latent_vars = [:ind60, :dem60, :dem65]
+
+graph = @StenoGraph begin
+
+    ind60 → fixed(1)*x1 + x2 + x3
+    dem60 → fixed(1)*y1 + y2 + y3 + y4
+    dem65 → fixed(1)*y5 + y6 + y7 + y8
+
+    dem60 ← ind60
+    dem65 ← dem60
+    dem65 ← ind60
+
+    _(observed_vars) ↔ _(observed_vars)
+    _(latent_vars) ↔ _(latent_vars)
+
+    y1 ↔ label(:cov_15)*y5
+    y2 ↔ label(:cov_24)*y4 + label(:cov_26)*y6
+    y3 ↔ label(:cov_37)*y7
+    y4 ↔ label(:cov_48)*y8
+    y6 ↔ label(:cov_68)*y8
+
+end
+
+partable = ParameterTable(
+    graph,
+    latent_vars = latent_vars,
+    observed_vars = observed_vars
+)
+
+data = example_data(&quot;political_democracy&quot;)
+
+model = Sem(
+    specification = partable,
+    data = data
+)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Structural Equation Model 
+- Loss Functions 
+   SemML
+- Fields 
+   observed:    SemObservedData 
+   implied:     RAM 
+</code></pre><p>We labeled the covariances between the items because we want to regularize those:</p><pre><code class="language-julia hljs">ind = getindex.(
+    [param_indices(model)],
+    [:cov_15, :cov_24, :cov_26, :cov_37, :cov_48, :cov_68])</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">6-element Vector{Int64}:
+ 26
+ 27
+ 28
+ 29
+ 30
+ 31</code></pre><p>In the following, we fit the same model with lasso regularization of those covariances. The lasso penalty is defined as</p><p class="math-container">\[\sum \lambda_i \lvert \theta_i \rvert\]</p><p>From the previously linked <a href="https://juliafirstorder.github.io/ProximalOperators.jl/stable/functions/#ProximalOperators.NormL1">documentation</a>, we find that lasso regularization is named <code>NormL1</code> in the <code>ProximalOperators</code> package, and that we can pass an array of hyperparameters (<code>λ</code>) to control the amount of regularization for each parameter. To regularize only the observed item covariances, we define <code>λ</code> as</p><pre><code class="language-julia hljs">λ = zeros(31); λ[ind] .= 0.02</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">6-element view(::Vector{Float64}, [26, 27, 28, 29, 30, 31]) with eltype Float64:
+ 0.02
+ 0.02
+ 0.02
+ 0.02
+ 0.02
+ 0.02</code></pre><p>and use <code>SemOptimizerProximal</code>.</p><pre><code class="language-julia hljs">optimizer_lasso = SemOptimizerProximal(
+    operator_g = NormL1(λ)
+    )
+
+model_lasso = Sem(
+    specification = partable,
+    data = data
+)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Structural Equation Model 
+- Loss Functions 
+   SemML
+- Fields 
+   observed:    SemObservedData 
+   implied:     RAM 
+</code></pre><p>Let&#39;s fit the regularized model</p><pre><code class="language-julia hljs">fit_lasso = fit(optimizer_lasso, model_lasso)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Fitted Structural Equation Model 
+=============================================== 
+--------------------- Model ------------------- 
+
+Structural Equation Model 
+- Loss Functions 
+   SemML
+- Fields 
+   observed:    SemObservedData 
+   implied:     RAM 
+
+------------- Optimization result ------------- 
+
+Minimum:          21.22 
+No. evaluations:  521 
+Operator:         NormL1 
+</code></pre><p>and compare the solution to unregularizted estimates:</p><pre><code class="language-julia hljs">sem_fit = fit(model)
+
+update_estimate!(partable, sem_fit)
+
+update_partable!(partable, :estimate_lasso, param_labels(fit_lasso), solution(fit_lasso))
+
+details(partable)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">
+<span class="sgr96">--------------------------------- Variables --------------------------------- </span>
+
+<span class="sgr96">Latent variables:    </span>ind60 dem60 dem65
+<span class="sgr96">Observed variables:  </span>x1 x2 x3 y1 y2 y3 y4 y5 y6 y7 y8
+
+<span class="sgr96">---------------------------- Parameter Estimates ----------------------------- </span>
+
+<span class="sgr96">Loadings: </span>
+
+<span class="sgr93">ind60</span>
+
+ <span class="sgr1"> to </span> <span class="sgr1"> estimate </span> <span class="sgr1"> value_fixed </span> <span class="sgr1"> start </span> <span class="sgr1"> estimate_lasso </span> <span class="sgr1"> free </span> <span class="sgr1"> from  </span> <span class="sgr1"> label </span> <span class="sgr1"> relation </span>
+
+  x1   1.0        1.0                   0.0              0.0    ind60   const   →
+  x2   2.18                             2.18             1.0    ind60   θ_1     →
+  x3   1.82                             1.82             1.0    ind60   θ_2     →
+
+<span class="sgr93">dem60</span>
+
+ <span class="sgr1"> to </span> <span class="sgr1"> estimate </span> <span class="sgr1"> value_fixed </span> <span class="sgr1"> start </span> <span class="sgr1"> estimate_lasso </span> <span class="sgr1"> free </span> <span class="sgr1"> from  </span> <span class="sgr1"> label </span> <span class="sgr1"> relation </span>
+
+  y1   1.0        1.0                   0.0              0.0    dem60   const   →
+  y2   1.26                             1.28             1.0    dem60   θ_3     →
+  y3   1.06                             1.06             1.0    dem60   θ_4     →
+  y4   1.26                             1.28             1.0    dem60   θ_5     →
+
+<span class="sgr93">dem65</span>
+
+ <span class="sgr1"> to </span> <span class="sgr1"> estimate </span> <span class="sgr1"> value_fixed </span> <span class="sgr1"> start </span> <span class="sgr1"> estimate_lasso </span> <span class="sgr1"> free </span> <span class="sgr1"> from  </span> <span class="sgr1"> label </span> <span class="sgr1"> relation </span>
+
+  y5   1.0        1.0                   0.0              0.0    dem65   const   →
+  y6   1.19                             1.2              1.0    dem65   θ_6     →
+  y7   1.28                             1.28             1.0    dem65   θ_7     →
+  y8   1.27                             1.28             1.0    dem65   θ_8     →
+
+<span class="sgr96">Directed Effects: </span>
+
+ <span class="sgr1"> from  </span> <span class="sgr1">   </span> <span class="sgr1"> to    </span> <span class="sgr1"> estimate </span> <span class="sgr1"> value_fixed </span> <span class="sgr1"> start </span> <span class="sgr1"> estimate_lasso </span> <span class="sgr1"> free </span> <span class="sgr1"> label </span>
+
+  ind60   →   dem60   1.48                             1.48             1.0    θ_9
+  dem60   →   dem65   0.84                             0.84             1.0    θ_10
+  ind60   →   dem65   0.57                             0.56             1.0    θ_11
+
+<span class="sgr96">Variances: </span>
+
+ <span class="sgr1"> from  </span> <span class="sgr1">   </span> <span class="sgr1"> to    </span> <span class="sgr1"> estimate </span> <span class="sgr1"> value_fixed </span> <span class="sgr1"> start </span> <span class="sgr1"> estimate_lasso </span> <span class="sgr1"> free </span> <span class="sgr1"> label </span>
+
+  x1      ↔   x1      0.08                             0.08             1.0    θ_12
+  x2      ↔   x2      0.12                             0.12             1.0    θ_13
+  x3      ↔   x3      0.47                             0.47             1.0    θ_14
+  y1      ↔   y1      1.92                             1.92             1.0    θ_15
+  y2      ↔   y2      7.47                             6.95             1.0    θ_16
+  y3      ↔   y3      5.14                             5.09             1.0    θ_17
+  y4      ↔   y4      3.19                             3.02             1.0    θ_18
+  y5      ↔   y5      2.38                             2.37             1.0    θ_19
+  y6      ↔   y6      5.02                             4.71             1.0    θ_20
+  y7      ↔   y7      3.48                             3.41             1.0    θ_21
+  y8      ↔   y8      3.3                              3.14             1.0    θ_22
+  ind60   ↔   ind60   0.45                             0.45             1.0    θ_23
+  dem60   ↔   dem60   4.01                             3.99             1.0    θ_24
+  dem65   ↔   dem65   0.17                             0.17             1.0    θ_25
+
+<span class="sgr96">Covariances: </span>
+
+ <span class="sgr1"> from </span> <span class="sgr1">   </span> <span class="sgr1"> to </span> <span class="sgr1"> estimate </span> <span class="sgr1"> value_fixed </span> <span class="sgr1"> start </span> <span class="sgr1"> estimate_lasso </span> <span class="sgr1"> free </span> <span class="sgr1"> label  </span>
+
+  y1     ↔   y5   0.63                             0.59             1.0    cov_15
+  y2     ↔   y4   1.33                             1.06             1.0    cov_24
+  y2     ↔   y6   2.18                             1.86             1.0    cov_26
+  y3     ↔   y7   0.81                             0.61             1.0    cov_37
+  y4     ↔   y8   0.35                             0.27             1.0    cov_48
+  y6     ↔   y8   1.37                             1.21             1.0    cov_68</code></pre><p>Instead of explicitely defining a <code>SemOptimizerProximal</code> object, you can also pass <code>engine = :Proximal</code> and additional keyword arguments to <code>fit</code>:</p><pre><code class="language-julia hljs">sem_fit = fit(model; engine = :Proximal, operator_g = NormL1(λ))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Fitted Structural Equation Model 
+=============================================== 
+--------------------- Model ------------------- 
+
+Structural Equation Model 
+- Loss Functions 
+   SemML
+- Fields 
+   observed:    SemObservedData 
+   implied:     RAM 
+
+------------- Optimization result ------------- 
+
+Minimum:          21.22 
+No. evaluations:  521 
+Operator:         NormL1 
+</code></pre><h2 id="Second-example-mixed-l1-and-l0-regularization"><a class="docs-heading-anchor" href="#Second-example-mixed-l1-and-l0-regularization">Second example - mixed l1 and l0 regularization</a><a id="Second-example-mixed-l1-and-l0-regularization-1"></a><a class="docs-heading-anchor-permalink" href="#Second-example-mixed-l1-and-l0-regularization" title="Permalink"></a></h2><p>You can choose to penalize different parameters with different types of regularization functions. Let&#39;s use the lasso again on the covariances, but additionally penalyze the error variances of the observed items via l0 regularization.</p><p>The l0 penalty is defined as</p><p class="math-container">\[\lambda \mathrm{nnz}(\theta)\]</p><p>To define a sup of separable proximal operators (i.e. no parameter is penalized twice), we can use <a href="https://juliafirstorder.github.io/ProximalOperators.jl/stable/calculus/#ProximalOperators.SlicedSeparableSum"><code>SlicedSeparableSum</code></a> from the <code>ProximalOperators</code> package:</p><pre><code class="language-julia hljs">prox_operator = SlicedSeparableSum((NormL0(20.0), NormL1(0.02), NormL0(0.0)), ([ind], [9:11], [vcat(1:8, 12:25)]))
+
+model_mixed = Sem(
+    specification = partable,
+    data = data,
+)
+
+fit_mixed = fit(model_mixed; engine = :Proximal, operator_g = prox_operator)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Fitted Structural Equation Model 
+=============================================== 
+--------------------- Model ------------------- 
+
+Structural Equation Model 
+- Loss Functions 
+   SemML
+- Fields 
+   observed:    SemObservedData 
+   implied:     RAM 
+
+------------- Optimization result ------------- 
+
+Minimum:          21.66 
+No. evaluations:  457 
+Operator:         SlicedSeparableSum 
+</code></pre><p>Let&#39;s again compare the different results:</p><pre><code class="language-julia hljs">update_partable!(partable, :estimate_mixed, param_labels(fit_mixed), solution(fit_mixed))
+
+details(partable)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">
+<span class="sgr96">--------------------------------- Variables --------------------------------- </span>
+
+<span class="sgr96">Latent variables:    </span>ind60 dem60 dem65
+<span class="sgr96">Observed variables:  </span>x1 x2 x3 y1 y2 y3 y4 y5 y6 y7 y8
+
+<span class="sgr96">---------------------------- Parameter Estimates ----------------------------- </span>
+
+<span class="sgr96">Loadings: </span>
+
+<span class="sgr93">ind60</span>
+
+ <span class="sgr1"> to </span> <span class="sgr1"> estimate </span> <span class="sgr1"> value_fixed </span> <span class="sgr1"> start </span> <span class="sgr1"> estimate_lasso </span> <span class="sgr1"> estimate_mixed </span> <span class="sgr1"> free </span> <span class="sgr1"> from  </span> <span class="sgr1"> label </span> <span class="sgr1"> relation </span>
+
+  x1   1.0        1.0                   0.0              0.0              0.0    ind60   const   →
+  x2   2.18                             2.18             2.17             1.0    ind60   θ_1     →
+  x3   1.82                             1.82             1.81             1.0    ind60   θ_2     →
+
+<span class="sgr93">dem60</span>
+
+ <span class="sgr1"> to </span> <span class="sgr1"> estimate </span> <span class="sgr1"> value_fixed </span> <span class="sgr1"> start </span> <span class="sgr1"> estimate_lasso </span> <span class="sgr1"> estimate_mixed </span> <span class="sgr1"> free </span> <span class="sgr1"> from  </span> <span class="sgr1"> label </span> <span class="sgr1"> relation </span>
+
+  y1   1.0        1.0                   0.0              0.0              0.0    dem60   const   →
+  y2   1.26                             1.28             1.36             1.0    dem60   θ_3     →
+  y3   1.06                             1.06             1.05             1.0    dem60   θ_4     →
+  y4   1.26                             1.28             1.3              1.0    dem60   θ_5     →
+
+<span class="sgr93">dem65</span>
+
+ <span class="sgr1"> to </span> <span class="sgr1"> estimate </span> <span class="sgr1"> value_fixed </span> <span class="sgr1"> start </span> <span class="sgr1"> estimate_lasso </span> <span class="sgr1"> estimate_mixed </span> <span class="sgr1"> free </span> <span class="sgr1"> from  </span> <span class="sgr1"> label </span> <span class="sgr1"> relation </span>
+
+  y5   1.0        1.0                   0.0              0.0              0.0    dem65   const   →
+  y6   1.19                             1.2              1.27             1.0    dem65   θ_6     →
+  y7   1.28                             1.28             1.29             1.0    dem65   θ_7     →
+  y8   1.27                             1.28             1.32             1.0    dem65   θ_8     →
+
+<span class="sgr96">Directed Effects: </span>
+
+ <span class="sgr1"> from  </span> <span class="sgr1">   </span> <span class="sgr1"> to    </span> <span class="sgr1"> estimate </span> <span class="sgr1"> value_fixed </span> <span class="sgr1"> start </span> <span class="sgr1"> estimate_lasso </span> <span class="sgr1"> estimate_mixed </span> <span class="sgr1"> free </span> <span class="sgr1"> label </span>
+
+  ind60   →   dem60   1.48                             1.48             1.38             1.0    θ_9
+  dem60   →   dem65   0.84                             0.84             0.86             1.0    θ_10
+  ind60   →   dem65   0.57                             0.56             0.43             1.0    θ_11
+
+<span class="sgr96">Variances: </span>
+
+ <span class="sgr1"> from  </span> <span class="sgr1">   </span> <span class="sgr1"> to    </span> <span class="sgr1"> estimate </span> <span class="sgr1"> value_fixed </span> <span class="sgr1"> start </span> <span class="sgr1"> estimate_lasso </span> <span class="sgr1"> estimate_mixed </span> <span class="sgr1"> free </span> <span class="sgr1"> label </span>
+
+  x1      ↔   x1      0.08                             0.08             0.08             1.0    θ_12
+  x2      ↔   x2      0.12                             0.12             0.12             1.0    θ_13
+  x3      ↔   x3      0.47                             0.47             0.47             1.0    θ_14
+  y1      ↔   y1      1.92                             1.92             1.97             1.0    θ_15
+  y2      ↔   y2      7.47                             6.95             6.57             1.0    θ_16
+  y3      ↔   y3      5.14                             5.09             5.42             1.0    θ_17
+  y4      ↔   y4      3.19                             3.02             2.92             1.0    θ_18
+  y5      ↔   y5      2.38                             2.37             2.44             1.0    θ_19
+  y6      ↔   y6      5.02                             4.71             4.39             1.0    θ_20
+  y7      ↔   y7      3.48                             3.41             3.55             1.0    θ_21
+  y8      ↔   y8      3.3                              3.14             2.97             1.0    θ_22
+  ind60   ↔   ind60   0.45                             0.45             0.46             1.0    θ_23
+  dem60   ↔   dem60   4.01                             3.99             3.91             1.0    θ_24
+  dem65   ↔   dem65   0.17                             0.17             0.12             1.0    θ_25
+
+<span class="sgr96">Covariances: </span>
+
+ <span class="sgr1"> from </span> <span class="sgr1">   </span> <span class="sgr1"> to </span> <span class="sgr1"> estimate </span> <span class="sgr1"> value_fixed </span> <span class="sgr1"> start </span> <span class="sgr1"> estimate_lasso </span> <span class="sgr1"> estimate_mixed </span> <span class="sgr1"> free </span> <span class="sgr1"> label  </span>
+
+  y1     ↔   y5   0.63                             0.59             0.0              1.0    cov_15
+  y2     ↔   y4   1.33                             1.06             0.0              1.0    cov_24
+  y2     ↔   y6   2.18                             1.86             0.0              1.0    cov_26
+  y3     ↔   y7   0.81                             0.61             0.0              1.0    cov_37
+  y4     ↔   y8   0.35                             0.27             0.0              1.0    cov_48
+  y6     ↔   y8   1.37                             1.21             0.0              1.0    cov_68</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../../developer/sem/">« Custom model types</a><a class="docs-footer-nextpage" href="../../../performance/sorting/">Model sorting »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.9.0 on <span class="colophon-date" title="Wednesday 19 March 2025 08:46">Wednesday 19 March 2025</span>. Using Julia version 1.11.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
