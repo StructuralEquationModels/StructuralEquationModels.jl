@@ -64,7 +64,8 @@ Let's introduce some constraints:
 
 (Of course those constaints only serve an illustratory purpose.)
 
-We first need to get the indices of the respective parameters that are invoved in the constraints.
+To fit the SEM model with the functional constraints, we will use the *NLopt* optimization engine.
+Since *NLopt* does not have access to the SEM parameter names, we have to lookup the indices of the respective parameters that are invoved in the constraints.
 We can look up their labels in the output above, and retrieve their indices as
 
 ```@example constraints
@@ -115,16 +116,17 @@ If the algorithm needs gradients at an iteration, it will pass the vector `gradi
 With `if length(gradient) > 0` we check if the algorithm needs gradients, and if it does, we fill the `gradient` vector with the gradients
 of the constraint w.r.t. the parameters.
 
-In NLopt, vector-valued constraints are also possible, but we refer to the documentation for that.
+In *NLopt*, vector-valued constraints are also possible, but we refer to the documentation for that.
 
 ### Fit the model
 
-We now have everything together to specify and fit our model. First, we specify our optimizer backend as
+Now we can construct the *SemOptimizer* that will use the *NLopt* engine for constrained optimization.
 
 ```@example constraints
 using NLopt
 
-constrained_optimizer = SemOptimizerNLopt(
+constrained_optimizer = SemOptimizer(
+    engine = :NLopt,
     algorithm = :AUGLAG,
     options = Dict(:upper_bounds => upper_bounds, :xtol_abs => 1e-4),
     local_algorithm = :LD_LBFGS,
@@ -133,7 +135,7 @@ constrained_optimizer = SemOptimizerNLopt(
 )
 ```
 
-As you see, the equality constraints and inequality constraints are passed as keyword arguments, and the bounds are passed as options for the (outer) optimization algorithm.
+As you see, the equality and inequality constraints are passed as keyword arguments, and the bounds are passed as options for the (outer) optimization algorithm.
 Additionally, for equality and inequality constraints, a feasibility tolerance can be specified that controls if a solution can be accepted, even if it violates the constraints by a small amount.
 Especially for equality constraints, it is recommended to allow for a small positive tolerance.
 In this example, we set both tolerances to `1e-8`.
@@ -141,19 +143,16 @@ In this example, we set both tolerances to `1e-8`.
 !!! warning "Convergence criteria"
     We have often observed that the default convergence criteria in NLopt lead to non-convergence flags.
     Indeed, this example does not convergence with default criteria.
-    As you see above, we used a realively liberal absolute tolerance in the optimization parameters of 1e-4.
+    As you see above, we used a relatively liberal absolute tolerance in the optimization parameters of 1e-4.
     This should not be a problem in most cases, as the sampling variance in (almost all) structural equation models
     should lead to uncertainty in the parameter estimates that are orders of magnitude larger.
     We nontheless recommend choosing a convergence criterion with care (i.e. w.r.t. the scale of your parameters),
     inspecting the solutions for plausibility, and comparing them to unconstrained solutions.
 
-```@example constraints
-model_constrained = Sem(
-    specification = partable,
-    data = data
-)
+We now have everything to fit our model under constraints:
 
-model_fit_constrained = fit(constrained_optimizer, model_constrained)
+```@example constraints
+model_fit_constrained = fit(constrained_optimizer, model)
 ```
 
 As you can see, the optimizer converged (`:XTOL_REACHED`) and investigating the solution yields
