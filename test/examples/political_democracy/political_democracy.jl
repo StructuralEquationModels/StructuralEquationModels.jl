@@ -1,4 +1,6 @@
 using StructuralEquationModels, Test, Suppressor, FiniteDiff
+using Statistics: cov, mean
+using Random, NLopt
 
 SEM = StructuralEquationModels
 
