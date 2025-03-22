@@ -1,9 +1,10 @@
 module SEMNLOptExt
 
 using StructuralEquationModels, NLopt
-import StructuralEquationModels: SemOptimizerNLopt, NLoptConstraint
 
 SEM = StructuralEquationModels
+
+export SemOptimizerNLopt, NLoptConstraint
 
 include("NLopt.jl")
 

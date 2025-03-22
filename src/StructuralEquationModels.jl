@@ -198,6 +198,5 @@ export AbstractSem,
     ↔,
     ⇔,
     SemOptimizerNLopt,
-    NLoptConstraint,
     SemOptimizerProximal
 end
