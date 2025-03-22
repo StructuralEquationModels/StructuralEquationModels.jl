@@ -1,3 +1,20 @@
+engine(::Type{SemOptimizer{E}}) where {E} = E
+engine(optimizer::SemOptimizer) = engine(typeof(optimizer))
+
+SemOptimizer(args...; engine::Symbol = :Optim, kwargs...) =
+    SemOptimizer{engine}(args...; kwargs...)
+
+# fallback optimizer constructor
+function SemOptimizer{E}(args...; kwargs...) where {E}
+    if E == :NLOpt
+        error("$E optimizer requires \"using NLopt\".")
+    elseif E == :Proximal
+        error("$E optimizer requires \"using ProximalAlgorithms\".")
+    else
+        error("$E optimizer is not supported.")
+    end
+end
+
 """
     fit([optim::SemOptimizer], model::AbstractSem;
             [engine::Symbol], start_val = start_val, kwargs...)
