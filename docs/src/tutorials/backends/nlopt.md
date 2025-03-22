@@ -1,39 +1,27 @@
 # Using NLopt.jl
 
-[`SemOptimizerNLopt`](@ref) implements the connection to `NLopt.jl`.
-It is only available if the `NLopt` package is loaded alongside `StructuralEquationModels.jl` in the running Julia session.
-It takes a bunch of arguments:
+When [`NLopt.jl`](https://github.com/jump-dev/NLopt.jl) is loaded in the running Julia session,
+it could be used by the [`SemOptimizer`](@ref) by specifying `engine = :NLopt`
+(see [NLopt-specific options](@ref `SemOptimizerNLopt`)).
+Among other things, `NLopt` enables constrained optimization of the SEM models, which is
+explained in the [Constrained optimization](@ref) section.
 
-```julia
-    •  algorithm: optimization algorithm
-
-    •  options::Dict{Symbol, Any}: options for the optimization algorithm
-
-    •  local_algorithm: local optimization algorithm
-
-    •  local_options::Dict{Symbol, Any}: options for the local optimization algorithm
-
-    •  equality_constraints::Vector{NLoptConstraint}: vector of equality constraints
-
-    •  inequality_constraints::Vector{NLoptConstraint}: vector of inequality constraints
-```
-Constraints are explained in the section on [Constrained optimization](@ref).
-
-The defaults are LBFGS as the optimization algorithm and the standard options from `NLopt.jl`.
-We can choose something different:
+We can override the default *NLopt* algorithm (LFBGS) and instead use
+the *augmented lagrangian* method with LBFGS as the *local* optimization algorithm,
+stop at a maximum of 200 evaluations and use a relative tolerance of
+the objective value of `1e-6` as the stopping criterion for the local algorithm:
 
 ```julia
 using NLopt
 
-my_optimizer = SemOptimizerNLopt(;
+my_optimizer = SemOptimizer(;
+    engine = :NLopt,
     algorithm = :AUGLAG,
     options = Dict(:maxeval => 200),
     local_algorithm = :LD_LBFGS,
     local_options = Dict(:ftol_rel => 1e-6)
 )
 ```
-
-This uses an augmented lagrangian method with LBFGS as the local optimization algorithm, stops at a maximum of 200 evaluations and uses a relative tolerance of the objective value of `1e-6` as the stopping criterion for the local algorithm.
 
 To see how to use the optimizer to actually fit a model now, check out the [Model fitting](@ref) section.
 
