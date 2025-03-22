@@ -5,7 +5,10 @@
 For ridge regularization, you can simply use `SemRidge` as an additional loss function
 (for example, a model with the loss functions `SemML` and `SemRidge` corresponds to ridge-regularized maximum likelihood estimation).
 
-For lasso, elastic net and (far) beyond, you can load the `ProximalAlgorithms.jl` and `ProximalOperators.jl` packages alongside `StructuralEquationModels`:
+For lasso, elastic net and (far) beyond, you can use the [`ProximalOperators.jl`](https://github.com/JuliaFirstOrder/ProximalOperators.jl)
+and optimize the model with [`ProximalAlgorithms.jl`](https://github.com/JuliaFirstOrder/ProximalAlgorithms.jl)
+that provides so-called *proximal optimization* algorithms.
+It can handle, amongst other things, various forms of regularization.
 
 ```@setup reg
 using StructuralEquationModels, ProximalAlgorithms, ProximalOperators
@@ -19,16 +22,14 @@ Pkg.add("ProximalOperators")
 using StructuralEquationModels, ProximalAlgorithms, ProximalOperators
 ```
 
-## `SemOptimizerProximal`
+## Proximal optimization
 
-To estimate regularized models, we provide a "building block" for the optimizer part, called `SemOptimizerProximal`.
-It connects our package to the [`ProximalAlgorithms.jl`](https://github.com/JuliaFirstOrder/ProximalAlgorithms.jl) optimization backend, providing so-called proximal optimization algorithms.
-Those can handle, amongst other things, various forms of regularization.
-
-It can be used as
+With *ProximalAlgorithms* package loaded, it is now possible to use `:Proximal` optimization engine
+in `SemOptimizer` for estimating regularized models.
 
 ```julia
-SemOptimizerProximal(
+SemOptimizer(;
+    engine = :Proximal,
     algorithm = ProximalAlgorithms.PANOC(),
     options = Dict{Symbol, Any}(),
     operator_g,
@@ -37,7 +38,7 @@ SemOptimizerProximal(
 ```
 
 The proximal operator (aka the regularization function) can be passed as `operator_g`, available options are listed [here](https://juliafirstorder.github.io/ProximalOperators.jl/stable/functions/).
-The available Algorithms are listed [here](https://juliafirstorder.github.io/ProximalAlgorithms.jl/stable/guide/implemented_algorithms/).
+The available algorithms are listed [here](https://juliafirstorder.github.io/ProximalAlgorithms.jl/stable/guide/implemented_algorithms/).
 
 ## First example - lasso
 
@@ -101,18 +102,10 @@ From the previously linked [documentation](https://juliafirstorder.github.io/Pro
 
 ```@example reg
 λ = zeros(31); λ[ind] .= 0.02
-```
 
-and use `SemOptimizerProximal`.
-
-```@example reg
-optimizer_lasso = SemOptimizerProximal(
+optimizer_lasso = SemOptimizer(
+    engine = :Proximal,
     operator_g = NormL1(λ)
-)
-
-model_lasso = Sem(
-    specification = partable,
-    data = data
 )
 ```
 
@@ -120,7 +113,7 @@ Let's fit the regularized model
 
 ```@example reg
 
-fit_lasso = fit(optimizer_lasso, model_lasso)
+fit_lasso = fit(optimizer_lasso, model)
 ```
 
 and compare the solution to unregularizted estimates:
@@ -135,7 +128,8 @@ update_partable!(partable, :estimate_lasso, param_labels(fit_lasso), solution(fi
 details(partable)
 ```
 
-Instead of explicitely defining a `SemOptimizerProximal` object, you can also pass `engine = :Proximal` and additional keyword arguments to `fit`:
+Instead of explicitly defining a `SemOptimizer` object, you can also pass `engine = :Proximal`
+and additional keyword arguments directly to the `fit` function:
 
 ```@example reg
 fit = fit(model; engine = :Proximal, operator_g = NormL1(λ))
@@ -144,25 +138,20 @@ fit = fit(model; engine = :Proximal, operator_g = NormL1(λ))
 ## Second example - mixed l1 and l0 regularization
 
 You can choose to penalize different parameters with different types of regularization functions.
-Let's use the lasso again on the covariances, but additionally penalyze the error variances of the observed items via l0 regularization.
+Let's use the lasso again on the covariances, but additionally penalize the error variances of the observed items via l0 regularization.
 
 The l0 penalty is defined as
 ```math
 \lambda \mathrm{nnz}(\theta)
 ```
 
-To define a sup of separable proximal operators (i.e. no parameter is penalized twice),
+To define a sum of separable proximal operators (i.e. no parameter is penalized twice),
 we can use [`SlicedSeparableSum`](https://juliafirstorder.github.io/ProximalOperators.jl/stable/calculus/#ProximalOperators.SlicedSeparableSum) from the `ProximalOperators` package:
 
 ```@example reg
 prox_operator = SlicedSeparableSum((NormL0(20.0), NormL1(0.02), NormL0(0.0)), ([ind], [9:11], [vcat(1:8, 12:25)]))
 
-model_mixed = Sem(
-    specification = partable,
-    data = data,
-)
-
-fit_mixed = fit(model_mixed; engine = :Proximal, operator_g = prox_operator)
+fit_mixed = fit(model; engine = :Proximal, operator_g = prox_operator)
 ```
 
 Let's again compare the different results:
