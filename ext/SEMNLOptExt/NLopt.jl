@@ -1,6 +1,9 @@
 ############################################################################################
 ### Types
 ############################################################################################
+
+const NLoptConstraint = Pair{Any, Number}
+
 """
 Connects to `NLopt.jl` as the optimization backend.
 Only usable if `NLopt.jl` is loaded in the current Julia session!
@@ -12,8 +15,9 @@ Only usable if `NLopt.jl` is loaded in the current Julia session!
         options = Dict{Symbol, Any}(),
         local_algorithm = nothing,
         local_options = Dict{Symbol, Any}(),
-        equality_constraints = Vector{NLoptConstraint}(),
-        inequality_constraints = Vector{NLoptConstraint}(),
+        equality_constraints = nothing,
+        inequality_constraints = nothing,
+        constraint_tol::Number = 0.0,
         kwargs...)
 
 # Arguments
@@ -21,19 +25,32 @@ Only usable if `NLopt.jl` is loaded in the current Julia session!
 - `options::Dict{Symbol, Any}`: options for the optimization algorithm
 - `local_algorithm`: local optimization algorithm
 - `local_options::Dict{Symbol, Any}`: options for the local optimization algorithm
-- `equality_constraints::Vector{NLoptConstraint}`: vector of equality constraints
-- `inequality_constraints::Vector{NLoptConstraint}`: vector of inequality constraints
+- `equality_constraints: optional equality constraints
+- `inequality_constraints:: optional inequality constraints
+- `constraint_tol::Number`: default tolerance for constraints
+
+## Constraints specification
+
+Equality and inequality constraints arguments could be a single constraint or any
+iterable constraints container (e.g. vector or tuple).
+Each constraint could be a function or any other callable object that
+takes the two input arguments:
+  - the vector of the model parameters;
+  - the array for the in-place calculation of the constraint gradient.
+To override the default tolerance, the constraint could be specified
+as a pair of the function and its tolerance: `constraint_func => tol`.
 
 # Example
 ```julia
-my_optimizer = SemOptimizerNLopt()
+my_optimizer = SemOptimizer(engine = :NLopt)
 
 # constrained optimization with augmented lagrangian
-my_constrained_optimizer = SemOptimizerNLopt(;
+my_constrained_optimizer = SemOptimizer(;
+    engine = :NLopt,
     algorithm = :AUGLAG,
     local_algorithm = :LD_LBFGS,
     local_options = Dict(:ftol_rel => 1e-6),
-    inequality_constraints = NLoptConstraint(;f = my_constraint, tol = 0.0),
+    inequality_constraints = (my_constraint => tol),
 )
 ```
 
@@ -57,24 +74,14 @@ see [Constrained optimization](@ref) in our online documentation.
 
 Subtype of `SemOptimizer`.
 """
-struct SemOptimizerNLopt{A, A2, B, B2, C} <: SemOptimizer{:NLopt}
-    algorithm::A
-    local_algorithm::A2
-    options::B
-    local_options::B2
-    equality_constraints::C
-    inequality_constraints::C
+struct SemOptimizerNLopt <: SemOptimizer{:NLopt}
+    algorithm::Symbol
+    local_algorithm::Union{Symbol, Nothing}
+    options::Dict{Symbol, Any}
+    local_options::Dict{Symbol, Any}
+    equality_constraints::Vector{NLoptConstraint}
+    inequality_constraints::Vector{NLoptConstraint}
 end
-
-Base.@kwdef struct NLoptConstraint
-    f::Any
-    tol = 0.0
-end
-
-Base.convert(
-    ::Type{NLoptConstraint},
-    tuple::NamedTuple{(:f, :tol), Tuple{F, T}},
-) where {F, T} = NLoptConstraint(tuple.f, tuple.tol)
 
 ############################################################################################
 ### Constructor
@@ -85,22 +92,26 @@ function SemOptimizerNLopt(;
     local_algorithm = nothing,
     options = Dict{Symbol, Any}(),
     local_options = Dict{Symbol, Any}(),
-    equality_constraints = Vector{NLoptConstraint}(),
-    inequality_constraints = Vector{NLoptConstraint}(),
-    kwargs...,
+    equality_constraints = nothing,
+    inequality_constraints = nothing,
+    constraint_tol::Number = 0.0,
+    kwargs..., # FIXME remove the sink for unused kwargs
 )
-    applicable(iterate, equality_constraints) && !isa(equality_constraints, NamedTuple) ||
-        (equality_constraints = [equality_constraints])
-    applicable(iterate, inequality_constraints) &&
-    !isa(inequality_constraints, NamedTuple) ||
-        (inequality_constraints = [inequality_constraints])
+    constraint(f::Any) = f => constraint_tol
+    constraint(f_and_tol::Pair) = f_and_tol
+
+    constraints(::Nothing) = Vector{NLoptConstraint}()
+    constraints(constraints) =
+        applicable(iterate, constraints) && !isa(constraints, Pair) ?
+        [constraint(constr) for constr in constraints] : [constraint(constraints)]
+
     return SemOptimizerNLopt(
         algorithm,
         local_algorithm,
         options,
         local_options,
-        convert.(NLoptConstraint, equality_constraints),
-        convert.(NLoptConstraint, inequality_constraints),
+        constraints(equality_constraints),
+        constraints(inequality_constraints),
     )
 end
 
@@ -151,10 +162,7 @@ function SEM.fit(
     start_params::AbstractVector;
     kwargs...,
 )
-
-    # construct the NLopt problem
-    opt = construct_NLopt_problem(optim.algorithm, optim.options, length(start_params))
-    set_NLopt_constraints!(opt, optim)
+    opt = construct_NLopt(optim.algorithm, optim.options, nparams(model))
     opt.min_objective =
         (par, G) -> SEM.evaluate!(
             zero(eltype(par)),
@@ -163,13 +171,16 @@ function SEM.fit(
             model,
             par,
         )
+    for (f, tol) in optim.inequality_constraints
+        inequality_constraint!(opt, f, tol)
+    end
+    for (f, tol) in optim.equality_constraints
+        equality_constraint!(opt, f, tol)
+    end
 
     if !isnothing(optim.local_algorithm)
-        opt_local = construct_NLopt_problem(
-            optim.local_algorithm,
-            optim.local_options,
-            length(start_params),
-        )
+        opt_local =
+            construct_NLopt(optim.local_algorithm, optim.local_options, nparams(model))
         opt.local_optimizer = opt_local
     end
 
@@ -183,7 +194,7 @@ end
 ### additional functions
 ############################################################################################
 
-function construct_NLopt_problem(algorithm, options, npar)
+function construct_NLopt(algorithm, options, npar)
     opt = Opt(algorithm, npar)
 
     for (key, val) in pairs(options)
@@ -191,15 +202,6 @@ function construct_NLopt_problem(algorithm, options, npar)
     end
 
     return opt
-end
-
-function set_NLopt_constraints!(opt::Opt, optimizer::SemOptimizerNLopt)
-    for con in optimizer.inequality_constraints
-        inequality_constraint!(opt, con.f, con.tol)
-    end
-    for con in optimizer.equality_constraints
-        equality_constraint!(opt, con.f, con.tol)
-    end
 end
 
 ############################################################################################

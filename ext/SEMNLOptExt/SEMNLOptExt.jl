@@ -4,7 +4,7 @@ using StructuralEquationModels, NLopt
 
 SEM = StructuralEquationModels
 
-export SemOptimizerNLopt, NLoptConstraint
+export SemOptimizerNLopt
 
 include("NLopt.jl")
 
