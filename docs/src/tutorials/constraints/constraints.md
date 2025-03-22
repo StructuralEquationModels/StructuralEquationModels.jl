@@ -1,6 +1,6 @@
 # Constrained optimization
 
-## Using the NLopt backend
+## Using the NLopt engine
 
 ### Define an example model
 
@@ -128,8 +128,8 @@ constrained_optimizer = SemOptimizerNLopt(
     algorithm = :AUGLAG,
     options = Dict(:upper_bounds => upper_bounds, :xtol_abs => 1e-4),
     local_algorithm = :LD_LBFGS,
-    equality_constraints = NLoptConstraint(;f = eq_constraint, tol = 1e-8),
-    inequality_constraints = NLoptConstraint(;f = ineq_constraint, tol = 1e-8),
+    equality_constraints = (eq_constraint => 1e-8),
+    inequality_constraints = (ineq_constraint => 1e-8),
 )
 ```
 
