@@ -40,7 +40,7 @@ end
 
 partable = ParameterTable(
     graph,
-    latent_vars = lat_vars, 
+    latent_vars = lat_vars,
     observed_vars = obs_vars)
 ```
 

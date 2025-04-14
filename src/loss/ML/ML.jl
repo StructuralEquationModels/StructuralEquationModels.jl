@@ -117,10 +117,9 @@ function evaluate!(
             if HessianEval(semml) === ApproxHessian
                 mul!(hessian, ∇Σ' * kron(Σ⁻¹, Σ⁻¹), ∇Σ, 2, 0)
             else
-                ∇²Σ_function! = implied.∇²Σ_function
                 ∇²Σ = implied.∇²Σ
                 # inner
-                ∇²Σ_function!(∇²Σ, J, par)
+                implied.∇²Σ_eval!(∇²Σ, J, par)
                 # outer
                 H_outer = kron(2Σ⁻¹ΣₒΣ⁻¹ - Σ⁻¹, Σ⁻¹)
                 mul!(hessian, ∇Σ' * H_outer, ∇Σ)
