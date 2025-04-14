@@ -33,6 +33,45 @@ latent_vars(spec::SemSpecification) =
     error("latent_vars(spec::$(typeof(spec))) is not implemented")
 
 """
+    param_labels(semobj) -> Vector{Symbol}
+
+Return the vector of parameter labels (in the same order as [`params`](@ref)).
+"""
+param_labels(spec::SemSpecification) = spec.param_labels
+
+"""
+    vars(semobj) -> Vector{Symbol}
+
+Return the vector of SEM model variables (both observed and latent)
+in the order specified by the model.
+"""
+function vars end
+
+vars(spec::SemSpecification) = error("vars(spec::$(typeof(spec))) is not implemented")
+
+"""
+    observed_vars(semobj) -> Vector{Symbol}
+
+Return the vector of SEM model observed variable in the order specified by the
+model, which also should match the order of variables in [`SemObserved`](@ref).
+"""
+function observed_vars end
+
+observed_vars(spec::SemSpecification) =
+    error("observed_vars(spec::$(typeof(spec))) is not implemented")
+
+"""
+    latent_vars(semobj) -> Vector{Symbol}
+
+Return the vector of SEM model latent variable in the order specified by the
+model.
+"""
+function latent_vars end
+
+latent_vars(spec::SemSpecification) =
+    error("latent_vars(spec::$(typeof(spec))) is not implemented")
+
+"""
 `ParameterTable`s contain the specification of a structural equation model.
 
 # Constructor

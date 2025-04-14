@@ -126,9 +126,9 @@ fit_lasso = fit(optimizer_lasso, model_lasso)
 and compare the solution to unregularizted estimates:
 
 ```@example reg
-fit = fit(model)
+sem_fit = fit(model)
 
-update_estimate!(partable, fit)
+update_estimate!(partable, sem_fit)
 
 update_partable!(partable, :estimate_lasso, param_labels(fit_lasso), solution(fit_lasso))
 
@@ -138,7 +138,7 @@ details(partable)
 Instead of explicitely defining a `SemOptimizerProximal` object, you can also pass `engine = :Proximal` and additional keyword arguments to `fit`:
 
 ```@example reg
-fit = fit(model; engine = :Proximal, operator_g = NormL1(λ))
+sem_fit = fit(model; engine = :Proximal, operator_g = NormL1(λ))
 ```
 
 ## Second example - mixed l1 and l0 regularization

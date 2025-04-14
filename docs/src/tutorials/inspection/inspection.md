@@ -117,6 +117,11 @@ Additional functions that can be used to extract information from a `SemFit` obj
 
 ```@docs
 SemFit
+params
+param_labels
+nparams
+nsamples
+nobserved_vars
 ```
 
 ## Fit measures
@@ -128,10 +133,6 @@ BIC
 χ²
 dof
 minus2ll
-nobserved_vars
-nsamples
-param_labels
-nparams
 p_value
 RMSEA
 ```
