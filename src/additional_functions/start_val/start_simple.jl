@@ -63,7 +63,6 @@ function start_simple(
     nparams(ram_matrices)
 
     start_val = zeros(n_par)
-    n_obs = nobserved_vars(ram_matrices)
     n_var = nvars(ram_matrices)
 
     C_indices = CartesianIndices((n_var, n_var))

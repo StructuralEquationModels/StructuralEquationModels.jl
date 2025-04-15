@@ -48,7 +48,7 @@ end
 
 # function to prepare input data shared by SemObserved implementations
 # returns tuple of
-# 1) the matrix of data
+# 1) the data matrix
 # 2) the observed variable symbols that match matrix columns
 # 3) the permutation of the original observed_vars (nothing if no reordering)
 # If observed_vars is not specified, the vars order is taken from the specification.

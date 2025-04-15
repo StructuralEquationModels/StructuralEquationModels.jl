@@ -10,9 +10,9 @@ For observed data without missings.
         kwargs...)
 
 # Arguments
-- `specification`: optional SEM specification ([`SemSpecification`](@ref))
 - `data`: observed data -- *DataFrame* or *Matrix*
 - `observed_vars::Vector{Symbol}`: column names of the data (if the object passed as data does not have column names, i.e. is not a data frame)
+- `specification`: optional SEM specification ([`SemSpecification`](@ref))
 
 # Extended help
 ## Interfaces
@@ -20,11 +20,8 @@ For observed data without missings.
 - `nobserved_vars(::SemObservedData)` -> number of observed (manifested) variables
 
 - `samples(::SemObservedData)` -> observed data
-- `obs_cov(::SemObservedData)` -> observed.obs_cov
-- `obs_mean(::SemObservedData)` -> observed.obs_mean
-
-## Implementation
-Subtype of `SemObserved`
+- `obs_cov(::SemObservedData)` -> observed covariance matrix
+- `obs_mean(::SemObservedData)` -> observed mean vector
 """
 struct SemObservedData{D <: Union{Nothing, AbstractMatrix}, S <: Number} <: SemObserved
     data::D
@@ -47,10 +44,6 @@ function SemObservedData(;
 
     return SemObservedData(data, obs_vars, obs_cov, vec(obs_mean), size(data, 1))
 end
-
-############################################################################################
-### Recommended methods
-############################################################################################
 
 ############################################################################################
 ### additional methods

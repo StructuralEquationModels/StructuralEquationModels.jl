@@ -45,11 +45,6 @@ Returns the [*observed*](@ref SemObserved) part of a model.
 """
 observed(model::AbstractSemSingle) = model.observed
 
-"""
-    nsamples(model::AbstractSem) -> Int
-
-Returns the number of samples from the [*observed*](@ref SemObserved) part of a model.
-"""
 nsamples(model::AbstractSemSingle) = nsamples(observed(model))
 
 """
@@ -155,11 +150,6 @@ end
 ##############################################################
 # pretty printing
 ##############################################################
-
-#= function Base.show(io::IO, sem::Sem{O, I, L, D})  where {O, I, L, D}
-    lossfuntypes = @. nameof(typeof(sem.loss.functions))
-    print(io, "Sem{$(nameof(O)), $(nameof(I)), $lossfuntypes, $(nameof(D))}")
-end =#
 
 function Base.show(io::IO, sem::Sem{O, I, L}) where {O, I, L}
     lossfuntypes = @. string(nameof(typeof(sem.loss.functions)))

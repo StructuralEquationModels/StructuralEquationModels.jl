@@ -6,8 +6,7 @@ Model implied covariance and means via RAM notation.
 
 # Constructor
 
-    RAM(;
-        specification,
+    RAM(;specification,
         meanstructure = false,
         gradient = true,
         kwargs...)
@@ -18,9 +17,6 @@ Model implied covariance and means via RAM notation.
 - `gradient::Bool`: is gradient-based optimization used
 
 # Extended help
-
-## Implementation
-Subtype of `SemImplied`.
 
 ## RAM notation
 
@@ -37,33 +33,32 @@ and for models with a meanstructure, the model implied means are computed as
 - `param_labels(::RAM) `-> vector of parameter labels
 - `nparams(::RAM)` -> number of parameters
 
-- `Σ(::RAM)` -> model implied covariance matrix
-- `μ(::RAM)` -> model implied mean vector
+- `ram.Σ` -> model implied covariance matrix
+- `ram.μ` -> model implied mean vector
 
 RAM matrices for the current parameter values:
-- `A(::RAM)`
-- `S(::RAM)`
-- `F(::RAM)`
-- `M(::RAM)`
+- `ram.A`
+- `ram.S`
+- `ram.F`
+- `ram.M`
 
 Jacobians of RAM matrices w.r.t to the parameter vector `θ`
-- `∇A(::RAM)` -> ``∂vec(A)/∂θᵀ``
-- `∇S(::RAM)` -> ``∂vec(S)/∂θᵀ``
-- `∇M(::RAM)` = ``∂M/∂θᵀ``
+- `ram.∇A` -> ``∂vec(A)/∂θᵀ``
+- `ram.∇S` -> ``∂vec(S)/∂θᵀ``
+- `ram.∇M` = ``∂M/∂θᵀ``
 
 Vector of indices of each parameter in the respective RAM matrix:
-- `A_indices(::RAM)`
-- `S_indices(::RAM)`
-- `M_indices(::RAM)`
+- `ram.A_indices`
+- `ram.S_indices`
+- `ram.M_indices`
 
 Additional interfaces
-- `F⨉I_A⁻¹(::RAM)` -> ``F(I-A)^{-1}``
-- `F⨉I_A⁻¹S(::RAM)` -> ``F(I-A)^{-1}S``
-- `I_A(::RAM)` -> ``I-A``
-- `has_meanstructure(::RAM)` -> `Val{Bool}` does the model have a meanstructure?
+- `ram.F⨉I_A⁻¹` -> ``F(I-A)^{-1}``
+- `ram.F⨉I_A⁻¹S` -> ``F(I-A)^{-1}S``
+- `ram.I_A` -> ``I-A``
 
 Only available in gradient! calls:
-- `I_A⁻¹(::RAM)` -> ``(I-A)^{-1}``
+- `ram.I_A⁻¹` -> ``(I-A)^{-1}``
 """
 mutable struct RAM{MS, A1, A2, A3, A4, A5, A6, V2, M1, M2, M3, M4, S1, S2, S3} <: SemImplied
     meanstruct::MS
@@ -97,7 +92,6 @@ end
 
 function RAM(;
     specification::SemSpecification,
-    #vech = false,
     gradient_required = true,
     meanstructure = false,
     kwargs...,

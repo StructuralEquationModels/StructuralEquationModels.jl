@@ -1,7 +1,7 @@
 # API methods supported by multiple SEM.jl types
 
 """
-    params(semobj) -> Vector{Symbol}
+    params(partable::ParameterTable) -> Vector{Symbol}
 
 Return the vector of SEM model parameter identifiers.
 """
@@ -42,7 +42,7 @@ nlatent_vars(semobj) = length(latent_vars(semobj))
 """
     param_indices(semobj)
 
-Returns a dict of parameter names and their indices in `semobj`.
+Returns a dict of parameter labels and their indices in `semobj`.
 
 # Examples
 ```julia

@@ -5,6 +5,7 @@
 ############################################################################################
 """
 Weighted least squares estimation.
+At the moment only available with the `RAMSymbolic` implied type.
 
 # Constructor
 
@@ -32,11 +33,7 @@ my_wls = SemWLS(observed = my_observed)
 ```
 
 # Interfaces
-Analytic gradients are available, and for models without a meanstructure, also analytic hessians.
-
-# Extended help
-## Implementation
-Subtype of `SemLossFunction`.
+Analytic gradients are available, and for models without a meanstructure also analytic hessians.
 """
 struct SemWLS{HE <: HessianEval, Vt, St, C} <: SemLossFunction
     hessianeval::HE
@@ -124,7 +121,7 @@ function evaluate!(
         if issparse(∇σ)
             gradient .= (σ₋' * V * ∇σ)'
         else # save one allocation
-            mul!(gradient, σ₋' * V, ∇σ) # actually transposed, but should be fine for vectors
+            mul!(gradient, σ₋' * V, ∇σ)
         end
         gradient .*= -2
     end

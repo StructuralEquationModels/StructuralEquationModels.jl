@@ -30,13 +30,12 @@ It can be used as
 ```julia
 SemOptimizerProximal(
     algorithm = ProximalAlgorithms.PANOC(),
-    options = Dict{Symbol, Any}(),
     operator_g,
     operator_h = nothing
     )
 ```
 
-The proximal operator (aka the regularization function) can be passed as `operator_g`, available options are listed [here](https://juliafirstorder.github.io/ProximalOperators.jl/stable/functions/).
+The proximal operator (aka the regularization function) can be passed as `operator_g`.
 The available Algorithms are listed [here](https://juliafirstorder.github.io/ProximalAlgorithms.jl/stable/guide/implemented_algorithms/).
 
 ## First example - lasso

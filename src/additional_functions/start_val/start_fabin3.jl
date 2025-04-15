@@ -18,7 +18,7 @@ end
 # SemObservedMissing
 function start_fabin3(observed::SemObservedMissing, implied, args...; kwargs...)
     if !observed.em_model.fitted
-        em_mvn(observed; kwargs...)
+        em_mvn!(observed; kwargs...)
     end
 
     return start_fabin3(implied.ram_matrices, observed.em_model.Σ, observed.em_model.μ)
@@ -45,24 +45,6 @@ function start_fabin3(
     )
     @assert length(F_var2obs) == size(F, 1)
 
-    # check in which matrix each parameter appears
-
-    #=     in_S = length.(S_ind) .!= 0
-        in_A = length.(A_ind) .!= 0
-        A_ind_c = [linear2cartesian(ind, (n_var, n_var)) for ind in A_ind]
-        in_Λ = [any(ind[2] .∈ F_ind) for ind in A_ind_c]
-
-        if !isnothing(M)
-            in_M = length.(M_ind) .!= 0
-            in_any = in_A .| in_S .| in_M
-        else
-            in_any = in_A .| in_S
-        end
-
-        if !all(in_any)
-            @warn "Could not determine fabin3 starting values for some parameters, default to 0."
-        end =#
-
     # set undirected parameters in S
     S_indices = CartesianIndices(S)
     for j in 1:nparams(S)
@@ -79,7 +61,6 @@ function start_fabin3(
 
     # set loadings
     A_indices = CartesianIndices(A)
-    # ind_Λ = findall([is_in_Λ(ind_vec, F_ind) for ind_vec in A_ind_c])
 
     # collect latent variable indicators in A
     # maps latent parameter to the vector of dependent vars

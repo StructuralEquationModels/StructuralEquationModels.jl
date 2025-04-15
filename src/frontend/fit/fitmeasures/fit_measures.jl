@@ -14,6 +14,6 @@ end
 """
     fit_measures(sem_fit, args...)
 
-Return a default set of fit measures or the fit measures passed as `arg...`.
+Return a default set of fit measures or the fit measures passed as `args...`.
 """
 function fit_measures end
