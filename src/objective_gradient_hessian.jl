@@ -95,7 +95,8 @@ function evaluate!(objective, gradient, hessian, model::AbstractSemSingle, param
 end
 
 ############################################################################################
-# methods for SemFiniteDiff (approximate gradient and hessian with finite differences of objective)
+# methods for SemFiniteDiff
+# (approximate gradient and hessian with finite differences of objective)
 ############################################################################################
 
 function evaluate!(objective, gradient, hessian, model::SemFiniteDiff, params)
@@ -156,14 +157,6 @@ function evaluate!(objective, gradient, hessian, ensemble::SemEnsemble, params)
     end
     return objective
 end
-
-# throw an error by default if gradient! and hessian! are not implemented
-
-#= gradient!(lossfun::SemLossFunction, par, model) =
-    throw(ArgumentError("gradient for $(typeof(lossfun).name.wrapper) is not available"))
-
-hessian!(lossfun::SemLossFunction, par, model) =
-    throw(ArgumentError("hessian for $(typeof(lossfun).name.wrapper) is not available")) =#
 
 ############################################################################################
 # Documentation

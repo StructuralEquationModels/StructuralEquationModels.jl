@@ -7,7 +7,7 @@ Return a new model with swaped observed part.
 
 # Arguments
 - `model::AbstractSemSingle`: model to swap the observed part of.
-- `kwargs`: additional keyword arguments; typically includes `data = ...`
+- `kwargs`: additional keyword arguments; typically includes `data` and `specification`
 - `observed`: Either an object of subtype of `SemObserved` or a subtype of `SemObserved`
 
 # Examples

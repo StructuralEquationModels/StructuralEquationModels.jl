@@ -25,9 +25,9 @@ For observed data with missing values.
         kwargs...)
 
 # Arguments
-- `specification`: optional SEM model specification ([`SemSpecification`](@ref))
 - `data`: observed data
 - `observed_vars::Vector{Symbol}`: column names of the data (if the object passed as data does not have column names, i.e. is not a data frame)
+- `specification`: optional SEM model specification ([`SemSpecification`](@ref))
 
 # Extended help
 ## Interfaces
@@ -35,10 +35,14 @@ For observed data with missing values.
 - `nobserved_vars(::SemObservedMissing)` -> number of observed variables
 
 - `samples(::SemObservedMissing)` -> data matrix (contains both measured and missing values)
-- `em_model(::SemObservedMissing)` -> `EmMVNModel` that contains the covariance matrix and mean vector found via expectation maximization
 
-## Implementation
-Subtype of `SemObserved`
+## Expectation maximization
+`em_mvn!(::SemObservedMissing)` can be called to fit a covariance matrix and mean vector to the data
+using an expectation maximization (EM) algorithm under the assumption of multivariate normality.
+After, the following methods are available:
+- `em_model(::SemObservedMissing)` -> `EmMVNModel` that contains the covariance matrix and mean vector found via EM
+- `obs_cov(::SemObservedData)` -> EM covariance matrix
+- `obs_mean(::SemObservedData)` -> EM mean vector
 """
 struct SemObservedMissing{T <: Real, S <: Real, E <: EmMVNModel} <: SemObserved
     data::Matrix{Union{T, Missing}}
@@ -90,10 +94,6 @@ function SemObservedMissing(;
         em_model,
     )
 end
-
-############################################################################################
-### Recommended methods
-############################################################################################
 
 ############################################################################################
 ### Additional methods

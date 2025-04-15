@@ -8,12 +8,6 @@ an optimizer part.
 # Constructor
 
     SemOptimizerEmpty()
-
-# Extended help
-
-## Implementation
-
-Subtype of `SemOptimizer`.
 """
 struct SemOptimizerEmpty <: SemOptimizer{:Empty} end
 

@@ -28,8 +28,8 @@ nsamples(observed::MyObserved) = ...
 nobserved_vars(observed::MyObserved) = ...
 ```
 
-As always, you can add additional methods for properties that implied types and loss function want to access, for example (from the `SemObservedCommon` implementation):
+As always, you can add additional methods for properties that implied types and loss function want to access, for example (from the `SemObservedData` implementation):
 
 ```julia
-obs_cov(observed::SemObservedCommon) = observed.obs_cov
+obs_cov(observed::SemObservedData) = observed.obs_cov
 ```

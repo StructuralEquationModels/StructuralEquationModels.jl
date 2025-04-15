@@ -37,13 +37,13 @@ options(optimizer::SemOptimizerName) = optimizer.options
 Note that your optimizer is a subtype of `SemOptimizer{:Name}`, where you can choose a `:Name` that can later be used as a keyword argument to `fit(engine = :Name)`.
 Similarly, `SemOptimizer{:Name}(args...; kwargs...) = SemOptimizerName(args...; kwargs...)` should be defined as well as a constructor that uses only keyword arguments:
 
-´´´julia
+```julia
 SemOptimizerName(;
     algorithm = LBFGS(),
     options = Optim.Options(; f_tol = 1e-10, x_tol = 1.5e-8),
     kwargs...,
 ) = SemOptimizerName(algorithm, options)
-´´´
+```
 A method for `update_observed` and additional methods might be usefull, but are not necessary.
 
 Now comes the substantive part: We need to provide a method for `fit`:

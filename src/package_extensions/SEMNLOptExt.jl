@@ -49,10 +49,6 @@ see [Constrained optimization](@ref) in our online documentation.
 - `local_options(::SemOptimizerNLopt)`
 - `equality_constraints(::SemOptimizerNLopt)`
 - `inequality_constraints(::SemOptimizerNLopt)`
-
-## Implementation
-
-Subtype of `SemOptimizer`.
 """
 struct SemOptimizerNLopt{A, A2, B, B2, C} <: SemOptimizer{:NLopt}
     algorithm::A

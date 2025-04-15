@@ -1,3 +1,7 @@
+##############################################################
+# Some helpers to implement show methods for SEM.jl objects
+##############################################################
+
 function print_field_types(io::IO, struct_instance)
     fields = fieldnames(typeof(struct_instance))
     types = [typeof(getproperty(struct_instance, field)) for field in fields]
@@ -25,7 +29,7 @@ function print_type(io::IO, struct_instance)
 end
 
 ##############################################################
-# Loss Functions, Implied,
+# Loss Function, Implied, Observed, Optimizer
 ##############################################################
 
 function Base.show(io::IO, struct_inst::SemLossFunction)
