@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>A first model · StructuralEquationModels.jl</title><meta name="title" content="A first model · StructuralEquationModels.jl"/><meta property="og:title" content="A first model · StructuralEquationModels.jl"/><meta property="twitter:title" content="A first model · StructuralEquationModels.jl"/><meta name="description" content="Documentation for StructuralEquationModels.jl."/><meta property="og:description" content="Documentation for StructuralEquationModels.jl."/><meta property="twitter:description" content="Documentation for StructuralEquationModels.jl."/><script data-outdated-warner src="../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../search_index.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script><link href="../../assets/favicon_zeta.ico" rel="icon" type="image/x-icon"/></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../../"><img src="../../assets/logo.svg" alt="StructuralEquationModels.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href="../../">StructuralEquationModels.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../../">A fast and flexible SEM framework</a></li><li><input class="collapse-toggle" id="menuitem-2" type="checkbox" checked/><label class="tocitem" for="menuitem-2"><span class="docs-label">Tutorials</span><i class="docs-chevron"></i></label><ul class="collapsed"><li class="is-active"><a class="tocitem" href>A first model</a></li><li><a class="tocitem" href="../concept/">Our Concept of a Structural Equation Model</a></li><li><input class="collapse-toggle" id="menuitem-2-3" type="checkbox"/><label class="tocitem" for="menuitem-2-3"><span class="docs-label">Model Specification</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../specification/specification/">Model specification</a></li><li><a class="tocitem" href="../specification/graph_interface/">Graph interface</a></li><li><a class="tocitem" href="../specification/ram_matrices/">RAMMatrices interface</a></li><li><a class="tocitem" href="../specification/parameter_table/">ParameterTable interface</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-2-4" type="checkbox"/><label class="tocitem" for="menuitem-2-4"><span class="docs-label">Model Construction</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../construction/construction/">Model Construction</a></li><li><a class="tocitem" href="../construction/outer_constructor/">Outer Constructor</a></li><li><a class="tocitem" href="../construction/build_by_parts/">Build by parts</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-2-5" type="checkbox"/><label class="tocitem" for="menuitem-2-5"><span class="docs-label">Optimization Backends</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../backends/optim/">Using Optim.jl</a></li><li><a class="tocitem" href="../backends/nlopt/">Using NLopt.jl</a></li></ul></li><li><a class="tocitem" href="../fitting/fitting/">Model Fitting</a></li><li><a class="tocitem" href="../inspection/inspection/">Model Inspection</a></li><li><a class="tocitem" href="../meanstructure/">Mean Structures</a></li><li><input class="collapse-toggle" id="menuitem-2-9" type="checkbox"/><label class="tocitem" for="menuitem-2-9"><span class="docs-label">Collections</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../collection/collection/">Collections</a></li><li><a class="tocitem" href="../collection/multigroup/">Multigroup models</a></li></ul></li><li><a class="tocitem" href="../constraints/constraints/">Constraints</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-3" type="checkbox"/><label class="tocitem" for="menuitem-3"><span class="docs-label">Developer documentation</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../developer/extending/">Extending the package</a></li><li><a class="tocitem" href="../../developer/loss/">Custom loss functions</a></li><li><a class="tocitem" href="../../developer/implied/">Custom implied types</a></li><li><a class="tocitem" href="../../developer/optimizer/">Custom optimizer types</a></li><li><a class="tocitem" href="../../developer/observed/">Custom observed types</a></li><li><a class="tocitem" href="../../developer/sem/">Custom model types</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-4" type="checkbox"/><label class="tocitem" for="menuitem-4"><span class="docs-label">Advanced tutorials</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../regularization/regularization/">Regularization</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-5" type="checkbox"/><label class="tocitem" for="menuitem-5"><span class="docs-label">Performance tips</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../performance/sorting/">Model sorting</a></li><li><a class="tocitem" href="../../performance/mkl/">MKL</a></li><li><a class="tocitem" href="../../performance/simulation/">Simulation studies</a></li><li><a class="tocitem" href="../../performance/symbolic/">Symbolic precomputation</a></li><li><a class="tocitem" href="../../performance/starting_values/">Starting values</a></li><li><a class="tocitem" href="../../performance/parametric/">Parametric Types</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-6" type="checkbox"/><label class="tocitem" for="menuitem-6"><span class="docs-label">Internals and design</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../internals/internals/">Internals and design</a></li><li><a class="tocitem" href="../../internals/files/">files</a></li><li><a class="tocitem" href="../../internals/types/">types</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-7" type="checkbox"/><label class="tocitem" for="menuitem-7"><span class="docs-label">Complementary material</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../complementary/maths/">Mathematical appendix</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Tutorials</a></li><li class="is-active"><a href>A first model</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>A first model</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/StructuralEquationModels/StructuralEquationModels.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/StructuralEquationModels/StructuralEquationModels.jl/blob/main/docs/src/tutorials/first_model.md" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="A-first-model"><a class="docs-heading-anchor" href="#A-first-model">A first model</a><a id="A-first-model-1"></a><a class="docs-heading-anchor-permalink" href="#A-first-model" title="Permalink"></a></h1><p>In this tutorial, we will fit an example SEM with our package.  The example we are using is from <a href="https://lavaan.ugent.be/tutorial/sem.html">the <code>lavaan</code> tutorial</a>, so it may be familiar. It looks like this:</p><p><img src="../../assets/political_democracy.png" alt="Visualization of the Political Democracy model"/></p><p>We assume the <code>StructuralEquationModels</code> package is already installed. To use it in the current session, we run</p><pre><code class="language-julia hljs">using StructuralEquationModels</code></pre><p>We then first define the graph of our model in a syntax which is similar to the R-package <code>lavaan</code>:</p><pre><code class="language-julia hljs">obs_vars = [:x1, :x2, :x3, :y1, :y2, :y3, :y4, :y5, :y6, :y7, :y8]
+lat_vars = [:ind60, :dem60, :dem65]
+
+graph = @StenoGraph begin
+
+    # loadings
+    ind60 → fixed(1)*x1 + x2 + x3
+    dem60 → fixed(1)*y1 + y2 + y3 + y4
+    dem65 → fixed(1)*y5 + y6 + y7 + y8
+
+    # latent regressions
+    ind60 → dem60
+    dem60 → dem65
+    ind60 → dem65
+
+    # variances
+    _(obs_vars) ↔ _(obs_vars)
+    _(lat_vars) ↔ _(lat_vars)
+
+    # covariances
+    y1 ↔ y5
+    y2 ↔ y4 + y6
+    y3 ↔ y7
+    y8 ↔ y4 + y6
+
+end</code></pre><div class="admonition is-info"><header class="admonition-header">Time to first model</header><div class="admonition-body"><p>When executing the code from this tutorial the first time in a fresh julia session, you may wonder that it takes quite some time. This is not because the implementation is slow, but because the functions are compiled the first time you use them. Try rerunning the example a second time - you will see that all function executions after the first one are quite fast.</p></div></div><p>We then use this graph to define a <code>ParameterTable</code> object</p><pre><code class="language-julia hljs">partable = ParameterTable(
+    graph,
+    latent_vars = lat_vars,
+    observed_vars = obs_vars)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi"> -------- ---------- -------- ------- ------------- --------- ---------- -------
+ <span class="sgr1">   from   relation       to    free   value_fixed     start   estimate    lab ⋯
+ <span class="sgr90"> Symbol     Symbol   Symbol    Bool       Float64   Float64    Float64   Symb ⋯
+ -------- ---------- -------- ------- ------------- --------- ---------- -------
+   ind60          →       x1   false           1.0                         con ⋯
+   ind60          →       x2    true                                         θ ⋯
+   ind60          →       x3    true                                         θ ⋯
+   dem60          →       y1   false           1.0                         con ⋯
+   dem60          →       y2    true                                         θ ⋯
+   dem60          →       y3    true                                         θ ⋯
+   dem60          →       y4    true                                         θ ⋯
+   dem65          →       y5   false           1.0                         con ⋯
+   dem65          →       y6    true                                         θ ⋯
+   dem65          →       y7    true                                         θ ⋯
+   dem65          →       y8    true                                         θ ⋯
+   ind60          →    dem60    true                                         θ ⋯
+   dem60          →    dem65    true                                        θ_ ⋯
+   ind60          →    dem65    true                                        θ_ ⋯
+      x1          ↔       x1    true                                        θ_ ⋯
+    ⋮         ⋮         ⋮        ⋮          ⋮           ⋮         ⋮         ⋮  ⋱
+ -------- ---------- -------- ------- ------------- --------- ---------- -------
+</span><span class="sgr36">                                                    1 column and 19 rows omitted
+Latent Variables:    [:ind60, :dem60, :dem65] 
+Observed Variables:  [:x1, :x2, :x3, :y1, :y2, :y3, :y4, :y5, :y6, :y7, :y8] 
+</span></span></code></pre><p>load the example data</p><pre><code class="language-julia hljs">data = example_data(&quot;political_democracy&quot;)</code></pre><p>and specify our model as</p><pre><code class="language-julia hljs">model = Sem(
+    specification = partable,
+    data = data
+)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Structural Equation Model 
+- Loss Functions 
+   SemML
+- Fields 
+   observed:    SemObservedData 
+   implied:     RAM 
+</code></pre><p>We can now fit the model via</p><pre><code class="language-julia hljs">model_fit = fit(model)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Fitted Structural Equation Model 
+=============================================== 
+--------------------- Model ------------------- 
+
+Structural Equation Model 
+- Loss Functions 
+   SemML
+- Fields 
+   observed:    SemObservedData 
+   implied:     RAM 
+
+------------- Optimization result ------------- 
+
+ * Status: success
+
+ * Candidate solution
+    Final objective value:     2.120543e+01
+
+ * Found with
+    Algorithm:     L-BFGS
+
+ * Convergence measures
+    |x - x&#39;|               = 6.67e-05 ≰ 1.5e-08
+    |x - x&#39;|/|x&#39;|          = 8.93e-06 ≰ 0.0e+00
+    |f(x) - f(x&#39;)|         = 1.14e-09 ≰ 0.0e+00
+    |f(x) - f(x&#39;)|/|f(x&#39;)| = 5.39e-11 ≤ 1.0e-10
+    |g(x)|                 = 1.36e-04 ≰ 1.0e-08
+
+ * Work counters
+    Seconds run:   0  (vs limit Inf)
+    Iterations:    127
+    f(x) calls:    387
+    ∇f(x) calls:   387
+</code></pre><p>and compute fit measures as</p><pre><code class="language-julia hljs">fit_measures(model_fit)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Dict{Symbol, Union{Missing, Float64}} with 8 entries:
+  :minus2ll =&gt; 3106.66
+  :AIC      =&gt; 3168.66
+  :BIC      =&gt; 3240.5
+  :χ²       =&gt; 37.6169
+  :dof      =&gt; 35.0
+  :p_value  =&gt; 0.350262
+  :nparams  =&gt; 31.0
+  :RMSEA    =&gt; 0.0315739</code></pre><p>We can also get a bit more information about the fitted model via the <code>details()</code> function:</p><pre><code class="language-julia hljs">details(model_fit)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">
+Fitted Structural Equation Model
+
+--------------------------------- Properties ---------------------------------
+
+Optimization algorithm:      L-BFGS
+Convergence:                 true
+No. iterations/evaluations:  127
+
+Number of parameters:        31
+Number of data samples:      75
+
+----------------------------------- Model ------------------------------------
+
+Structural Equation Model
+- Loss Functions
+   SemML
+- Fields
+   observed:    SemObservedData
+   implied:     RAM</code></pre><p>To investigate the parameter estimates, we can update our <code>partable</code> object to contain the new estimates:</p><pre><code class="language-julia hljs">update_estimate!(partable, model_fit)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi"> -------- ---------- -------- ------- ------------- --------- ----------- ------
+ <span class="sgr1">   from   relation       to    free   value_fixed     start    estimate    la ⋯
+ <span class="sgr90"> Symbol     Symbol   Symbol    Bool       Float64   Float64     Float64   Sym ⋯
+ -------- ---------- -------- ------- ------------- --------- ----------- ------
+   ind60          →       x1   false           1.0                   1.0    co ⋯
+   ind60          →       x2    true                             2.18036       ⋯
+   ind60          →       x3    true                             1.81849       ⋯
+   dem60          →       y1   false           1.0                   1.0    co ⋯
+   dem60          →       y2    true                             1.25683       ⋯
+   dem60          →       y3    true                              1.0577       ⋯
+   dem60          →       y4    true                             1.26484       ⋯
+   dem65          →       y5   false           1.0                   1.0    co ⋯
+   dem65          →       y6    true                             1.18573       ⋯
+   dem65          →       y7    true                             1.27947       ⋯
+   dem65          →       y8    true                             1.26596       ⋯
+   ind60          →    dem60    true                             1.48315       ⋯
+   dem60          →    dem65    true                            0.837368     θ ⋯
+   ind60          →    dem65    true                            0.572317     θ ⋯
+      x1          ↔       x1    true                           0.0826479     θ ⋯
+    ⋮         ⋮         ⋮        ⋮          ⋮           ⋮          ⋮         ⋮ ⋱
+ -------- ---------- -------- ------- ------------- --------- ----------- ------
+</span><span class="sgr36">                                                    1 column and 19 rows omitted
+Latent Variables:    [:ind60, :dem60, :dem65] 
+Observed Variables:  [:x1, :x2, :x3, :y1, :y2, :y3, :y4, :y5, :y6, :y7, :y8] 
+</span></span></code></pre><p>and investigate the solution with</p><pre><code class="language-julia hljs">details(partable)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">
+---------------------------------- Variables ---------------------------------
+
+Latent variables:    ind60 dem60 dem65
+Observed variables:  x1 x2 x3 y1 y2 y3 y4 y5 y6 y7 y8
+
+---------------------------- Parameter Estimates -----------------------------
+
+Loadings:
+
+ind60
+
+  to   estimate   value_fixed   start   free   from    label   relation
+
+  x1   1.0        1.0                   0.0    ind60   const   →
+  x2   2.18                             1.0    ind60   θ_1     →
+  x3   1.82                             1.0    ind60   θ_2     →
+
+dem60
+
+  to   estimate   value_fixed   start   free   from    label   relation
+
+  y1   1.0        1.0                   0.0    dem60   const   →
+  y2   1.26                             1.0    dem60   θ_3     →
+  y3   1.06                             1.0    dem60   θ_4     →
+  y4   1.26                             1.0    dem60   θ_5     →
+
+dem65
+
+  to   estimate   value_fixed   start   free   from    label   relation
+
+  y5   1.0        1.0                   0.0    dem65   const   →
+  y6   1.19                             1.0    dem65   θ_6     →
+  y7   1.28                             1.0    dem65   θ_7     →
+  y8   1.27                             1.0    dem65   θ_8     →
+
+Directed Effects:
+
+  from        to      estimate   value_fixed   start   free   label
+
+  ind60   →   dem60   1.48                             1.0    θ_9
+  dem60   →   dem65   0.84                             1.0    θ_10
+  ind60   →   dem65   0.57                             1.0    θ_11
+
+Variances:
+
+  from        to      estimate   value_fixed   start   free   label
+
+  x1      ↔   x1      0.08                             1.0    θ_12
+  x2      ↔   x2      0.12                             1.0    θ_13
+  x3      ↔   x3      0.47                             1.0    θ_14
+  y1      ↔   y1      1.92                             1.0    θ_15
+  y2      ↔   y2      7.47                             1.0    θ_16
+  y3      ↔   y3      5.14                             1.0    θ_17
+  y4      ↔   y4      3.19                             1.0    θ_18
+  y5      ↔   y5      2.38                             1.0    θ_19
+  y6      ↔   y6      5.02                             1.0    θ_20
+  y7      ↔   y7      3.48                             1.0    θ_21
+  y8      ↔   y8      3.3                              1.0    θ_22
+  ind60   ↔   ind60   0.45                             1.0    θ_23
+  dem60   ↔   dem60   4.01                             1.0    θ_24
+  dem65   ↔   dem65   0.17                             1.0    θ_25
+
+Covariances:
+
+  from       to   estimate   value_fixed   start   free   label
+
+  y1     ↔   y5   0.63                             1.0    θ_26
+  y2     ↔   y4   1.33                             1.0    θ_27
+  y2     ↔   y6   2.18                             1.0    θ_28
+  y3     ↔   y7   0.81                             1.0    θ_29
+  y8     ↔   y4   0.35                             1.0    θ_30
+  y8     ↔   y6   1.37                             1.0    θ_31</code></pre><p>Congratulations, you fitted and inspected your very first model!  We recommend continuing with <a href="../concept/#Our-Concept-of-a-Structural-Equation-Model">Our Concept of a Structural Equation Model</a>.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../">« A fast and flexible SEM framework</a><a class="docs-footer-nextpage" href="../concept/">Our Concept of a Structural Equation Model »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.10.1 on <span class="colophon-date" title="Tuesday 15 April 2025 12:02">Tuesday 15 April 2025</span>. Using Julia version 1.11.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
