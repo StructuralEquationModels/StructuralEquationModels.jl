@@ -1,9 +1,5 @@
 # Simulation studies
 
-!!! note "Simulation study interface"
-    We are currently working on an interface for simulation studies.
-    Until we are finished with this, this page is just a collection of tips.
-
 ## Replace observed data
 In simulation studies, a common task is fitting the same model to many different datasets.
 It would be a waste of resources to reconstruct the complete model for each dataset.

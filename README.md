@@ -39,7 +39,7 @@ The package makes use of
 - SparseArrays.jl to speed up symbolic computations.
 - Optim.jl and NLopt.jl to provide a range of different Optimizers/Linesearches.
 - ProximalAlgorithms.jl for regularization.
-- FiniteDiff.jl and ForwardDiff.jl to provide gradients for user-defined loss functions.
+- FiniteDiff.jl and to provide gradient approximations for user-defined loss functions.
 
 # At the moment, we are still working on:
 - optimizing performance for big models (with hundreds of parameters)

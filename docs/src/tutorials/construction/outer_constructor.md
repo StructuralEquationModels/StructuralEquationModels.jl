@@ -14,9 +14,8 @@ Structural Equation Model
 - Loss Functions
    SemML
 - Fields
-   observed:  SemObservedCommon
-   implied:     RAM
-   optimizer: SemOptimizerOptim
+   observed:  SemObservedData
+   implied:   RAM
 ```
 
 The output of this call tells you exactly what model you just constructed (i.e. what the loss functions, observed, implied and optimizer parts are).
