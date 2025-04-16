@@ -12,7 +12,7 @@ Connects to `Optim.jl` as the optimization backend.
 
     SemOptimizerOptim(;
         algorithm = LBFGS(),
-        options = Optim.Options(;f_tol = 1e-10, x_tol = 1.5e-8),
+        options = Optim.Options(;f_reltol = 1e-10, x_abstol = 1.5e-8),
         kwargs...)
 
 # Arguments
@@ -67,7 +67,7 @@ SemOptimizer{:Optim}(args...; kwargs...) = SemOptimizerOptim(args...; kwargs...)
 
 SemOptimizerOptim(;
     algorithm = LBFGS(),
-    options = Optim.Options(; f_tol = 1e-10, x_tol = 1.5e-8),
+    options = Optim.Options(;f_reltol = 1e-10, x_abstol = 1.5e-8),
     kwargs...,
 ) = SemOptimizerOptim(algorithm, options)
 

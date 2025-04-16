@@ -16,7 +16,7 @@ SemOptimizer{:Name}(args...; kwargs...) = SemOptimizerName(args...; kwargs...)
 
 SemOptimizerName(;
     algorithm = LBFGS(),
-    options = Optim.Options(; f_tol = 1e-10, x_tol = 1.5e-8),
+    options = Optim.Options(; f_reltol = 1e-10, x_abstol = 1.5e-8),
     kwargs...,
 ) = SemOptimizerName(algorithm, options)
 
@@ -40,7 +40,7 @@ Similarly, `SemOptimizer{:Name}(args...; kwargs...) = SemOptimizerName(args...; 
 ```julia
 SemOptimizerName(;
     algorithm = LBFGS(),
-    options = Optim.Options(; f_tol = 1e-10, x_tol = 1.5e-8),
+    options = Optim.Options(; f_reltol = 1e-10, x_abstol = 1.5e-8),
     kwargs...,
 ) = SemOptimizerName(algorithm, options)
 ```
