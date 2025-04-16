@@ -3,16 +3,32 @@
 ############################################################################################
 
 # An EM Algorithm for MVN-distributed Data with missing values
-# Adapted from supplementary Material to the book Machine Learning: A Probabilistic Perspective
-# Copyright (2010) Kevin Murphy and Matt Dunham
-# found at https://github.com/probml/pmtk3/blob/master/toolbox/BasicModels/gauss/sub/gaussMissingFitEm.m
-# and at https://github.com/probml/pmtk3/blob/master/toolbox/Algorithms/optimization/emAlgo.m
+# Adapted from https://github.com/probml/pmtk3, licensed as
+#= The MIT License
 
-# what about random restarts?
+Copyright (2010) Kevin Murphy and Matt Dunham
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE. =#
 
 # outer function ---------------------------------------------------------------------------
 """
-    em_mvn(;
+    em_mvn!(;
         observed::SemObservedMissing,
         start_em = start_em_observed,
         max_iter_em = 100,
@@ -22,7 +38,7 @@
 Estimates the covariance matrix and mean vector of the normal distribution via expectation maximization for `observed`.
 Overwrites the statistics stored in `observed`.
 """
-function em_mvn(
+function em_mvn!(
     observed::SemObservedMissing;
     start_em = start_em_observed,
     max_iter_em = 100,
@@ -32,7 +48,7 @@ function em_mvn(
     nvars = nobserved_vars(observed)
     nsamps = nsamples(observed)
 
-    # preallocate stuff?
+    # preallocate stuff
     𝔼x_pre = zeros(nvars)
     𝔼xxᵀ_pre = zeros(nvars, nvars)
 
@@ -44,9 +60,6 @@ function em_mvn(
             𝔼xxᵀ_pre += row * row'
         end
     end
-
-    # ess = 𝔼x, 𝔼xxᵀ, ismissing, missingRows, nsamps
-    # estepFn = (em_model, data) -> estep(em_model, data, EXsum, EXXsum, ismissing, missingRows, nsamps)
 
     # initialize
     em_model = start_em(observed; kwargs...)
@@ -65,13 +78,11 @@ function em_mvn(
             @warn "EM Algorithm for MVN missing data did not converge. Likelihood for FIML is not interpretable.
             Maybe try passing different starting values via 'start_em = ...' "
         elseif iter > 1
-            # done = isapprox(ll, ll_prev; rtol = rtol)
             done =
                 isapprox(em_model_prev.μ, em_model.μ; rtol = rtol_em) &
                 isapprox(em_model_prev.Σ, em_model.Σ; rtol = rtol_em)
         end
 
-        # print("$iter \n")
         iter = iter + 1
         em_model_prev.μ, em_model_prev.Σ = em_model.μ, em_model.Σ
     end
@@ -135,23 +146,7 @@ end
 function em_mvn_Mstep!(em_model, nsamples, 𝔼x, 𝔼xxᵀ)
     em_model.μ = 𝔼x / nsamples
     Σ = Symmetric(𝔼xxᵀ / nsamples - em_model.μ * em_model.μ')
-
-    # ridge Σ
-    # while !isposdef(Σ)
-    #     Σ += 0.5I
-    # end
-
     em_model.Σ = Σ
-
-    # diagonalization
-    #if !isposdef(Σ)
-    #    print("Matrix not positive definite")
-    #    em_model.Σ .= 0
-    #    em_model.Σ[diagind(em_model.Σ)] .= diag(Σ)
-    #else
-    # em_model.Σ = Σ
-    #end
-
     return nothing
 end
 
@@ -178,7 +173,6 @@ function start_em_simple(observed::SemObservedMissing; kwargs...)
     μ = zeros(nvars)
     Σ = rand(nvars, nvars)
     Σ = Σ * Σ'
-    # Σ = Matrix(1.0I, nvars, nvars)
     return EmMVNModel(Σ, μ, false)
 end
 

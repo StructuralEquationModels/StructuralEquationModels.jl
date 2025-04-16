@@ -16,7 +16,7 @@ Connects to `Optim.jl` as the optimization backend.
         kwargs...)
 
 # Arguments
-- `algorithm`: optimization algorithm.
+- `algorithm`: optimization algorithm from `Optim.jl`
 - `options::Optim.Options`: options for the optimization algorithm
 
 # Usage
@@ -110,7 +110,7 @@ function fit(
     upper_bounds::Union{AbstractVector, AbstractDict, Nothing} = nothing,
     lower_bound = -Inf,
     upper_bound = Inf,
-    variance_lower_bound::Number = 0.0,
+    variance_lower_bound::Number = -Inf,
     variance_upper_bound::Number = Inf,
     kwargs...,
 )

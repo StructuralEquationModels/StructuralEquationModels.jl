@@ -106,7 +106,7 @@ abstract type SemObserved end
 
 """
 Supertype of all objects that can serve as the implied field of a SEM.
-Computed model-implied values that should be compared with the observed data to find parameter estimates,
+Computes model-implied values that should be compared with the observed data to find parameter estimates,
 e. g. the model implied covariance or mean.
 If you would like to implement a different notation, e.g. LISREL, you should implement a subtype of SemImplied.
 """
@@ -168,7 +168,7 @@ end
 # ensemble models
 ############################################################################################
 """
-    (1) SemEnsemble(models..., weights = nothing, kwargs...)
+    (1) SemEnsemble(models...; weights = nothing, kwargs...)
 
     (2) SemEnsemble(;specification, data, groups, column = :group, kwargs...)
 
@@ -189,6 +189,8 @@ Returns a SemEnsemble with fields
 - `sems::Tuple`: `AbstractSem`s.
 - `weights::Vector`: Weights for each model.
 - `param_labels::Vector`: Stores parameter labels and their position.
+
+For instructions on multigroup models, see the online documentation.
 """
 struct SemEnsemble{N, T <: Tuple, V <: AbstractVector, I} <: AbstractSemCollection
     n::N

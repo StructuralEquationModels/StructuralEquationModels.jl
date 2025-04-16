@@ -1,7 +1,7 @@
 # Using NLopt.jl
 
 [`SemOptimizerNLopt`](@ref) implements the connection to `NLopt.jl`.
-It is only available if the `NLopt` package is loaded alongside `StructuralEquationModel.jl` in the running Julia session.
+It is only available if the `NLopt` package is loaded alongside `StructuralEquationModels.jl` in the running Julia session.
 It takes a bunch of arguments:
 
 ```julia

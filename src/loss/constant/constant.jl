@@ -20,10 +20,6 @@ Constant loss term. Can be used for comparability to other packages.
 
 # Interfaces
 Analytic gradients and hessians are available.
-
-# Extended help
-## Implementation
-Subtype of `SemLossFunction`.
 """
 struct SemConstant{C} <: SemLossFunction
     hessianeval::ExactHessian

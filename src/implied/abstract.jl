@@ -1,4 +1,3 @@
-
 # vars and params API methods for SemImplied
 vars(implied::SemImplied) = vars(implied.ram_matrices)
 observed_vars(implied::SemImplied) = observed_vars(implied.ram_matrices)

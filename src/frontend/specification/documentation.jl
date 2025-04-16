@@ -33,13 +33,6 @@ latent_vars(spec::SemSpecification) =
     error("latent_vars(spec::$(typeof(spec))) is not implemented")
 
 """
-    param_labels(semobj) -> Vector{Symbol}
-
-Return the vector of parameter labels (in the same order as [`params`](@ref)).
-"""
-param_labels(spec::SemSpecification) = spec.param_labels
-
-"""
     vars(semobj) -> Vector{Symbol}
 
 Return the vector of SEM model variables (both observed and latent)
@@ -72,13 +65,21 @@ latent_vars(spec::SemSpecification) =
     error("latent_vars(spec::$(typeof(spec))) is not implemented")
 
 """
+    param_labels(semobj) -> Vector{Symbol}
+
+Return the vector of parameter labels (in the same order as [`params`](@ref)).
+"""
+param_labels(spec::SemSpecification) = spec.param_labels
+
+
+"""
 `ParameterTable`s contain the specification of a structural equation model.
 
 # Constructor
 
-    (1) ParameterTable(;graph, observed_vars, latent_vars, ...)
+    (1) ParameterTable(graph; observed_vars, latent_vars, ...)
 
-    (2) ParameterTable(ram_matrices)
+    (2) ParameterTable(ram_matrices; ...)
 
 Return a `ParameterTable` constructed from (1) a graph or (2) RAM matrices.
 
@@ -89,7 +90,7 @@ Return a `ParameterTable` constructed from (1) a graph or (2) RAM matrices.
 - `ram_matrices::RAMMatrices`: a `RAMMatrices` object
 
 # Examples
-See the online documentation on [Model specification](@ref) and the [ParameterTable interface](@ref).
+See the online documentation on [Model specification](@ref) and the [Graph interface](@ref).
 
 # Extended help
 ## Additional keyword arguments
@@ -102,7 +103,7 @@ function ParameterTable end
 
 # Constructor
 
-    (1) EnsembleParameterTable(;graph, observed_vars, latent_vars, groups)
+    (1) EnsembleParameterTable(graph; observed_vars, latent_vars, groups)
 
     (2) EnsembleParameterTable(ps::Pair...; param_labels = nothing)
 
@@ -125,9 +126,9 @@ function EnsembleParameterTable end
 
 # Constructor
 
-    (1) RAMMatrices(partable::ParameterTable)
+    (1) RAMMatrices(partable::ParameterTable; param_labels = nothing)
 
-    (2) RAMMatrices(;A, S, F, M = nothing, param_labels, vars)
+    (2) RAMMatrices(;A, S, F, M = nothing, param_labels, vars = nothing)
 
     (3) RAMMatrices(partable::EnsembleParameterTable)
 

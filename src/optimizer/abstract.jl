@@ -20,10 +20,16 @@ the online documentation on [Starting values](@ref).
 
 # Examples
 ```julia
-fit(
-    my_model;
+fit(my_model;
     start_val = start_simple,
     start_covariances_latent = 0.5)
+```
+
+```julia
+using Optim
+
+fit(my_model;
+    algorithm = BFGS())
 ```
 """
 function fit(optim::SemOptimizer, model::AbstractSem; start_val = nothing, kwargs...)
@@ -48,6 +54,10 @@ prepare_start_params(start_val::Nothing, model::AbstractSemSingle; kwargs...) =
 # simple algorithm is the default method for ensembles
 prepare_start_params(start_val::Nothing, model::AbstractSem; kwargs...) =
     start_simple(model; kwargs...)
+
+# first argument is a function
+prepare_start_params(start_val, model::AbstractSem; kwargs...) =
+    start_val(model; kwargs...)
 
 function prepare_start_params(start_val::AbstractVector, model::AbstractSem; kwargs...)
     (length(start_val) == nparams(model)) || throw(

@@ -19,10 +19,6 @@ my_fiml = SemFIML(observed = my_observed, specification = my_parameter_table)
 
 # Interfaces
 Analytic gradients are available.
-
-# Extended help
-## Implementation
-Subtype of `SemLossFunction`.
 """
 mutable struct SemFIML{INV, C, L, O, M, IM, I, T, W} <: SemLossFunction
     hessianeval::ExactHessian

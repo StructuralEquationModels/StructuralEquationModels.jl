@@ -24,10 +24,6 @@ my_ridge = SemRidge(;α_ridge = 0.02, which_ridge = [:λ₁, :λ₂, :ω₂₃],
 
 # Interfaces
 Analytic gradients and hessians are available.
-
-# Extended help
-## Implementation
-Subtype of `SemLossFunction`.
 """
 struct SemRidge{P, W1, W2, GT, HT} <: SemLossFunction
     hessianeval::ExactHessian

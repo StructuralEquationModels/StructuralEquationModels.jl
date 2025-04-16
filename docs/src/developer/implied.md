@@ -62,11 +62,8 @@ model per group and an additional model with `ImpliedEmpty` and `SemRidge` for t
 # Extended help
 
 ## Interfaces
-- `params(::RAMSymbolic) `-> Vector of parameter labels
-- `nparams(::RAMSymbolic)` -> Number of parameters
-
-## Implementation
-Subtype of `SemImplied`.
+- `param_labels(::ImpliedEmpty) `-> Vector of parameter labels
+- `nparams(::ImpliedEmpty)` -> Number of parameters
 """
 struct ImpliedEmpty{A, B, C} <: SemImplied
     hessianeval::A
@@ -78,7 +75,12 @@ end
 ### Constructors
 ############################################################################################
 
-function ImpliedEmpty(;specification, meanstruct = NoMeanStruct(), hessianeval = ExactHessian(), kwargs...)
+function ImpliedEmpty(;
+    specification,
+    meanstruct = NoMeanStruct(),
+    hessianeval = ExactHessian(),
+    kwargs...,
+)
     return ImpliedEmpty(hessianeval, meanstruct, convert(RAMMatrices, specification))
 end
 

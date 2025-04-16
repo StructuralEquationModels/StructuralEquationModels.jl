@@ -19,11 +19,8 @@ model per group and an additional model with `ImpliedEmpty` and `SemRidge` for t
 # Extended help
 
 ## Interfaces
-- `param_labels(::RAMSymbolic) `-> Vector of parameter labels
-- `nparams(::RAMSymbolic)` -> Number of parameters
-
-## Implementation
-Subtype of `SemImplied`.
+- `param_labels(::ImpliedEmpty) `-> Vector of parameter labels
+- `nparams(::ImpliedEmpty)` -> Number of parameters
 """
 struct ImpliedEmpty{A, B, C} <: SemImplied
     hessianeval::A
