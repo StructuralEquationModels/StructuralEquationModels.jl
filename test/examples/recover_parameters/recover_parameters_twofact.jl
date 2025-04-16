@@ -70,7 +70,7 @@ objective!(model_ml, true_val)
 
 optimizer = SemOptimizerOptim(
     BFGS(; linesearch = BackTracking(order = 3), alphaguess = InitialHagerZhang()),# m = 100),
-    Optim.Options(; f_tol = 1e-10, x_tol = 1.5e-8),
+    Optim.Options(; f_reltol = 1e-10, x_abstol = 1.5e-8),
 )
 
 solution_ml = fit(optimizer, model_ml)
