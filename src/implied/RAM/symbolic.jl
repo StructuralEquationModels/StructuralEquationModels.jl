@@ -6,7 +6,8 @@ Subtype of `SemImplied` that implements the RAM notation with symbolic precomput
 
 # Constructor
 
-    RAMSymbolic(;specification,
+    RAMSymbolic(;
+        specification,
         vech = false,
         gradient = true,
         hessian = false,
@@ -25,32 +26,25 @@ Subtype of `SemImplied` that implements the RAM notation with symbolic precomput
 
 # Extended help
 
-## Implementation
-Subtype of `SemImplied`.
-
 ## Interfaces
 - `param_labels(::RAMSymbolic) `-> vector of parameter ids
 - `nparams(::RAMSymbolic)` -> number of parameters
 
-- `Σ(::RAMSymbolic)` -> model implied covariance matrix
-- `μ(::RAMSymbolic)` -> model implied mean vector
+- `ram.Σ` -> model implied covariance matrix
+- `ram.μ` -> model implied mean vector
 
 Jacobians (only available in gradient! calls)
-- `∇Σ(::RAMSymbolic)` -> ``∂vec(Σ)/∂θᵀ``
-- `∇μ(::RAMSymbolic)` -> ``∂μ/∂θᵀ``
+- `ram.∇Σ` -> ``∂vec(Σ)/∂θᵀ``
+- `ram.∇μ` -> ``∂μ/∂θᵀ``
 
-- `∇Σ_function(::RAMSymbolic)` -> function to overwrite `∇Σ` in place,
-    i.e. `∇Σ_function(∇Σ, θ)`. Normally, you do not want to use this but simply
-    query `∇Σ(::RAMSymbolic)`.
+- `ram.∇Σ_function` -> function to overwrite `∇Σ` in place,
+    i.e. `∇Σ_function(∇Σ, θ)`. Typically, you do not want to use this but simply
+    query `ram.∇Σ`.
 
 Hessians
-The computation of hessians is more involved, and uses the "chain rule for
-hessian matrices".
-Therefore, we desribe it at length in the mathematical appendix of the online documentation,
-and the relevant interfaces are omitted here.
-
-Additional interfaces
-- `has_meanstructure(::RAMSymbolic)` -> `Val{Bool}` does the model have a meanstructure?
+The computation of hessians is more involved.
+Therefore, we desribe it in the online documentation, 
+and the respective interfaces are omitted here.
 
 ## RAM notation
 The model implied covariance matrix is computed as

@@ -12,11 +12,11 @@ Connects to `Optim.jl` as the optimization backend.
 
     SemOptimizerOptim(;
         algorithm = LBFGS(),
-        options = Optim.Options(;f_tol = 1e-10, x_tol = 1.5e-8),
+        options = Optim.Options(;f_reltol = 1e-10, x_abstol = 1.5e-8),
         kwargs...)
 
 # Arguments
-- `algorithm`: optimization algorithm.
+- `algorithm`: optimization algorithm from `Optim.jl`
 - `options::Optim.Options`: options for the optimization algorithm
 
 # Usage
@@ -67,7 +67,7 @@ SemOptimizer{:Optim}(args...; kwargs...) = SemOptimizerOptim(args...; kwargs...)
 
 SemOptimizerOptim(;
     algorithm = LBFGS(),
-    options = Optim.Options(; f_tol = 1e-10, x_tol = 1.5e-8),
+    options = Optim.Options(;f_reltol = 1e-10, x_abstol = 1.5e-8),
     kwargs...,
 ) = SemOptimizerOptim(algorithm, options)
 
@@ -110,7 +110,7 @@ function fit(
     upper_bounds::Union{AbstractVector, AbstractDict, Nothing} = nothing,
     lower_bound = -Inf,
     upper_bound = Inf,
-    variance_lower_bound::Number = 0.0,
+    variance_lower_bound::Number = -Inf,
     variance_upper_bound::Number = Inf,
     kwargs...,
 )

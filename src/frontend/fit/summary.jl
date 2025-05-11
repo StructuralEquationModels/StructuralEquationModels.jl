@@ -15,7 +15,7 @@ function details(sem_fit::SemFit; show_fitmeasures = false, color = :light_cyan,
     println("Number of data samples:      $(nsamples(sem_fit))")
     print("\n")
     printstyled(
-        "----------------------------------- Model ----------------------------------- \n";
+        "----------------------------------- Model ------------------------------------ \n";
         color = color,
     )
     print("\n")
@@ -23,7 +23,7 @@ function details(sem_fit::SemFit; show_fitmeasures = false, color = :light_cyan,
     print("\n")
     if show_fitmeasures
         printstyled(
-            "--------------------------------- Fitmeasures --------------------------------- \n";
+            "-------------------------------- Fitmeasures --------------------------------- \n";
             color = color,
         )
         print("\n")
@@ -51,7 +51,7 @@ function details(
     if show_variables
         print("\n")
         printstyled(
-            "--------------------------------- Variables --------------------------------- \n";
+            "---------------------------------- Variables --------------------------------- \n";
             color = color,
         )
         print("\n")
@@ -242,9 +242,6 @@ function details(
         )
         print("\n")
     end
-
-    #printstyled("""No need to copy and paste results, you can use CSV.write(DataFrame(my_partable), "myfile.csv")"""; hidden = true)
-
 end
 
 function details(
@@ -297,9 +294,6 @@ function details(
             show_columns = show_columns,
         )
     end
-
-    # printstyled("""No need to copy and paste results, you can use CSV.write(DataFrame(my_partable), "myfile.csv")"""; hidden = true)
-
 end
 
 function check_round(vec; digits)

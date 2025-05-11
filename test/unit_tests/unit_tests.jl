@@ -33,11 +33,3 @@ selected_tests = isempty(ARGS) ? collect(keys(available_tests)) : ARGS
         end
     end
 end
-
-@safetestset "SemSpecification" begin
-    include("specification.jl")
-end
-
-@safetestset "Sem model" begin
-    include("model.jl")
-end

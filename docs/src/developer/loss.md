@@ -204,7 +204,7 @@ julia>?
 
 help?> RAM
 
-help?> SemObservedCommon
+help?> SemObservedData
 ```
 
 We see that the model implied covariance matrix can be assessed as `Σ(implied)` and the observed covariance matrix as `obs_cov(observed)`.

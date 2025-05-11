@@ -55,7 +55,6 @@ function ParameterTable(
     value_fixed = columns[:value_fixed]
     start = columns[:start]
     param_refs = columns[:label]
-    # group = Vector{Symbol}(undef, n)
 
     for (i, element) in enumerate(graph)
         edge = element isa ModifiedEdge ? element.edge : element

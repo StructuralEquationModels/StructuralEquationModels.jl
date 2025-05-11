@@ -41,7 +41,7 @@ end
 function minus2ll(observed::SemObservedMissing)
     # fit EM-based mean and cov if not yet fitted
     # FIXME EM could be very computationally expensive
-    observed.em_model.fitted || em_mvn(observed)
+    observed.em_model.fitted || em_mvn!(observed)
 
     Σ = observed.em_model.Σ
     μ = observed.em_model.μ

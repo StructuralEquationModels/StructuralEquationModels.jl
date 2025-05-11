@@ -21,11 +21,8 @@ my_ml = SemML(observed = my_observed)
 ```
 
 # Interfaces
-Analytic gradients are available, and for models without a meanstructure, also analytic hessians.
-
-# Extended help
-## Implementation
-Subtype of `SemLossFunction`.
+Analytic gradients are available, and for models without a meanstructure
+and RAMSymbolic implied type, also analytic hessians.
 """
 struct SemML{HE <: HessianEval, INV, M, M2} <: SemLossFunction
     hessianeval::HE

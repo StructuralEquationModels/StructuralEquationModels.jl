@@ -9,7 +9,7 @@ struct RAMMatrices <: SemSpecification
     F::SparseMatrixCSC{Float64}
     M::Union{ParamsVector{Float64}, Nothing}
     param_labels::Vector{Symbol}
-    vars::Union{Vector{Symbol}, Nothing}    # better call it "variables": it's a mixture of observed and latent (and it gets confusing with get_vars())
+    vars::Union{Vector{Symbol}, Nothing}
 end
 
 nparams(ram::RAMMatrices) = nparams(ram.A)
