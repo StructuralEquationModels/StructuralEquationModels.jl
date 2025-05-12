@@ -168,7 +168,7 @@ end
 # ensemble models
 ############################################################################################
 """
-    (1) SemEnsemble(models...; weights = nothing, kwargs...)
+    (1) SemEnsemble(models...; weights = nothing, groups = nothing, kwargs...)
 
     (2) SemEnsemble(;specification, data, groups, column = :group, kwargs...)
 
@@ -192,24 +192,24 @@ Returns a SemEnsemble with fields
 
 For instructions on multigroup models, see the online documentation.
 """
-struct SemEnsemble{N, T <: Tuple, V <: AbstractVector, I} <: AbstractSemCollection
+struct SemEnsemble{N, T <: Tuple, V <: AbstractVector, I, G <: Vector{Symbol}} <: AbstractSemCollection
     n::N
     sems::T
     weights::V
     param_labels::I
+    groups::G
 end
 
 # constructor from multiple models
-function SemEnsemble(models...; weights = nothing, kwargs...)
+function SemEnsemble(models...; weights = nothing, groups = nothing, kwargs...)
     n = length(models)
-
     # default weights
-
     if isnothing(weights)
         nsamples_total = sum(nsamples, models)
         weights = [nsamples(model) / nsamples_total for model in models]
     end
-
+    # default group labels
+    groups = isnothing(groups) ? Symbol.(:g, 1:n) : groups
     # check parameters equality
     param_labels = SEM.param_labels(models[1])
     for model in models
@@ -220,7 +220,7 @@ function SemEnsemble(models...; weights = nothing, kwargs...)
         end
     end
 
-    return SemEnsemble(n, models, weights, param_labels)
+    return SemEnsemble(n, models, weights, param_labels, groups)
 end
 
 # constructor from EnsembleParameterTable and data set
@@ -238,7 +238,7 @@ function SemEnsemble(; specification, data, groups, column = :group, kwargs...)
         model = Sem(; specification = ram_matrices, data = data_group, kwargs...)
         push!(models, model)
     end
-    return SemEnsemble(models...; weights = nothing, kwargs...)
+    return SemEnsemble(models...; weights = nothing, groups = groups, kwargs...)
 end
 
 param_labels(ensemble::SemEnsemble) = ensemble.param_labels
