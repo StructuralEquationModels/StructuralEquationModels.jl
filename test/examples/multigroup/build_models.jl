@@ -20,6 +20,13 @@ model_ml_multigroup2 = SemEnsemble(
     loss = SemML,
 )
 
+model_ml_multigroup3 = replace_observed(
+    model_ml_multigroup2,
+    column = :school,
+    specification = partable,
+    data = dat,
+)
+
 # gradients
 @testset "ml_gradients_multigroup" begin
     test_gradient(model_ml_multigroup, start_test; atol = 1e-9)
@@ -44,6 +51,12 @@ end
         atol = 1e-4,
         lav_groups = Dict(:Pasteur => 1, :Grant_White => 2),
     )
+end
+
+@testset "replace_observed_multigroup" begin
+    sem_fit_1 = fit(semoptimizer, model_ml_multigroup)
+    sem_fit_2 = fit(semoptimizer, model_ml_multigroup3)
+    @test sem_fit_1.solution ≈ sem_fit_2.solution
 end
 
 @testset "fitmeasures/se_ml" begin
