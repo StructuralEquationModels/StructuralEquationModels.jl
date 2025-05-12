@@ -21,7 +21,7 @@ model_ml_multigroup2 = SemEnsemble(
 )
 
 model_ml_multigroup3 = replace_observed(
-    model_ml_multigroup,
+    model_ml_multigroup2,
     column = :school,
     specification = partable,
     data = dat,
