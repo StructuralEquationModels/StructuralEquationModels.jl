@@ -1,15 +1,15 @@
 
 """
-pseudoR2(fitted)
+explained_variance(fitted)
 
-Compute pseudo-R² for each observed variable in a fitted SEM.
+Compute explained variance (R²) for each observed variable in a fitted SEM.
 
 Returns a DataFrame with:
 - :var         — observed variable name (Symbol)
 - :r2_implied  — 1 - ( residual variance / model-implied variance)
 
 """
-function pseudoR2(fitted::SemFit)
+function explained_variance(fitted::SemFit)
 # 1) Observed variable order as used by the model
 obs = Symbol.(fitted.model.observed.observed_vars)
 
