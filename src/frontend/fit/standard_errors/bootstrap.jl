@@ -1,5 +1,5 @@
 """
-    se_bootstrap(semfit::SemFit; n_boot = 3000, data = nothing, kwargs...)
+    se_bootstrap(sem_fit::SemFit; n_boot = 3000, data = nothing, kwargs...)
 
 Return boorstrap standard errors.
 Only works for single models.
@@ -7,16 +7,25 @@ Only works for single models.
 # Arguments
 - `n_boot`: number of boostrap samples
 - `data`: data to sample from. Only needed if different than the data from `sem_fit`
-- `kwargs...`: passed down to `swap_observed`
+- `kwargs...`: passed down to `replace_observed`
 """
-function se_bootstrap(semfit::SemFit; n_boot = 3000, data = nothing, specification = nothing, kwargs...)
-
+function se_bootstrap(
+    semfit::SemFit;
+    n_boot = 3000,
+    data = nothing,
+    specification = nothing,
+    kwargs...,
+)
     if model(semfit) isa AbstractSemCollection
-        throw(ArgumentError("bootstrap standard errors for ensemble models are not available yet"))
+        throw(
+            ArgumentError(
+                "bootstrap standard errors for ensemble models are not available yet",
+            ),
+        )
     end
 
     if isnothing(data)
-        data = get_data(observed(model(semfit)))
+        data = samples(observed(model(semfit)))
     end
 
     data = prepare_data_bootstrap(data)
@@ -31,20 +40,19 @@ function se_bootstrap(semfit::SemFit; n_boot = 3000, data = nothing, specificati
 
     converged = true
 
-    for _ = 1:n_boot
-
+    for _ in 1:n_boot
         sample_data = bootstrap_sample(data)
-        new_model = swap_observed(
-            model(semfit); 
+        new_model = replace_observed(
+            model(semfit);
             data = sample_data,
             specification = specification,
-            kwargs...
+            kwargs...,
         )
 
         new_solution .= 0.0
 
         try
-            new_solution = solution(sem_fit(new_model; start_val = start))
+            new_solution = solution(fit(new_model; start_val = start))
         catch
             n_failed += 1
         end
@@ -56,10 +64,9 @@ function se_bootstrap(semfit::SemFit; n_boot = 3000, data = nothing, specificati
     end
 
     n_conv = n_boot - n_failed
-    sd = sqrt.(squared_sum/n_conv - (sum/n_conv).^2)
+    sd = sqrt.(squared_sum / n_conv - (sum / n_conv) .^ 2)
     print("Number of nonconverged models: ", n_failed, "\n")
     return sd
-
 end
 
 function prepare_data_bootstrap(data)

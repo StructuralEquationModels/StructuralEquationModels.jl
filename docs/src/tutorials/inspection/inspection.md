@@ -1,7 +1,7 @@
 # Model inspection
 
 ```@setup colored
-using StructuralEquationModels 
+using StructuralEquationModels
 
 observed_vars = [:x1, :x2, :x3, :y1, :y2, :y3, :y4, :y5, :y6, :y7, :y8]
 latent_vars = [:ind60, :dem60, :dem65]
@@ -31,9 +31,9 @@ graph = @StenoGraph begin
 end
 
 partable = ParameterTable(
-    latent_vars = latent_vars, 
-    observed_vars = observed_vars, 
-    graph = graph)
+    graph,
+    latent_vars = latent_vars,
+    observed_vars = observed_vars)
 
 data = example_data("political_democracy")
 
@@ -42,21 +42,21 @@ model = Sem(
     data = data
 )
 
-model_fit = sem_fit(model)
+model_fit = fit(model)
 ```
 
 After you fitted a model,
 
 ```julia
-model_fit = sem_fit(model)
+model_fit = fit(model)
 ```
 
 you end up with an object of type [`SemFit`](@ref).
 
-You can get some more information about it by using the `sem_summary` function:
+You can get some more information about it by using the `details` function:
 
 ```@example colored; ansicolor = true
-sem_summary(model_fit)
+details(model_fit)
 ```
 
 To compute fit measures, we use
@@ -73,12 +73,12 @@ AIC(model_fit)
 
 A list of available [Fit measures](@ref) is at the end of this page.
 
-To inspect the parameter estimates, we can update a `ParameterTable` object and call `sem_summary` on it:
+To inspect the parameter estimates, we can update a `ParameterTable` object and call `details` on it:
 
 ```@example colored; ansicolor = true; output = false
 update_estimate!(partable, model_fit)
 
-sem_summary(partable)
+details(partable)
 ```
 
 We can also update the `ParameterTable` object with other information via [`update_partable!`](@ref). For example, if we want to compare hessian-based and bootstrap-based standard errors, we may write
@@ -87,10 +87,10 @@ We can also update the `ParameterTable` object with other information via [`upda
 se_bs = se_bootstrap(model_fit; n_boot = 20)
 se_he = se_hessian(model_fit)
 
-update_partable!(partable, model_fit, se_he, :se_hessian)
-update_partable!(partable, model_fit, se_bs, :se_bootstrap)
+update_partable!(partable, :se_hessian, param_labels(model_fit), se_he)
+update_partable!(partable, :se_bootstrap, param_labels(model_fit), se_bs)
 
-sem_summary(partable)
+details(partable)
 ```
 
 ## Export results
@@ -106,7 +106,7 @@ parameters_df = DataFrame(partable)
 # API - model inspection
 
 ```@docs
-sem_summary
+details
 update_estimate!
 update_partable!
 ```
@@ -117,6 +117,11 @@ Additional functions that can be used to extract information from a `SemFit` obj
 
 ```@docs
 SemFit
+params
+param_labels
+nparams
+nsamples
+nobserved_vars
 ```
 
 ## Fit measures
@@ -126,11 +131,8 @@ fit_measures
 AIC
 BIC
 χ²
-df
+dof
 minus2ll
-n_man
-n_obs
-n_par
 p_value
 RMSEA
 ```

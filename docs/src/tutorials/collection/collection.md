@@ -15,11 +15,10 @@ model_2 = SemFiniteDiff(...)
 
 model_3 = Sem(...)
 
-model_ensemble = SemEnsemble(model_1, model_2, model_3; optimizer = ...)
+model_ensemble = SemEnsemble(model_1, model_2, model_3)
 ```
 
 So you just construct the individual models (however you like) and pass them to `SemEnsemble`.
-One important thing to note is that the individual optimizer entries of each model do not matter (as you can optimize your ensemble model only with one algorithmn from one optimization suite). Instead, `SemEnsemble` has its own optimizer part that specifies the backend for the whole ensemble model.
 You may also pass a vector of weigths to `SemEnsemble`. By default, those are set to ``N_{model}/N_{total}``, i.e. each model is weighted by the number of observations in it's data (which matches the formula for multigroup models).
 
 Multigroup models can also be specified via the graph interface; for an example, see [Multigroup models](@ref).

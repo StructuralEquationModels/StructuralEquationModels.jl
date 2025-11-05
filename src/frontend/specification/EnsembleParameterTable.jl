@@ -2,8 +2,9 @@
 ### Types
 ############################################################################################
 
-mutable struct EnsembleParameterTable{C} <: AbstractParameterTable
-    tables::C
+struct EnsembleParameterTable <: AbstractParameterTable
+    tables::Dict{Symbol, ParameterTable}
+    param_labels::Vector{Symbol}
 end
 
 ############################################################################################
@@ -11,41 +12,67 @@ end
 ############################################################################################
 
 # constuct an empty table
-function EnsembleParameterTable(::Nothing)
-    tables = Dict{Symbol, ParameterTable}()
-    return EnsembleParameterTable(tables)
+EnsembleParameterTable(::Nothing; param_labels::Union{Nothing, Vector{Symbol}} = nothing) =
+    EnsembleParameterTable(
+        Dict{Symbol, ParameterTable}(),
+        isnothing(param_labels) ? Symbol[] : copy(param_labels),
+    )
+
+# convert pairs to dict
+EnsembleParameterTable(ps::Pair{K, V}...; param_labels = nothing) where {K, V} =
+    EnsembleParameterTable(Dict(ps...); param_labels = param_labels)
+
+# dictionary of SEM specifications
+function EnsembleParameterTable(
+    spec_ensemble::AbstractDict{K, V};
+    param_labels::Union{Nothing, Vector{Symbol}} = nothing,
+) where {K, V <: SemSpecification}
+    param_labels = if isnothing(param_labels)
+        # collect all SEM parameters in ensemble if not specified
+        # and apply the set to all partables
+        unique(mapreduce(SEM.param_labels, vcat, values(spec_ensemble), init = Vector{Symbol}()))
+    else
+        copy(param_labels)
+    end
+
+    # convert each model specification to ParameterTable
+    partables = Dict{Symbol, ParameterTable}(
+        Symbol(group) => convert(ParameterTable, spec; param_labels) for
+        (group, spec) in pairs(spec_ensemble)
+    )
+    return EnsembleParameterTable(partables, param_labels)
 end
 
 ############################################################################################
 ### Convert to other types
 ############################################################################################
 
-import Base.Dict
-
-function Dict(partable::EnsembleParameterTable)
-    return partable.tables
+function Base.convert(::Type{Dict}, partable::EnsembleParameterTable)
+    return convert(Dict, partable.tables)
 end
 
-#= function DataFrame(
-        partable::ParameterTable; 
-        columns = nothing)
-    if isnothing(columns) columns = keys(partable.columns) end
-    out = DataFrame([key => partable.columns[key] for key in columns])
-    return DataFrame(out)
-end =#
+function Base.convert(
+    ::Type{Dict{K, RAMMatrices}},
+    partables::EnsembleParameterTable;
+    param_labels::Union{AbstractVector{Symbol}, Nothing} = nothing,
+) where {K}
+    isnothing(param_labels) || (param_labels = SEM.param_labels(partables))
 
-############################################################################################
-### get parameter table from RAMMatrices
-############################################################################################
+    return Dict{K, RAMMatrices}(
+        K(key) => RAMMatrices(partable; param_labels = param_labels) for
+        (key, partable) in pairs(partables.tables)
+    )
+end
 
-function EnsembleParameterTable(args...; groups)
-    partable = EnsembleParameterTable(nothing)
-
-    for (group, ram_matrices) in zip(groups, args)
-        push!(partable.tables, group => ParameterTable(ram_matrices))
+function DataFrames.DataFrame(
+    partables::EnsembleParameterTable;
+    columns::Union{AbstractVector{Symbol}, Nothing} = nothing,
+)
+    mapreduce(vcat, pairs(partables.tables)) do (key, partable)
+        df = DataFrame(partable; columns = columns)
+        df[!, :group] .= key
+        return df
     end
-
-    return partable
 end
 
 ############################################################################################
@@ -54,7 +81,9 @@ end
 
 function Base.show(io::IO, partable::EnsembleParameterTable)
     print(io, "EnsembleParameterTable with groups: ")
-    for key in keys(partable.tables) print(io, "|", key, "|") end
+    for key in keys(partable.tables)
+        print(io, "|", key, "|")
+    end
     print(io, "\n")
     for key in keys(partable.tables)
         print("\n")
@@ -67,48 +96,58 @@ end
 ### Additional Methods
 ############################################################################################
 
-# Sorting ----------------------------------------------------------------------------------
+# Variables Sorting ------------------------------------------------------------------------
 
-# Sorting ----------------------------------------------------------------------------------
-
-function sort!(ensemble_partable::EnsembleParameterTable)
-
-    for partable in values(ensemble_partable.tables)
-        sort!(partable)
+function sort_vars!(partables::EnsembleParameterTable)
+    for partable in values(partables.tables)
+        sort_vars!(partable)
     end
 
-    return ensemble_partable
+    return partables
 end
 
-function sort(partable::EnsembleParameterTable)
-    new_partable = deepcopy(partable)
-    sort!(new_partable)
-    return new_partable
-end
+sort_vars(partables::EnsembleParameterTable) = sort_vars!(deepcopy(partables))
 
 # add a row --------------------------------------------------------------------------------
 
 # do we really need this?
-import Base.push!
-
-function push!(partable::EnsembleParameterTable, d::AbstractDict, group)
+function Base.push!(partable::EnsembleParameterTable, d::AbstractDict, group)
     push!(partable.tables[group], d)
 end
 
-push!(partable::EnsembleParameterTable, d::Nothing, group) = nothing
-
-# get group --------------------------------------------------------------------------------
-
-get_group(partable::EnsembleParameterTable, group) = get_group(partable.tables, group)
+Base.getindex(partable::EnsembleParameterTable, group) = partable.tables[group]
 
 ############################################################################################
 ### Update Partable from Fitted Model
 ############################################################################################
 
-# update generic ---------------------------------------------------------------------------
-function update_partable!(partable::EnsembleParameterTable, model_identifier::AbstractDict, vec, column)
-    for k in keys(partable.tables)
-        update_partable!(partable.tables[k], model_identifier, vec, column)
+function update_partable!(
+    partables::EnsembleParameterTable,
+    column::Symbol,
+    params::AbstractDict{Symbol},
+    default::Any = nothing,
+)
+    for partable in values(partables.tables)
+        update_partable!(partable, column, params, default)
     end
-    return partable
+    return partables
+end
+
+function update_partable!(
+    partables::EnsembleParameterTable,
+    column::Symbol,
+    param_labels::AbstractVector{Symbol},
+    values::AbstractVector,
+    default::Any = nothing,
+)
+    return update_partable!(partables, column, Dict(zip(param_labels, values)), default)
+end
+
+############################################################################################
+### Additional methods
+############################################################################################
+
+function Base.:(==)(p1::EnsembleParameterTable, p2::EnsembleParameterTable)
+    out = (p1.tables == p2.tables) && (p1.param_labels == p2.param_labels)
+    return out
 end

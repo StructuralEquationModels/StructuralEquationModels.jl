@@ -12,13 +12,13 @@ end
 and convert it to a ParameterTable to construct your models:
 
 ```julia
-observed_vars = ...
-latent_vars   = ...
+obs_vars = ...
+lat_vars   = ...
 
 partable = ParameterTable(
-    latent_vars = latent_vars, 
-    observed_vars = observed_vars, 
-    graph = graph)
+    graph,
+    latent_vars = lat_vars, 
+    observed_vars = obs_vars)
 
 model = Sem(
     specification = partable,
@@ -65,24 +65,24 @@ As you saw above and in the [A first model](@ref) example, the graph object need
 
 ```julia
 partable = ParameterTable(
-    latent_vars = latent_vars, 
-    observed_vars = observed_vars, 
-    graph = graph)
+    graph,
+    latent_vars = lat_vars, 
+    observed_vars = obs_vars)
 ```
 
 The `ParameterTable` constructor also needs you to specify a vector of observed and latent variables, in the example above this would correspond to
 
 ```julia
-observed_vars = [:x1 :x2 :x3 :x4 :x5 :x6 :x7 :x8 :x9]
-latent_vars   = [:ξ₁ :ξ₂ :ξ₃]
+obs_vars = [:x1 :x2 :x3 :x4 :x5 :x6 :x7 :x8 :x9]
+lat_vars   = [:ξ₁ :ξ₂ :ξ₃]
 ```
 
 The variable names (`:x1`) have to be symbols, the syntax `:something` creates an object of type `Symbol`. But you can also use vectors of symbols inside the graph specification, escaping them with `_(...)`. For example, this graph specification
 
 ```julia
 @StenoGraph begin
-    _(observed_vars) ↔ _(observed_vars)
-    _(latent_vars) ⇔ _(latent_vars)
+    _(obs_vars) ↔ _(obs_vars)
+    _(lat_vars) ⇔ _(lat_vars)
 end
 ```
 creates undirected effects coresponding to 
@@ -95,7 +95,7 @@ Mean parameters are specified as a directed effect from `1` to the respective va
 
 ```julia
 @StenoGraph begin
-    Symbol("1") → _(observed_vars)
+    Symbol(1) → _(obs_vars)
 end
 ```
 

@@ -20,12 +20,9 @@ Constant loss term. Can be used for comparability to other packages.
 
 # Interfaces
 Analytic gradients and hessians are available.
-
-# Extended help
-## Implementation
-Subtype of `SemLossFunction`.
 """
-struct SemConstant{C} <: SemLossFunction 
+struct SemConstant{C} <: SemLossFunction
+    hessianeval::ExactHessian
     c::C
 end
 
@@ -33,20 +30,22 @@ end
 ### Constructors
 ############################################################################################
 
-function SemConstant(;constant_loss, kwargs...)
-    return SemConstant(constant_loss)
+function SemConstant(; constant_loss, kwargs...)
+    return SemConstant(ExactHessian(), constant_loss)
 end
 
 ############################################################################################
 ### methods
 ############################################################################################
 
-objective!(constant::SemConstant, par, model) = constant.c
-gradient!(constant::SemConstant, par, model) = zero(par)
-hessian!(constant::SemConstant, par, model) = zeros(eltype(par), length(par), length(par))
+objective(constant::SemConstant, model::AbstractSem, par) = constant.c
+gradient(constant::SemConstant, model::AbstractSem, par) = zero(par)
+hessian(constant::SemConstant, model::AbstractSem, par) =
+    zeros(eltype(par), length(par), length(par))
 
 ############################################################################################
 ### Recommended methods
 ############################################################################################
 
-update_observed(loss_function::SemConstant, observed::SemObserved; kwargs...) = loss_function
+update_observed(loss_function::SemConstant, observed::SemObserved; kwargs...) =
+    loss_function

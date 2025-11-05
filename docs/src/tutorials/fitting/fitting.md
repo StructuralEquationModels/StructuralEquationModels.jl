@@ -3,7 +3,7 @@
 As we saw in [A first model](@ref), after you have build a model, you can fit it via
 
 ```julia
-model_fit = sem_fit(model)
+model_fit = fit(model)
 
 # output
 
@@ -16,7 +16,7 @@ Structural Equation Model
    SemML
 - Fields 
    observed:  SemObservedData 
-   imply:     RAM 
+   implied:   RAM 
    optimizer: SemOptimizerOptim 
 
 ------------- Optimization result ------------- 
@@ -43,10 +43,32 @@ Structural Equation Model
     ∇f(x) calls:   524
 ```
 
-You may optionally specify [Starting values](@ref).
+## Choosing an optimizer
+
+To choose a different optimizer, you can call `fit` with the keyword argument `engine = ...`, and pass additional keyword arguments:
+
+```julia
+using Optim
+
+model_fit = fit(model; engine = :Optim, algorithm = BFGS())
+```
+
+Available options for engine are `:Optim`, `:NLopt` and `:Proximal`, where `:NLopt` and `:Proximal` are only available if the `NLopt.jl` and `ProximalAlgorithms.jl` packages are loaded respectively.
+
+The available keyword arguments are listed in the sections [Using Optim.jl](@ref), [Using NLopt.jl](@ref) and [Regularization](@ref).
+
+Alternative, you can also explicitely define a `SemOptimizer` and pass it as the first argument to `fit`:
+
+```julia
+my_optimizer = SemOptimizerOptim(algorithm = BFGS())
+
+fit(my_optimizer, model)
+```
+
+You may also optionally specify [Starting values](@ref).
 
 # API - model fitting
 
 ```@docs
-sem_fit
+fit
 ```

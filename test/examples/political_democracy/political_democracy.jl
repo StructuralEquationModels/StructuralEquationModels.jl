@@ -1,9 +1,13 @@
-using StructuralEquationModels, Test, FiniteDiff
-# import StructuralEquationModels as SEM
+using StructuralEquationModels, Test, Suppressor, FiniteDiff
+
+SEM = StructuralEquationModels
+
 include(
-    joinpath(chop(dirname(pathof(StructuralEquationModels)), tail = 3), 
-    "test/examples/helper.jl")
-    )
+    joinpath(
+        chop(dirname(pathof(StructuralEquationModels)), tail = 3),
+        "test/examples/helper.jl",
+    ),
+)
 
 ############################################################################################
 ### data
@@ -19,9 +23,10 @@ solution_lav = example_data("political_democracy_solution")
 
 # w.o. meanstructure -----------------------------------------------------------------------
 
-x = Symbol.("x".*string.(1:31))
+x = Symbol.("x" .* string.(1:31))
 
-S =[:x1   0    0     0     0      0     0     0     0     0     0     0     0     0
+S = [
+    :x1   0    0     0     0      0     0     0     0     0     0     0     0     0
     0     :x2  0     0     0      0     0     0     0     0     0     0     0     0
     0     0     :x3  0     0      0     0     0     0     0     0     0     0     0
     0     0     0     :x4  0      0     0     :x15  0     0     0     0     0     0
@@ -34,9 +39,11 @@ S =[:x1   0    0     0     0      0     0     0     0     0     0     0     0   
     0     0     0     0     0     0     :x19  0     :x20  0     :x11  0     0     0
     0     0     0     0     0     0     0     0     0     0     0     :x12  0     0
     0     0     0     0     0     0     0     0     0     0     0     0     :x13  0
-    0     0     0     0     0     0     0     0     0     0     0     0     0     :x14]
+    0     0     0     0     0     0     0     0     0     0     0     0     0     :x14
+]
 
-F =[1.0 0 0 0 0 0 0 0 0 0 0 0 0 0
+F = [
+    1.0 0 0 0 0 0 0 0 0 0 0 0 0 0
     0 1 0 0 0 0 0 0 0 0 0 0 0 0
     0 0 1 0 0 0 0 0 0 0 0 0 0 0
     0 0 0 1 0 0 0 0 0 0 0 0 0 0
@@ -46,9 +53,11 @@ F =[1.0 0 0 0 0 0 0 0 0 0 0 0 0 0
     0 0 0 0 0 0 0 1 0 0 0 0 0 0
     0 0 0 0 0 0 0 0 1 0 0 0 0 0
     0 0 0 0 0 0 0 0 0 1 0 0 0 0
-    0 0 0 0 0 0 0 0 0 0 1 0 0 0]
+    0 0 0 0 0 0 0 0 0 0 1 0 0 0
+]
 
-A =[0  0  0  0  0  0  0  0  0  0  0     1.0   0     0
+A = [
+    0  0  0  0  0  0  0  0  0  0  0     1.0   0     0
     0  0  0  0  0  0  0  0  0  0  0     :x21  0     0
     0  0  0  0  0  0  0  0  0  0  0     :x22  0     0
     0  0  0  0  0  0  0  0  0  0  0     0     1.0   0
@@ -61,50 +70,66 @@ A =[0  0  0  0  0  0  0  0  0  0  0     1.0   0     0
     0  0  0  0  0  0  0  0  0  0  0     0     0     :x28
     0  0  0  0  0  0  0  0  0  0  0     0     0     0
     0  0  0  0  0  0  0  0  0  0  0     :x29  0     0
-    0  0  0  0  0  0  0  0  0  0  0     :x30  :x31  0]
+    0  0  0  0  0  0  0  0  0  0  0     :x30  :x31  0
+]
 
 spec = RAMMatrices(;
-    A = A, 
-    S = S, 
-    F = F, 
-    parameters = x,
-    colnames = [:x1, :x2, :x3, :y1, :y2, :y3, :y4, :y5, :y6, :y7, :y8, :ind60, :dem60, :dem65]
+    A = A,
+    S = S,
+    F = F,
+    param_labels = x,
+    vars = [:x1, :x2, :x3, :y1, :y2, :y3, :y4, :y5, :y6, :y7, :y8, :ind60, :dem60, :dem65],
 )
 
 partable = ParameterTable(spec)
 
-# w. meanstructure -------------------------------------------------------------------------
+@test SEM.param_labels(spec) == SEM.param_labels(partable)
 
-x = Symbol.("x".*string.(1:38))
+# w. meanstructure -------------------------------------------------------------------------
 
 M = [:x32; :x33; :x34; :x35; :x36; :x37; :x38; :x35; :x36; :x37; :x38; 0.0; 0.0; 0.0]
 
 spec_mean = RAMMatrices(;
-    A = A, 
-    S = S, 
+    A = A,
+    S = S,
     F = F,
     M = M,
-    parameters = x,
-    colnames = [:x1, :x2, :x3, :y1, :y2, :y3, :y4, :y5, :y6, :y7, :y8, :ind60, :dem60, :dem65])
+    param_labels = [SEM.param_labels(spec); Symbol.("x", string.(32:38))],
+    vars = [:x1, :x2, :x3, :y1, :y2, :y3, :y4, :y5, :y6, :y7, :y8, :ind60, :dem60, :dem65],
+)
 
 partable_mean = ParameterTable(spec_mean)
 
+@test SEM.param_labels(partable_mean) == SEM.param_labels(spec_mean)
+
 start_test = [fill(1.0, 11); fill(0.05, 3); fill(0.05, 6); fill(0.5, 8); fill(0.05, 3)]
-start_test_mean = [fill(1.0, 11); fill(0.05, 3); fill(0.05, 6); fill(0.5, 8); fill(0.05, 3); fill(0.1, 7)]
+start_test_mean =
+    [fill(1.0, 11); fill(0.05, 3); fill(0.05, 6); fill(0.5, 8); fill(0.05, 3); fill(0.1, 7)]
 
-semoptimizer = SemOptimizerOptim
-@testset "RAMMatrices | constructor | Optim" begin include("constructor.jl") end
-semoptimizer = SemOptimizerNLopt
-@testset "RAMMatrices | constructor | NLopt" begin include("constructor.jl") end
-
-if ENV["JULIA_EXTENDED_TESTS"] == "true"
-    semoptimizer = SemOptimizerOptim
-    @testset "RAMMatrices | parts | Optim" begin include("by_parts.jl") end
-    semoptimizer = SemOptimizerNLopt
-    @testset "RAMMatrices | parts | NLopt" begin include("by_parts.jl") end
+opt_engine = :Optim
+@testset "RAMMatrices | constructor | Optim" begin
+    include("constructor.jl")
 end
 
-@testset "constraints | NLopt" begin include("constraints.jl") end
+opt_engine = :NLopt
+@testset "RAMMatrices | constructor | NLopt" begin
+    include("constructor.jl")
+end
+
+if is_extended_tests()
+    opt_engine = :Optim
+    @testset "RAMMatrices | parts | Optim" begin
+        include("by_parts.jl")
+    end
+    opt_engine = :NLopt
+    @testset "RAMMatrices | parts | NLopt" begin
+        include("by_parts.jl")
+    end
+end
+
+@testset "constraints | NLopt" begin
+    include("constraints.jl")
+end
 
 ############################################################################################
 ### specification - RAMMatrices → ParameterTable
@@ -113,19 +138,29 @@ end
 spec = ParameterTable(spec)
 spec_mean = ParameterTable(spec_mean)
 
+@test SEM.param_labels(spec) == SEM.param_labels(partable)
+
 partable = spec
 partable_mean = spec_mean
 
-semoptimizer = SemOptimizerOptim
-@testset "RAMMatrices → ParameterTable | constructor | Optim" begin include("constructor.jl") end
-semoptimizer = SemOptimizerNLopt
-@testset "RAMMatrices → ParameterTable | constructor | NLopt" begin include("constructor.jl") end
+opt_engine = :Optim
+@testset "RAMMatrices → ParameterTable | constructor | Optim" begin
+    include("constructor.jl")
+end
+opt_engine = :NLopt
+@testset "RAMMatrices → ParameterTable | constructor | NLopt" begin
+    include("constructor.jl")
+end
 
-if ENV["JULIA_EXTENDED_TESTS"] == "true"
-    semoptimizer = SemOptimizerOptim
-    @testset "RAMMatrices → ParameterTable | parts | Optim" begin include("by_parts.jl") end
-    semoptimizer = SemOptimizerNLopt
-    @testset "RAMMatrices → ParameterTable | parts | NLopt" begin include("by_parts.jl") end
+if is_extended_tests()
+    opt_engine = :Optim
+    @testset "RAMMatrices → ParameterTable | parts | Optim" begin
+        include("by_parts.jl")
+    end
+    opt_engine = :NLopt
+    @testset "RAMMatrices → ParameterTable | parts | NLopt" begin
+        include("by_parts.jl")
+    end
 end
 
 ############################################################################################
@@ -137,11 +172,11 @@ latent_vars = [:ind60, :dem60, :dem65]
 
 graph = @StenoGraph begin
     # loadings
-    ind60 → fixed(1)*x1 + x2 + x3
-    dem60 → fixed(1)*y1 + y2 + y3 + y4
-    dem65 → fixed(1)*y5 + y6 + y7 + y8
+    ind60 → fixed(1) * x1 + x2 + x3
+    dem60 → fixed(1) * y1 + y2 + y3 + y4
+    dem65 → fixed(1) * y5 + y6 + y7 + y8
     # latent regressions
-    label(:a)*dem60 ← ind60
+    label(:a) * dem60 ← ind60
     dem65 ← dem60
     dem65 ← ind60
     # variances
@@ -154,12 +189,9 @@ graph = @StenoGraph begin
     y8 ↔ y4 + y6
 end
 
-spec = ParameterTable(
-    latent_vars = latent_vars,
-    observed_vars = observed_vars,
-    graph = graph)
+spec = ParameterTable(graph, latent_vars = latent_vars, observed_vars = observed_vars)
 
-sort!(spec)
+sort_vars!(spec)
 
 partable = spec
 
@@ -168,11 +200,11 @@ mean_labels = label.([:m1, :m2, :m3, :m4, :m5, :m6, :m7, :m4, :m5, :m6, :m7])
 
 graph = @StenoGraph begin
     # loadings
-    ind60 → fixed(1)*x1 + x2 + x3
-    dem60 → fixed(1)*y1 + y2 + y3 + y4
-    dem65 → fixed(1)*y5 + y6 + y7 + y8
+    ind60 → fixed(1) * x1 + x2 + x3
+    dem60 → fixed(1) * y1 + y2 + y3 + y4
+    dem65 → fixed(1) * y5 + y6 + y7 + y8
     # latent regressions
-    label(:a)*dem60 ← ind60
+    label(:a) * dem60 ← ind60
     dem65 ← dem60
     dem65 ← ind60
     # variances
@@ -184,30 +216,36 @@ graph = @StenoGraph begin
     y3 ↔ y7
     y8 ↔ y4 + y6
     # means
-    Symbol("1") → _(mean_labels).*_(observed_vars)
-    Symbol("1") → fixed(0)*ind60
+    Symbol(1) → _(mean_labels) .* _(observed_vars)
+    Symbol(1) → fixed(0) * ind60
 end
 
-spec_mean = ParameterTable(
-    latent_vars = latent_vars,
-    observed_vars = observed_vars,
-    graph = graph)
+spec_mean = ParameterTable(graph, latent_vars = latent_vars, observed_vars = observed_vars)
 
-sort!(spec_mean)
+sort_vars!(spec_mean)
 
 partable_mean = spec_mean
 
-start_test = [fill(0.5, 8); fill(0.05, 3); fill(1.0, 11);  fill(0.05, 9)]
-start_test_mean = [fill(0.5, 8); fill(0.05, 3); fill(1.0, 11); fill(0.05, 3); fill(0.05, 13)]
+start_test = [fill(0.5, 8); fill(0.05, 3); fill(1.0, 11); fill(0.05, 9)]
+start_test_mean =
+    [fill(0.5, 8); fill(0.05, 3); fill(1.0, 11); fill(0.05, 3); fill(0.05, 13)]
 
-semoptimizer = SemOptimizerOptim
-@testset "Graph → ParameterTable | constructor | Optim" begin include("constructor.jl") end
-semoptimizer = SemOptimizerNLopt
-@testset "Graph → ParameterTable | constructor | NLopt" begin include("constructor.jl") end
+opt_engine = :Optim
+@testset "Graph → ParameterTable | constructor | Optim" begin
+    include("constructor.jl")
+end
+opt_engine = :NLopt
+@testset "Graph → ParameterTable | constructor | NLopt" begin
+    include("constructor.jl")
+end
 
-if ENV["JULIA_EXTENDED_TESTS"] == "true"
-    semoptimizer = SemOptimizerOptim
-    @testset "Graph → ParameterTable | parts | Optim" begin include("by_parts.jl") end
-    semoptimizer = SemOptimizerNLopt
-    @testset "Graph → ParameterTable | parts | NLopt" begin include("by_parts.jl") end
+if is_extended_tests()
+    opt_engine = :Optim
+    @testset "Graph → ParameterTable | parts | Optim" begin
+        include("by_parts.jl")
+    end
+    opt_engine = :NLopt
+    @testset "Graph → ParameterTable | parts | NLopt" begin
+        include("by_parts.jl")
+    end
 end

@@ -32,7 +32,7 @@ For examples of how to use the package, see the Tutorials.
 Models you can fit out of the box include
 - Linear SEM that can be specified in RAM notation
 - ML, GLS and FIML estimation
-- Ridge Regularization
+- Ridge/Lasso/... Regularization
 - Multigroup SEM
 - Sums of arbitrary loss functions (everything the optimizer can handle)
 
@@ -46,11 +46,11 @@ This strategy also applies to gradients, where you may supply analytic gradients
 ### Installation
 You must have [julia](https://julialang.org/downloads/) installed (and we strongly recommend using an IDE of your choice; we like VS Code with the Julia extension).
 
-To install the latest version of our package from GitHub, use the following commands:
+To install the latest version of our package, use the following commands:
 
 ```julia
-using Pkg
-Pkg.add(url = "https://github.com/StructuralEquationModels/StructuralEquationModels.jl")
+julia> ]
+pkg> add StructuralEquationModels
 ```
 
 ## Citing the package

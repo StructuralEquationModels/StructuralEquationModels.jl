@@ -3,16 +3,32 @@
 ############################################################################################
 
 # An EM Algorithm for MVN-distributed Data with missing values
-# Adapted from supplementary Material to the book Machine Learning: A Probabilistic Perspective
-# Copyright (2010) Kevin Murphy and Matt Dunham
-# found at https://github.com/probml/pmtk3/blob/master/toolbox/BasicModels/gauss/sub/gaussMissingFitEm.m
-# and at https://github.com/probml/pmtk3/blob/master/toolbox/Algorithms/optimization/emAlgo.m
+# Adapted from https://github.com/probml/pmtk3, licensed as
+#= The MIT License
 
-# what about random restarts?
+Copyright (2010) Kevin Murphy and Matt Dunham
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE. =#
 
 # outer function ---------------------------------------------------------------------------
 """
-    em_mvn(;
+    em_mvn!(;
         observed::SemObservedMissing,
         start_em = start_em_observed,
         max_iter_em = 100,
@@ -22,57 +38,53 @@
 Estimates the covariance matrix and mean vector of the normal distribution via expectation maximization for `observed`.
 Overwrites the statistics stored in `observed`.
 """
-function em_mvn(
+function em_mvn!(
     observed::SemObservedMissing;
     start_em = start_em_observed,
     max_iter_em = 100,
     rtol_em = 1e-4,
-    kwargs...)
-    
-    n_obs, n_man = observed.n_obs, Int(observed.n_man)
+    kwargs...,
+)
+    nvars = nobserved_vars(observed)
+    nsamps = nsamples(observed)
 
-    # preallocate stuff?
-    𝔼x_pre = zeros(n_man)
-    𝔼xxᵀ_pre = zeros(n_man, n_man)
+    # preallocate stuff
+    𝔼x_pre = zeros(nvars)
+    𝔼xxᵀ_pre = zeros(nvars, nvars)
 
     ### precompute for full cases
-    if length(observed.patterns[1]) == observed.n_man
-        for row ∈ observed.rows[1]
-            row = observed.data_rowwise[row]
-            𝔼x_pre += row;
-            𝔼xxᵀ_pre += row*row';
+    fullpat = observed.patterns[1]
+    if nmissed_vars(fullpat) == 0
+        for row in eachrow(fullpat.data)
+            𝔼x_pre += row
+            𝔼xxᵀ_pre += row * row'
         end
     end
-    
-    # ess = 𝔼x, 𝔼xxᵀ, ismissing, missingRows, n_obs
-    # estepFn = (em_model, data) -> estep(em_model, data, EXsum, EXXsum, ismissing, missingRows, n_obs)
 
     # initialize
     em_model = start_em(observed; kwargs...)
-    em_model_prev = EmMVNModel(zeros(n_man, n_man), zeros(n_man), false)
+    em_model_prev = EmMVNModel(zeros(nvars, nvars), zeros(nvars), false)
     iter = 1
     done = false
-    𝔼x = zeros(n_man)
-    𝔼xxᵀ = zeros(n_man, n_man)
+    𝔼x = zeros(nvars)
+    𝔼xxᵀ = zeros(nvars, nvars)
 
     while !done
-
         em_mvn_Estep!(𝔼x, 𝔼xxᵀ, em_model, observed, 𝔼x_pre, 𝔼xxᵀ_pre)
-        em_mvn_Mstep!(em_model, n_obs, 𝔼x, 𝔼xxᵀ)
+        em_mvn_Mstep!(em_model, nsamps, 𝔼x, 𝔼xxᵀ)
 
         if iter > max_iter_em
             done = true
-            @warn "EM Algorithm for MVN missing data did not converge. Likelihood for FIML is not interpretable. 
+            @warn "EM Algorithm for MVN missing data did not converge. Likelihood for FIML is not interpretable.
             Maybe try passing different starting values via 'start_em = ...' "
         elseif iter > 1
-            # done = isapprox(ll, ll_prev; rtol = rtol)
-            done = isapprox(em_model_prev.μ, em_model.μ; rtol = rtol_em) & isapprox(em_model_prev.Σ, em_model.Σ; rtol = rtol_em)
+            done =
+                isapprox(em_model_prev.μ, em_model.μ; rtol = rtol_em) &
+                isapprox(em_model_prev.Σ, em_model.Σ; rtol = rtol_em)
         end
 
-        # print("$iter \n")
         iter = iter + 1
         em_model_prev.μ, em_model_prev.Σ = em_model.μ, em_model.Σ
-
     end
 
     # update EM Mode in observed
@@ -81,13 +93,11 @@ function em_mvn(
     observed.em_model.fitted = true
 
     return nothing
-    
 end
 
 # E and M step -----------------------------------------------------------------------------
 
 function em_mvn_Estep!(𝔼x, 𝔼xxᵀ, em_model, observed, 𝔼x_pre, 𝔼xxᵀ_pre)
-
     𝔼x .= 0.0
     𝔼xxᵀ .= 0.0
 
@@ -98,21 +108,27 @@ function em_mvn_Estep!(𝔼x, 𝔼xxᵀ, em_model, observed, 𝔼x_pre, 𝔼xx�
     Σ = em_model.Σ
 
     # Compute the expected sufficient statistics
-    for i in 2:length(observed.pattern_n_obs)
+    for pat in observed.patterns
+        (nmissed_vars(pat) == 0) && continue # skip full cases
 
         # observed and unobserved vars
-        u = observed.patterns_not[i]
-        o = observed.patterns[i]
+        u = pat.miss_mask
+        o = pat.measured_mask
 
         # precompute for pattern
-        V = Σ[u, u] - Σ[u, o] * (Σ[o, o]\Σ[o, u])
+        Σoo = Σ[o, o]
+        Σuo = Σ[u, o]
+        μu = μ[u]
+        μo = μ[o]
+
+        V = Σ[u, u] - Σuo * (Σoo \ Σ[o, u])
 
         # loop trough data
-        for row in observed.rows[i]
-            m = μ[u] + Σ[u, o] * ( Σ[o, o] \ (observed.data_rowwise[row]-μ[o]) )
+        for rowdata in eachrow(pat.data)
+            m = μu + Σuo * (Σoo \ (rowdata - μo))
 
             𝔼xᵢ[u] = m
-            𝔼xᵢ[o] = observed.data_rowwise[row]
+            𝔼xᵢ[o] = rowdata
             𝔼xxᵀᵢ[u, u] = 𝔼xᵢ[u] * 𝔼xᵢ[u]' + V
             𝔼xxᵀᵢ[o, o] = 𝔼xᵢ[o] * 𝔼xᵢ[o]'
             𝔼xxᵀᵢ[o, u] = 𝔼xᵢ[o] * 𝔼xᵢ[u]'
@@ -121,35 +137,16 @@ function em_mvn_Estep!(𝔼x, 𝔼xxᵀ, em_model, observed, 𝔼x_pre, 𝔼xx�
             𝔼x .+= 𝔼xᵢ
             𝔼xxᵀ .+= 𝔼xxᵀᵢ
         end
-
     end
 
     𝔼x .+= 𝔼x_pre
     𝔼xxᵀ .+= 𝔼xxᵀ_pre
-
 end
-    
-function em_mvn_Mstep!(em_model, n_obs, 𝔼x, 𝔼xxᵀ)
-    
-    em_model.μ = 𝔼x/n_obs;
-    Σ = Symmetric(𝔼xxᵀ/n_obs - em_model.μ*em_model.μ')
-    
-    # ridge Σ
-    # while !isposdef(Σ)
-    #     Σ += 0.5I
-    # end
 
+function em_mvn_Mstep!(em_model, nsamples, 𝔼x, 𝔼xxᵀ)
+    em_model.μ = 𝔼x / nsamples
+    Σ = Symmetric(𝔼xxᵀ / nsamples - em_model.μ * em_model.μ')
     em_model.Σ = Σ
-
-    # diagonalization
-    #if !isposdef(Σ)
-    #    print("Matrix not positive definite")
-    #    em_model.Σ .= 0
-    #    em_model.Σ[diagind(em_model.Σ)] .= diag(Σ)
-    #else
-        # em_model.Σ = Σ
-    #end
-
     return nothing
 end
 
@@ -157,10 +154,10 @@ end
 
 # use μ and Σ of full cases
 function start_em_observed(observed::SemObservedMissing; kwargs...)
-
-    if (length(observed.patterns[1]) == observed.n_man) & (observed.pattern_n_obs[1] > 1)
-        μ = copy(observed.obs_mean[1])
-        Σ = copy(Symmetric(observed.obs_cov[1]))
+    fullpat = observed.patterns[1]
+    if (nmissed_vars(fullpat) == 0) && (nobserved_vars(fullpat) > 1)
+        μ = copy(fullpat.measured_mean)
+        Σ = copy(Symmetric(fullpat.measured_cov))
         if !isposdef(Σ)
             Σ = Matrix(Diagonal(Σ))
         end
@@ -168,15 +165,14 @@ function start_em_observed(observed::SemObservedMissing; kwargs...)
     else
         return start_em_simple(observed, kwargs...)
     end
-
 end
 
 # use μ = O and Σ = I
 function start_em_simple(observed::SemObservedMissing; kwargs...)
-    n_man = Int(observed.n_man)
-    μ = zeros(n_man)
-    Σ = rand(n_man, n_man); Σ = Σ*Σ'
-    # Σ = Matrix(1.0I, n_man, n_man)
+    nvars = nobserved_vars(observed)
+    μ = zeros(nvars)
+    Σ = rand(nvars, nvars)
+    Σ = Σ * Σ'
     return EmMVNModel(Σ, μ, false)
 end
 

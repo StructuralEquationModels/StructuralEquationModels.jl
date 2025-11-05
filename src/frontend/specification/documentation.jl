@@ -1,11 +1,51 @@
 """
+    vars(semobj) -> Vector{Symbol}
+
+Return the vector of SEM model variables (both observed and latent)
+in the order specified by the model.
+"""
+function vars end
+
+vars(spec::SemSpecification) = error("vars(spec::$(typeof(spec))) is not implemented")
+
+"""
+    observed_vars(semobj) -> Vector{Symbol}
+
+Return the vector of SEM model observed variable in the order specified by the
+model, which also should match the order of variables in [`SemObserved`](@ref).
+"""
+function observed_vars end
+
+observed_vars(spec::SemSpecification) =
+    error("observed_vars(spec::$(typeof(spec))) is not implemented")
+
+"""
+    latent_vars(semobj) -> Vector{Symbol}
+
+Return the vector of SEM model latent variable in the order specified by the
+model.
+"""
+function latent_vars end
+
+latent_vars(spec::SemSpecification) =
+    error("latent_vars(spec::$(typeof(spec))) is not implemented")
+
+"""
+    param_labels(semobj) -> Vector{Symbol}
+
+Return the vector of parameter labels (in the same order as [`params`](@ref)).
+"""
+param_labels(spec::SemSpecification) = spec.param_labels
+
+
+"""
 `ParameterTable`s contain the specification of a structural equation model.
 
 # Constructor
 
-    (1) ParameterTable(;graph, observed_vars, latent_vars, ...)
+    (1) ParameterTable(graph; observed_vars, latent_vars, ...)
 
-    (2) ParameterTable(ram_matrices)
+    (2) ParameterTable(ram_matrices; ...)
 
 Return a `ParameterTable` constructed from (1) a graph or (2) RAM matrices.
 
@@ -14,9 +54,9 @@ Return a `ParameterTable` constructed from (1) a graph or (2) RAM matrices.
 - `observed_vars::Vector{Symbol}`: observed variable names
 - `latent_vars::Vector{Symbol}`: latent variable names
 - `ram_matrices::RAMMatrices`: a `RAMMatrices` object
-    
+
 # Examples
-See the online documentation on [Model specification](@ref) and the [ParameterTable interface](@ref).
+See the online documentation on [Model specification](@ref) and the [Graph interface](@ref).
 
 # Extended help
 ## Additional keyword arguments
@@ -29,37 +69,36 @@ function ParameterTable end
 
 # Constructor
 
-    (1) EnsembleParameterTable(;graph, observed_vars, latent_vars, groups)
+    (1) EnsembleParameterTable(graph; observed_vars, latent_vars, groups)
 
-    (2) EnsembleParameterTable(args...; groups)
+    (2) EnsembleParameterTable(ps::Pair...; param_labels = nothing)
 
-Return an `EnsembleParameterTable` constructed from (1) a graph or (2) multiple RAM matrices.
+Return an `EnsembleParameterTable` constructed from (1) a graph or (2) multiple specifications.
 
 # Arguments
 - `graph`: graph defined via `@StenoGraph`
 - `observed_vars::Vector{Symbol}`: observed variable names
 - `latent_vars::Vector{Symbol}`: latent variable names
-- `groups::Vector{Symbol}`: group names
-- `args...`: `RAMMatrices` for each model
+- `param_labels::Vector{Symbol}`: (optional) a vector of parameter names
+- `ps::Pair...`: `:group_name => specification`, where `specification` is either a `ParameterTable` or `RAMMatrices`
 
 # Examples
 See the online documentation on [Multigroup models](@ref).
 """
 function EnsembleParameterTable end
 
-
 """
 `RAMMatrices` contain the specification of a structural equation model.
 
 # Constructor
 
-    (1) RAMMatrices(partable::ParameterTable)
+    (1) RAMMatrices(partable::ParameterTable; param_labels = nothing)
 
-    (2) RAMMatrices(;A, S, F, M = nothing, parameters, colnames)
+    (2) RAMMatrices(;A, S, F, M = nothing, param_labels, vars = nothing)
 
     (3) RAMMatrices(partable::EnsembleParameterTable)
-    
-Return `RAMMatrices` constructed from (1) a parameter table or (2) individual matrices. 
+
+Return `RAMMatrices` constructed from (1) a parameter table or (2) individual matrices.
 
 (3) Return a dictionary of `RAMMatrices` from an `EnsembleParameterTable` (keys are the group names).
 
@@ -69,8 +108,8 @@ Return `RAMMatrices` constructed from (1) a parameter table or (2) individual ma
 - `S`: matrix of undirected effects
 - `F`: filter matrix
 - `M`: vector of mean effects
-- `parameters::Vector{Symbol}`: parameter labels
-- `colnames::Vector{Symbol}`: variable names corresponding to the A, S and F matrix columns
+- `param_labels::Vector{Symbol}`: parameter labels
+- `vars::Vector{Symbol}`: variable names corresponding to the A, S and F matrix columns
 
 # Examples
 See the online documentation on [Model specification](@ref) and the [RAMMatrices interface](@ref).
@@ -80,7 +119,7 @@ function RAMMatrices end
 """
     fixed(args...)
 
-Fix parameters to a certain value. 
+Fix parameters to a certain value.
 For ensemble models, multiple values (one for each submodel/group) are needed.
 
 # Examples
@@ -95,7 +134,7 @@ function fixed end
 """
     start(args...)
 
-Define starting values for parameters. 
+Define starting values for parameters.
 For ensemble models, multiple values (one for each submodel/group) are needed.
 
 # Examples

@@ -22,14 +22,14 @@ end
 To compute some fit indices, you need to provide methods for
 
 ```julia
-# Number of observed datapoints
-n_obs(observed::MyObserved) = ...
-# Number of manifest variables
-n_man(observed::MyObserved) = ...
+# Number of samples (observations) in the dataset
+nsamples(observed::MyObserved) = ...
+# Number of observed variables
+nobserved_vars(observed::MyObserved) = ...
 ```
 
-As always, you can add additional methods for properties that imply types and loss function want to access, for example (from the `SemObservedCommon` implementation):
+As always, you can add additional methods for properties that implied types and loss function want to access, for example (from the `SemObservedData` implementation):
 
 ```julia
-obs_cov(observed::SemObservedCommon) = observed.obs_cov
+obs_cov(observed::SemObservedData) = observed.obs_cov
 ```

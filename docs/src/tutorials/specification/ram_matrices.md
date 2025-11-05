@@ -59,8 +59,8 @@ spec = RAMMatrices(;
     A = A, 
     S = S, 
     F = F, 
-    parameters = θ,
-    colnames = [:x1, :x2, :x3, :y1, :y2, :y3, :y4, :y5, :y6, :y7, :y8, :ind60, :dem60, :dem65]
+    param_labels = θ,
+    vars = [:x1, :x2, :x3, :y1, :y2, :y3, :y4, :y5, :y6, :y7, :y8, :ind60, :dem60, :dem65]
 )
 
 model = Sem(
@@ -90,8 +90,8 @@ spec = RAMMatrices(;
     A = A, 
     S = S, 
     F = F, 
-    parameters = θ,
-    colnames = [:x1, :x2, :x3, :y1, :y2, :y3, :y4, :y5, :y6, :y7, :y8, :ind60, :dem60, :dem65]
+    param_labels = θ,
+    vars = [:x1, :x2, :x3, :y1, :y2, :y3, :y4, :y5, :y6, :y7, :y8, :ind60, :dem60, :dem65]
 )
 ```
 
