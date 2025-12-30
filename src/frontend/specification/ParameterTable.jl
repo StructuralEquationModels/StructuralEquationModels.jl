@@ -288,14 +288,25 @@ function update_partable!(
 end
 
 """
-    update_partable!(partable::AbstractParameterTable, param_labels::Vector{Symbol}, params, column)
+    (1) update_partable!(partable::AbstractParameterTable, column, fitted:SemFit, params, default = nothing)
+    
+    (2) update_partable!(partable::AbstractParameterTable, column, param_labels::Vector{Symbol}, params, default = nothing)
 
-Write parameter `values` into `column` of `partable`.
-
-The `param_labels` and `params` vectors define the pairs of 
-parameters, which are being matched to the `:param` column
-of the `partable`.
+Add a new column to a parameter table. 
+`column` is the name of the column, `params` contains the values of the new column,
+and `fitted` or `param_labels` is used to match the values to the correct parameter labels.
+The `default` value is used if a parameter in `partable` does not occur in `param_labels`.
 """
+function update_partable!(
+    partable::AbstractParameterTable,
+    column::Symbol,
+    fitted::SemFit,
+    params::AbstractVector,
+    default::Any = nothing,
+)
+    update_partable!(partable, column, param_labels(fitted), params, default)
+end
+
 function update_partable!(
     partable::ParameterTable,
     column::Symbol,
