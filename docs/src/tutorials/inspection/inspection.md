@@ -87,8 +87,8 @@ We can also update the `ParameterTable` object with other information via [`upda
 se_bs = se_bootstrap(model_fit; n_boot = 20)
 se_he = se_hessian(model_fit)
 
-update_partable!(partable, :se_hessian, param_labels(model_fit), se_he)
-update_partable!(partable, :se_bootstrap, param_labels(model_fit), se_bs)
+update_partable!(partable, :se_hessian, model_fit, se_he)
+update_partable!(partable, :se_bootstrap, model_fit, se_bs)
 
 details(partable)
 ```
