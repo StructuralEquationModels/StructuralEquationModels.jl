@@ -18,7 +18,7 @@ using LinearAlgebra,
 
 import StatsAPI: params, coef, coefnames, dof, fit, nobs, coeftable
 
-export StenoGraphs, @StenoGraph, meld
+export StenoGraphs, @StenoGraph, meld, SimpleNode
 
 const SEM = StructuralEquationModels
 
