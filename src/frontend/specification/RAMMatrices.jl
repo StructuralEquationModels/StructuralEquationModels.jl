@@ -424,3 +424,55 @@ function Base.:(==)(mat1::RAMMatrices, mat2::RAMMatrices)
     )
     return res
 end
+
+# check the correctness of variable set (which could be specified either by name or by index)
+# and return the indices of the variables
+function check_var_indices(spec::RAMMatrices, vars::Union{AbstractVector, Nothing};
+                           allow_latent::Bool = true, allow_observed::Bool = true,
+                           normalize::Bool = false)
+    allow_latent || allow_observed ||
+        throw(ArgumentError("At least one of allow_latent or allow_observed must be true"))
+
+    if isnothing(vars)
+        # Return appropriate indices based on what's allowed
+        if allow_latent && allow_observed
+            return collect(axes(spec.A, 1))
+        elseif allow_latent
+            return latent_var_indices(spec)
+        else # allow_observed
+            return observed_var_indices(spec)
+        end
+    elseif eltype(vars) == Symbol
+        var_names = Symbol[]
+        var_indices = Int[]
+
+        # Collect allowed variable names and their indices
+        if allow_latent
+            append!(var_names, SEM.latent_vars(spec))
+            append!(var_indices, latent_var_indices(spec))
+        end
+        if allow_observed
+            append!(var_names, SEM.observed_vars(spec))
+            append!(var_indices, observed_var_indices(spec))
+        end
+
+        var2ix = Dict(zip(var_names, var_indices))
+        indices = [var2ix[var] for var in vars if haskey(var2ix, var) ||
+                   throw(ArgumentError("$var is not an allowed variable of the model"))]
+    elseif eltype(vars) <: Integer
+        indices = Int[]
+        for varix in vars
+            if (allow_latent && islatent_var(spec, varix)) ||
+               (allow_observed && isobserved_var(spec, varix))
+                push!(indices, Int(varix))
+            else
+                throw(ArgumentError("The variable with index $varix is not an allowed variable of the model"))
+            end
+        end
+    else
+        throw(ArgumentError("Argument must be a vector of variable symbols or indices, found $(typeof(vars))"))
+    end
+
+    normalize && sort!(unique!(indices))
+    return indices
+end
