@@ -7,7 +7,7 @@ available_tests = Dict(
     "data_input_formats" => "SemObserved",
     "specification" => "SemSpecification",
     "model" => "Sem model",
-    "StatsAPI" => "StatsAPI"
+    "StatsAPI" => "StatsAPI",
 )
 
 # Determine which tests to run based on command-line arguments
