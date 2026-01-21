@@ -41,7 +41,7 @@ function fit(optim::SemOptimizer, model::AbstractSem; start_val = nothing, kwarg
 end
 
 fit(model::AbstractSem; engine::Symbol = :Optim, start_val = nothing, kwargs...) =
-fit(SemOptimizer(; engine, kwargs...), model; start_val, kwargs...)
+    fit(SemOptimizer(; engine, kwargs...), model; start_val, kwargs...)
 
 # fallback method
 fit(optim::SemOptimizer, model::AbstractSem, start_params; kwargs...) =
