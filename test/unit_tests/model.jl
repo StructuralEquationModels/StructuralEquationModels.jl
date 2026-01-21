@@ -25,7 +25,6 @@ graph = @StenoGraph begin
     y8 ↔ y4 + y6
 end
 
-
 ram_matrices =
     RAMMatrices(ParameterTable(graph, observed_vars = obs_vars, latent_vars = lat_vars))
 
