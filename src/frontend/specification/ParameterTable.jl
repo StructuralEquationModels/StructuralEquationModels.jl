@@ -34,7 +34,9 @@ function ParameterTable(
     latent_vars::Union{AbstractVector{Symbol}, Nothing} = nothing,
     param_labels::Union{AbstractVector{Symbol}, Nothing} = nothing,
 )
-    param_labels = isnothing(param_labels) ? unique!(filter(!=(:const), columns[:label])) : copy(param_labels)
+    param_labels =
+        isnothing(param_labels) ? unique!(filter(!=(:const), columns[:label])) :
+        copy(param_labels)
     check_param_labels(param_labels, columns[:label])
     return ParameterTable(
         columns,
@@ -400,7 +402,6 @@ function update_se_hessian!(
     return update_partable!(partable, :se, param_labels(fit), se)
 end
 
-
 """
     lavaan_params!(out::AbstractVector, partable_lav,
                          partable::ParameterTable,
@@ -449,8 +450,8 @@ function lavaan_params!(
             lav_ind = findallrows(
                 r ->
                     r[:lhs] == String(to) &&
-                        r[:op] == "~1" &&
-                        (isnothing(lav_group) || r[:group] == lav_group),
+                    r[:op] == "~1" &&
+                    (isnothing(lav_group) || r[:group] == lav_group),
                 partable_lav,
             )
         else
@@ -469,20 +470,20 @@ function lavaan_params!(
                 lav_ind = findallrows(
                     r ->
                         (
-                                (r[:lhs] == String(from) && r[:rhs] == String(to)) ||
-                                (r[:lhs] == String(to) && r[:rhs] == String(from))
-                            ) &&
-                            r[:op] == lav_type &&
-                            (isnothing(lav_group) || r[:group] == lav_group),
+                            (r[:lhs] == String(from) && r[:rhs] == String(to)) ||
+                            (r[:lhs] == String(to) && r[:rhs] == String(from))
+                        ) &&
+                        r[:op] == lav_type &&
+                        (isnothing(lav_group) || r[:group] == lav_group),
                     partable_lav,
                 )
             else
                 lav_ind = findallrows(
                     r ->
                         r[:lhs] == String(from) &&
-                            r[:rhs] == String(to) &&
-                            r[:op] == lav_type &&
-                            (isnothing(lav_group) || r[:group] == lav_group),
+                        r[:rhs] == String(to) &&
+                        r[:op] == lav_type &&
+                        (isnothing(lav_group) || r[:group] == lav_group),
                     partable_lav,
                 )
             end
