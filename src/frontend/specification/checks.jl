@@ -5,7 +5,11 @@ function check_param_labels(
 )
     dup_param_labels = nonunique(param_labels)
     isempty(dup_param_labels) ||
-        throw(ArgumentError("Duplicate parameter labels detected: $(join(dup_param_labels, ", "))"))
+        throw(
+            ArgumentError(
+                "Duplicate parameter labels detected: $(join(dup_param_labels, ", "))",
+            ),
+        )
     any(==(:const), param_labels) &&
         throw(ArgumentError("Parameters constain reserved :const name"))
 
