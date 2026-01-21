@@ -30,7 +30,7 @@ function EnsembleParameterTable(
     param_labels = if isnothing(param_labels)
         # collect all SEM parameters in ensemble if not specified
         # and apply the set to all partables
-        unique(mapreduce(SEM.param_labels, vcat, values(spec_ensemble), init = Vector{Symbol}()))
+        mapreduce(SEM.param_labels, vcat, values(spec_ensemble), init = Symbol[]) |> unique
     else
         copy(param_labels)
     end
