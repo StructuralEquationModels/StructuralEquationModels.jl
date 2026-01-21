@@ -48,7 +48,7 @@ replace_observed(model::AbstractSemSingle; kwargs...) =
     replace_observed(model, typeof(observed(model)).name.wrapper; kwargs...)
 
 function replace_observed(model::AbstractSemSingle, observed_type; kwargs...)
-    new_observed = observed_type(;kwargs...)
+    new_observed = observed_type(; kwargs...)
     kwargs = Dict{Symbol, Any}(kwargs...)
 
     # get field types
@@ -68,7 +68,7 @@ function replace_observed(model::AbstractSemSingle, observed_type; kwargs...)
     return Sem(
         new_observed,
         new_implied,
-        new_loss
+        new_loss,
     )
 end
 
@@ -78,7 +78,6 @@ function update_observed(loss::SemLoss, new_observed; kwargs...)
     )
     return SemLoss(new_functions, loss.weights)
 end
-
 
 function replace_observed(
     emodel::SemEnsemble;
@@ -103,7 +102,8 @@ function replace_observed(
     # update each model for new data
     models = emodel.sems
     new_models = Tuple(
-        replace_observed(m; group_kwargs(g, kwargs)...) for (m, g) in zip(models, emodel.groups)
+        replace_observed(m; group_kwargs(g, kwargs)...) for
+        (m, g) in zip(models, emodel.groups)
     )
     return SemEnsemble(new_models...; weights = weights, groups = emodel.groups)
 end
