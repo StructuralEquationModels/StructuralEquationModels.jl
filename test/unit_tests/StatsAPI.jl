@@ -7,7 +7,7 @@ update_partable!(partable, :estimate, param_labels(partable), [3.1415])
 data = randn(100, 2)
 model = Sem(
     specification = partable,
-    data = data
+    data = data,
 )
 model_fit = fit(model)
 
@@ -25,5 +25,5 @@ end
 end
 
 @testset "coeftable" begin
-    @test_throws "StructuralEquationModels does not support" coeftable(model) 
+    @test_throws "StructuralEquationModels does not support" coeftable(model)
 end
