@@ -65,11 +65,7 @@ function replace_observed(model::AbstractSemSingle, observed_type; kwargs...)
     # update loss
     new_loss = update_observed(model.loss, new_observed; kwargs...)
 
-    return Sem(
-        new_observed,
-        new_implied,
-        new_loss,
-    )
+    return Sem(new_observed, new_implied, new_loss)
 end
 
 function update_observed(loss::SemLoss, new_observed; kwargs...)
@@ -93,11 +89,10 @@ function replace_observed(
     # allow for DataFrame with group variable "column" to be passed as new data
     if haskey(kwargs, :data) && isa(kwargs[:data], DataFrame)
         kwargs[:data] = Dict(
-            group => select(
-                filter(
-                    r -> r[column] == group,
-                    kwargs[:data]),
-                Not(column)) for group in emodel.groups)
+            group =>
+                select(filter(r -> r[column] == group, kwargs[:data]), Not(column)) for
+            group in emodel.groups
+        )
     end
     # update each model for new data
     models = emodel.sems

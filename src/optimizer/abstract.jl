@@ -56,8 +56,7 @@ prepare_start_params(start_val::Nothing, model::AbstractSem; kwargs...) =
     start_simple(model; kwargs...)
 
 # first argument is a function
-prepare_start_params(start_val, model::AbstractSem; kwargs...) =
-    start_val(model; kwargs...)
+prepare_start_params(start_val, model::AbstractSem; kwargs...) = start_val(model; kwargs...)
 
 function prepare_start_params(start_val::AbstractVector, model::AbstractSem; kwargs...)
     (length(start_val) == nparams(model)) || throw(

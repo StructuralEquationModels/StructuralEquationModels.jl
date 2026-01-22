@@ -199,11 +199,7 @@ materialize!(
     kwargs...,
 ) = materialize!(parent(dest), src, params; kwargs...)
 
-function sparse_materialize(
-    ::Type{T},
-    arr::ParamsMatrix,
-    params::AbstractVector,
-) where {T}
+function sparse_materialize(::Type{T}, arr::ParamsMatrix, params::AbstractVector) where {T}
     nparams(arr) == length(params) || throw(
         DimensionMismatch(
             "Number of values ($(length(params))) does not match the number of parameter ($(nparams(arr)))",

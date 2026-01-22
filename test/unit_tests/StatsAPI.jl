@@ -5,10 +5,7 @@ end
 partable = ParameterTable(graph, observed_vars = [:a, :b], latent_vars = Symbol[])
 update_partable!(partable, :estimate, param_labels(partable), [3.1415])
 data = randn(100, 2)
-model = Sem(
-    specification = partable,
-    data = data,
-)
+model = Sem(specification = partable, data = data)
 model_fit = fit(model)
 
 @testset "params" begin

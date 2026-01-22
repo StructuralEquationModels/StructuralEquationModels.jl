@@ -536,10 +536,4 @@ lavaan_params(
     partable::ParameterTable,
     lav_col::Symbol = :est,
     lav_group = nothing,
-) = lavaan_params!(
-    fill(NaN, nparams(partable)),
-    partable_lav,
-    partable,
-    lav_col,
-    lav_group,
-)
+) = lavaan_params!(fill(NaN, nparams(partable)), partable_lav, partable, lav_col, lav_group)

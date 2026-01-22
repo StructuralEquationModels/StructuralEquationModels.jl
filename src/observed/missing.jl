@@ -79,8 +79,7 @@ function SemObservedMissing(;
     end
     # process each pattern and sort from most to least number of observed vars
     patterns = [
-        SemObservedMissingPattern(pat, rows, data)
-        for (pat, rows) in pairs(pattern_to_rows)
+        SemObservedMissingPattern(pat, rows, data) for (pat, rows) in pairs(pattern_to_rows)
     ]
     sort!(patterns, by = nmissed_vars)
 
