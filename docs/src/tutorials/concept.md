@@ -21,13 +21,13 @@ So everything that can be used as the 'observed' part has to be of type `SemObse
 
 Here is an overview on the available building blocks:
 
-|[`SemObserved`](@ref)            | [`SemImplied`](@ref)  | [`SemLossFunction`](@ref) | [`SemOptimizer`](@ref)        |
-|---------------------------------|-----------------------|---------------------------|-------------------------------|
-| [`SemObservedData`](@ref)       | [`RAM`](@ref)         | [`SemML`](@ref)           | [`SemOptimizerOptim`](@ref)   |
-| [`SemObservedCovariance`](@ref) | [`RAMSymbolic`](@ref) | [`SemWLS`](@ref)          | [`SemOptimizerNLopt`](@ref)   |
-| [`SemObservedMissing`](@ref)    | [`ImpliedEmpty`](@ref)| [`SemFIML`](@ref)         |                               |
-|                                 |                       | [`SemRidge`](@ref)        |                               |
-|                                 |                       | [`SemConstant`](@ref)     |                               |
+|[`SemObserved`](@ref)            | [`SemImplied`](@ref)  | [`SemLossFunction`](@ref) | [`SemOptimizer`](@ref)         |
+|---------------------------------|-----------------------|---------------------------|--------------------------------|
+| [`SemObservedData`](@ref)       | [`RAM`](@ref)         | [`SemML`](@ref)           | [`SemOptimizerOptim`](@ref)    |
+| [`SemObservedCovariance`](@ref) | [`RAMSymbolic`](@ref) | [`SemWLS`](@ref)          | [`SemOptimizerNLopt`](@ref)    |
+| [`SemObservedMissing`](@ref)    | [`ImpliedEmpty`](@ref)| [`SemFIML`](@ref)         | [`SemOptimizerProximal`](@ref) |
+|                                 |                       | [`SemRidge`](@ref)        |                                |
+|                                 |                       | [`SemConstant`](@ref)     |                                |
 
 The rest of this page explains the building blocks for each part. First, we explain every part and give an overview on the different options that are available. After that, the [API - model parts](@ref) section serves as a reference for detailed explanations about the different options.
 (How to stick them together to a final model is explained in the section on [Model Construction](@ref).)
