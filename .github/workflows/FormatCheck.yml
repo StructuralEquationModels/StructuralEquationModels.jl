@@ -9,5 +9,4 @@ jobs:
     steps:
       - uses: julia-actions/julia-format@v4
         with:
-          version: '1'
-          suggestion-label: 'format-suggest'
+          version: '2'
