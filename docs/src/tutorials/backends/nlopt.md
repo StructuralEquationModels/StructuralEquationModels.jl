@@ -25,11 +25,12 @@ my_optimizer = SemOptimizer(;
 
 To see how to use the optimizer to actually fit a model now, check out the [Model fitting](@ref) section.
 
-In the NLopt docs, you can find explanations about the different [algorithms](https://nlopt.readthedocs.io/en/latest/NLopt_Algorithms/) and a [tutorial](https://nlopt.readthedocs.io/en/latest/NLopt_Introduction/) that also explains the different options.
+In the *NLopt* docs, you can find details about the [optimization algorithms](https://nlopt.readthedocs.io/en/latest/NLopt_Algorithms/),
+and the [tutorial](https://nlopt.readthedocs.io/en/latest/NLopt_Introduction/) that demonstrates how to tweak their behavior.
 
 To choose an algorithm, just pass its name without the 'NLOPT\_' prefix (for example, 'NLOPT\_LD\_SLSQP' can be used by passing `algorithm = :LD_SLSQP`).
 
-The README of the [julia package](https://github.com/JuliaOpt/NLopt.jl) may also be helpful, and provides a list of options:
+The README of the [*NLopt.jl*](https://github.com/JuliaOpt/NLopt.jl) may also be helpful, and provides a list of options:
 
  - `algorithm`
  - `stopval`
