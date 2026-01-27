@@ -1,6 +1,3 @@
-engine(::Type{SemOptimizer{E}}) where {E} = E
-engine(optimizer::SemOptimizer) = engine(typeof(optimizer))
-
 SemOptimizer(args...; engine::Symbol = :Optim, kwargs...) =
     SemOptimizer{engine}(args...; kwargs...)
 
@@ -14,6 +11,15 @@ function SemOptimizer{E}(args...; kwargs...) where {E}
         error("$E optimizer is not supported.")
     end
 end
+
+"""
+    optimizer_engine(::Type{<:SemOptimizer})
+    optimizer_engine(::SemOptimizer)
+
+Returns the engine name (`Symbol`) for a [`SemOptimizer`](@ref) instance or subtype.
+"""
+optimizer_engine(::Type{<:SemOptimizer{E}}) where {E} = E
+optimizer_engine(optim::SemOptimizer) = optimizer_engine(typeof(optim))
 
 """
     fit([optim::SemOptimizer], model::AbstractSem;
