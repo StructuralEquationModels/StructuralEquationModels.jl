@@ -16,6 +16,17 @@ function SemOptimizer{E}(args...; kwargs...) where {E}
 end
 
 """
+    optimizer_engines()
+
+Returns a vector of optimizer engines supported by the `engine` keyword argument of
+the [`SemOptimizer`](@ref) constructor.
+
+The list of engines depends on the Julia packages loaded (with the `using` directive)
+into the current session.
+"""
+optimizer_engines() = Symbol[engine(opt_type) for opt_type in subtypes(SemOptimizer)]
+
+"""
     fit([optim::SemOptimizer], model::AbstractSem;
             [engine::Symbol], start_val = start_val, kwargs...)
 
