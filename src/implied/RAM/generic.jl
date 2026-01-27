@@ -152,7 +152,7 @@ function RAM(;
         F⨉I_A⁻¹,
         F⨉I_A⁻¹S,
         I_A,
-        copy(I_A),
+        similar(I_A),
         ∇A,
         ∇S,
         ∇M,
@@ -163,7 +163,12 @@ end
 ### methods
 ############################################################################################
 
-function update!(targets::EvaluationTargets, implied::RAM, model::AbstractSemSingle, param_labels)
+function update!(
+    targets::EvaluationTargets,
+    implied::RAM,
+    model::AbstractSemSingle,
+    param_labels,
+)
     materialize!(implied.A, implied.ram_matrices.A, param_labels)
     materialize!(implied.S, implied.ram_matrices.S, param_labels)
     if !isnothing(implied.M)

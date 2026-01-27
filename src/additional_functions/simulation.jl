@@ -48,7 +48,7 @@ replace_observed(model::AbstractSemSingle; kwargs...) =
     replace_observed(model, typeof(observed(model)).name.wrapper; kwargs...)
 
 function replace_observed(model::AbstractSemSingle, observed_type; kwargs...)
-    new_observed = observed_type(;kwargs...)
+    new_observed = observed_type(; kwargs...)
     kwargs = Dict{Symbol, Any}(kwargs...)
 
     # get field types
@@ -65,11 +65,7 @@ function replace_observed(model::AbstractSemSingle, observed_type; kwargs...)
     # update loss
     new_loss = update_observed(model.loss, new_observed; kwargs...)
 
-    return Sem(
-        new_observed,
-        new_implied,
-        new_loss
-    )
+    return Sem(new_observed, new_implied, new_loss)
 end
 
 function update_observed(loss::SemLoss, new_observed; kwargs...)
@@ -78,7 +74,6 @@ function update_observed(loss::SemLoss, new_observed; kwargs...)
     )
     return SemLoss(new_functions, loss.weights)
 end
-
 
 function replace_observed(
     emodel::SemEnsemble;
@@ -94,16 +89,16 @@ function replace_observed(
     # allow for DataFrame with group variable "column" to be passed as new data
     if haskey(kwargs, :data) && isa(kwargs[:data], DataFrame)
         kwargs[:data] = Dict(
-            group => select(
-                filter(
-                    r -> r[column] == group,
-                    kwargs[:data]),
-                Not(column)) for group in emodel.groups)
+            group =>
+                select(filter(r -> r[column] == group, kwargs[:data]), Not(column)) for
+            group in emodel.groups
+        )
     end
     # update each model for new data
     models = emodel.sems
     new_models = Tuple(
-        replace_observed(m; group_kwargs(g, kwargs)...) for (m, g) in zip(models, emodel.groups)
+        replace_observed(m; group_kwargs(g, kwargs)...) for
+        (m, g) in zip(models, emodel.groups)
     )
     return SemEnsemble(new_models...; weights = weights, groups = emodel.groups)
 end

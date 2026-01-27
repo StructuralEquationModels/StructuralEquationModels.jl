@@ -2,7 +2,7 @@
 
 ## Setup
 
-For ridge regularization, you can simply use `SemRidge` as an additional loss function 
+For ridge regularization, you can simply use `SemRidge` as an additional loss function
 (for example, a model with the loss functions `SemML` and `SemRidge` corresponds to ridge-regularized maximum likelihood estimation).
 
 For lasso, elastic net and (far) beyond, you can load the `ProximalAlgorithms.jl` and `ProximalOperators.jl` packages alongside `StructuralEquationModels`:
@@ -22,7 +22,7 @@ using StructuralEquationModels, ProximalAlgorithms, ProximalOperators
 ## `SemOptimizerProximal`
 
 To estimate regularized models, we provide a "building block" for the optimizer part, called `SemOptimizerProximal`.
-It connects our package to the [`ProximalAlgorithms.jl`](https://github.com/JuliaFirstOrder/ProximalAlgorithms.jl) optimization backend, providing so-called proximal optimization algorithms. 
+It connects our package to the [`ProximalAlgorithms.jl`](https://github.com/JuliaFirstOrder/ProximalAlgorithms.jl) optimization backend, providing so-called proximal optimization algorithms.
 Those can handle, amongst other things, various forms of regularization.
 
 It can be used as
@@ -32,7 +32,7 @@ SemOptimizerProximal(
     algorithm = ProximalAlgorithms.PANOC(),
     operator_g,
     operator_h = nothing
-    )
+)
 ```
 
 The proximal operator (aka the regularization function) can be passed as `operator_g`.
@@ -69,7 +69,7 @@ end
 
 partable = ParameterTable(
     graph,
-    latent_vars = latent_vars, 
+    latent_vars = latent_vars,
     observed_vars = observed_vars
 )
 
@@ -85,7 +85,7 @@ We labeled the covariances between the items because we want to regularize those
 
 ```@example reg
 ind = getindex.(
-    [param_indices(model)], 
+    Ref(param_indices(model)),
     [:cov_15, :cov_24, :cov_26, :cov_37, :cov_48, :cov_68])
 ```
 
@@ -107,7 +107,7 @@ and use `SemOptimizerProximal`.
 ```@example reg
 optimizer_lasso = SemOptimizerProximal(
     operator_g = NormL1(λ)
-    )
+)
 
 model_lasso = Sem(
     specification = partable,
@@ -158,7 +158,7 @@ prox_operator = SlicedSeparableSum((NormL0(20.0), NormL1(0.02), NormL0(0.0)), ([
 
 model_mixed = Sem(
     specification = partable,
-    data = data,    
+    data = data,
 )
 
 fit_mixed = fit(model_mixed; engine = :Proximal, operator_g = prox_operator)

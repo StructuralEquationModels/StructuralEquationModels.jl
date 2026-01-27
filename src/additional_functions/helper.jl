@@ -21,7 +21,7 @@ function batch_inv!(fun, model)
 end
 
 # computes A*S*B -> C, where ind gives the entries of S that are 1
-function sparse_outer_mul!(C, A, B, ind) 
+function sparse_outer_mul!(C, A, B, ind)
     fill!(C, 0.0)
     for i in 1:length(ind)
         BLAS.ger!(1.0, A[:, ind[i][1]], B[ind[i][2], :], C)
@@ -29,14 +29,14 @@ function sparse_outer_mul!(C, A, B, ind)
 end
 
 # computes A*∇m, where ∇m ind gives the entries of ∇m that are 1
-function sparse_outer_mul!(C, A, ind) 
+function sparse_outer_mul!(C, A, ind)
     fill!(C, 0.0)
     @views C .= sum(A[:, ind], dims = 2)
     return C
 end
 
 # computes A*S*B -> C, where ind gives the entries of S that are 1
-function sparse_outer_mul!(C, A, B::Vector, ind) 
+function sparse_outer_mul!(C, A, B::Vector, ind)
     fill!(C, 0.0)
     @views @inbounds for i in 1:length(ind)
         C .+= B[ind[i][2]] .* A[:, ind[i][1]]

@@ -199,11 +199,7 @@ materialize!(
     kwargs...,
 ) = materialize!(parent(dest), src, params; kwargs...)
 
-function sparse_materialize(
-    ::Type{T},
-    arr::ParamsMatrix,
-    params::AbstractVector,
-) where {T}
+function sparse_materialize(::Type{T}, arr::ParamsMatrix, params::AbstractVector) where {T}
     nparams(arr) == length(params) || throw(
         DimensionMismatch(
             "Number of values ($(length(params))) does not match the number of parameter ($(nparams(arr)))",
@@ -251,8 +247,8 @@ sparse_gradient(arr::ParamsArray{T}) where {T} = sparse_gradient(T, arr)
 
 # range of parameters that are referenced in the matrix
 function params_range(arr::ParamsArray; allow_gaps::Bool = false)
-    first_i = findfirst(i -> arr.param_ptr[i+1] > arr.param_ptr[i], 1:nparams(arr)-1)
-    last_i = findlast(i -> arr.param_ptr[i+1] > arr.param_ptr[i], 1:nparams(arr)-1)
+    first_i = findfirst(i -> arr.param_ptr[i+1] > arr.param_ptr[i], 1:(nparams(arr)-1))
+    last_i = findlast(i -> arr.param_ptr[i+1] > arr.param_ptr[i], 1:(nparams(arr)-1))
 
     if !allow_gaps && !isnothing(first_i) && !isnothing(last_i)
         for i in first_i:last_i

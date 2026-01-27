@@ -192,7 +192,8 @@ Returns a SemEnsemble with fields
 
 For instructions on multigroup models, see the online documentation.
 """
-struct SemEnsemble{N, T <: Tuple, V <: AbstractVector, I, G <: Vector{Symbol}} <: AbstractSemCollection
+struct SemEnsemble{N, T <: Tuple, V <: AbstractVector, I, G <: Vector{Symbol}} <:
+       AbstractSemCollection
     n::N
     sems::T
     weights::V

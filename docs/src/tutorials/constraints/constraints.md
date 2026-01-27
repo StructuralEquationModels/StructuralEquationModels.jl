@@ -38,7 +38,7 @@ end
 
 partable = ParameterTable(
     graph,
-    latent_vars = latent_vars, 
+    latent_vars = latent_vars,
     observed_vars = observed_vars)
 
 data = example_data("political_democracy")
@@ -64,7 +64,7 @@ Let's introduce some constraints:
 
 (Of course those constaints only serve an illustratory purpose.)
 
-We first need to get the indices of the respective parameters that are invoved in the constraints. 
+We first need to get the indices of the respective parameters that are invoved in the constraints.
 We can look up their labels in the output above, and retrieve their indices as
 
 ```@example constraints
@@ -112,7 +112,7 @@ end
 ```
 
 If the algorithm needs gradients at an iteration, it will pass the vector `gradient` that is of the same size as the parameters.
-With `if length(gradient) > 0` we check if the algorithm needs gradients, and if it does, we fill the `gradient` vector with the gradients 
+With `if length(gradient) > 0` we check if the algorithm needs gradients, and if it does, we fill the `gradient` vector with the gradients
 of the constraint w.r.t. the parameters.
 
 In NLopt, vector-valued constraints are also possible, but we refer to the documentation for that.
@@ -134,7 +134,7 @@ constrained_optimizer = SemOptimizerNLopt(
 ```
 
 As you see, the equality constraints and inequality constraints are passed as keyword arguments, and the bounds are passed as options for the (outer) optimization algorithm.
-Additionally, for equality and inequality constraints, a feasibility tolerance can be specified that controls if a solution can be accepted, even if it violates the constraints by a small amount. 
+Additionally, for equality and inequality constraints, a feasibility tolerance can be specified that controls if a solution can be accepted, even if it violates the constraints by a small amount.
 Especially for equality constraints, it is recommended to allow for a small positive tolerance.
 In this example, we set both tolerances to `1e-8`.
 
@@ -142,7 +142,7 @@ In this example, we set both tolerances to `1e-8`.
     We have often observed that the default convergence criteria in NLopt lead to non-convergence flags.
     Indeed, this example does not convergence with default criteria.
     As you see above, we used a realively liberal absolute tolerance in the optimization parameters of 1e-4.
-    This should not be a problem in most cases, as the sampling variance in (almost all) structural equation models 
+    This should not be a problem in most cases, as the sampling variance in (almost all) structural equation models
     should lead to uncertainty in the parameter estimates that are orders of magnitude larger.
     We nontheless recommend choosing a convergence criterion with care (i.e. w.r.t. the scale of your parameters),
     inspecting the solutions for plausibility, and comparing them to unconstrained solutions.
@@ -162,14 +162,14 @@ As you can see, the optimizer converged (`:XTOL_REACHED`) and investigating the 
 update_partable!(
     partable,
     :estimate_constr,
-    model_fit_constrained, 
-    solution(model_fit_constrained), 
-    )
+    model_fit_constrained,
+    solution(model_fit_constrained),
+)
 
 details(partable)
 ```
 
-As we can see, the constrained solution is very close to the original solution (compare the columns estimate and estimate_constr), with the difference that the constrained parameters fulfill their constraints. 
+As we can see, the constrained solution is very close to the original solution (compare the columns estimate and estimate_constr), with the difference that the constrained parameters fulfill their constraints.
 As all parameters are estimated simultaneously, it is expexted that some unconstrained parameters are also affected (e.g., the constraint on `dem60 → y2` leads to a higher estimate of the residual variance `y2 ↔ y2`).
 
 ## Using the Optim.jl backend

@@ -14,8 +14,7 @@ function se_bootstrap(
     data = nothing,
     specification = nothing,
     kwargs...,
-    ) where {Mi, So, St, Mo <: AbstractSemSingle, O}
-
+) where {Mi, So, St, Mo <: AbstractSemSingle, O}
     if isnothing(data)
         data = samples(observed(model(semfit)))
     end
@@ -67,11 +66,10 @@ function se_bootstrap(
     data = nothing,
     specification = nothing,
     kwargs...,
-    ) where {Mi, So, St, Mo <: SemEnsemble, O}
-
+) where {Mi, So, St, Mo <: SemEnsemble, O}
     models = semfit.model.sems
     groups = semfit.model.groups
-    
+
     if isnothing(data)
         data = Dict(g => samples(observed(m)) for (g, m) in zip(groups, models))
     end

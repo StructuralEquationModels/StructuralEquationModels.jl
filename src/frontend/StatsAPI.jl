@@ -13,11 +13,7 @@ Note that the function combines the duplicate occurences of the
 same parameter in `partable` and will raise an error if the
 values do not match.
 """
-function params!(
-    out::AbstractVector,
-    partable::ParameterTable,
-    col::Symbol = :estimate,
-)
+function params!(out::AbstractVector, partable::ParameterTable, col::Symbol = :estimate)
     (length(out) == nparams(partable)) || throw(
         DimensionMismatch(
             "The length of parameter values vector ($(length(out))) does not match the number of parameters ($(nparams(partable)))",
@@ -75,4 +71,8 @@ Synonymous to [`nsamples`](@ref).
 """
 nobs(model::AbstractSem) = nsamples(model)
 
-coeftable(model::AbstractSem; level::Real=0.95) = throw(ArgumentError("StructuralEquationModels does not support the `CoefTable` interface; see [`ParameterTable`](@ref) instead."))
+coeftable(model::AbstractSem; level::Real = 0.95) = throw(
+    ArgumentError(
+        "StructuralEquationModels does not support the `CoefTable` interface; see [`ParameterTable`](@ref) instead.",
+    ),
+)
