@@ -1,13 +1,11 @@
 ############################################################################################
 ### Types
 ############################################################################################
+
 """
-Empty placeholder for models that don't need
-an optimizer part.
+    SemOptimizer(engine = :Empty)
 
-# Constructor
-
-    SemOptimizerEmpty()
+Constructs a dummy placeholder optimizer for models that don't need it.
 """
 struct SemOptimizerEmpty <: SemOptimizer{:Empty} end
 

@@ -21,6 +21,30 @@ sem_optimizer_subtype(engine::Symbol) = sem_optimizer_subtype(Val(engine))
 # fallback method for unsupported engines
 sem_optimizer_subtype(::Val{E}) where {E} = throw_engine_error(E)
 
+"""
+    SemOptimizer(args...; engine::Symbol = :Optim, kwargs...)
+
+Constructs a `SemOptimizer` object that can be passed to [`fit`](@ref) for specifying aspects
+of the numerical optimization involved in fitting a SEM.
+
+The keyword `engine` controlls which Julia package is used, with `:Optim` being the default.
+- [`optimizer_engines()`](@ref optimizer_engines) prints a list of currently available engines.
+- [`optimizer_engine_doc(EngineName)`](@ref optimizer_engine_doc) prints information on the usage of a specific engine.
+
+More engines become available if specific packages are loaded, for example
+[*NLopt.jl*](https://github.com/JuliaOpt/NLopt.jl) (also see [Constrained optimization](@ref)
+in the online documentation) or
+[*ProximalAlgorithms.jl*](https://github.com/JuliaFirstOrder/ProximalAlgorithms.jl)
+(also see [Regularization](@ref) in the online documentation).
+
+The arguments `args...` and `kwargs...` are engine-specific and control further
+aspects of the optimization process, such as the algorithm, convergence criteria or constraints.
+Information on those can be accessed with [`optimizer_engine_doc`](@ref).
+
+[Custom optimizer types](@ref) shows how to connect the *SEM.jl* package to a completely new optimization engine.
+"""
+SemOptimizer
+
 # default constructor that dispatches to the engine-specific type
 SemOptimizer(::Val{E}, args...; kwargs...) where {E} =
     sem_optimizer_subtype(E)(args...; kwargs...)

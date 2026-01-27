@@ -4,12 +4,22 @@
 
 const NLoptConstraint = Pair{Any, Number}
 
+struct SemOptimizerNLopt <: SemOptimizer{:NLopt}
+    algorithm::Symbol
+    local_algorithm::Union{Symbol, Nothing}
+    options::Dict{Symbol, Any}
+    local_options::Dict{Symbol, Any}
+    equality_constraints::Vector{NLoptConstraint}
+    inequality_constraints::Vector{NLoptConstraint}
+end
+
+SEM.sem_optimizer_subtype(::Val{:NLopt}) = SemOptimizerNLopt
+
+############################################################################################
+### Constructor
+############################################################################################
+
 """
-Uses *NLopt.jl* as the optimization engine.
-Only available if *NLopt.jl* is loaded in the current Julia session!
-
-# Constructor
-
     SemOptimizer(;
         engine = :NLopt,
         algorithm = :LD_LBFGS,
@@ -20,6 +30,10 @@ Only available if *NLopt.jl* is loaded in the current Julia session!
         inequality_constraints = nothing,
         constraint_tol::Number = 0.0,
         kwargs...)
+
+Uses *NLopt.jl* as the optimization engine. For more information on the available algorithms
+and options, see the [*NLopt.jl*](https://github.com/JuliaOpt/NLopt.jl) package and
+the [NLopt docs](https://nlopt.readthedocs.io/en/latest/).
 
 # Arguments
 - `algorithm`: optimization algorithm.
@@ -38,8 +52,10 @@ Each constraint could be a function or any other callable object that
 takes the two input arguments:
   - the vector of the model parameters;
   - the array for the in-place calculation of the constraint gradient.
-To override the default tolerance, the constraint could be specified
+To override the default tolerance, the constraint can be specified
 as a pair of the function and its tolerance: `constraint_func => tol`.
+For information on how to use inequality and equality constraints,
+see [Constrained optimization](@ref) in our online documentation.
 
 # Example
 ```julia
@@ -55,42 +71,14 @@ my_constrained_optimizer = SemOptimizer(;
 )
 ```
 
-# Usage
-All algorithms and options from the *NLopt* library are available, for more information see
-the [*NLopt.jl*](https://github.com/JuliaOpt/NLopt.jl) package and the
-[NLopt docs](https://nlopt.readthedocs.io/en/latest/).
-For information on how to use inequality and equality constraints,
-see [Constrained optimization](@ref) in our online documentation.
-
-# Extended help
-
-## Interfaces
+# Interfaces
 - `algorithm(::SemOptimizerNLopt)`
 - `local_algorithm(::SemOptimizerNLopt)`
 - `options(::SemOptimizerNLopt)`
 - `local_options(::SemOptimizerNLopt)`
 - `equality_constraints(::SemOptimizerNLopt)`
 - `inequality_constraints(::SemOptimizerNLopt)`
-
-## Implementation
-
-Subtype of `SemOptimizer`.
 """
-struct SemOptimizerNLopt <: SemOptimizer{:NLopt}
-    algorithm::Symbol
-    local_algorithm::Union{Symbol, Nothing}
-    options::Dict{Symbol, Any}
-    local_options::Dict{Symbol, Any}
-    equality_constraints::Vector{NLoptConstraint}
-    inequality_constraints::Vector{NLoptConstraint}
-end
-
-SEM.sem_optimizer_subtype(::Val{:NLopt}) = SemOptimizerNLopt
-
-############################################################################################
-### Constructor
-############################################################################################
-
 function SemOptimizerNLopt(;
     algorithm = :LD_LBFGS,
     local_algorithm = nothing,
