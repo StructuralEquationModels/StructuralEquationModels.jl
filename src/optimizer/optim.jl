@@ -63,13 +63,13 @@ mutable struct SemOptimizerOptim{A, B} <: SemOptimizer{:Optim}
     options::B
 end
 
-SemOptimizer{:Optim}(args...; kwargs...) = SemOptimizerOptim(args...; kwargs...)
-
 SemOptimizerOptim(;
     algorithm = LBFGS(),
     options = Optim.Options(; f_reltol = 1e-10, x_abstol = 1.5e-8),
     kwargs...,
 ) = SemOptimizerOptim(algorithm, options)
+
+SemOptimizer(::Val{:Optim}, args...; kwargs...) = SemOptimizerOptim(args...; kwargs...)
 
 ############################################################################################
 ### Recommended methods

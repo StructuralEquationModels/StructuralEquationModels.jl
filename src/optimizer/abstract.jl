@@ -4,16 +4,20 @@ engine(optimizer::SemOptimizer) = engine(typeof(optimizer))
 SemOptimizer(args...; engine::Symbol = :Optim, kwargs...) =
     SemOptimizer{engine}(args...; kwargs...)
 
-# fallback optimizer constructor
-function SemOptimizer{E}(args...; kwargs...) where {E}
-    if E == :NLOpt
+# fallback optimizer constructor when the engine E is not supported
+function SemOptimizer(::Val{E}, args...; kwargs...) where {E}
+    if typeof(E) !== Symbol
+        throw(ArgumentError("engine argument must be a Symbol."))
+    elseif E == :NLOpt
         error("$E optimizer requires \"using NLopt\".")
     elseif E == :Proximal
         error("$E optimizer requires \"using ProximalAlgorithms\".")
     else
-        error("$E optimizer is not supported.")
+        error("$E optimizer engine is not supported.")
     end
 end
+
+SemOptimizer{E}(args...; kwargs...) where {E} = SemOptimizer(Val(E), args...; kwargs...)
 
 """
     optimizer_engines()

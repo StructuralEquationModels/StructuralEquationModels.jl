@@ -15,7 +15,7 @@ struct SemOptimizerEmpty <: SemOptimizer{:Empty} end
 ### Constructor
 ############################################################################################
 
-SemOptimizer{:Empty}() = SemOptimizerEmpty()
+SemOptimizer(::Val{:Empty}) = SemOptimizerEmpty()
 
 ############################################################################################
 ### Recommended methods

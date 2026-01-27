@@ -115,7 +115,7 @@ function SemOptimizerNLopt(;
     )
 end
 
-SEM.SemOptimizer{:NLopt}(args...; kwargs...) = SemOptimizerNLopt(args...; kwargs...)
+SEM.SemOptimizer(::Val{:NLopt}, args...; kwargs...) = SemOptimizerNLopt(args...; kwargs...)
 
 ############################################################################################
 ### Recommended methods
