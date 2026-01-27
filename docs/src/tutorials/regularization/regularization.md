@@ -142,7 +142,7 @@ Let's use the *lasso* (*l1*) again on the covariances, but additionally penalize
 
 The *l0* penalty is defined as
 ```math
-\lambda_0 = \mathrm{nnz}(\theta)
+l_0 = \lambda \mathrm{nnz}(\theta)
 ```
 
 Since we apply *l1* and *l0* to the disjoint sets of parameters, this regularization could be represented as
