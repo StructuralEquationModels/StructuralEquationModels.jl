@@ -18,12 +18,13 @@ end
 ############################################################################################
 
 """
-Connects to `NLopt.jl` as the optimization backend.
-Only usable if `NLopt.jl` is loaded in the current Julia session!
+Uses *NLopt.jl* as the optimization engine.
+Only available if *NLopt.jl* is loaded in the current Julia session!
 
 # Constructor
 
-    SemOptimizerNLopt(;
+    SemOptimizer(;
+        engine = :NLopt,
         algorithm = :LD_LBFGS,
         options = Dict{Symbol, Any}(),
         local_algorithm = nothing,
@@ -68,8 +69,9 @@ my_constrained_optimizer = SemOptimizer(;
 ```
 
 # Usage
-All algorithms and options from the NLopt library are available, for more information see
-the NLopt.jl package and the NLopt online documentation.
+All algorithms and options from the *NLopt* library are available, for more information see
+the [*NLopt.jl*](https://github.com/JuliaOpt/NLopt.jl) package and the
+[NLopt docs](https://nlopt.readthedocs.io/en/latest/).
 For information on how to use inequality and equality constraints,
 see [Constrained optimization](@ref) in our online documentation.
 
