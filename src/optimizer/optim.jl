@@ -3,25 +3,29 @@
 ############################################################################################
 ### Types and Constructor
 ############################################################################################
+
+# SemOptimizer for the Optim.jl
+mutable struct SemOptimizerOptim{A, B} <: SemOptimizer{:Optim}
+    algorithm::A
+    options::B
+end
+
 """
-    SemOptimizerOptim{A, B} <: SemOptimizer{:Optim}
-
-Connects to `Optim.jl` as the optimization backend.
-
-# Constructor
-
-    SemOptimizerOptim(;
+    SemOptimizer(;
+        engine = :Optim,
         algorithm = LBFGS(),
         options = Optim.Options(;f_reltol = 1e-10, x_abstol = 1.5e-8),
         kwargs...)
 
+Creates SEM optimizer using [*Optim.jl*](https://julianlsolvers.github.io/Optim.jl/stable/).
+
 # Arguments
-- `algorithm`: optimization algorithm from `Optim.jl`
+- `algorithm`: optimization algorithm from *Optim.jl*
 - `options::Optim.Options`: options for the optimization algorithm
 
 # Usage
-All algorithms and options from the Optim.jl library are available, for more information see
-the Optim.jl online documentation.
+All algorithms and options from the *Optim.jl* package are available, for more information see
+the *Optim.jl* online documentation.
 
 # Examples
 ```julia
@@ -53,22 +57,20 @@ for the variance parameters (the diagonal of the *S* matrix).
 ## Interfaces
 - `algorithm(::SemOptimizerOptim)`
 - `options(::SemOptimizerOptim)`
-
-## Implementation
-
-Subtype of `SemOptimizer`.
 """
-mutable struct SemOptimizerOptim{A, B} <: SemOptimizer{:Optim}
-    algorithm::A
-    options::B
-end
-
 SemOptimizerOptim(;
     algorithm = LBFGS(),
     options = Optim.Options(; f_reltol = 1e-10, x_abstol = 1.5e-8),
     kwargs...,
 ) = SemOptimizerOptim(algorithm, options)
 
+"""
+    SemOptimizer(args...; engine = :Optim, kwargs...)
+
+Creates SEM optimizer using [*Optim.jl*](https://julianlsolvers.github.io/Optim.jl/stable/).
+
+See [`SemOptimizerOptim`](@ref) for the full reference.
+"""
 SemOptimizer(::Val{:Optim}, args...; kwargs...) = SemOptimizerOptim(args...; kwargs...)
 
 ############################################################################################

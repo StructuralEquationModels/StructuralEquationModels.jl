@@ -1,6 +1,24 @@
 engine(::Type{<:SemOptimizer{E}}) where {E} = E
 engine(optimizer::SemOptimizer) = engine(typeof(optimizer))
 
+"""
+    SemOptimizer(args...; engine::Symbol = :Optim, kwargs...)
+
+Constructs [`SemOptimizer`](@ref) for the specified optimization `engine`.
+
+A wrapper function that passes `args...` and `kwargs...` to the
+engine-specific optimizer constructor.
+
+Uses `:Optim` as the default engine.
+Throws an error if the specified `engine` is not supported.
+Call [`optimizer_engines`](@ref) for the list of supported engines.
+
+For the information about using the engine `:EngineName`, use
+```julia
+?SemOptimizer(Val(:EngineName))
+```
+
+"""
 SemOptimizer(args...; engine::Symbol = :Optim, kwargs...) =
     SemOptimizer{engine}(args...; kwargs...)
 

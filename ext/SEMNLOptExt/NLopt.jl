@@ -4,6 +4,19 @@
 
 const NLoptConstraint = Pair{Any, Number}
 
+struct SemOptimizerNLopt <: SemOptimizer{:NLopt}
+    algorithm::Symbol
+    local_algorithm::Union{Symbol, Nothing}
+    options::Dict{Symbol, Any}
+    local_options::Dict{Symbol, Any}
+    equality_constraints::Vector{NLoptConstraint}
+    inequality_constraints::Vector{NLoptConstraint}
+end
+
+############################################################################################
+### Constructor
+############################################################################################
+
 """
 Connects to `NLopt.jl` as the optimization backend.
 Only usable if `NLopt.jl` is loaded in the current Julia session!
@@ -74,19 +87,6 @@ see [Constrained optimization](@ref) in our online documentation.
 
 Subtype of `SemOptimizer`.
 """
-struct SemOptimizerNLopt <: SemOptimizer{:NLopt}
-    algorithm::Symbol
-    local_algorithm::Union{Symbol, Nothing}
-    options::Dict{Symbol, Any}
-    local_options::Dict{Symbol, Any}
-    equality_constraints::Vector{NLoptConstraint}
-    inequality_constraints::Vector{NLoptConstraint}
-end
-
-############################################################################################
-### Constructor
-############################################################################################
-
 function SemOptimizerNLopt(;
     algorithm = :LD_LBFGS,
     local_algorithm = nothing,
@@ -115,6 +115,15 @@ function SemOptimizerNLopt(;
     )
 end
 
+"""
+    SemOptimizer(args...; engine = :NLopt, kwargs...)
+
+Creates SEM optimizer using [*NLopt.jl*](https://github.com/JuliaOpt/NLopt.jl).
+
+# Extended help
+
+See [`SemOptimizerNLopt`](@ref) for a full reference.
+"""
 SEM.SemOptimizer(::Val{:NLopt}, args...; kwargs...) = SemOptimizerNLopt(args...; kwargs...)
 
 ############################################################################################
