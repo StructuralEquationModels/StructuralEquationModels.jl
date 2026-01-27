@@ -21,13 +21,13 @@ So everything that can be used as the 'observed' part has to be of type `SemObse
 
 Here is an overview on the available building blocks:
 
-|[`SemObserved`](@ref)            | [`SemImplied`](@ref)  | [`SemLossFunction`](@ref) | [`SemOptimizer`](@ref)        |
-|---------------------------------|-----------------------|---------------------------|-------------------------------|
-| [`SemObservedData`](@ref)       | [`RAM`](@ref)         | [`SemML`](@ref)           | [`SemOptimizerOptim`](@ref)   |
-| [`SemObservedCovariance`](@ref) | [`RAMSymbolic`](@ref) | [`SemWLS`](@ref)          | [`SemOptimizerNLopt`](@ref)   |
-| [`SemObservedMissing`](@ref)    | [`ImpliedEmpty`](@ref)| [`SemFIML`](@ref)         |                               |
-|                                 |                       | [`SemRidge`](@ref)        |                               |
-|                                 |                       | [`SemConstant`](@ref)     |                               |
+|[`SemObserved`](@ref)            | [`SemImplied`](@ref)  | [`SemLossFunction`](@ref) | [`SemOptimizer`](@ref)     |
+|---------------------------------|-----------------------|---------------------------|----------------------------|
+| [`SemObservedData`](@ref)       | [`RAM`](@ref)         | [`SemML`](@ref)           | [:Optim](@ref StructuralEquationModels.SemOptimizerOptim)                     |
+| [`SemObservedCovariance`](@ref) | [`RAMSymbolic`](@ref) | [`SemWLS`](@ref)          | [:NLopt](@ref SEMNLOptExt.SemOptimizerNLopt)                     |
+| [`SemObservedMissing`](@ref)    | [`ImpliedEmpty`](@ref)| [`SemFIML`](@ref)         | [:Proximal](@ref SEMProximalOptExt.SemOptimizerProximal)                  |
+|                                 |                       | [`SemRidge`](@ref)        |                            |
+|                                 |                       | [`SemConstant`](@ref)     |                            |
 
 The rest of this page explains the building blocks for each part. First, we explain every part and give an overview on the different options that are available. After that, the [API - model parts](@ref) section serves as a reference for detailed explanations about the different options.
 (How to stick them together to a final model is explained in the section on [Model Construction](@ref).)
@@ -52,7 +52,7 @@ Available loss functions are
 ## The optimizer part aka `SemOptimizer`
 The optimizer part of a model connects to the numerical optimization backend used to fit the model.
 It can be used to control options like the optimization algorithm, linesearch, stopping criteria, etc.
-There are currently three available backends, [`SemOptimizerOptim`](@ref) connecting to the [Optim.jl](https://github.com/JuliaNLSolvers/Optim.jl) backend, [`SemOptimizerNLopt`](@ref) connecting to the [NLopt.jl](https://github.com/JuliaOpt/NLopt.jl) backend and [`SemOptimizerProximal`](@ref) connecting to [ProximalAlgorithms.jl](https://github.com/JuliaFirstOrder/ProximalAlgorithms.jl).
+There are currently three available engines (i.e., backends used to carry out the numerical optimization), [`:Optim`](@ref StructuralEquationModels.SemOptimizerOptim) connecting to the [Optim.jl](https://github.com/JuliaNLSolvers/Optim.jl) backend, [`:NLopt`](@ref SEMNLOptExt.SemOptimizerNLopt) connecting to the [NLopt.jl](https://github.com/JuliaOpt/NLopt.jl) backend and [`:Proximal`](@ref SEMProximalOptExt.SemOptimizerProximal) connecting to [ProximalAlgorithms.jl](https://github.com/JuliaFirstOrder/ProximalAlgorithms.jl).
 For more information about the available options see also the tutorials about [Using Optim.jl](@ref) and [Using NLopt.jl](@ref), as well as [Constrained optimization](@ref) and [Regularization](@ref) .
 
 # What to do next
@@ -101,8 +101,11 @@ SemConstant
 ## optimizer
 
 ```@docs
+optimizer_engines
+optimizer_engine
+optimizer_engine_doc
 SemOptimizer
-SemOptimizerOptim
-SemOptimizerNLopt
-SemOptimizerProximal
+SEM.SemOptimizerOptim
+SEMNLOptExt.SemOptimizerNLopt
+SEMProximalOptExt.SemOptimizerProximal
 ```

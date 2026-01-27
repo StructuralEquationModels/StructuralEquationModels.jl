@@ -1,7 +1,7 @@
 # Using Optim.jl
 
-[Optim.jl](https://github.com/JuliaNLSolvers/Optim.jl) is the default optimization engine of *SEM.jl*,
-see [`SemOptimizerOptim`](@ref) for a full list of its parameters.
+[*Optim.jl*](https://github.com/JuliaNLSolvers/Optim.jl) is the default optimization engine of *SEM.jl*,
+see [`SEM.SemOptimizerOptim`](@ref) for a full list of its parameters.
 It defaults to the LBFGS optimization, but we can load the `Optim` and `LineSearches` packages
 and specify BFGS (!not L-BFGS) with a back-tracking linesearch and Hager-Zhang initial step length guess:
 
