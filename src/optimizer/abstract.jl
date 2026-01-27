@@ -22,8 +22,20 @@ optimizer_engine(::Type{<:SemOptimizer{E}}) where {E} = E
 optimizer_engine(optim::SemOptimizer) = optimizer_engine(typeof(optim))
 
 """
+    optimizer_engines()
+
+Returns a vector of optimizer engines supported by the `engine` keyword argument of
+the [`SemOptimizer`](@ref) constructor.
+
+The list of engines depends on the Julia packages loaded (with the `using` directive)
+into the current session.
+"""
+optimizer_engines() =
+    Symbol[optimizer_engine(opt_type) for opt_type in subtypes(SemOptimizer)]
+
+"""
     fit([optim::SemOptimizer], model::AbstractSem;
-            [engine::Symbol], start_val = start_val, kwargs...)
+        [engine::Symbol], start_val = start_val, kwargs...)
 
 Return the fitted `model`.
 
