@@ -1,10 +1,19 @@
 ############################################################################################
 ### Types
 ############################################################################################
-"""
-Connects to `ProximalAlgorithms.jl` as the optimization backend.
+mutable struct SemOptimizerProximal{A, B, C} <: SemOptimizer{:Proximal}
+    algorithm::A
+    operator_g::B
+    operator_h::C
+end
 
-Can be used for regularized SEM, for a tutorial see the online docs on [Regularization](@ref).
+"""
+# Extended help
+*`engine = :Proximal`*
+
+Connects to `ProximalAlgorithms.jl` as the optimization backend. For more information on 
+the available algorithms and options, see the online docs on [Regularization](@ref) and
+the documentation of [*ProximalAlgorithms.jl*](https://github.com/JuliaFirstOrder/ProximalAlgorithms.jl) / [ProximalOperators.jl](https://github.com/JuliaFirstOrder/ProximalOperators.jl).
 
 # Constructor
 
@@ -18,18 +27,7 @@ Can be used for regularized SEM, for a tutorial see the online docs on [Regulari
 - `algorithm`: optimization algorithm.
 - `operator_g`: proximal operator (e.g., regularization penalty)
 - `operator_h`: optional second proximal operator
-
-# Usage
-All algorithms and operators from `ProximalAlgorithms.jl` are available,
-for more information see the online docs on [Regularization](@ref) and
-the documentation of `ProximalAlgorithms.jl` / `ProximalOperators.jl`.
 """
-mutable struct SemOptimizerProximal{A, B, C} <: SemOptimizer{:Proximal}
-    algorithm::A
-    operator_g::B
-    operator_h::C
-end
-
 SEM.SemOptimizer{:Proximal}(args...; kwargs...) = SemOptimizerProximal(args...; kwargs...)
 
 SemOptimizerProximal(;

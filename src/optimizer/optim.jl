@@ -10,31 +10,39 @@ mutable struct SemOptimizerOptim{A, B} <: SemOptimizer{:Optim}
     options::B
 end
 
+
+SemOptimizerOptim(;
+    algorithm = LBFGS(),
+    options = Optim.Options(; f_reltol = 1e-10, x_abstol = 1.5e-8),
+    kwargs...,
+) = SemOptimizerOptim(algorithm, options)
+
 """
+# Extended help
+*`engine = :Optim`*
+
+Creates SEM optimizer using [*Optim.jl*](https://julianlsolvers.github.io/Optim.jl/stable/).
+For more information on the available algorithms and options, see the *Optim.jl* docs.
+
+# Constructor
+
     SemOptimizer(;
         engine = :Optim,
         algorithm = LBFGS(),
         options = Optim.Options(;f_reltol = 1e-10, x_abstol = 1.5e-8),
         kwargs...)
 
-Creates SEM optimizer using [*Optim.jl*](https://julianlsolvers.github.io/Optim.jl/stable/).
-
 # Arguments
 - `algorithm`: optimization algorithm from *Optim.jl*
 - `options::Optim.Options`: options for the optimization algorithm
 
-# Usage
-All algorithms and options from the *Optim.jl* package are available, for more information see
-the *Optim.jl* online documentation.
-
 # Examples
 ```julia
-my_optimizer = SemOptimizerOptim()
-
 # hessian based optimization with backtracking linesearch and modified initial step size
 using Optim, LineSearches
 
-my_newton_optimizer = SemOptimizerOptim(
+my_newton_optimizer = SemOptimizer(
+    engine = :Optim,
     algorithm = Newton(
         ;linesearch = BackTracking(order=3),
         alphaguess = InitialHagerZhang()
@@ -42,10 +50,7 @@ my_newton_optimizer = SemOptimizerOptim(
 )
 ```
 
-# Extended help
-
-## Constrained optimization
-
+# Constrained optimization
 When using the `Fminbox` or `SAMIN` constrained optimization algorithms,
 the vector or dictionary of lower and upper bounds for each model parameter can be specified
 via `lower_bounds` and `upper_bounds` keyword arguments.
@@ -54,22 +59,9 @@ the default bound for all non-variance model parameters,
 and the `variance_lower_bound` and `variance_upper_bound` keyword --
 for the variance parameters (the diagonal of the *S* matrix).
 
-## Interfaces
-- `algorithm(::SemOptimizerOptim)`
-- `options(::SemOptimizerOptim)`
-"""
-SemOptimizerOptim(;
-    algorithm = LBFGS(),
-    options = Optim.Options(; f_reltol = 1e-10, x_abstol = 1.5e-8),
-    kwargs...,
-) = SemOptimizerOptim(algorithm, options)
-
-"""
-    SemOptimizer(args...; engine = :Optim, kwargs...)
-
-Creates SEM optimizer using [*Optim.jl*](https://julianlsolvers.github.io/Optim.jl/stable/).
-
-See [`SemOptimizerOptim`](@ref) for the full reference.
+# Interfaces
+- `algorithm(::SemOptimizer)`
+- `options(::SemOptimizer)`
 """
 SemOptimizer(::Val{:Optim}, args...; kwargs...) = SemOptimizerOptim(args...; kwargs...)
 
