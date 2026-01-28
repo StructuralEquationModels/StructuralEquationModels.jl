@@ -17,38 +17,7 @@ end
 ### Constructor
 ############################################################################################
 
-function SemOptimizerNLopt(;
-    algorithm = :LD_LBFGS,
-    local_algorithm = nothing,
-    options = Dict{Symbol, Any}(),
-    local_options = Dict{Symbol, Any}(),
-    equality_constraints = nothing,
-    inequality_constraints = nothing,
-    constraint_tol::Number = 0.0,
-    kwargs..., # FIXME remove the sink for unused kwargs
-)
-    constraint(f::Any) = f => constraint_tol
-    constraint(f_and_tol::Pair) = f_and_tol
-
-    constraints(::Nothing) = Vector{NLoptConstraint}()
-    constraints(constraints) =
-        applicable(iterate, constraints) && !isa(constraints, Pair) ?
-        [constraint(constr) for constr in constraints] : [constraint(constraints)]
-
-    return SemOptimizerNLopt(
-        algorithm,
-        local_algorithm,
-        options,
-        local_options,
-        constraints(equality_constraints),
-        constraints(inequality_constraints),
-    )
-end
-
 """
-# Extended help
-*`engine = :NLopt`*
-
 Uses *NLopt.jl* as the optimization engine. For more information on the available algorithms 
 and options, see the [*NLopt.jl*](https://github.com/JuliaOpt/NLopt.jl)  package and the [NLopt docs](https://nlopt.readthedocs.io/en/latest/).
 
@@ -109,7 +78,37 @@ my_constrained_optimizer = SemOptimizer(;
 - `equality_constraints(::SemOptimizerNLopt)`
 - `inequality_constraints(::SemOptimizerNLopt)`
 """
+function SemOptimizerNLopt(;
+    algorithm = :LD_LBFGS,
+    local_algorithm = nothing,
+    options = Dict{Symbol, Any}(),
+    local_options = Dict{Symbol, Any}(),
+    equality_constraints = nothing,
+    inequality_constraints = nothing,
+    constraint_tol::Number = 0.0,
+    kwargs..., # FIXME remove the sink for unused kwargs
+)
+    constraint(f::Any) = f => constraint_tol
+    constraint(f_and_tol::Pair) = f_and_tol
+
+    constraints(::Nothing) = Vector{NLoptConstraint}()
+    constraints(constraints) =
+        applicable(iterate, constraints) && !isa(constraints, Pair) ?
+        [constraint(constr) for constr in constraints] : [constraint(constraints)]
+
+    return SemOptimizerNLopt(
+        algorithm,
+        local_algorithm,
+        options,
+        local_options,
+        constraints(equality_constraints),
+        constraints(inequality_constraints),
+    )
+end
+
 SEM.SemOptimizer(::Val{:NLopt}, args...; kwargs...) = SemOptimizerNLopt(args...; kwargs...)
+
+SEM.engine_info(engine::Val{:NLopt}) = doc(SemOptimizerNLopt)
 
 ############################################################################################
 ### Recommended methods

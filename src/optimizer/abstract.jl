@@ -4,18 +4,25 @@ engine(optimizer::SemOptimizer) = engine(typeof(optimizer))
 """
     SemOptimizer(args...; engine::Symbol = :Optim, kwargs...)
 
-Constructs a `SemOptimizer` object that can be passed to `fit`(@ref) for specifying aspects 
+Constructs a `SemOptimizer` object that can be passed to [`fit`](@ref) for specifying aspects 
 of the numerical optimization involved in fitting a SEM.
 
 The keyword `engine` controlls which Julia package is used, with `:Optim` being the default.
+- `optimizer_engines()` prints a list of currently available engines.
+- `engine_info(EngineName)` prints information on the usage of a specific engine.
+
+More engines become available if specific packages are loaded, for example 
+[*NLopt.jl*](https://github.com/JuliaOpt/NLopt.jl) (also see [Constrained optimization](@ref) 
+in the online documentation) or 
+[*ProximalAlgorithms.jl*](https://github.com/JuliaFirstOrder/ProximalAlgorithms.jl)
+(also see [Regularization](@ref) in the online documentation).
+
 The additional arguments `args...` and `kwargs...` are engine-specific and control further
 aspects of the optimization process, such as the algorithm, convergence criteria or constraints.
+Information on those can be accessed with `engine_info`.
 
-More engines are available if specific packages are loaded, for example [*NLopt.jl*](https://github.com/JuliaOpt/NLopt.jl) 
-(also see [Constrained optimization](@ref) in the online documentation) or [*ProximalAlgorithms.jl*](https://github.com/JuliaFirstOrder/ProximalAlgorithms.jl)
-(also see [Regularization](@ref) in the online documentation).
-The documentation of available engines (with the packages loaded in the current Julia session) 
-is shown in the extended help.
+To connect the SEM package to a completely new optimization backend, you can implement a new 
+subtype of SemOptimizer.
 """
 SemOptimizer(args...; engine::Symbol = :Optim, kwargs...) =
     SemOptimizer{engine}(args...; kwargs...)
@@ -45,6 +52,17 @@ The list of engines depends on the Julia packages loaded (with the `using` direc
 into the current session.
 """
 optimizer_engines() = Symbol[engine(opt_type) for opt_type in subtypes(SemOptimizer)]
+
+"""
+    engine_info(engine::Symbol)
+
+Shows information on the optimizer engine.
+For a list of available engines, call `optimizer_engines`.
+"""
+engine_info(engine) = engine_info(Val(engine))
+
+engine_info(engine::Val) = 
+    throw(ArgumentError("Unknown engine. Did you forget to load the necessary packages?"))
 
 """
     fit([optim::SemOptimizer], model::AbstractSem;

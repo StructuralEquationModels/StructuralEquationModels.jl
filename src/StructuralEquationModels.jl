@@ -18,6 +18,8 @@ using LinearAlgebra,
 
 import StatsAPI: params, coef, coefnames, dof, fit, nobs, coeftable
 
+import Base.Docs: doc
+
 using InteractiveUtils: subtypes
 
 export StenoGraphs, @StenoGraph, meld, SimpleNode
@@ -122,8 +124,8 @@ export AbstractSem,
     SemWLS,
     loss,
     SemOptimizer,
-    SemOptimizerEmpty,
-    SemOptimizerOptim,
+    engine_info,
+    optimizer_engines,
     optimizer,
     n_iterations,
     convergence,
