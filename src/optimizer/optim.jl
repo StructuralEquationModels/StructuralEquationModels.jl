@@ -76,20 +76,6 @@ update_observed(optimizer::SemOptimizerOptim, observed::SemObserved; kwargs...) 
 algorithm(optimizer::SemOptimizerOptim) = optimizer.algorithm
 options(optimizer::SemOptimizerOptim) = optimizer.options
 
-function SemFit(
-    optimization_result::Optim.MultivariateOptimizationResults,
-    model::AbstractSem,
-    start_val,
-)
-    return SemFit(
-        optimization_result.minimum,
-        optimization_result.minimizer,
-        start_val,
-        model,
-        optimization_result,
-    )
-end
-
 optimizer(res::Optim.MultivariateOptimizationResults) = Optim.summary(res)
 n_iterations(res::Optim.MultivariateOptimizationResults) = Optim.iterations(res)
 convergence(res::Optim.MultivariateOptimizationResults) = Optim.converged(res)
@@ -139,5 +125,11 @@ function fit(
             optim.options,
         )
     end
-    return SemFit(result, model, start_params)
+    return SemFit(
+        result.minimum,
+        result.minimizer,
+        start_params,
+        model,
+        optim,
+        result)
 end

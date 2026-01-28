@@ -1,5 +1,5 @@
 engine(::Type{<:SemOptimizer{E}}) where {E} = E
-engine(optimizer::SemOptimizer) = engine(typeof(optimizer))
+engine(::SemOptimizer{E}) where {E} = E
 
 """
     SemOptimizer(args...; engine::Symbol = :Optim, kwargs...)
