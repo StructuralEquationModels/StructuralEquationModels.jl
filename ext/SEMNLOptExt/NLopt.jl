@@ -19,7 +19,8 @@ end
 
 """
 Uses *NLopt.jl* as the optimization engine. For more information on the available algorithms 
-and options, see the [*NLopt.jl*](https://github.com/JuliaOpt/NLopt.jl)  package and the [NLopt docs](https://nlopt.readthedocs.io/en/latest/).
+and options, see the [*NLopt.jl*](https://github.com/JuliaOpt/NLopt.jl)  package and the 
+[NLopt docs](https://nlopt.readthedocs.io/en/latest/).
 
 # Constructor
 
@@ -138,12 +139,13 @@ SEM.n_iterations(res::NLoptResult) = res.problem.numevals
 SEM.convergence(res::NLoptResult) = res.result[3]
 
 # construct SemFit from fitted NLopt object
-function SemFit_NLopt(optimization_result, model::AbstractSem, start_val, opt)
+function SemFit_NLopt(optimization_result, model::AbstractSem, start_val, optim, opt)
     return SemFit(
         optimization_result[1],
         optimization_result[2],
         start_val,
         model,
+        optim,
         NLoptResult(optimization_result, opt),
     )
 end
@@ -180,7 +182,7 @@ function SEM.fit(
     # fit
     result = NLopt.optimize(opt, start_params)
 
-    return SemFit_NLopt(result, model, start_params, opt)
+    return SemFit_NLopt(result, model, start_params, optim, opt)
 end
 
 ############################################################################################

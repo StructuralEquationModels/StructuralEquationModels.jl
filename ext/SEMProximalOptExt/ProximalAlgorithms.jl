@@ -104,6 +104,7 @@ function SEM.fit(
         solution,
         start_params,
         model,
+        optim,
         ProximalResult(optimization_result),
     )
 end

@@ -86,7 +86,7 @@ start_test = [
     fill(0.05, 3)
     fill(0.01, 3)
 ]
-semoptimizer = SemOptimizerOptim()
+semoptimizer = SemOptimizer()
 
 @testset "RAMMatrices | constructor | Optim" begin
     include("build_models.jl")
