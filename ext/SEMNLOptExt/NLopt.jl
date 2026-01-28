@@ -17,9 +17,40 @@ end
 ### Constructor
 ############################################################################################
 
+function SemOptimizerNLopt(;
+    algorithm = :LD_LBFGS,
+    local_algorithm = nothing,
+    options = Dict{Symbol, Any}(),
+    local_options = Dict{Symbol, Any}(),
+    equality_constraints = nothing,
+    inequality_constraints = nothing,
+    constraint_tol::Number = 0.0,
+    kwargs..., # FIXME remove the sink for unused kwargs
+)
+    constraint(f::Any) = f => constraint_tol
+    constraint(f_and_tol::Pair) = f_and_tol
+
+    constraints(::Nothing) = Vector{NLoptConstraint}()
+    constraints(constraints) =
+        applicable(iterate, constraints) && !isa(constraints, Pair) ?
+        [constraint(constr) for constr in constraints] : [constraint(constraints)]
+
+    return SemOptimizerNLopt(
+        algorithm,
+        local_algorithm,
+        options,
+        local_options,
+        constraints(equality_constraints),
+        constraints(inequality_constraints),
+    )
+end
+
 """
-Uses *NLopt.jl* as the optimization engine.
-Only available if *NLopt.jl* is loaded in the current Julia session!
+# Extended help
+*`engine = :NLopt`*
+
+Uses *NLopt.jl* as the optimization engine. For more information on the available algorithms 
+and options, see the [*NLopt.jl*](https://github.com/JuliaOpt/NLopt.jl)  package and the [NLopt docs](https://nlopt.readthedocs.io/en/latest/).
 
 # Constructor
 
@@ -51,8 +82,10 @@ Each constraint could be a function or any other callable object that
 takes the two input arguments:
   - the vector of the model parameters;
   - the array for the in-place calculation of the constraint gradient.
-To override the default tolerance, the constraint could be specified
+To override the default tolerance, the constraint can be specified
 as a pair of the function and its tolerance: `constraint_func => tol`.
+For information on how to use inequality and equality constraints,
+see [Constrained optimization](@ref) in our online documentation.
 
 # Example
 ```julia
@@ -68,63 +101,13 @@ my_constrained_optimizer = SemOptimizer(;
 )
 ```
 
-# Usage
-All algorithms and options from the *NLopt* library are available, for more information see
-the [*NLopt.jl*](https://github.com/JuliaOpt/NLopt.jl) package and the
-[NLopt docs](https://nlopt.readthedocs.io/en/latest/).
-For information on how to use inequality and equality constraints,
-see [Constrained optimization](@ref) in our online documentation.
-
-# Extended help
-
-## Interfaces
+# Interfaces
 - `algorithm(::SemOptimizerNLopt)`
 - `local_algorithm(::SemOptimizerNLopt)`
 - `options(::SemOptimizerNLopt)`
 - `local_options(::SemOptimizerNLopt)`
 - `equality_constraints(::SemOptimizerNLopt)`
 - `inequality_constraints(::SemOptimizerNLopt)`
-
-## Implementation
-
-Subtype of `SemOptimizer`.
-"""
-function SemOptimizerNLopt(;
-    algorithm = :LD_LBFGS,
-    local_algorithm = nothing,
-    options = Dict{Symbol, Any}(),
-    local_options = Dict{Symbol, Any}(),
-    equality_constraints = nothing,
-    inequality_constraints = nothing,
-    constraint_tol::Number = 0.0,
-    kwargs..., # FIXME remove the sink for unused kwargs
-)
-    constraint(f::Any) = f => constraint_tol
-    constraint(f_and_tol::Pair) = f_and_tol
-
-    constraints(::Nothing) = Vector{NLoptConstraint}()
-    constraints(constraints) =
-        applicable(iterate, constraints) && !isa(constraints, Pair) ?
-        [constraint(constr) for constr in constraints] : [constraint(constraints)]
-
-    return SemOptimizerNLopt(
-        algorithm,
-        local_algorithm,
-        options,
-        local_options,
-        constraints(equality_constraints),
-        constraints(inequality_constraints),
-    )
-end
-
-"""
-    SemOptimizer(args...; engine = :NLopt, kwargs...)
-
-Creates SEM optimizer using [*NLopt.jl*](https://github.com/JuliaOpt/NLopt.jl).
-
-# Extended help
-
-See [`SemOptimizerNLopt`](@ref) for a full reference.
 """
 SEM.SemOptimizer(::Val{:NLopt}, args...; kwargs...) = SemOptimizerNLopt(args...; kwargs...)
 

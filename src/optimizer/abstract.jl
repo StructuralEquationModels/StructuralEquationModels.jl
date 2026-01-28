@@ -4,20 +4,18 @@ engine(optimizer::SemOptimizer) = engine(typeof(optimizer))
 """
     SemOptimizer(args...; engine::Symbol = :Optim, kwargs...)
 
-Constructs [`SemOptimizer`](@ref) for the specified optimization `engine`.
+Constructs a `SemOptimizer` object that can be passed to `fit`(@ref) for specifying aspects 
+of the numerical optimization involved in fitting a SEM.
 
-A wrapper function that passes `args...` and `kwargs...` to the
-engine-specific optimizer constructor.
+The keyword `engine` controlls which Julia package is used, with `:Optim` being the default.
+The additional arguments `args...` and `kwargs...` are engine-specific and control further
+aspects of the optimization process, such as the algorithm, convergence criteria or constraints.
 
-Uses `:Optim` as the default engine.
-Throws an error if the specified `engine` is not supported.
-Call [`optimizer_engines`](@ref) for the list of supported engines.
-
-For the information about using the engine `:EngineName`, use
-```julia
-?SemOptimizer(Val(:EngineName))
-```
-
+More engines are available if specific packages are loaded, for example [*NLopt.jl*](https://github.com/JuliaOpt/NLopt.jl) 
+(also see [Constrained optimization](@ref) in the online documentation) or [*ProximalAlgorithms.jl*](https://github.com/JuliaFirstOrder/ProximalAlgorithms.jl)
+(also see [Regularization](@ref) in the online documentation).
+The documentation of available engines (with the packages loaded in the current Julia session) 
+is shown in the extended help.
 """
 SemOptimizer(args...; engine::Symbol = :Optim, kwargs...) =
     SemOptimizer{engine}(args...; kwargs...)
