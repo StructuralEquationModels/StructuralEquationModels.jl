@@ -10,19 +10,9 @@ mutable struct SemOptimizerOptim{A, B} <: SemOptimizer{:Optim}
     options::B
 end
 
-
-SemOptimizerOptim(;
-    algorithm = LBFGS(),
-    options = Optim.Options(; f_reltol = 1e-10, x_abstol = 1.5e-8),
-    kwargs...,
-) = SemOptimizerOptim(algorithm, options)
-
 """
-# Extended help
-*`engine = :Optim`*
-
-Creates SEM optimizer using [*Optim.jl*](https://julianlsolvers.github.io/Optim.jl/stable/).
-For more information on the available algorithms and options, see the *Optim.jl* docs.
+Connects to *Optim.jl* as the optimization engine.
+For more information on the available algorithms and options, see the [*Optim.jl* docs](https://julianlsolvers.github.io/Optim.jl/stable/).
 
 # Constructor
 
@@ -63,7 +53,15 @@ for the variance parameters (the diagonal of the *S* matrix).
 - `algorithm(::SemOptimizer)`
 - `options(::SemOptimizer)`
 """
+SemOptimizerOptim(;
+    algorithm = LBFGS(),
+    options = Optim.Options(; f_reltol = 1e-10, x_abstol = 1.5e-8),
+    kwargs...,
+) = SemOptimizerOptim(algorithm, options)
+
 SemOptimizer(::Val{:Optim}, args...; kwargs...) = SemOptimizerOptim(args...; kwargs...)
+
+SEM.engine_info(engine::Val{:Optim}) = doc(SemOptimizerOptim)
 
 ############################################################################################
 ### Recommended methods

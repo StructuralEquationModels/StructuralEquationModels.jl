@@ -3,18 +3,18 @@
 ############################################################################################
 
 # dummy SEM optimizer
+"""
+Test.
+"""
 struct SemOptimizerEmpty <: SemOptimizer{:Empty} end
 
 ############################################################################################
 ### Constructor
 ############################################################################################
 
-"""
-    SemOptimizer(engine = :Empty)
-
-Constructs a dummy optimizer for models that don't need it.
-"""
 SemOptimizer(::Val{:Empty}) = SemOptimizerEmpty()
+
+engine_info(engine::Val{:Empty}) = doc(SemOptimizerEmpty)
 
 ############################################################################################
 ### Recommended methods

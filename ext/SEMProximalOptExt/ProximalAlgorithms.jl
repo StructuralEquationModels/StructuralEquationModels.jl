@@ -7,10 +7,11 @@ mutable struct SemOptimizerProximal{A, B, C} <: SemOptimizer{:Proximal}
     operator_h::C
 end
 
-"""
-# Extended help
-*`engine = :Proximal`*
+SEM.SemOptimizer{:Proximal}(args...; kwargs...) = SemOptimizerProximal(args...; kwargs...)
 
+SEM.engine_info(engine::Val{:Proximal}) = doc(SemOptimizerProximal)
+
+"""
 Connects to `ProximalAlgorithms.jl` as the optimization backend. For more information on 
 the available algorithms and options, see the online docs on [Regularization](@ref) and
 the documentation of [*ProximalAlgorithms.jl*](https://github.com/JuliaFirstOrder/ProximalAlgorithms.jl) / [ProximalOperators.jl](https://github.com/JuliaFirstOrder/ProximalOperators.jl).
@@ -28,8 +29,6 @@ the documentation of [*ProximalAlgorithms.jl*](https://github.com/JuliaFirstOrde
 - `operator_g`: proximal operator (e.g., regularization penalty)
 - `operator_h`: optional second proximal operator
 """
-SEM.SemOptimizer{:Proximal}(args...; kwargs...) = SemOptimizerProximal(args...; kwargs...)
-
 SemOptimizerProximal(;
     algorithm = ProximalAlgorithms.PANOC(),
     operator_g,

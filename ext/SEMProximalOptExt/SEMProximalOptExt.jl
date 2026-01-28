@@ -1,8 +1,9 @@
 module SEMProximalOptExt
 
-using StructuralEquationModels
+using StructuralEquationModels, ProximalAlgorithms
 using StructuralEquationModels: print_type_name, print_field_types
-using ProximalAlgorithms
+
+import Base.Docs: doc
 
 export SemOptimizerProximal
 
