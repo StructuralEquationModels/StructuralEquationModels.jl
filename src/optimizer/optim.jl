@@ -73,10 +73,9 @@ update_observed(optimizer::SemOptimizerOptim, observed::SemObserved; kwargs...) 
 ### additional methods
 ############################################################################################
 
-algorithm(optimizer::SemOptimizerOptim) = optimizer.algorithm
 options(optimizer::SemOptimizerOptim) = optimizer.options
 
-optimizer(res::Optim.MultivariateOptimizationResults) = Optim.summary(res)
+algorithm_name(res::Optim.MultivariateOptimizationResults) = Optim.summary(res)
 n_iterations(res::Optim.MultivariateOptimizationResults) = Optim.iterations(res)
 convergence(res::Optim.MultivariateOptimizationResults) = Optim.converged(res)
 

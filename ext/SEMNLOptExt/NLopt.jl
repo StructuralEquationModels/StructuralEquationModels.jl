@@ -122,7 +122,6 @@ SEM.update_observed(optimizer::SemOptimizerNLopt, observed::SemObserved; kwargs.
 ### additional methods
 ############################################################################################
 
-SEM.algorithm(optimizer::SemOptimizerNLopt) = optimizer.algorithm
 local_algorithm(optimizer::SemOptimizerNLopt) = optimizer.local_algorithm
 SEM.options(optimizer::SemOptimizerNLopt) = optimizer.options
 local_options(optimizer::SemOptimizerNLopt) = optimizer.local_options
@@ -134,7 +133,7 @@ struct NLoptResult
     problem::Any
 end
 
-SEM.optimizer(res::NLoptResult) = res.problem.algorithm
+SEM.algorithm_name(res::NLoptResult) = res.problem.algorithm
 SEM.n_iterations(res::NLoptResult) = res.problem.numevals
 SEM.convergence(res::NLoptResult) = res.result[3]
 

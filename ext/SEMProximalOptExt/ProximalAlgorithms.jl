@@ -47,7 +47,12 @@ SEM.update_observed(optimizer::SemOptimizerProximal, observed::SemObserved; kwar
 ### additional methods
 ############################################################################################
 
-SEM.algorithm(optimizer::SemOptimizerProximal) = optimizer.algorithm
+SEM.algorithm_name(res::ProximalResult) = SEM.algorithm_name(res.result[:algorithm])
+SEM.algorithm_name(::ProximalAlgorithms.IterativeAlgorithm{I,H,S,D,K}) where 
+    {I, H, S, D, K} = nameof(I)
+
+SEM.convergence(::ProximalResult) = "No standard convergence criteria for proximal \n algorithms available."
+SEM.n_iterations(res::ProximalResult) = res.result[:iterations]
 
 ############################################################################
 ### Pretty Printing
