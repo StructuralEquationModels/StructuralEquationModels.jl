@@ -1,5 +1,17 @@
-optimizer_engine(::Type{<:SemOptimizer{E}}) where {E} = E
-optimizer_engine(::SemOptimizer{E}) where {E} = E
+const optimizer_engine_packages = Dict(
+    :NLopt => "NLopt",
+    :Proximal => "ProximalAlgorithms"
+)
+
+function throw_engine_error(E)
+    if typeof(E) !== Symbol
+        throw(ArgumentError("engine argument must be a Symbol."))
+    elseif haskey(optimizer_engine_packages, E)
+        error("optimizer \":$E\" requires \"using $(optimizer_engine_packages[E])\".")
+    else
+        error("optimizer engine \":$E\" is not supported.")
+    end
+end
 
 """
     SemOptimizer(args...; engine::Symbol = :Optim, kwargs...)
@@ -28,19 +40,18 @@ SemOptimizer(args...; engine::Symbol = :Optim, kwargs...) =
     SemOptimizer{engine}(args...; kwargs...)
 
 # fallback optimizer constructor when the engine E is not supported
-function SemOptimizer(::Val{E}, args...; kwargs...) where {E}
-    if typeof(E) !== Symbol
-        throw(ArgumentError("engine argument must be a Symbol."))
-    elseif E == :NLOpt
-        error("$E optimizer requires \"using NLopt\".")
-    elseif E == :Proximal
-        error("$E optimizer requires \"using ProximalAlgorithms\".")
-    else
-        error("$E optimizer engine is not supported.")
-    end
-end
+SemOptimizer(::Val{E}, args...; kwargs...) where {E} = throw_engine_error(E)
 
 SemOptimizer{E}(args...; kwargs...) where {E} = SemOptimizer(Val(E), args...; kwargs...)
+
+"""
+    (1) optimizer_engine(::Type{<:SemOptimizer{E}})
+    (2) optimizer_engine(::SemOptimizer{E})
+    
+Returns `E`; the engine of a `SemOptimizer` object or a subtype of `SemOptimizer`.
+"""
+optimizer_engine(::Type{<:SemOptimizer{E}}) where {E} = E
+optimizer_engine(::SemOptimizer{E}) where {E} = E
 
 """
     optimizer_engines()
@@ -61,8 +72,7 @@ For a list of available engines, call `optimizer_engines`.
 """
 optimizer_engine_doc(engine) = optimizer_engine_doc(Val(engine))
 
-optimizer_engine_doc(engine::Val) = 
-    throw(ArgumentError("Unknown engine. Did you forget to load the necessary packages?"))
+optimizer_engine_doc(::Val{E}) where {E} = throw_engine_error(E)
 
 """
     fit([optim::SemOptimizer], model::AbstractSem;
