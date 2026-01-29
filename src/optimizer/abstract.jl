@@ -1,5 +1,5 @@
-engine(::Type{<:SemOptimizer{E}}) where {E} = E
-engine(::SemOptimizer{E}) where {E} = E
+optimizer_engine(::Type{<:SemOptimizer{E}}) where {E} = E
+optimizer_engine(::SemOptimizer{E}) where {E} = E
 
 """
     SemOptimizer(args...; engine::Symbol = :Optim, kwargs...)
@@ -9,7 +9,7 @@ of the numerical optimization involved in fitting a SEM.
 
 The keyword `engine` controlls which Julia package is used, with `:Optim` being the default.
 - `optimizer_engines()` prints a list of currently available engines.
-- `engine_info(EngineName)` prints information on the usage of a specific engine.
+- `optimizer_engine_doc(EngineName)` prints information on the usage of a specific engine.
 
 More engines become available if specific packages are loaded, for example 
 [*NLopt.jl*](https://github.com/JuliaOpt/NLopt.jl) (also see [Constrained optimization](@ref) 
@@ -19,7 +19,7 @@ in the online documentation) or
 
 The additional arguments `args...` and `kwargs...` are engine-specific and control further
 aspects of the optimization process, such as the algorithm, convergence criteria or constraints.
-Information on those can be accessed with `engine_info`.
+Information on those can be accessed with `optimizer_engine_doc`.
 
 To connect the SEM package to a completely new optimization backend, you can implement a new 
 subtype of SemOptimizer.
@@ -51,17 +51,17 @@ the [`SemOptimizer`](@ref) constructor.
 The list of engines depends on the Julia packages loaded (with the `using` directive)
 into the current session.
 """
-optimizer_engines() = Symbol[engine(opt_type) for opt_type in subtypes(SemOptimizer)]
+optimizer_engines() = Symbol[optimizer_engine(opt_type) for opt_type in subtypes(SemOptimizer)]
 
 """
-    engine_info(engine::Symbol)
+    optimizer_engine_doc(engine::Symbol)
 
 Shows information on the optimizer engine.
 For a list of available engines, call `optimizer_engines`.
 """
-engine_info(engine) = engine_info(Val(engine))
+optimizer_engine_doc(engine) = optimizer_engine_doc(Val(engine))
 
-engine_info(engine::Val) = 
+optimizer_engine_doc(engine::Val) = 
     throw(ArgumentError("Unknown engine. Did you forget to load the necessary packages?"))
 
 """
