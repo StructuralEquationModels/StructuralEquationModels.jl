@@ -100,9 +100,20 @@ SemConstant
 
 ## optimizer
 
+```@eval OptDocs
+using StructuralEquationModels, NLopt
+
+StructuralEquationModels.optimizer_engine_doc(:NLopt)
+```
+
+```@setup OptDocs
+using StructuralEquationModels, NLopt
+
+SemOptimizerNLopt = Base.get_extension(StructuralEquationModels, :SEMNLOptExt).SemOptimizerNLopt
+```
+
 ```@docs
 SemOptimizer
 SemOptimizerOptim
 SemOptimizerNLopt
-SemOptimizerProximal
 ```
