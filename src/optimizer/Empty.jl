@@ -14,7 +14,7 @@ struct SemOptimizerEmpty <: SemOptimizer{:Empty} end
 
 SemOptimizer(::Val{:Empty}) = SemOptimizerEmpty()
 
-engine_info(engine::Val{:Empty}) = doc(SemOptimizerEmpty)
+optimizer_engine_doc(engine::Val{:Empty}) = doc(SemOptimizerEmpty)
 
 ############################################################################################
 ### Recommended methods

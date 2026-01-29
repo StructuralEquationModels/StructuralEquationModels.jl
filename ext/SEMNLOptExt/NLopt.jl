@@ -109,7 +109,7 @@ end
 
 SEM.SemOptimizer(::Val{:NLopt}, args...; kwargs...) = SemOptimizerNLopt(args...; kwargs...)
 
-SEM.engine_info(engine::Val{:NLopt}) = doc(SemOptimizerNLopt)
+SEM.optimizer_engine_doc(engine::Val{:NLopt}) = doc(SemOptimizerNLopt)
 
 ############################################################################################
 ### Recommended methods
