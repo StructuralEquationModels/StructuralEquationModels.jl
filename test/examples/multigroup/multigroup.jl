@@ -169,7 +169,7 @@ start_test = [
     0.01
     0.05
 ]
-semoptimizer = SemOptimizerOptim()
+semoptimizer = SemOptimizer()
 
 @testset "Graph → Partable → RAMMatrices | constructor | Optim" begin
     include("build_models.jl")
