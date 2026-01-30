@@ -1,6 +1,12 @@
 using Documenter, StructuralEquationModels
+using NLopt, ProximalAlgorithms
 
 makedocs(
+    modules=[
+        StructuralEquationModels,
+        Base.get_extension(StructuralEquationModels, :SEMNLOptExt),
+        Base.get_extension(StructuralEquationModels, :SEMProximalOptExt)
+        ],
     sitename = "StructuralEquationModels.jl",
     pages = [
         "index.md",
