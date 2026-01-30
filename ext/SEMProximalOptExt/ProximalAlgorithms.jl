@@ -43,24 +43,12 @@ SemOptimizerProximal(;
 SEM.update_observed(optimizer::SemOptimizerProximal, observed::SemObserved; kwargs...) =
     optimizer
 
-############################################################################################
-### additional methods
-############################################################################################
-
-SEM.algorithm_name(res::ProximalResult) = SEM.algorithm_name(res.result[:algorithm])
-SEM.algorithm_name(::ProximalAlgorithms.IterativeAlgorithm{I,H,S,D,K}) where 
-    {I, H, S, D, K} = nameof(I)
-
-SEM.convergence(::ProximalResult) = "No standard convergence criteria for proximal \n algorithms available."
-SEM.n_iterations(res::ProximalResult) = res.result[:iterations]
-
 ############################################################################
-### Pretty Printing
+### Model fitting
 ############################################################################
 
-function Base.show(io::IO, struct_inst::SemOptimizerProximal)
-    print_type_name(io, struct_inst)
-    print_field_types(io, struct_inst)
+mutable struct ProximalResult
+    result::Any
 end
 
 ## connect to ProximalAlgorithms.jl
@@ -68,10 +56,6 @@ function ProximalAlgorithms.value_and_gradient(model::AbstractSem, params)
     grad = similar(params)
     obj = SEM.evaluate!(zero(eltype(params)), grad, nothing, model, params)
     return obj, grad
-end
-
-mutable struct ProximalResult
-    result::Any
 end
 
 function SEM.fit(
@@ -115,8 +99,24 @@ function SEM.fit(
 end
 
 ############################################################################################
+### additional methods
+############################################################################################
+
+SEM.algorithm_name(res::ProximalResult) = SEM.algorithm_name(res.result[:algorithm])
+SEM.algorithm_name(::ProximalAlgorithms.IterativeAlgorithm{I,H,S,D,K}) where 
+    {I, H, S, D, K} = nameof(I)
+
+SEM.convergence(::ProximalResult) = "No standard convergence criteria for proximal \n algorithms available."
+SEM.n_iterations(res::ProximalResult) = res.result[:iterations]
+
+############################################################################################
 # pretty printing
 ############################################################################################
+
+function Base.show(io::IO, struct_inst::SemOptimizerProximal)
+    print_type_name(io, struct_inst)
+    print_field_types(io, struct_inst)
+end
 
 function Base.show(io::IO, result::ProximalResult)
     print(io, "Minimum:          $(round(result.result[:minimum]; digits = 2)) \n")
