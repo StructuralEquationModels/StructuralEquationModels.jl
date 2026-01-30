@@ -100,7 +100,7 @@ SemConstant
 
 ## optimizer
 
-```@eval OptDocs
+```@example OptDocs
 using StructuralEquationModels, NLopt
 
 StructuralEquationModels.optimizer_engine_doc(:NLopt)
