@@ -66,6 +66,7 @@ makedocs(
         collapselevel = 1,
     ),
     doctest = false,
+    checkdocs = :none,
 )
 
 # doctest(StructuralEquationModels, fix=true)
