@@ -104,7 +104,7 @@ SemConstant
 SemOptimizer
 ```
 
-A reference: [NLopt engine](@ref Base.get_extension(StructuralEquationModels, :SEMNLOptExt).SemOptimizerNLopt)
+A reference: [NLopt engine](@ref SEMNLOptExt.SemOptimizerNLopt)
 
 ```@autodocs
 Modules = [
