@@ -117,5 +117,6 @@ SemOptimizer
 ```
 
 ```@autodocs
-Modules = [SEMNLOptExt,]
+Modules = [Base.get_extension(StructuralEquationModels, :SEMNLOptExt)]
+Order = [:type, :function]
 ```
