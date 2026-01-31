@@ -100,23 +100,13 @@ SemConstant
 
 ## optimizer
 
-```@example OptDocs
-using StructuralEquationModels, NLopt
-
-StructuralEquationModels.optimizer_engine_doc(:NLopt)
-```
-
-```@setup OptDocs
-using StructuralEquationModels, NLopt
-
-SemOptimizerNLopt = Base.get_extension(StructuralEquationModels, :SEMNLOptExt).SemOptimizerNLopt
-```
-
 ```@docs
 SemOptimizer
 ```
 
 ```@autodocs
-Modules = [Base.get_extension(StructuralEquationModels, :SEMNLOptExt)]
+Modules = [
+    Base.get_extension(StructuralEquationModels, :SEMNLOptExt),
+    Base.get_extension(StructuralEquationModels, :SEMProximalOptExt)]
 Order = [:type, :function]
 ```
