@@ -2,7 +2,7 @@
 
 When [`NLopt.jl`](https://github.com/jump-dev/NLopt.jl) is loaded in the running Julia session,
 it could be used by the [`SemOptimizer`](@ref) by specifying `engine = :NLopt`
-(see [NLopt-specific options](@ref `SemOptimizer(Val(:NLopt))`)).
+(see [NLopt-specific options](@ref SEMNLOptExt.SemOptimizerNLopt)).
 Among other things, `NLopt` enables constrained optimization of the SEM models, which is
 explained in the [Constrained optimization](@ref) section.
 
