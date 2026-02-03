@@ -30,14 +30,14 @@ mutable struct SemOptimizerProximal{A, B, C} <: SemOptimizer{:Proximal}
     operator_h::C
 end
 
-SEM.SemOptimizer{:Proximal}(args...; kwargs...) = SemOptimizerProximal(args...; kwargs...)
-
 SemOptimizerProximal(;
     algorithm = ProximalAlgorithms.PANOC(),
     operator_g,
     operator_h = nothing,
     kwargs...,
 ) = SemOptimizerProximal(algorithm, operator_g, operator_h)
+
+SEM.sem_optimizer_subtype(::Val{:Proximal}) = SemOptimizerProximal
 
 ############################################################################################
 ### Recommended methods

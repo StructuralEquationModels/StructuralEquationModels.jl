@@ -11,11 +11,7 @@ an optimizer part.
 """
 struct SemOptimizerEmpty <: SemOptimizer{:Empty} end
 
-############################################################################################
-### Constructor
-############################################################################################
-
-SemOptimizer{:Empty}() = SemOptimizerEmpty()
+sem_optimizer_subtype(::Val{:Empty}) = SemOptimizerEmpty
 
 ############################################################################################
 ### Recommended methods

@@ -1,6 +1,6 @@
 # Custom optimizer types
 
-The optimizer part of a model connects it to the optimization backend. 
+The optimizer part of a model connects it to the optimization backend.
 Let's say we want to implement a new optimizer as `SemOptimizerName`. The first part of the implementation is very similar to loss functions, so we just show the implementation of `SemOptimizerOptim` here as a reference:
 
 ```julia
@@ -12,7 +12,7 @@ mutable struct SemOptimizerName{A, B} <: SemOptimizer{:Name}
     options::B
 end
 
-SemOptimizer{:Name}(args...; kwargs...) = SemOptimizerName(args...; kwargs...)
+SEM.sem_optimizer_subtype(::Val{:Name}) = SemOptimizerName
 
 SemOptimizerName(;
     algorithm = LBFGS(),

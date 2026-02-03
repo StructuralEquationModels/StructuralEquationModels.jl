@@ -1,16 +1,31 @@
-SemOptimizer(args...; engine::Symbol = :Optim, kwargs...) =
-    SemOptimizer{engine}(args...; kwargs...)
-
-# fallback optimizer constructor
-function SemOptimizer{E}(args...; kwargs...) where {E}
-    if E == :NLOpt
+# throw unsupported engine error
+function throw_engine_error(E)
+    if typeof(E) !== Symbol
+        throw(ArgumentError("engine argument must be a Symbol."))
+    elseif E == :NLopt
         error("$E optimizer requires \"using NLopt\".")
     elseif E == :Proximal
         error("$E optimizer requires \"using ProximalAlgorithms\".")
     else
-        error("$E optimizer is not supported.")
+        error("$E optimizer engine is not supported.")
     end
 end
+
+# return the type implementing SemOptimizer{engine}
+# the method should be overridden in the extension
+sem_optimizer_subtype(engine::Symbol) = sem_optimizer_subtype(Val(engine))
+
+# fallback method for unsupported engines
+sem_optimizer_subtype(::Val{E}) where {E} = throw_engine_error(E)
+
+# default constructor that dispatches to the engine-specific type
+SemOptimizer(::Val{E}, args...; kwargs...) where {E} =
+    sem_optimizer_subtype(E)(args...; kwargs...)
+
+SemOptimizer{E}(args...; kwargs...) where {E} = SemOptimizer(Val(E), args...; kwargs...)
+
+SemOptimizer(args...; engine::Symbol = :Optim, kwargs...) =
+    SemOptimizer(Val(engine), args...; kwargs...)
 
 """
     optimizer_engine(::Type{<:SemOptimizer})
