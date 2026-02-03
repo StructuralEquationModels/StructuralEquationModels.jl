@@ -6,8 +6,7 @@ For ridge regularization, you can simply use `SemRidge` as an additional loss fu
 (for example, a model with the loss functions `SemML` and `SemRidge` corresponds to ridge-regularized maximum likelihood estimation).
 
 You can define lasso, elastic net and other forms of regularization using [`ProximalOperators.jl`](https://github.com/JuliaFirstOrder/ProximalOperators.jl)
-and optimize the SEM model with [`ProximalAlgorithms.jl`](https://github.com/JuliaFirstOrder/ProximalAlgorithms.jl)
-that provides so-called *proximal optimization* algorithms.
+and optimize the SEM with so-called *proximal optimization* algorithms from [`ProximalAlgorithms.jl`](https://github.com/JuliaFirstOrder/ProximalAlgorithms.jl).
 
 ```@setup reg
 using StructuralEquationModels, ProximalAlgorithms, ProximalOperators
@@ -23,8 +22,8 @@ using StructuralEquationModels, ProximalAlgorithms, ProximalOperators
 
 ## Proximal optimization
 
-With *ProximalAlgorithms* package loaded, it is now possible to use `:Proximal` optimization engine
-in `SemOptimizer` for estimating regularized models.
+With the *ProximalAlgorithms* package loaded, it is now possible to use the `:Proximal`
+optimization engine in `SemOptimizer` for estimating regularized models.
 
 ```julia
 SemOptimizer(;
@@ -138,15 +137,16 @@ fit_lasso2 = fit(model; engine = :Proximal, operator_g = NormL1(λ))
 ## Second example - mixed l1 and l0 regularization
 
 You can choose to penalize different parameters with different types of regularization functions.
-Let's use the *lasso* (*l1*) again on the covariances, but additionally penalize the error variances of the observed items via *l0* regularization.
+Let's use the *lasso* (*l1*) again on the covariances, but additionally penalize the error variances of
+the observed items via *l0* regularization.
 
 The *l0* penalty is defined as
 ```math
 l_0 = \lambda \mathrm{nnz}(\theta)
 ```
 
-Since we apply *l1* and *l0* to the disjoint sets of parameters, this regularization could be represented as
-as sum of *separable proximal operators* (i.e. no parameter is penalized twice)
+Since we apply *l1* and *l0* to the disjoint sets of parameters, this regularization can be
+represented as a sum of *separable proximal operators* (i.e. no parameter is penalized twice)
 implemented by the [`SlicedSeparableSum`](https://juliafirstorder.github.io/ProximalOperators.jl/stable/calculus/#ProximalOperators.SlicedSeparableSum) operator:
 
 ```@example reg
