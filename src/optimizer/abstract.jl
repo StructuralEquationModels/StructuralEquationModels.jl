@@ -1,13 +1,13 @@
-const optimizer_engine_packages = Dict(
-    :NLopt => "NLopt",
-    :Proximal => "ProximalAlgorithms"
-)
+const optimizer_engine_dependencies =
+    Dict(:NLopt => ["NLopt"], :Proximal => ["ProximalAlgorithms"])
 
 function throw_engine_error(E)
     if typeof(E) !== Symbol
         throw(ArgumentError("engine argument must be a Symbol."))
-    elseif haskey(optimizer_engine_packages, E)
-        error("optimizer \":$E\" requires \"using $(optimizer_engine_packages[E])\".")
+    elseif haskey(optimizer_engine_dependencies, E)
+        error(
+            "optimizer \":$E\" requires \"using $(join(optimizer_engine_dependencies[E], ", "))\".",
+        )
     else
         error("optimizer engine \":$E\" is not supported.")
     end
