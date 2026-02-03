@@ -20,8 +20,8 @@ SEM.SemOptimizer_impltype(::Val{:NLopt}) = SemOptimizerNLopt
 ############################################################################################
 
 """
-Uses *NLopt.jl* as the optimization engine. For more information on the available algorithms 
-and options, see the [*NLopt.jl*](https://github.com/JuliaOpt/NLopt.jl)  package and the 
+Uses *NLopt.jl* as the optimization engine. For more information on the available algorithms
+and options, see the [*NLopt.jl*](https://github.com/JuliaOpt/NLopt.jl)  package and the
 [NLopt docs](https://nlopt.readthedocs.io/en/latest/).
 
 # Constructor

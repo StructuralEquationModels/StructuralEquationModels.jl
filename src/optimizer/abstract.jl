@@ -16,16 +16,16 @@ end
 """
     SemOptimizer(args...; engine::Symbol = :Optim, kwargs...)
 
-Constructs a `SemOptimizer` object that can be passed to [`fit`](@ref) for specifying aspects 
+Constructs a `SemOptimizer` object that can be passed to [`fit`](@ref) for specifying aspects
 of the numerical optimization involved in fitting a SEM.
 
 The keyword `engine` controlls which Julia package is used, with `:Optim` being the default.
 - `optimizer_engines()` prints a list of currently available engines.
 - `optimizer_engine_doc(EngineName)` prints information on the usage of a specific engine.
 
-More engines become available if specific packages are loaded, for example 
-[*NLopt.jl*](https://github.com/JuliaOpt/NLopt.jl) (also see [Constrained optimization](@ref) 
-in the online documentation) or 
+More engines become available if specific packages are loaded, for example
+[*NLopt.jl*](https://github.com/JuliaOpt/NLopt.jl) (also see [Constrained optimization](@ref)
+in the online documentation) or
 [*ProximalAlgorithms.jl*](https://github.com/JuliaFirstOrder/ProximalAlgorithms.jl)
 (also see [Regularization](@ref) in the online documentation).
 
@@ -33,7 +33,7 @@ The additional arguments `args...` and `kwargs...` are engine-specific and contr
 aspects of the optimization process, such as the algorithm, convergence criteria or constraints.
 Information on those can be accessed with `optimizer_engine_doc`.
 
-To connect the SEM package to a completely new optimization backend, you can implement a new 
+To connect the SEM package to a completely new optimization backend, you can implement a new
 subtype of SemOptimizer.
 """
 SemOptimizer(args...; engine::Symbol = :Optim, kwargs...) =
@@ -47,7 +47,7 @@ SemOptimizer{E}(args...; kwargs...) where {E} = SemOptimizer(Val(E), args...; kw
 """
     (1) optimizer_engine(::Type{<:SemOptimizer{E}})
     (2) optimizer_engine(::SemOptimizer{E})
-    
+
 Returns `E`; the engine of a `SemOptimizer` object or a subtype of `SemOptimizer`.
 """
 optimizer_engine(::Type{<:SemOptimizer{E}}) where {E} = E
@@ -62,7 +62,8 @@ the [`SemOptimizer`](@ref) constructor.
 The list of engines depends on the Julia packages loaded (with the `using` directive)
 into the current session.
 """
-optimizer_engines() = Symbol[optimizer_engine(opt_type) for opt_type in subtypes(SemOptimizer)]
+optimizer_engines() =
+    Symbol[optimizer_engine(opt_type) for opt_type in subtypes(SemOptimizer)]
 
 # return the type implementing SemOptimizer{engine}
 # should be overridden in the extension
@@ -85,7 +86,7 @@ optimizer_engine(result::SemOptimizerResult) = optimizer_engine(result.optimizer
 
 """
     fit([optim::SemOptimizer], model::AbstractSem;
-            [engine::Symbol], start_val = start_val, kwargs...)
+        [engine::Symbol], start_val = start_val, kwargs...)
 
 Return the fitted `model`.
 

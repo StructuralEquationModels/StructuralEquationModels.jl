@@ -12,20 +12,20 @@ SEM.SemOptimizer{:Proximal}(args...; kwargs...) = SemOptimizerProximal(args...; 
 SEM.SemOptimizer_impltype(::Val{:Proximal}) = SemOptimizerProximal
 
 """
-Connects to `ProximalAlgorithms.jl` as the optimization backend. For more information on 
-the available algorithms and options, see the online docs on [Regularization](@ref) and
-the documentation of [*ProximalAlgorithms.jl*](https://github.com/JuliaFirstOrder/ProximalAlgorithms.jl) / [ProximalOperators.jl](https://github.com/JuliaFirstOrder/ProximalOperators.jl).
-
-# Constructor
-
     SemOptimizerProximal(;
         algorithm = ProximalAlgorithms.PANOC(),
         operator_g,
         operator_h = nothing,
         kwargs...,
+    )
+
+Connects to `ProximalAlgorithms.jl` as the optimization backend. For more information on
+the available algorithms and options, see the online docs on [Regularization](@ref) and
+the documentation of [*ProximalAlgorithms.jl*](https://github.com/JuliaFirstOrder/ProximalAlgorithms.jl) /
+[ProximalOperators.jl](https://github.com/JuliaFirstOrder/ProximalOperators.jl).
 
 # Arguments
-- `algorithm`: optimization algorithm.
+- `algorithm`: proximal optimization algorithm.
 - `operator_g`: proximal operator (e.g., regularization penalty)
 - `operator_h`: optional second proximal operator
 """
