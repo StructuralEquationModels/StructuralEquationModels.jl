@@ -9,7 +9,7 @@ end
 
 SEM.SemOptimizer{:Proximal}(args...; kwargs...) = SemOptimizerProximal(args...; kwargs...)
 
-SEM.optimizer_engine_doc(engine::Val{:Proximal}) = doc(SemOptimizerProximal)
+SEM.SemOptimizer_impltype(::Val{:Proximal}) = SemOptimizerProximal
 
 """
 Connects to `ProximalAlgorithms.jl` as the optimization backend. For more information on 

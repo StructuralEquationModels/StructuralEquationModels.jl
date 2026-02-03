@@ -13,6 +13,8 @@ struct SemOptimizerNLopt <: SemOptimizer{:NLopt}
     inequality_constraints::Vector{NLoptConstraint}
 end
 
+SEM.SemOptimizer_impltype(::Val{:NLopt}) = SemOptimizerNLopt
+
 ############################################################################################
 ### Constructor
 ############################################################################################
@@ -108,8 +110,6 @@ function SemOptimizerNLopt(;
 end
 
 SEM.SemOptimizer(::Val{:NLopt}, args...; kwargs...) = SemOptimizerNLopt(args...; kwargs...)
-
-SEM.optimizer_engine_doc(engine::Val{:NLopt}) = doc(SemOptimizerNLopt)
 
 ############################################################################################
 ### Recommended methods

@@ -61,7 +61,7 @@ SemOptimizerOptim(;
 
 SemOptimizer(::Val{:Optim}, args...; kwargs...) = SemOptimizerOptim(args...; kwargs...)
 
-SEM.optimizer_engine_doc(engine::Val{:Optim}) = doc(SemOptimizerOptim)
+SemOptimizer_impltype(::Val{:Optim}) = SemOptimizerOptim
 
 ############################################################################################
 ### Recommended methods

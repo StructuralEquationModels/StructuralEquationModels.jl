@@ -64,15 +64,20 @@ into the current session.
 """
 optimizer_engines() = Symbol[optimizer_engine(opt_type) for opt_type in subtypes(SemOptimizer)]
 
+# return the type implementing SemOptimizer{engine}
+# should be overridden in the extension
+SemOptimizer_impltype(engine::Symbol) = SemOptimizer_impltype(Val(engine))
+
+SemOptimizer_impltype(::Val{E}) where {E} = throw_engine_error(E)
+
 """
     optimizer_engine_doc(engine::Symbol)
 
-Shows information on the optimizer engine.
-For a list of available engines, call `optimizer_engines`.
-"""
-optimizer_engine_doc(engine) = optimizer_engine_doc(Val(engine))
+Shows documentation for the optimizer engine.
 
-optimizer_engine_doc(::Val{E}) where {E} = throw_engine_error(E)
+For a list of available engines, call [`optimizer_engines`](@ref).
+"""
+optimizer_engine_doc(engine) = doc(SemOptimizer_impltype(engine))
 
 """
     fit([optim::SemOptimizer], model::AbstractSem;
