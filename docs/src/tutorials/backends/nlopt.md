@@ -1,9 +1,9 @@
 # Using NLopt.jl
 
 When [`NLopt.jl`](https://github.com/jump-dev/NLopt.jl) is loaded in the running Julia session,
-it could be used by the [`SemOptimizer`](@ref) by specifying `engine = :NLopt`
+it can be used by the [`SemOptimizer`](@ref) by specifying `engine = :NLopt`
 (see [NLopt-specific options](@ref SEMNLOptExt.SemOptimizerNLopt)).
-Among other things, `NLopt` enables constrained optimization of the SEM models, which is
+Among other things, `NLopt` enables constrained optimization of SEMs, which is
 explained in the [Constrained optimization](@ref) section.
 
 We can override the default *NLopt* algorithm (LFBGS) and instead use
@@ -28,9 +28,9 @@ To see how to use the optimizer to actually fit a model now, check out the [Mode
 In the *NLopt* docs, you can find details about the [optimization algorithms](https://nlopt.readthedocs.io/en/latest/NLopt_Algorithms/),
 and the [tutorial](https://nlopt.readthedocs.io/en/latest/NLopt_Introduction/) that demonstrates how to tweak their behavior.
 
-To choose an algorithm, just pass its name without the 'NLOPT\_' prefix (for example, 'NLOPT\_LD\_SLSQP' can be used by passing `algorithm = :LD_SLSQP`).
+To choose an algorithm, just pass its name without the `NLOPT_` prefix (for example, `NLOPT_LD_SLSQP` can be used by passing `algorithm = :LD_SLSQP`).
 
-The README of the [*NLopt.jl*](https://github.com/JuliaOpt/NLopt.jl) may also be helpful, and provides a list of options:
+The *README* of [*NLopt.jl*](https://github.com/JuliaOpt/NLopt.jl) may also be helpful, and provides a list of options:
 
  - `algorithm`
  - `stopval`
