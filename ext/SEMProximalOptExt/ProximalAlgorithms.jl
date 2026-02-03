@@ -47,8 +47,10 @@ SEM.update_observed(optimizer::SemOptimizerProximal, observed::SemObserved; kwar
 ### Model fitting
 ############################################################################
 
-mutable struct ProximalResult
-    result::Any
+# wrapper for the Proximal optimization result
+struct ProximalResult{O <: SemOptimizer{:Proximal}} <: SEM.SemOptimizerResult{O}
+    optimizer::O
+    n_iterations::Int
 end
 
 ## connect to ProximalAlgorithms.jl
@@ -65,10 +67,10 @@ function SEM.fit(
     kwargs...,
 )
     if isnothing(optim.operator_h)
-        solution, iterations =
+        solution, niterations =
             optim.algorithm(x0 = start_params, f = model, g = optim.operator_g)
     else
-        solution, iterations = optim.algorithm(
+        solution, niterations = optim.algorithm(
             x0 = start_params,
             f = model,
             g = optim.operator_g,
@@ -76,25 +78,12 @@ function SEM.fit(
         )
     end
 
-    minimum = objective!(model, solution)
-
-    optimization_result = Dict(
-        :minimum => minimum,
-        :iterations => iterations,
-        :algorithm => optim.algorithm,
-        :operator_g => optim.operator_g,
-    )
-
-    isnothing(optim.operator_h) ||
-        push!(optimization_result, :operator_h => optim.operator_h)
-
     return SemFit(
-        minimum,
+        objective!(model, solution), # minimum
         solution,
         start_params,
         model,
-        optim,
-        ProximalResult(optimization_result),
+        ProximalResult(optim, niterations),
     )
 end
 
@@ -102,12 +91,15 @@ end
 ### additional methods
 ############################################################################################
 
-SEM.algorithm_name(res::ProximalResult) = SEM.algorithm_name(res.result[:algorithm])
-SEM.algorithm_name(::ProximalAlgorithms.IterativeAlgorithm{I,H,S,D,K}) where 
-    {I, H, S, D, K} = nameof(I)
+SEM.algorithm_name(res::ProximalResult) = SEM.algorithm_name(res.optimizer.algorithm)
+SEM.algorithm_name(
+    ::ProximalAlgorithms.IterativeAlgorithm{I, H, S, D, K},
+) where {I, H, S, D, K} = nameof(I)
 
-SEM.convergence(::ProximalResult) = "No standard convergence criteria for proximal \n algorithms available."
-SEM.n_iterations(res::ProximalResult) = res.result[:iterations]
+SEM.convergence(
+    ::ProximalResult,
+) = "No standard convergence criteria for proximal \n algorithms available."
+SEM.n_iterations(res::ProximalResult) = res.n_iterations
 
 ############################################################################################
 # pretty printing
@@ -119,10 +111,8 @@ function Base.show(io::IO, struct_inst::SemOptimizerProximal)
 end
 
 function Base.show(io::IO, result::ProximalResult)
-    print(io, "Minimum:          $(round(result.result[:minimum]; digits = 2)) \n")
-    print(io, "No. evaluations:  $(result.result[:iterations]) \n")
-    print(io, "Operator:         $(nameof(typeof(result.result[:operator_g]))) \n")
-    if haskey(result.result, :operator_h)
-        print(io, "Second Operator:  $(nameof(typeof(result.result[:operator_h]))) \n")
-    end
+    print(io, "No. evaluations:  $(result.n_iterations) \n")
+    print(io, "Operator:         $(nameof(typeof(result.optimizer.operator_g))) \n")
+    op_h = result.optimizer.operator_h
+    isnothing(op_h) || print(io, "Second Operator:  $(nameof(typeof(op_h))) \n")
 end

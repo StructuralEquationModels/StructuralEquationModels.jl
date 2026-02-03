@@ -81,6 +81,9 @@ Base.:*(x::SemWeight, y) = x.w * y
 
 abstract type SemOptimizer{E} end
 
+# wrapper around optimization result
+abstract type SemOptimizerResult{O <: SemOptimizer} end
+
 """
 Supertype of all objects that can serve as the observed field of a SEM.
 Pre-processes data and computes sufficient statistics for example.

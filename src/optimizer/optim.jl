@@ -75,9 +75,15 @@ update_observed(optimizer::SemOptimizerOptim, observed::SemObserved; kwargs...) 
 
 options(optimizer::SemOptimizerOptim) = optimizer.options
 
-algorithm_name(res::Optim.MultivariateOptimizationResults) = Optim.summary(res)
-n_iterations(res::Optim.MultivariateOptimizationResults) = Optim.iterations(res)
-convergence(res::Optim.MultivariateOptimizationResults) = Optim.converged(res)
+# wrapper for the Optim.jl result
+struct SemOptimResult{O <: SemOptimizerOptim} <: SemOptimizerResult{O}
+    optimizer::O
+    result::Optim.MultivariateOptimizationResults
+end
+
+algorithm_name(res::SemOptimResult) = Optim.summary(res.result)
+n_iterations(res::SemOptimResult) = Optim.iterations(res.result)
+convergence(res::SemOptimResult) = Optim.converged(res.result)
 
 function fit(
     optim::SemOptimizerOptim,
@@ -129,6 +135,6 @@ function fit(
         result.minimizer,
         start_params,
         model,
-        optim,
-        result)
+        SemOptimResult(optim, result),
+    )
 end
