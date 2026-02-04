@@ -4,7 +4,12 @@
 
 # dummy SEM optimizer
 """
-Test.
+Empty placeholder for models that don't need
+an optimizer part.
+
+# Constructor
+
+    SemOptimizerEmpty()
 """
 struct SemOptimizerEmpty <: SemOptimizer{:Empty} end
 
