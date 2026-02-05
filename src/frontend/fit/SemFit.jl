@@ -39,6 +39,10 @@ function Base.show(io::IO, semfit::SemFit)
     #print(io, "Objective value: $(round(semfit.minimum, digits = 4)) \n")
     print(io, "------------- Optimization result ------------- \n")
     print(io, "\n")
+    print(io, "engine: ")
+    print(io, optimizer_engine(semfit))
+    print(io, "\n")
+    print(io, "\n")
     print(io, semfit.optimization_result)
 end
 
@@ -58,6 +62,7 @@ model(sem_fit::SemFit) = sem_fit.model
 optimization_result(sem_fit::SemFit) = sem_fit.optimization_result
 
 # optimizer properties
+optimizer_engine(sem_fit::SemFit) = optimizer_engine(optimization_result(sem_fit))
 optimizer(sem_fit::SemFit) = optimizer(optimization_result(sem_fit))
 n_iterations(sem_fit::SemFit) = n_iterations(optimization_result(sem_fit))
 convergence(sem_fit::SemFit) = convergence(optimization_result(sem_fit))
