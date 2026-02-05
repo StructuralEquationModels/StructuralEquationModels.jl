@@ -1,9 +1,7 @@
 # Custom optimizer types
 
-The optimizer part of a model connects it to the optimization backend.
+The optimizer part of a model connects it to the optimization engine.
 Let's say we want to implement a new optimizer as `SemOptimizerMyopt`.
-The first part of the implementation is very similar to loss functions,
-so we just show the implementation of `SemOptimizerOptim` here as a reference:
 
 ```julia
 ############################################################################################
@@ -17,12 +15,12 @@ end
 SEM.sem_optimizer_subtype(::Val{:Myopt}) = SemOptimizerMyopt
 
 SemOptimizerMyopt(;
-    algorithm = LBFGS(),
-    options = Optim.Options(; f_reltol = 1e-10, x_abstol = 1.5e-8),
+    algorithm = ...,
+    options = ...,
     kwargs...,
 ) = SemOptimizerMyopt(algorithm, options)
 
-struct MyOptResult{O <: SemOptimizerMyopt} <: SEM.SemOptimizerResult{O}
+struct MyoptResult{O <: SemOptimizerMyopt} <: SEM.SemOptimizerResult{O}
     optimizer::O
     ...
 end
@@ -40,21 +38,15 @@ update_observed(optimizer::SemOptimizerMyopt, observed::SemObserved; kwargs...) 
 options(optimizer::SemOptimizerMyopt) = optimizer.options
 ```
 
-Note that your optimizer is a subtype of `SemOptimizer{:Myopt}`,
-where you can choose a `:Myopt` that can later be used as a keyword argument to `fit(engine = :Myopt)`.
-Similarly, `SemOptimizer{:Myopt}(args...; kwargs...) = SemOptimizerMyopt(args...; kwargs...)`
-should be defined as well as a constructor that uses only keyword arguments:
+Note that `SemOptimizerMyopt` is defined as a subtype of [`SemOptimizer{:Myopt}`](@ref SEM.SemOptimizer)`,
+and `SEM.sem_optimizer_subtype(::Val{:Myopt})` returns `SemOptimizerMyopt`.
+This instructs *SEM.jl* to use `SemOptimizerMyopt` when `:Myopt` is specified as the engine for
+model fitting: `fit(..., engine = :Myopt)`.
 
-```julia
-SemOptimizerMyopt(;
-    algorithm = LBFGS(),
-    options = Optim.Options(; f_reltol = 1e-10, x_abstol = 1.5e-8),
-    kwargs...,
-) = SemOptimizerMyopt(algorithm, options)
-```
 A method for `update_observed` and additional methods might be usefull, but are not necessary.
 
-Now comes the substantive part: We need to provide a method for `fit`:
+Now comes the essential part: we need to provide the [`fit`](@ref) method with `SemOptimizerMyopt`
+as the first positional argument.
 
 ```julia
 function fit(
@@ -63,20 +55,29 @@ function fit(
     start_params::AbstractVector;
     kwargs...,
 )
-    ...
+    # ... prepare the Myopt optimization problem
 
-    optimization_result = MyoptResult(optim, ...)
+    myopt_res = ... # fit the problem with the Myopt engine
+    minimum = ... # extract the minimum from myopt_res
+    minimizer = ... # extract the solution (parameter estimates)
+    optim_result = MyoptResult(optim, myopt_res, ...) # store the original Myopt result and params
 
-    return SemFit(minimum, minimizer, start_params, model, optimization_result)
+    return SemFit(minimum, minimizer, start_params, model, optim_result)
 end
 ```
 
-The method has to return a `SemFit` object that consists of the minimum of the objective at the solution, the minimizer (aka parameter estimates), the starting values, the model and the optimization result (which may be anything you desire for your specific backend).
+This method is responsible for converting the SEM into the format required by your optimization engine,
+running the optimization, extracting the solution and returning the `SemFit` object, which should package:
+* the minimum of the objective at the solution
+* the minimizer (the vector of the SEM parameter estimates)
+* the starting values
+* the SEM model
+* `MyoptResult` object with any relevant engine-specific details you want to preserve
 
-In addition, you might want to provide methods to access properties of your optimization result:
+In addition, you might want to provide methods to access engine-specific properties stored in `MyoptResult`:
 
 ```julia
-algorithm_name(res::MyOptResult) = ...
-n_iterations(res::MyOptResult) = ...
-convergence(res::MyOptResult) = ...
+algorithm_name(res::MyoptResult) = ...
+n_iterations(res::MyoptResult) = ...
+convergence(res::MyoptResult) = ...
 ```
