@@ -76,6 +76,15 @@ optimizer_engines() =
     Symbol[optimizer_engine(opt_type) for opt_type in subtypes(SemOptimizer)]
 
 """
+    optimizer_engine_doc(engine::Symbol)
+
+Shows documentation for the optimizer engine.
+
+For a list of available engines, call [`optimizer_engines`](@ref).
+"""
+optimizer_engine_doc(engine) = Base.Docs.doc(sem_optimizer_subtype(engine))
+
+"""
     fit([optim::SemOptimizer], model::AbstractSem;
         [engine::Symbol], start_val = start_val, kwargs...)
 
