@@ -67,26 +67,17 @@ update_observed(optimizer::SemOptimizerOptim, observed::SemObserved; kwargs...) 
 ### additional methods
 ############################################################################################
 
-algorithm(optimizer::SemOptimizerOptim) = optimizer.algorithm
 options(optimizer::SemOptimizerOptim) = optimizer.options
 
-function SemFit(
-    optimization_result::Optim.MultivariateOptimizationResults,
-    model::AbstractSem,
-    start_val,
-)
-    return SemFit(
-        optimization_result.minimum,
-        optimization_result.minimizer,
-        start_val,
-        model,
-        optimization_result,
-    )
+# wrapper for the Optim.jl result
+struct SemOptimResult{O <: SemOptimizerOptim} <: SemOptimizerResult{O}
+    optimizer::O
+    result::Optim.MultivariateOptimizationResults
 end
 
-optimizer(res::Optim.MultivariateOptimizationResults) = Optim.summary(res)
-n_iterations(res::Optim.MultivariateOptimizationResults) = Optim.iterations(res)
-convergence(res::Optim.MultivariateOptimizationResults) = Optim.converged(res)
+algorithm_name(res::SemOptimResult) = Optim.summary(res.result)
+n_iterations(res::SemOptimResult) = Optim.iterations(res.result)
+convergence(res::SemOptimResult) = Optim.converged(res.result)
 
 function fit(
     optim::SemOptimizerOptim,
@@ -133,5 +124,11 @@ function fit(
             optim.options,
         )
     end
-    return SemFit(result, model, start_params)
+    return SemFit(
+        result.minimum,
+        result.minimizer,
+        start_params,
+        model,
+        SemOptimResult(optim, result),
+    )
 end

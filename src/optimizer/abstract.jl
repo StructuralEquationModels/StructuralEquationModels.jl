@@ -84,6 +84,10 @@ For a list of available engines, call [`optimizer_engines`](@ref).
 """
 optimizer_engine_doc(engine) = Base.Docs.doc(sem_optimizer_subtype(engine))
 
+optimizer(result::SemOptimizerResult) = result.optimizer
+
+optimizer_engine(result::SemOptimizerResult) = optimizer_engine(result.optimizer)
+
 """
     fit([optim::SemOptimizer], model::AbstractSem;
         [engine::Symbol], start_val = start_val, kwargs...)

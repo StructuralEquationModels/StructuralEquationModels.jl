@@ -13,7 +13,7 @@ Fitted structural equation model.
 - `model(::SemFit)`
 - `optimization_result(::SemFit)`
 
-- `optimizer(::SemFit)` -> optimization algorithm
+- `algorithm_name(::SemFit)` -> optimization algorithm
 - `n_iterations(::SemFit)` -> number of iterations
 - `convergence(::SemFit)` -> convergence properties
 """
@@ -63,6 +63,6 @@ optimization_result(sem_fit::SemFit) = sem_fit.optimization_result
 
 # optimizer properties
 optimizer_engine(sem_fit::SemFit) = optimizer_engine(optimization_result(sem_fit))
-optimizer(sem_fit::SemFit) = optimizer(optimization_result(sem_fit))
+algorithm_name(sem_fit::SemFit) = algorithm_name(optimization_result(sem_fit))
 n_iterations(sem_fit::SemFit) = n_iterations(optimization_result(sem_fit))
 convergence(sem_fit::SemFit) = convergence(optimization_result(sem_fit))

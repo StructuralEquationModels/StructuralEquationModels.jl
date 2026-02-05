@@ -30,7 +30,6 @@ update_observed(optimizer::SemOptimizerName, observed::SemObserved; kwargs...) =
 ### additional methods
 ############################################################################################
 
-algorithm(optimizer::SemOptimizerName) = optimizer.algorithm
 options(optimizer::SemOptimizerName) = optimizer.options
 ```
 
@@ -68,7 +67,7 @@ The method has to return a `SemFit` object that consists of the minimum of the o
 In addition, you might want to provide methods to access properties of your optimization result:
 
 ```julia
-optimizer(res::MyOptimizationResult) = ...
+algorithm_name(res::MyOptimizationResult) = ...
 n_iterations(res::MyOptimizationResult) = ...
 convergence(res::MyOptimizationResult) = ...
 ```

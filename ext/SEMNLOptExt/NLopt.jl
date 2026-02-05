@@ -118,31 +118,32 @@ SEM.update_observed(optimizer::SemOptimizerNLopt, observed::SemObserved; kwargs.
 ### additional methods
 ############################################################################################
 
-SEM.algorithm(optimizer::SemOptimizerNLopt) = optimizer.algorithm
 local_algorithm(optimizer::SemOptimizerNLopt) = optimizer.local_algorithm
 SEM.options(optimizer::SemOptimizerNLopt) = optimizer.options
 local_options(optimizer::SemOptimizerNLopt) = optimizer.local_options
 equality_constraints(optimizer::SemOptimizerNLopt) = optimizer.equality_constraints
 inequality_constraints(optimizer::SemOptimizerNLopt) = optimizer.inequality_constraints
 
-struct NLoptResult
+# wrapper for the NLopt optimization result
+struct NLoptResult <: SEM.SemOptimizerResult{SemOptimizerNLopt}
+    optimizer::SemOptimizerNLopt
     result::Any
     problem::Any
 end
 
-SEM.optimizer(res::NLoptResult) = res.problem.algorithm
+SEM.algorithm_name(res::NLoptResult) = res.problem.algorithm
 SEM.n_iterations(res::NLoptResult) = res.problem.numevals
 SEM.convergence(res::NLoptResult) = res.result[3]
 
-# construct SemFit from fitted NLopt object
-function SemFit_NLopt(optimization_result, model::AbstractSem, start_val, opt)
-    return SemFit(
-        optimization_result[1],
-        optimization_result[2],
-        start_val,
-        model,
-        NLoptResult(optimization_result, opt),
-    )
+# construct NLopt.jl problem
+function NLopt_problem(algorithm, options, npar)
+    problem = Opt(algorithm, npar)
+
+    for (key, val) in pairs(options)
+        setproperty!(problem, key, val)
+    end
+
+    return problem
 end
 
 # fit method
@@ -152,8 +153,8 @@ function SEM.fit(
     start_params::AbstractVector;
     kwargs...,
 )
-    opt = construct_NLopt(optim.algorithm, optim.options, nparams(model))
-    opt.min_objective =
+    problem = NLopt_problem(optim.algorithm, optim.options, nparams(model))
+    problem.min_objective =
         (par, G) -> SEM.evaluate!(
             zero(eltype(par)),
             !isnothing(G) && !isempty(G) ? G : nothing,
@@ -162,36 +163,27 @@ function SEM.fit(
             par,
         )
     for (f, tol) in optim.inequality_constraints
-        inequality_constraint!(opt, f, tol)
+        inequality_constraint!(problem, f, tol)
     end
     for (f, tol) in optim.equality_constraints
-        equality_constraint!(opt, f, tol)
+        equality_constraint!(problem, f, tol)
     end
 
     if !isnothing(optim.local_algorithm)
-        opt_local =
-            construct_NLopt(optim.local_algorithm, optim.local_options, nparams(model))
-        opt.local_optimizer = opt_local
+        problem.local_optimizer =
+            NLopt_problem(optim.local_algorithm, optim.local_options, nparams(model))
     end
 
     # fit
-    result = NLopt.optimize(opt, start_params)
+    result = NLopt.optimize(problem, start_params)
 
-    return SemFit_NLopt(result, model, start_params, opt)
-end
-
-############################################################################################
-### additional functions
-############################################################################################
-
-function construct_NLopt(algorithm, options, npar)
-    opt = Opt(algorithm, npar)
-
-    for (key, val) in pairs(options)
-        setproperty!(opt, key, val)
-    end
-
-    return opt
+    return SemFit(
+        result[1], # minimum
+        result[2], # optimal params
+        start_val,
+        model,
+        NLoptResult(optim, result, problem),
+    )
 end
 
 ############################################################################################

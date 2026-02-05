@@ -41,12 +41,6 @@ SEM.sem_optimizer_subtype(::Val{:Proximal}) = SemOptimizerProximal
 SEM.update_observed(optimizer::SemOptimizerProximal, observed::SemObserved; kwargs...) =
     optimizer
 
-############################################################################################
-### additional methods
-############################################################################################
-
-SEM.algorithm(optimizer::SemOptimizerProximal) = optimizer.algorithm
-
 ############################################################################
 ### Model fitting
 ############################################################################
@@ -58,8 +52,11 @@ function ProximalAlgorithms.value_and_gradient(model::AbstractSem, params)
     return obj, grad
 end
 
-mutable struct ProximalResult
-    result::Any
+# wrapper for the Proximal optimization result
+struct ProximalResult{O <: SemOptimizer{:Proximal}} <: SEM.SemOptimizerResult{O}
+    optimizer::O
+    minimum::Float64
+    n_iterations::Int
 end
 
 function SEM.fit(
@@ -69,10 +66,10 @@ function SEM.fit(
     kwargs...,
 )
     if isnothing(optim.operator_h)
-        solution, iterations =
+        solution, niterations =
             optim.algorithm(x0 = start_params, f = model, g = optim.operator_g)
     else
-        solution, iterations = optim.algorithm(
+        solution, niterations = optim.algorithm(
             x0 = start_params,
             f = model,
             g = optim.operator_g,
@@ -80,25 +77,9 @@ function SEM.fit(
         )
     end
 
-    minimum = objective!(model, solution)
+    optim_res = ProximalResult(optim, objective!(model, solution), niterations)
 
-    optimization_result = Dict(
-        :minimum => minimum,
-        :iterations => iterations,
-        :algorithm => optim.algorithm,
-        :operator_g => optim.operator_g,
-    )
-
-    isnothing(optim.operator_h) ||
-        push!(optimization_result, :operator_h => optim.operator_h)
-
-    return SemFit(
-        minimum,
-        solution,
-        start_params,
-        model,
-        ProximalResult(optimization_result),
-    )
+    return SemFit(optim_res.minimum, solution, start_params, model, optim_res)
 end
 
 ############################################################################################
@@ -125,10 +106,9 @@ function Base.show(io::IO, struct_inst::SemOptimizerProximal)
 end
 
 function Base.show(io::IO, result::ProximalResult)
-    print(io, "Minimum:          $(round(result.result[:minimum]; digits = 2)) \n")
-    print(io, "No. evaluations:  $(result.result[:iterations]) \n")
-    print(io, "Operator:         $(nameof(typeof(result.result[:operator_g]))) \n")
-    if haskey(result.result, :operator_h)
-        print(io, "Second Operator:  $(nameof(typeof(result.result[:operator_h]))) \n")
-    end
+    print(io, "Minimum:          $(round(result.minimum; digits = 2)) \n")
+    print(io, "No. evaluations:  $(result.n_iterations) \n")
+    print(io, "Operator:         $(nameof(typeof(result.optimizer.operator_g))) \n")
+    op_h = result.optimizer.operator_h
+    isnothing(op_h) || print(io, "Second Operator:  $(nameof(typeof(op_h))) \n")
 end
