@@ -68,7 +68,7 @@ loss_ml = SemLoss(SemML(; observed = semobserved, nparams = length(start)))
 model_ml = Sem(semobserved, implied_ml, loss_ml)
 objective!(model_ml, true_val)
 
-optimizer = SemOptimizerOptim(
+optimizer = SemOptimizer(
     BFGS(; linesearch = BackTracking(order = 3), alphaguess = InitialHagerZhang()),# m = 100),
     Optim.Options(; f_reltol = 1e-10, x_abstol = 1.5e-8),
 )

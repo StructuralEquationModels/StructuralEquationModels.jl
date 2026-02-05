@@ -17,7 +17,6 @@ Structural Equation Model
 - Fields
    observed:  SemObservedData
    implied:   RAM
-   optimizer: SemOptimizerOptim
 
 ------------- Optimization result -------------
 
@@ -60,7 +59,7 @@ The available keyword arguments are listed in the sections [Using Optim.jl](@ref
 Alternative, you can also explicitely define a `SemOptimizer` and pass it as the first argument to `fit`:
 
 ```julia
-my_optimizer = SemOptimizerOptim(algorithm = BFGS())
+my_optimizer = SemOptimizer(algorithm = BFGS())
 
 fit(my_optimizer, model)
 ```
