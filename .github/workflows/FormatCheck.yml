@@ -1,8 +1,7 @@
 name: Format suggestions
 on:
-  pull_request_target:
-    # this argument is not required if you don't use the `suggestion-label` input
-    types: [ opened, reopened, synchronize, labeled, unlabeled ]
+  push:            # Runs on all pushes to any branch
+  pull_request:    # Runs on all PR events (open, sync, reopen)
 jobs:
   code-style:
     runs-on: ubuntu-latest
