@@ -12,6 +12,8 @@ struct RAMMatrices <: SemSpecification
     vars::Union{Vector{Symbol}, Nothing}
 end
 
+MeanStruct(ram::RAMMatrices) = isnothing(ram.M) ? NoMeanStruct() : HasMeanStruct()
+
 nparams(ram::RAMMatrices) = nparams(ram.A)
 nvars(ram::RAMMatrices) = size(ram.F, 2)
 nobserved_vars(ram::RAMMatrices) = size(ram.F, 1)
