@@ -18,6 +18,8 @@ using LinearAlgebra,
 
 import StatsAPI: params, coef, coefnames, dof, fit, nobs, coeftable
 
+using InteractiveUtils: subtypes
+
 export StenoGraphs, @StenoGraph, meld, SimpleNode
 
 const SEM = StructuralEquationModels
@@ -86,9 +88,6 @@ include("frontend/fit/fitmeasures/fit_measures.jl")
 # standard errors
 include("frontend/fit/standard_errors/hessian.jl")
 include("frontend/fit/standard_errors/bootstrap.jl")
-# extensions
-include("package_extensions/SEMNLOptExt.jl")
-include("package_extensions/SEMProximalOptExt.jl")
 
 export AbstractSem,
     AbstractSemSingle,
@@ -123,9 +122,10 @@ export AbstractSem,
     SemWLS,
     loss,
     SemOptimizer,
-    SemOptimizerEmpty,
-    SemOptimizerOptim,
     optimizer,
+    optimizer_engine,
+    optimizer_engine_doc,
+    optimizer_engines,
     n_iterations,
     convergence,
     SemObserved,
@@ -196,8 +196,5 @@ export AbstractSem,
     →,
     ←,
     ↔,
-    ⇔,
-    SemOptimizerNLopt,
-    NLoptConstraint,
-    SemOptimizerProximal
+    ⇔
 end

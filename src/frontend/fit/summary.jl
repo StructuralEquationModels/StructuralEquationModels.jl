@@ -7,7 +7,8 @@ function details(sem_fit::SemFit; show_fitmeasures = false, color = :light_cyan,
         color = color,
     )
     print("\n")
-    println("Optimization algorithm:      $(optimizer(sem_fit))")
+    println("Optimization engine:         $(optimizer_engine(sem_fit))")
+    println("Optimization algorithm:      $(algorithm_name(sem_fit))")
     println("Convergence:                 $(convergence(sem_fit))")
     println("No. iterations/evaluations:  $(n_iterations(sem_fit))")
     print("\n")

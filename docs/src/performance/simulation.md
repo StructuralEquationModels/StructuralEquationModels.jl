@@ -67,7 +67,7 @@ For example,
 
 new_observed = SemObservedData(;data = data_2, specification = partable)
 
-my_optimizer = SemOptimizerOptim()
+my_optimizer = SemOptimizer()
 
 new_optimizer = update_observed(my_optimizer, new_observed)
 ```

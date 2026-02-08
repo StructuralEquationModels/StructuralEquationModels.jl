@@ -5,7 +5,8 @@
 For ridge regularization, you can simply use `SemRidge` as an additional loss function
 (for example, a model with the loss functions `SemML` and `SemRidge` corresponds to ridge-regularized maximum likelihood estimation).
 
-For lasso, elastic net and (far) beyond, you can load the `ProximalAlgorithms.jl` and `ProximalOperators.jl` packages alongside `StructuralEquationModels`:
+You can define lasso, elastic net and other forms of regularization using [`ProximalOperators.jl`](https://github.com/JuliaFirstOrder/ProximalOperators.jl)
+and optimize the SEM with so-called *proximal optimization* algorithms from [`ProximalAlgorithms.jl`](https://github.com/JuliaFirstOrder/ProximalAlgorithms.jl).
 
 ```@setup reg
 using StructuralEquationModels, ProximalAlgorithms, ProximalOperators
@@ -19,24 +20,22 @@ Pkg.add("ProximalOperators")
 using StructuralEquationModels, ProximalAlgorithms, ProximalOperators
 ```
 
-## `SemOptimizerProximal`
+## Proximal optimization
 
-To estimate regularized models, we provide a "building block" for the optimizer part, called `SemOptimizerProximal`.
-It connects our package to the [`ProximalAlgorithms.jl`](https://github.com/JuliaFirstOrder/ProximalAlgorithms.jl) optimization backend, providing so-called proximal optimization algorithms.
-Those can handle, amongst other things, various forms of regularization.
-
-It can be used as
+With the *ProximalAlgorithms* package loaded, it is now possible to use the `:Proximal`
+optimization engine in `SemOptimizer` for estimating regularized models.
 
 ```julia
-SemOptimizerProximal(
+SemOptimizer(;
+    engine = :Proximal,
     algorithm = ProximalAlgorithms.PANOC(),
     operator_g,
     operator_h = nothing
 )
 ```
 
-The proximal operator (aka the regularization function) can be passed as `operator_g`.
-The available Algorithms are listed [here](https://juliafirstorder.github.io/ProximalAlgorithms.jl/stable/guide/implemented_algorithms/).
+The *proximal operator* (aka the *regularization function*) is passed as `operator_g`, see [available operators](https://juliafirstorder.github.io/ProximalOperators.jl/stable/functions/).
+The `algorithm` is chosen from one of the [available algorithms](https://juliafirstorder.github.io/ProximalAlgorithms.jl/stable/guide/implemented_algorithms/).
 
 ## First example - lasso
 
@@ -84,7 +83,7 @@ model = Sem(
 We labeled the covariances between the items because we want to regularize those:
 
 ```@example reg
-ind = getindex.(
+cov_inds = getindex.(
     Ref(param_indices(model)),
     [:cov_15, :cov_24, :cov_26, :cov_37, :cov_48, :cov_68])
 ```
@@ -96,22 +95,16 @@ The lasso penalty is defined as
 \sum \lambda_i \lvert \theta_i \rvert
 ```
 
-From the previously linked [documentation](https://juliafirstorder.github.io/ProximalOperators.jl/stable/functions/#ProximalOperators.NormL1), we find that lasso regularization is named `NormL1` in the `ProximalOperators` package, and that we can pass an array of hyperparameters (`λ`) to control the amount of regularization for each parameter. To regularize only the observed item covariances, we define `λ` as
+In `ProximalOperators.jl`, lasso regularization is represented by the [`NormL1`](https://juliafirstorder.github.io/ProximalOperators.jl/stable/functions/#ProximalOperators.NormL1) operator. It allows controlling the amount of
+regularization individually for each SEM model parameter via the vector of hyperparameters (`λ`).
+To regularize only the observed item covariances, we define `λ` as
 
 ```@example reg
-λ = zeros(31); λ[ind] .= 0.02
-```
+λ = zeros(31); λ[cov_inds] .= 0.02
 
-and use `SemOptimizerProximal`.
-
-```@example reg
-optimizer_lasso = SemOptimizerProximal(
+optimizer_lasso = SemOptimizer(
+    engine = :Proximal,
     operator_g = NormL1(λ)
-)
-
-model_lasso = Sem(
-    specification = partable,
-    data = data
 )
 ```
 
@@ -119,7 +112,7 @@ Let's fit the regularized model
 
 ```@example reg
 
-fit_lasso = fit(optimizer_lasso, model_lasso)
+fit_lasso = fit(optimizer_lasso, model)
 ```
 
 and compare the solution to unregularizted estimates:
@@ -134,34 +127,32 @@ update_partable!(partable, :estimate_lasso, fit_lasso, solution(fit_lasso))
 details(partable)
 ```
 
-Instead of explicitely defining a `SemOptimizerProximal` object, you can also pass `engine = :Proximal` and additional keyword arguments to `fit`:
+Instead of explicitly defining a `SemOptimizer` object, you can also pass `engine = :Proximal`
+and additional keyword arguments directly to the `fit` function:
 
 ```@example reg
-sem_fit = fit(model; engine = :Proximal, operator_g = NormL1(λ))
+fit_lasso2 = fit(model; engine = :Proximal, operator_g = NormL1(λ))
 ```
 
 ## Second example - mixed l1 and l0 regularization
 
 You can choose to penalize different parameters with different types of regularization functions.
-Let's use the lasso again on the covariances, but additionally penalyze the error variances of the observed items via l0 regularization.
+Let's use the *lasso* (*l1*) again on the covariances, but additionally penalize the error variances of
+the observed items via *l0* regularization.
 
-The l0 penalty is defined as
+The *l0* penalty is defined as
 ```math
-\lambda \mathrm{nnz}(\theta)
+l_0 = \lambda \mathrm{nnz}(\theta)
 ```
 
-To define a sup of separable proximal operators (i.e. no parameter is penalized twice),
-we can use [`SlicedSeparableSum`](https://juliafirstorder.github.io/ProximalOperators.jl/stable/calculus/#ProximalOperators.SlicedSeparableSum) from the `ProximalOperators` package:
+Since we apply *l1* and *l0* to the disjoint sets of parameters, this regularization can be
+represented as a sum of *separable proximal operators* (i.e. no parameter is penalized twice)
+implemented by the [`SlicedSeparableSum`](https://juliafirstorder.github.io/ProximalOperators.jl/stable/calculus/#ProximalOperators.SlicedSeparableSum) operator:
 
 ```@example reg
-prox_operator = SlicedSeparableSum((NormL0(20.0), NormL1(0.02), NormL0(0.0)), ([ind], [9:11], [vcat(1:8, 12:25)]))
+l0_and_l1_reg = SlicedSeparableSum((NormL0(20.0), NormL1(0.02), NormL0(0.0)), ([cov_inds], [9:11], [vcat(1:8, 12:25)]))
 
-model_mixed = Sem(
-    specification = partable,
-    data = data,
-)
-
-fit_mixed = fit(model_mixed; engine = :Proximal, operator_g = prox_operator)
+fit_mixed = fit(model; engine = :Proximal, operator_g = l0_and_l1_reg)
 ```
 
 Let's again compare the different results:
