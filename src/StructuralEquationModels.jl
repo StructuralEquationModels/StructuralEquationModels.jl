@@ -14,7 +14,8 @@ using LinearAlgebra,
     StenoGraphs,
     LazyArtifacts,
     DelimitedFiles,
-    DataFrames
+    DataFrames,
+    ProgressMeter
 
 import StatsAPI: params, coef, coefnames, dof, fit, nobs, coeftable
 
