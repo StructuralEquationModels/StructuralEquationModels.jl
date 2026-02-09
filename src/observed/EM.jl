@@ -31,6 +31,7 @@ THE SOFTWARE. =#
            max_iter_em = 100,
            rtol_em = 1e-4,
            max_nsamples_em = nothing,
+           min_eigval = nothing,
            start_em = start_em_observed,
            start_kwargs...)
 
@@ -68,6 +69,7 @@ function em_mvn(
     max_iter_em::Integer = 100,
     rtol_em::Number = 1e-4,
     max_nsamples_em::Union{Integer, Nothing} = nothing,
+    min_eigval::Union{Number, Nothing} = nothing,
     start_em = start_em_observed,
     start_kwargs...,
 )
@@ -109,6 +111,7 @@ function em_mvn(
             𝔼x_full,
             nsamples_full;
             max_nsamples_em,
+            min_eigval,
         )
 
         if iter > 0
@@ -153,6 +156,7 @@ function em_step!(
     𝔼x_full::AbstractVector,
     nsamples_full::Integer;
     max_nsamples_em::Union{Integer, Nothing} = nothing,
+    min_eigval::Union{Number, Nothing} = nothing,
 )
     # E step: update 𝔼x and 𝔼xxᵀ
     copy!(μ, 𝔼x_full)
@@ -234,6 +238,9 @@ function em_step!(
     mul!(Σ, μ₀, μ', -1, 1)
     mul!(Σ, μ, μ', -1, 1)
     μ .+= μ₀
+
+    # try to fix non-positive-definite Σ
+    isnothing(min_eigval) || copyto!(Σ, trunc_eigvals(Σ, min_eigval))
 
     return Σ, μ
 end
