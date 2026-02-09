@@ -69,12 +69,13 @@ function em_mvn(
     rtol_em::Number = 1e-4,
     max_nsamples_em::Union{Integer, Nothing} = nothing,
     min_eigval::Union{Number, Nothing} = nothing,
+    verbose::Bool = false,
     start_em = start_em_observed,
     start_kwargs...,
 )
     nobs_vars = nobserved_vars(patterns[1])
 
-    # precompute for full cases
+    verbose && @info "Estimating N(μ, Σ) for complete observations..."
     𝔼x_full = zeros(nobs_vars)
     𝔼xxᵀ_full = zeros(nobs_vars, nobs_vars)
     nsamples_full = 0
@@ -89,7 +90,7 @@ function em_mvn(
         @warn "No full cases in data"
     end
 
-    # initialize
+    verbose && @info "Estimating initial μ and Σ..."
     Σ₀, μ = start_em(patterns; start_kwargs...)
     Σ = convert(Matrix, Σ₀)
     @assert all(isfinite, Σ) all(isfinite, μ)
@@ -99,6 +100,12 @@ function em_mvn(
     converged = false
     Δμ_rel = NaN
     ΔΣ_rel = NaN
+    progress = Progress(
+        max_iter_em,
+        dt = 1.0,
+        showspeed = true,
+        desc = "EM inference of MVN(μ, Σ)",
+    )
     while !converged && (iter < max_iter_em)
         em_step!(
             Σ,
@@ -127,8 +134,9 @@ function em_mvn(
             μ, μ_prev = μ_prev, μ
         end
         iter += 1
-        #@info "$iter\n"
+        next!(progress, step = 1, showvalues = [("ΔΣ/Σ", ΔΣ_rel), ("Δμ/μ", Δμ_rel)])
     end
+    finish!(progress)
 
     if !converged
         @warn "EM inference for MVN missing data did not converge in $iter iterations.\n" *
@@ -136,7 +144,8 @@ function em_mvn(
               "Likelihood for FIML is not interpretable.\n" *
               "Maybe try passing different starting values via 'start_em = ...' "
     else
-        verbose && @info "EM for MVN missing data converged in $iter iterations: ΔΣ/Σ=$(ΔΣ_rel), Δμ/μ=$(Δμ_rel)."
+        verbose &&
+            @info "EM for MVN missing data converged in $iter iterations: ΔΣ/Σ=$(ΔΣ_rel), Δμ/μ=$(Δμ_rel)."
     end
 
     StatsBase._symmetrize!(Σ)
