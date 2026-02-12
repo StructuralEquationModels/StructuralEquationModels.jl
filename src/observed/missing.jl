@@ -5,7 +5,7 @@
 """
     SemObservedMissing{T <: Real, S <: Real} <: SemObserved
 
-[`SemObserved`](@ref) implementation for the data with missing values.
+[`SemObserved`](@ref) implementation for data with missing values.
 
 # Constructor
 
