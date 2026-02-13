@@ -35,11 +35,8 @@ THE SOFTWARE. =#
            start_em = start_em_observed,
            start_kwargs...)
 
-Estimate the covariance using expectation maximization algorithm.
-
-Estimate the covariance matrix and the mean vector for the data
-with the missing values using the expectation maximization (EM) algorithm for the
-multivariate normal distribution (MVN).
+Estimate the covariance and the mean for data with missing values using
+the expectation maximization (EM) algorithm.
 
 # Arguments
 - `patterns`: the observed data with missing values, grouped by missingness pattern (see [`
@@ -50,12 +47,16 @@ multivariate normal distribution (MVN).
   by default all samples are used, but for large datasets it may be desirable to use a random
   subset of the data for each pattern in each EM iteration to speed up the algorithm
 - `min_eigval`: the minimum eigenvalue for the covariance matrix;
-  if not `nothing`, the covariance matrix is regularized in each EM iteration to ensure that all eigenvalues are no
+   if not `nothing`, the covariance matrix is regularized in each EM iteration to ensure that
+   all eigenvalues are not smaller than `min_eigval`, which can help with convergence;
 - `start_em`: the function to generate starting values for the EM algorithm, by default
   `start_em_observed` which uses the mean and covariance of the full cases if available
 - `start_kwargs...`: keyword arguments to pass to the `start_em` function
 
-Returns the tuple of the EM covariance matrix and the EM mean vector.
+Returns the tuple of the covariance matrix and the mean vector for the estimated
+multivariate normal (MVN) distribution.
+
+# References
 
 Based on the EM algorithm for MVN-distributed data with missing values
 adapted from the supplementary material to the book *Machine Learning: A Probabilistic Perspective*,
