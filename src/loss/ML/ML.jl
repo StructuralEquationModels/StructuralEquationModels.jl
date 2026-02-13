@@ -39,6 +39,21 @@ end
 ############################################################################################
 
 function SemML(; observed::SemObserved, approximate_hessian::Bool = false, kwargs...)
+
+    if observed isa SemObservedMissing
+        throw(ArgumentError(
+            "Normal maximum likelihood estimation can't be used with `SemObservedMissing`.
+            Use full information maximum likelihood (FIML) estimation or remove missing 
+            values in your data.
+            A FIML model can be constructed with 
+            Sem(
+                ...,
+                observed = SemObservedMissing,
+                loss = SemFIML,
+                meanstructure = true
+            )"))
+    end
+
     obsmean = obs_mean(observed)
     obscov = obs_cov(observed)
     meandiff = isnothing(obsmean) ? nothing : copy(obsmean)

@@ -31,3 +31,17 @@ function check_acyclic(A::AbstractMatrix; verbose::Bool = false)
         return A
     end
 end
+
+# Verify that the `meanstructure` argument aligns with the model specification.
+function check_meanstructure_specification(meanstructure, ram_matrices)
+    if meanstructure & isnothing(ram_matrices.M)
+        throw(ArgumentError(
+            "You set `meanstructure = true`, but your model specification contains no mean parameters."
+        ))
+    end
+    if !meanstructure & !isnothing(ram_matrices.M)
+        throw(ArgumentError(
+            "If your model specification contains mean parameters, you have to set `Sem(..., meanstructure = true)`."
+        ))
+    end
+end

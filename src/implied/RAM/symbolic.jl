@@ -92,6 +92,8 @@ function RAMSymbolic(;
 )
     ram_matrices = convert(RAMMatrices, specification)
 
+    check_meanstructure_specification(meanstructure, ram_matrices)
+
     n_par = nparams(ram_matrices)
     par = (Symbolics.@variables θ[1:n_par])[1]
 

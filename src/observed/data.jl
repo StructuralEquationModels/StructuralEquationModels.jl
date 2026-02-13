@@ -38,9 +38,23 @@ function SemObservedData(;
     observed_var_prefix::Union{Symbol, AbstractString} = :obs,
     kwargs...,
 )
+
     data, obs_vars, _ =
         prepare_data(data, observed_vars, specification; observed_var_prefix)
     obs_mean, obs_cov = mean_and_cov(data, 1)
+
+    if any(ismissing.(data))
+        throw(ArgumentError(
+            "Your dataset contains missing values.
+            Remove missing values or use full information maximum likelihood (FIML) estimation.
+            A FIML model can be constructed with 
+            Sem(
+                ...,
+                observed = SemObservedMissing,
+                loss = SemFIML,
+                meanstructure = true
+            )"))
+    end
 
     return SemObservedData(data, obs_vars, obs_cov, vec(obs_mean), size(data, 1))
 end

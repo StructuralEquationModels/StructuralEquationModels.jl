@@ -43,7 +43,14 @@ end
 ### Constructors
 ############################################################################################
 
-function SemFIML(; observed::SemObservedMissing, specification, kwargs...)
+function SemFIML(; observed::SemObservedMissing, implied, specification, kwargs...)
+
+    if implied.meanstruct isa NoMeanStruct
+        throw(ArgumentError(
+            "Full information maximum likelihood (FIML) can only be used with a meanstructure.
+            Did you forget to set `Sem(..., meanstructure = true)`?"))
+    end
+
     inverses =
         [zeros(nmeasured_vars(pat), nmeasured_vars(pat)) for pat in observed.patterns]
     choleskys = Array{Cholesky{Float64, Array{Float64, 2}}, 1}(undef, length(inverses))
