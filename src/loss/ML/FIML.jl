@@ -107,9 +107,10 @@ end
 function SemFIML(; observed::SemObservedMissing, implied, specification, kwargs...)
 
     if MeanStruct(implied) === NoMeanStruct
-        throw(ArgumentError(
-            "Full information maximum likelihood (FIML) can only be used with a meanstructure.
-            Did you forget to set `Sem(..., meanstructure = true)`?"))
+        ArgumentError(
+            "Full information maximum likelihood (FIML) can only be used with a meanstructure.\n" *
+            "Did you forget to set `Sem(..., meanstructure = true)`?",
+        ) |> throw
     end
 
     return SemFIML(
