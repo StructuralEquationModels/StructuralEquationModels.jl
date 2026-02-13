@@ -41,7 +41,7 @@ function check_meanstructure_specification(meanstructure, ram_matrices)
     end
     if !meanstructure & !isnothing(ram_matrices.M)
         throw(ArgumentError(
-            "If your model specification contains mean parameters, you have to set `meanstructure = true`."
+            "If your model specification contains mean parameters, you have to set `Sem(..., meanstructure = true)`."
         ))
     end
 end
