@@ -32,7 +32,7 @@ end
 
 partable = ParameterTable(
     graph,
-    latent_vars = latent_vars, 
+    latent_vars = latent_vars,
     observed_vars = observed_vars)</code></pre><p>that is, all observed variable means are estimated freely.</p><p>To build the model with a meanstructure, we proceed as usual, but pass the argument <code>meanstructure = true</code>. For our example,</p><pre><code class="language-julia hljs">data = example_data(&quot;political_democracy&quot;)
 
 model = Sem(
@@ -54,7 +54,12 @@ Structural Equation Model
 
 ------------- Optimization result ------------- 
 
- * Status: success
+engine: Optim
+
+StructuralEquationModels.SemOptimResult{StructuralEquationModels.SemOptimizerOptim{Optim.LBFGS{Nothing, LineSearches.InitialStatic{Float64}, LineSearches.HagerZhang{Float64, Base.RefValue{Bool}}, Returns{Nothing}}, Optim.Options{Float64, Nothing}}}(SemOptimizerOptim
+   algorithm: Optim.LBFGS{Nothing, LineSearches.InitialStatic{Float64}, LineSearches.HagerZhang{Float64, Base.RefValue{Bool}}, Returns{Nothing}}
+   options: Optim.Options{Float64, Nothing}
+,  * Status: success
 
  * Candidate solution
     Final objective value:     2.120543e+01
@@ -74,7 +79,7 @@ Structural Equation Model
     Iterations:    130
     f(x) calls:    400
     ∇f(x) calls:   400
-</code></pre><p>If we build the model by parts, we have to pass the <code>meanstructure = true</code> argument to every part that requires it (when in doubt, simply consult the documentation for the respective part).</p><p>For our example,</p><pre><code class="language-julia hljs">observed = SemObservedData(specification = partable, data = data, meanstructure = true)
+)</code></pre><p>If we build the model by parts, we have to pass the <code>meanstructure = true</code> argument to every part that requires it (when in doubt, simply consult the documentation for the respective part).</p><p>For our example,</p><pre><code class="language-julia hljs">observed = SemObservedData(specification = partable, data = data, meanstructure = true)
 
 implied_ram = RAM(specification = partable, meanstructure = true)
 
@@ -95,7 +100,12 @@ Structural Equation Model
 
 ------------- Optimization result ------------- 
 
- * Status: success
+engine: Optim
+
+StructuralEquationModels.SemOptimResult{StructuralEquationModels.SemOptimizerOptim{Optim.LBFGS{Nothing, LineSearches.InitialStatic{Float64}, LineSearches.HagerZhang{Float64, Base.RefValue{Bool}}, Returns{Nothing}}, Optim.Options{Float64, Nothing}}}(SemOptimizerOptim
+   algorithm: Optim.LBFGS{Nothing, LineSearches.InitialStatic{Float64}, LineSearches.HagerZhang{Float64, Base.RefValue{Bool}}, Returns{Nothing}}
+   options: Optim.Options{Float64, Nothing}
+,  * Status: success
 
  * Candidate solution
     Final objective value:     2.120543e+01
@@ -115,4 +125,4 @@ Structural Equation Model
     Iterations:    130
     f(x) calls:    400
     ∇f(x) calls:   400
-</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../inspection/inspection/">« Model Inspection</a><a class="docs-footer-nextpage" href="../collection/collection/">Collections »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.16.1 on <span class="colophon-date" title="Thursday 22 January 2026 13:34">Thursday 22 January 2026</span>. Using Julia version 1.12.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+)</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../inspection/inspection/">« Model Inspection</a><a class="docs-footer-nextpage" href="../collection/collection/">Collections »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.16.1 on <span class="colophon-date" title="Friday 13 February 2026 11:33">Friday 13 February 2026</span>. Using Julia version 1.12.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

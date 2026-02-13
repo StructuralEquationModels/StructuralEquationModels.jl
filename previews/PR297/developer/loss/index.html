@@ -61,7 +61,12 @@ Structural Equation Model : Finite Diff Approximation
 
 ------------- Optimization result ------------- 
 
- * Status: success
+engine: Optim
+
+StructuralEquationModels.SemOptimResult{StructuralEquationModels.SemOptimizerOptim{Optim.LBFGS{Nothing, LineSearches.InitialStatic{Float64}, LineSearches.HagerZhang{Float64, Base.RefValue{Bool}}, Returns{Nothing}}, Optim.Options{Float64, Nothing}}}(SemOptimizerOptim
+   algorithm: Optim.LBFGS{Nothing, LineSearches.InitialStatic{Float64}, LineSearches.HagerZhang{Float64, Base.RefValue{Bool}}, Returns{Nothing}}
+   options: Optim.Options{Float64, Nothing}
+,  * Status: success
 
  * Candidate solution
     Final objective value:     2.123542e+01
@@ -81,7 +86,7 @@ Structural Equation Model : Finite Diff Approximation
     Iterations:    143
     f(x) calls:    424
     ∇f(x) calls:   424
-</code></pre><p>This is one way of specifying the model - we now have <strong>one model</strong> with <strong>multiple loss functions</strong>. Because we did not provide a gradient for <code>Ridge</code>, we have to specify a <code>SemFiniteDiff</code> model that computes numerical gradients with finite difference approximation.</p><p>Note that the last argument to the <code>objective!</code> method is the whole model. Therefore, we can access everything that is stored inside our model everytime we compute the objective value for our loss function. Since ridge regularization is a very easy case, we do not need to do this. But maximum likelihood estimation for example depends on both the observed and the model implied covariance matrix. See <a href="#Second-example-maximum-likelihood">Second example - maximum likelihood</a> for information on how to do that.</p><h3 id="Improve-performance"><a class="docs-heading-anchor" href="#Improve-performance">Improve performance</a><a id="Improve-performance-1"></a><a class="docs-heading-anchor-permalink" href="#Improve-performance" title="Permalink"></a></h3><p>By far the biggest improvements in performance will result from specifying analytical gradients. We can do this for our example:</p><pre><code class="language-julia hljs">function evaluate!(objective, gradient, hessian::Nothing, ridge::Ridge, model::AbstractSem, par)
+)</code></pre><p>This is one way of specifying the model - we now have <strong>one model</strong> with <strong>multiple loss functions</strong>. Because we did not provide a gradient for <code>Ridge</code>, we have to specify a <code>SemFiniteDiff</code> model that computes numerical gradients with finite difference approximation.</p><p>Note that the last argument to the <code>objective!</code> method is the whole model. Therefore, we can access everything that is stored inside our model everytime we compute the objective value for our loss function. Since ridge regularization is a very easy case, we do not need to do this. But maximum likelihood estimation for example depends on both the observed and the model implied covariance matrix. See <a href="#Second-example-maximum-likelihood">Second example - maximum likelihood</a> for information on how to do that.</p><h3 id="Improve-performance"><a class="docs-heading-anchor" href="#Improve-performance">Improve performance</a><a id="Improve-performance-1"></a><a class="docs-heading-anchor-permalink" href="#Improve-performance" title="Permalink"></a></h3><p>By far the biggest improvements in performance will result from specifying analytical gradients. We can do this for our example:</p><pre><code class="language-julia hljs">function evaluate!(objective, gradient, hessian::Nothing, ridge::Ridge, model::AbstractSem, par)
     # compute gradient
     if !isnothing(gradient)
         fill!(gradient, 0)
@@ -111,7 +116,12 @@ Structural Equation Model
 
 ------------- Optimization result ------------- 
 
- * Status: success
+engine: Optim
+
+StructuralEquationModels.SemOptimResult{StructuralEquationModels.SemOptimizerOptim{Optim.LBFGS{Nothing, LineSearches.InitialStatic{Float64}, LineSearches.HagerZhang{Float64, Base.RefValue{Bool}}, Returns{Nothing}}, Optim.Options{Float64, Nothing}}}(SemOptimizerOptim
+   algorithm: Optim.LBFGS{Nothing, LineSearches.InitialStatic{Float64}, LineSearches.HagerZhang{Float64, Base.RefValue{Bool}}, Returns{Nothing}}
+   options: Optim.Options{Float64, Nothing}
+,  * Status: success
 
  * Candidate solution
     Final objective value:     2.123542e+01
@@ -131,7 +141,7 @@ Structural Equation Model
     Iterations:    151
     f(x) calls:    455
     ∇f(x) calls:   455
-</code></pre><p>The results are the same, but we can verify that the computational costs are way lower (for this, the julia package <code>BenchmarkTools</code> has to be installed):</p><pre><code class="language-julia hljs">using BenchmarkTools
+)</code></pre><p>The results are the same, but we can verify that the computational costs are way lower (for this, the julia package <code>BenchmarkTools</code> has to be installed):</p><pre><code class="language-julia hljs">using BenchmarkTools
 
 @benchmark fit(model)
 
@@ -192,7 +202,12 @@ Structural Equation Model : Finite Diff Approximation
 
 ------------- Optimization result ------------- 
 
- * Status: success
+engine: Optim
+
+StructuralEquationModels.SemOptimResult{StructuralEquationModels.SemOptimizerOptim{Optim.LBFGS{Nothing, LineSearches.InitialStatic{Float64}, LineSearches.HagerZhang{Float64, Base.RefValue{Bool}}, Returns{Nothing}}, Optim.Options{Float64, Nothing}}}(SemOptimizerOptim
+   algorithm: Optim.LBFGS{Nothing, LineSearches.InitialStatic{Float64}, LineSearches.HagerZhang{Float64, Base.RefValue{Bool}}, Returns{Nothing}}
+   options: Optim.Options{Float64, Nothing}
+,  * Status: success
 
  * Candidate solution
     Final objective value:     2.120543e+01
@@ -208,8 +223,8 @@ Structural Equation Model : Finite Diff Approximation
     |g(x)|                 = 4.01e-05 ≰ 1.0e-08
 
  * Work counters
-    Seconds run:   1  (vs limit Inf)
+    Seconds run:   0  (vs limit Inf)
     Iterations:    151
     f(x) calls:    454
     ∇f(x) calls:   454
-</code></pre><p>If you want to differentiate your own loss functions via automatic differentiation, check out the <a href="https://github.com/StructuralEquationModels/AutoDiffSEM">AutoDiffSEM</a> package.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../extending/">« Extending the package</a><a class="docs-footer-nextpage" href="../implied/">Custom implied types »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.16.1 on <span class="colophon-date" title="Thursday 22 January 2026 13:34">Thursday 22 January 2026</span>. Using Julia version 1.12.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+)</code></pre><p>If you want to differentiate your own loss functions via automatic differentiation, check out the <a href="https://github.com/StructuralEquationModels/AutoDiffSEM">AutoDiffSEM</a> package.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../extending/">« Extending the package</a><a class="docs-footer-nextpage" href="../implied/">Custom implied types »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.16.1 on <span class="colophon-date" title="Friday 13 February 2026 11:33">Friday 13 February 2026</span>. Using Julia version 1.12.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
