@@ -52,6 +52,11 @@ nsamples(fit::SemFit) = nsamples(fit.model)
 
 # access fields
 minimum(sem_fit::SemFit) = sem_fit.minimum
+"""
+    solution(sem_fit::SemFit)
+
+Returns the vector of parameter estimates from a fitted SEM.
+"""
 solution(sem_fit::SemFit) = sem_fit.solution
 start_val(sem_fit::SemFit) = sem_fit.start_val
 model(sem_fit::SemFit) = sem_fit.model
