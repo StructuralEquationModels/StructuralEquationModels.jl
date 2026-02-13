@@ -51,12 +51,33 @@ SemWLS{HE}(args...) where {HE <: HessianEval} =
 
 function SemWLS(;
     observed,
+    implied,
     wls_weight_matrix = nothing,
     wls_weight_matrix_mean = nothing,
     approximate_hessian = false,
     meanstructure = false,
     kwargs...,
 )
+
+    if observed isa SemObservedMissing
+        throw(ArgumentError(
+            "WLS estimation can't be used with `SemObservedMissing`.
+            Use full information maximum likelihood (FIML) estimation or remove missing 
+            values in your data.
+            A FIML model can be constructed with 
+            Sem(
+                ...,
+                observed = SemObservedMissing,
+                loss = SemFIML,
+                meanstructure = true
+            )"))
+    end
+
+    if !(implied isa RAMSymbolic) 
+        throw(ArgumentError(
+            "WLS estimation is only available with the implied type RAMSymbolic at the moment."))
+    end
+
     nobs_vars = nobserved_vars(observed)
     tril_ind = filter(x -> (x[1] >= x[2]), CartesianIndices(obs_cov(observed)))
     s = obs_cov(observed)[tril_ind]
@@ -127,10 +148,9 @@ function evaluate!(
     end
     isnothing(hessian) || (mul!(hessian, ∇σ' * V, ∇σ, 2, 0))
     if !isnothing(hessian) && (HessianEval(semwls) === ExactHessian)
-        ∇²Σ_function! = implied.∇²Σ_function
         ∇²Σ = implied.∇²Σ
         J = -2 * (σ₋' * semwls.V)'
-        ∇²Σ_function!(∇²Σ, J, par)
+        implied.∇²Σ_eval!(∇²Σ, J, par)
         hessian .+= ∇²Σ
     end
     if MeanStruct(implied) === HasMeanStruct

@@ -26,8 +26,8 @@ constrained_optimizer = SemOptimizer(;
     algorithm = :AUGLAG,
     local_algorithm = :LD_LBFGS,
     options = Dict(:xtol_rel => 1e-4),
-    # equality_constraints = (f = eq_constraint, tol = 1e-14),
-    inequality_constraints = (f = ineq_constraint, tol = 0.0),
+    # equality_constraints = (eq_constraint => 1e-14),
+    inequality_constraints = (ineq_constraint => 0.0),
 )
 
 @test constrained_optimizer isa SemOptimizer{:NLopt}

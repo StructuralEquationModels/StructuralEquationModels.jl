@@ -40,7 +40,7 @@ end
 
 partable = ParameterTable(
     graph,
-    latent_vars = lat_vars, 
+    latent_vars = lat_vars,
     observed_vars = obs_vars)
 ```
 
@@ -59,7 +59,7 @@ ml = SemML(observed = observed)
 loss_ml = SemLoss(ml)
 
 # optimizer ----------------------------------------------------------------------------
-optimizer = SemOptimizerOptim()
+optimizer = SemOptimizer()
 
 # model --------------------------------------------------------------------------------
 

@@ -37,7 +37,6 @@ Return the vector of parameter labels (in the same order as [`params`](@ref)).
 """
 param_labels(spec::SemSpecification) = spec.param_labels
 
-
 """
 `ParameterTable`s contain the specification of a structural equation model.
 

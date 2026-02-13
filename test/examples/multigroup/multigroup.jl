@@ -9,11 +9,11 @@ dat = example_data("holzinger_swineford")
 dat_missing = example_data("holzinger_swineford_missing")
 solution_lav = example_data("holzinger_swineford_solution")
 
-dat_g1 = dat[dat.school.=="Pasteur", :]
-dat_g2 = dat[dat.school.=="Grant-White", :]
+dat_g1 = dat[dat.school .== "Pasteur", :]
+dat_g2 = dat[dat.school .== "Grant-White", :]
 
-dat_miss_g1 = dat_missing[dat_missing.school.=="Pasteur", :]
-dat_miss_g2 = dat_missing[dat_missing.school.=="Grant-White", :]
+dat_miss_g1 = dat_missing[dat_missing.school .== "Pasteur", :]
+dat_miss_g2 = dat_missing[dat_missing.school .== "Grant-White", :]
 
 dat.school = ifelse.(dat.school .== "Pasteur", :Pasteur, :Grant_White)
 dat_missing.school = ifelse.(dat_missing.school .== "Pasteur", :Pasteur, :Grant_White)
@@ -86,7 +86,7 @@ start_test = [
     fill(0.05, 3)
     fill(0.01, 3)
 ]
-semoptimizer = SemOptimizerOptim()
+semoptimizer = SemOptimizer()
 
 @testset "RAMMatrices | constructor | Optim" begin
     include("build_models.jl")
@@ -169,7 +169,7 @@ start_test = [
     0.01
     0.05
 ]
-semoptimizer = SemOptimizerOptim()
+semoptimizer = SemOptimizer()
 
 @testset "Graph → Partable → RAMMatrices | constructor | Optim" begin
     include("build_models.jl")

@@ -41,7 +41,7 @@ model = Sem(
     data = data,
     implied = RAMSymbolic,
     loss = SemWLS,
-    optimizer = SemOptimizerOptim
+    optimizer = SemOptimizer
 )
 ```
 

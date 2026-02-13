@@ -55,7 +55,7 @@ start = [
 
 implied_ml = RAMSymbolic(; specification = ram_matrices, start_val = start)
 
-implied_ml.Σ_function(implied_ml.Σ, true_val)
+implied_ml.Σ_eval!(implied_ml.Σ, true_val)
 
 true_dist = MultivariateNormal(implied_ml.Σ)
 
@@ -68,7 +68,7 @@ loss_ml = SemLoss(SemML(; observed = semobserved, nparams = length(start)))
 model_ml = Sem(semobserved, implied_ml, loss_ml)
 objective!(model_ml, true_val)
 
-optimizer = SemOptimizerOptim(
+optimizer = SemOptimizer(
     BFGS(; linesearch = BackTracking(order = 3), alphaguess = InitialHagerZhang()),# m = 100),
     Optim.Options(; f_reltol = 1e-10, x_abstol = 1.5e-8),
 )

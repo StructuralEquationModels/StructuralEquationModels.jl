@@ -37,13 +37,13 @@ Jacobians (only available in gradient! calls)
 - `ram.∇Σ` -> ``∂vec(Σ)/∂θᵀ``
 - `ram.∇μ` -> ``∂μ/∂θᵀ``
 
-- `ram.∇Σ_function` -> function to overwrite `∇Σ` in place,
-    i.e. `∇Σ_function(∇Σ, θ)`. Typically, you do not want to use this but simply
+- `∇Σ_eval!(::RAMSymbolic)` -> function to evaluate `∇Σ` in place,
+    i.e. `∇Σ_eval!(∇Σ, θ)`. Typically, you do not want to use this but simply
     query `ram.∇Σ`.
 
 Hessians
 The computation of hessians is more involved.
-Therefore, we desribe it in the online documentation, 
+Therefore, we desribe it in the online documentation,
 and the respective interfaces are omitted here.
 
 ## RAM notation
@@ -56,23 +56,19 @@ and for models with a meanstructure, the model implied means are computed as
     \mu = F(I-A)^{-1}M
 ```
 """
-struct RAMSymbolic{MS, F1, F2, F3, A1, A2, A3, S1, S2, S3, V2, F4, A4, F5, A5} <:
-       SemImpliedSymbolic
+struct RAMSymbolic{MS, F1, F2, F3, A1, A2, A3, V2, F4, A4, F5, A5} <: SemImpliedSymbolic
     meanstruct::MS
     hessianeval::ExactHessian
-    Σ_function::F1
-    ∇Σ_function::F2
-    ∇²Σ_function::F3
+    Σ_eval!::F1
+    ∇Σ_eval!::F2
+    ∇²Σ_eval!::F3
     Σ::A1
     ∇Σ::A2
     ∇²Σ::A3
-    Σ_symbolic::S1
-    ∇Σ_symbolic::S2
-    ∇²Σ_symbolic::S3
     ram_matrices::V2
-    μ_function::F4
+    μ_eval!::F4
     μ::A4
-    ∇μ_function::F5
+    ∇μ_eval!::F5
     ∇μ::A5
 
     RAMSymbolic{MS}(args...) where {MS <: MeanStruct} =
@@ -96,6 +92,8 @@ function RAMSymbolic(;
 )
     ram_matrices = convert(RAMMatrices, specification)
 
+    check_meanstructure_specification(meanstructure, ram_matrices)
+
     n_par = nparams(ram_matrices)
     par = (Symbolics.@variables θ[1:n_par])[1]
 
@@ -111,81 +109,75 @@ function RAMSymbolic(;
     I_A⁻¹ = neumann_series(A)
 
     # Σ
-    Σ_symbolic = eval_Σ_symbolic(S, I_A⁻¹, F; vech = vech, simplify = simplify_symbolics)
-    #print(Symbolics.build_function(Σ_symbolic)[2])
-    Σ_function = Symbolics.build_function(Σ_symbolic, par, expression = Val{false})[2]
-    Σ = zeros(size(Σ_symbolic))
-    precompile(Σ_function, (typeof(Σ), Vector{Float64}))
+    Σ_sym = eval_Σ_symbolic(S, I_A⁻¹, F; vech, simplify = simplify_symbolics)
+    #print(Symbolics.build_function(Σ_sym)[2])
+    Σ_eval! = Symbolics.build_function(Σ_sym, par, expression = Val{false})[2]
+    Σ = zeros(size(Σ_sym))
+    precompile(Σ_eval!, (typeof(Σ), Vector{Float64}))
 
     # ∇Σ
     if gradient
-        ∇Σ_symbolic = Symbolics.sparsejacobian(vec(Σ_symbolic), [par...])
-        ∇Σ_function = Symbolics.build_function(∇Σ_symbolic, par, expression = Val{false})[2]
-        constr = findnz(∇Σ_symbolic)
-        ∇Σ = sparse(constr[1], constr[2], fill(1.0, nnz(∇Σ_symbolic)), size(∇Σ_symbolic)...)
-        precompile(∇Σ_function, (typeof(∇Σ), Vector{Float64}))
+        ∇Σ_sym = Symbolics.sparsejacobian(vec(Σ_sym), [par...])
+        ∇Σ_eval! = Symbolics.build_function(∇Σ_sym, par, expression = Val{false})[2]
+        constr = findnz(∇Σ_sym)
+        ∇Σ = sparse(constr[1], constr[2], fill(1.0, nnz(∇Σ_sym)), size(∇Σ_sym)...)
+        precompile(∇Σ_eval!, (typeof(∇Σ), Vector{Float64}))
     else
-        ∇Σ_symbolic = nothing
-        ∇Σ_function = nothing
+        ∇Σ_eval! = nothing
         ∇Σ = nothing
     end
 
     if hessian && !approximate_hessian
-        n_sig = length(Σ_symbolic)
-        ∇²Σ_symbolic_vec = [Symbolics.sparsehessian(σᵢ, [par...]) for σᵢ in vec(Σ_symbolic)]
+        n_sig = length(Σ_sym)
+        ∇²Σ_sym_vec = [Symbolics.sparsehessian(σᵢ, [par...]) for σᵢ in vec(Σ_sym)]
 
         @variables J[1:n_sig]
-        ∇²Σ_symbolic = zeros(Num, n_par, n_par)
+        ∇²Σ_sym = zeros(Num, n_par, n_par)
         for i in 1:n_sig
-            ∇²Σ_symbolic += J[i] * ∇²Σ_symbolic_vec[i]
+            ∇²Σ_sym += J[i] * ∇²Σ_sym_vec[i]
         end
 
-        ∇²Σ_function =
-            Symbolics.build_function(∇²Σ_symbolic, J, par, expression = Val{false})[2]
+        ∇²Σ_eval! = Symbolics.build_function(∇²Σ_sym, J, par, expression = Val{false})[2]
         ∇²Σ = zeros(n_par, n_par)
     else
-        ∇²Σ_symbolic = nothing
-        ∇²Σ_function = nothing
+        ∇²Σ_sym = nothing
+        ∇²Σ_eval! = nothing
         ∇²Σ = nothing
     end
 
     # μ
     if meanstructure
         MS = HasMeanStruct
-        μ_symbolic = eval_μ_symbolic(M, I_A⁻¹, F; simplify = simplify_symbolics)
-        μ_function = Symbolics.build_function(μ_symbolic, par, expression = Val{false})[2]
-        μ = zeros(size(μ_symbolic))
+        μ_sym = eval_μ_symbolic(M, I_A⁻¹, F; simplify = simplify_symbolics)
+        μ_eval! = Symbolics.build_function(μ_sym, par, expression = Val{false})[2]
+        μ = zeros(size(μ_sym))
         if gradient
-            ∇μ_symbolic = Symbolics.jacobian(μ_symbolic, [par...])
-            ∇μ_function =
-                Symbolics.build_function(∇μ_symbolic, par, expression = Val{false})[2]
+            ∇μ_sym = Symbolics.jacobian(μ_sym, [par...])
+            ∇μ_eval! = Symbolics.build_function(∇μ_sym, par, expression = Val{false})[2]
             ∇μ = zeros(size(F, 1), size(par, 1))
         else
-            ∇μ_function = nothing
+            ∇μ_eval! = nothing
             ∇μ = nothing
         end
     else
         MS = NoMeanStruct
-        μ_function = nothing
+        μ_eval! = nothing
         μ = nothing
-        ∇μ_function = nothing
+        ∇μ_eval! = nothing
         ∇μ = nothing
     end
 
     return RAMSymbolic{MS}(
-        Σ_function,
-        ∇Σ_function,
-        ∇²Σ_function,
+        Σ_eval!,
+        ∇Σ_eval!,
+        ∇²Σ_eval!,
         Σ,
         ∇Σ,
         ∇²Σ,
-        Σ_symbolic,
-        ∇Σ_symbolic,
-        ∇²Σ_symbolic,
         ram_matrices,
-        μ_function,
+        μ_eval!,
         μ,
-        ∇μ_function,
+        ∇μ_eval!,
         ∇μ,
     )
 end
@@ -200,15 +192,15 @@ function update!(
     model::AbstractSemSingle,
     par,
 )
-    implied.Σ_function(implied.Σ, par)
+    implied.Σ_eval!(implied.Σ, par)
     if MeanStruct(implied) === HasMeanStruct
-        implied.μ_function(implied.μ, par)
+        implied.μ_eval!(implied.μ, par)
     end
 
     if is_gradient_required(targets) || is_hessian_required(targets)
-        implied.∇Σ_function(implied.∇Σ, par)
+        implied.∇Σ_eval!(implied.∇Σ, par)
         if MeanStruct(implied) === HasMeanStruct
-            implied.∇μ_function(implied.∇μ, par)
+            implied.∇μ_eval!(implied.∇μ, par)
         end
     end
 end

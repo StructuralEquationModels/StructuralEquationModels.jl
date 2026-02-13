@@ -1,6 +1,96 @@
+const optimizer_engine_dependencies =
+    Dict(:NLopt => ["NLopt"], :Proximal => ["ProximalAlgorithms"])
+
+# throw unsupported engine error
+function throw_engine_error(E)
+    if typeof(E) !== Symbol
+        throw(ArgumentError("engine argument must be a Symbol."))
+    elseif haskey(optimizer_engine_dependencies, E)
+        error(
+            "optimizer \":$E\" requires \"using $(join(optimizer_engine_dependencies[E], ", "))\".",
+        )
+    else
+        error("optimizer engine \":$E\" is not supported.")
+    end
+end
+
+# return the type implementing SemOptimizer{engine}
+# the method should be overridden in the extension
+sem_optimizer_subtype(engine::Symbol) = sem_optimizer_subtype(Val(engine))
+
+# fallback method for unsupported engines
+sem_optimizer_subtype(::Val{E}) where {E} = throw_engine_error(E)
+
+"""
+    SemOptimizer(args...; engine::Symbol = :Optim, kwargs...)
+
+Constructs a `SemOptimizer` object that can be passed to [`fit`](@ref) for specifying aspects
+of the numerical optimization involved in fitting a SEM.
+
+The keyword `engine` controlls which Julia package is used, with `:Optim` being the default.
+- [`optimizer_engines()`](@ref optimizer_engines) prints a list of currently available engines.
+- [`optimizer_engine_doc(EngineName)`](@ref optimizer_engine_doc) prints information on the usage of a specific engine.
+
+More engines become available if specific packages are loaded, for example
+[*NLopt.jl*](https://github.com/JuliaOpt/NLopt.jl) (also see [Constrained optimization](@ref)
+in the online documentation) or
+[*ProximalAlgorithms.jl*](https://github.com/JuliaFirstOrder/ProximalAlgorithms.jl)
+(also see [Regularization](@ref) in the online documentation).
+
+The arguments `args...` and `kwargs...` are engine-specific and control further
+aspects of the optimization process, such as the algorithm, convergence criteria or constraints.
+Information on those can be accessed with [`optimizer_engine_doc`](@ref).
+
+[Custom optimizer types](@ref) shows how to connect the *SEM.jl* package to a completely new optimization engine.
+"""
+SemOptimizer
+
+# default constructor that dispatches to the engine-specific type
+SemOptimizer(::Val{E}, args...; kwargs...) where {E} =
+    sem_optimizer_subtype(E)(args...; kwargs...)
+
+SemOptimizer{E}(args...; kwargs...) where {E} = SemOptimizer(Val(E), args...; kwargs...)
+
+SemOptimizer(args...; engine::Symbol = :Optim, kwargs...) =
+    SemOptimizer(Val(engine), args...; kwargs...)
+
+"""
+    optimizer_engine(::Type{<:SemOptimizer})
+    optimizer_engine(::SemOptimizer)
+
+Returns the engine name (`Symbol`) for a [`SemOptimizer`](@ref) instance or subtype.
+"""
+optimizer_engine(::Type{<:SemOptimizer{E}}) where {E} = E
+optimizer_engine(optim::SemOptimizer) = optimizer_engine(typeof(optim))
+
+"""
+    optimizer_engines()
+
+Returns a vector of optimizer engines supported by the `engine` keyword argument of
+the [`SemOptimizer`](@ref) constructor.
+
+The list of engines depends on the Julia packages loaded (with the `using` directive)
+into the current session.
+"""
+optimizer_engines() =
+    Symbol[optimizer_engine(opt_type) for opt_type in subtypes(SemOptimizer)]
+
+"""
+    optimizer_engine_doc(engine::Symbol)
+
+Shows documentation for the optimizer engine.
+
+For a list of available engines, call [`optimizer_engines`](@ref).
+"""
+optimizer_engine_doc(engine) = Base.Docs.doc(sem_optimizer_subtype(engine))
+
+optimizer(result::SemOptimizerResult) = result.optimizer
+
+optimizer_engine(result::SemOptimizerResult) = optimizer_engine(result.optimizer)
+
 """
     fit([optim::SemOptimizer], model::AbstractSem;
-            [engine::Symbol], start_val = start_val, kwargs...)
+        [engine::Symbol], start_val = start_val, kwargs...)
 
 Return the fitted `model`.
 
@@ -41,7 +131,7 @@ function fit(optim::SemOptimizer, model::AbstractSem; start_val = nothing, kwarg
 end
 
 fit(model::AbstractSem; engine::Symbol = :Optim, start_val = nothing, kwargs...) =
-fit(SemOptimizer(; engine, kwargs...), model; start_val, kwargs...)
+    fit(SemOptimizer(; engine, kwargs...), model; start_val, kwargs...)
 
 # fallback method
 fit(optim::SemOptimizer, model::AbstractSem, start_params; kwargs...) =
@@ -56,8 +146,7 @@ prepare_start_params(start_val::Nothing, model::AbstractSem; kwargs...) =
     start_simple(model; kwargs...)
 
 # first argument is a function
-prepare_start_params(start_val, model::AbstractSem; kwargs...) =
-    start_val(model; kwargs...)
+prepare_start_params(start_val, model::AbstractSem; kwargs...) = start_val(model; kwargs...)
 
 function prepare_start_params(start_val::AbstractVector, model::AbstractSem; kwargs...)
     (length(start_val) == nparams(model)) || throw(

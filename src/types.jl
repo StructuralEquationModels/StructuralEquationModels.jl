@@ -79,23 +79,10 @@ end
 Base.:*(x::SemWeight{Nothing}, y) = y
 Base.:*(x::SemWeight, y) = x.w * y
 
-"""
-Supertype of all objects that can serve as the `optimizer` field of a SEM.
-Connects the SEM to its optimization backend and controls options like the optimization algorithm.
-If you want to connect the SEM package to a new optimization backend, you should implement a subtype of SemOptimizer.
-"""
 abstract type SemOptimizer{E} end
 
-engine(::Type{SemOptimizer{E}}) where {E} = E
-engine(optimizer::SemOptimizer) = engine(typeof(optimizer))
-
-SemOptimizer(args...; engine::Symbol = :Optim, kwargs...) =
-    SemOptimizer{engine}(args...; kwargs...)
-
-# fallback optimizer constructor
-function SemOptimizer{E}(args...; kwargs...) where {E}
-    throw(ErrorException("$E optimizer is not supported."))
-end
+# wrapper around optimization result
+abstract type SemOptimizerResult{O <: SemOptimizer} end
 
 """
 Supertype of all objects that can serve as the observed field of a SEM.
@@ -192,7 +179,8 @@ Returns a SemEnsemble with fields
 
 For instructions on multigroup models, see the online documentation.
 """
-struct SemEnsemble{N, T <: Tuple, V <: AbstractVector, I, G <: Vector{Symbol}} <: AbstractSemCollection
+struct SemEnsemble{N, T <: Tuple, V <: AbstractVector, I, G <: Vector{Symbol}} <:
+       AbstractSemCollection
     n::N
     sems::T
     weights::V

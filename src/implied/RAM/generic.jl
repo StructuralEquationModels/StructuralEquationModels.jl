@@ -98,6 +98,8 @@ function RAM(;
 )
     ram_matrices = convert(RAMMatrices, specification)
 
+    check_meanstructure_specification(meanstructure, ram_matrices)
+
     # get dimensions of the model
     n_par = nparams(ram_matrices)
     n_obs = nobserved_vars(ram_matrices)
@@ -126,11 +128,6 @@ function RAM(;
     # μ
     if meanstructure
         MS = HasMeanStruct
-        !isnothing(ram_matrices.M) || throw(
-            ArgumentError(
-                "You set `meanstructure = true`, but your model specification contains no mean parameters.",
-            ),
-        )
         M_pre = materialize(ram_matrices.M, rand_params)
         ∇M = gradient_required ? sparse_gradient(ram_matrices.M) : nothing
         μ = zeros(n_obs)
@@ -152,7 +149,7 @@ function RAM(;
         F⨉I_A⁻¹,
         F⨉I_A⁻¹S,
         I_A,
-        copy(I_A),
+        similar(I_A),
         ∇A,
         ∇S,
         ∇M,
@@ -163,7 +160,12 @@ end
 ### methods
 ############################################################################################
 
-function update!(targets::EvaluationTargets, implied::RAM, model::AbstractSemSingle, param_labels)
+function update!(
+    targets::EvaluationTargets,
+    implied::RAM,
+    model::AbstractSemSingle,
+    param_labels,
+)
     materialize!(implied.A, implied.ram_matrices.A, param_labels)
     materialize!(implied.S, implied.ram_matrices.S, param_labels)
     if !isnothing(implied.M)

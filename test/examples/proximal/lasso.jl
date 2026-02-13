@@ -1,5 +1,3 @@
-using StructuralEquationModels, Test, ProximalAlgorithms, ProximalOperators
-
 # load data
 dat = example_data("political_democracy")
 
@@ -45,7 +43,7 @@ model_prox = Sem(specification = partable, data = dat, loss = SemML)
 fit_prox = fit(model_prox, engine = :Proximal, operator_g = NormL1(λ))
 
 @testset "lasso | solution_unregularized" begin
-    @test fit_prox.optimization_result.result[:iterations] < 1000
+    @test n_iterations(fit_prox.optimization_result) < 1000
     @test maximum(abs.(solution(sem_fit) - solution(fit_prox))) < 0.002
 end
 
@@ -57,7 +55,7 @@ model_prox = Sem(specification = partable, data = dat, loss = SemML)
 fit_prox = fit(model_prox, engine = :Proximal, operator_g = NormL1(λ))
 
 @testset "lasso | solution_regularized" begin
-    @test fit_prox.optimization_result.result[:iterations] < 1000
+    @test n_iterations(fit_prox.optimization_result) < 1000
     @test all(solution(fit_prox)[16:20] .< solution(sem_fit)[16:20])
     @test StructuralEquationModels.minimum(fit_prox) -
           StructuralEquationModels.minimum(sem_fit) < 0.03
