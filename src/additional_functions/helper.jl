@@ -76,6 +76,10 @@ function trunc_eigvals(
     mtx_label::AbstractString = "matrix",
     verbose::Bool = false,
 ) where {T}
+    size(mtx, 1) == size(mtx, 2) ||
+        throw(ArgumentError("Matrix must be square, $(size(mtx)) given"))
+    issymmetric(mtx) || throw(ArgumentError("Matrix must be symmetric"))
+
     # eigen decomposition of the mtx
     mtx_eig = eigen(convert(Matrix{T}, mtx))
     verbose &&
@@ -85,7 +89,7 @@ function trunc_eigvals(
     if eigmin < min_eigval
         # substitute small eigvals with min_eigval
         eigvals_mtx = Diagonal(max.(mtx_eig.values, min_eigval))
-        newmtx = mtx_eig.vectors' * eigvals_mtx * mtx_eig.vectors
+        newmtx = mtx_eig.vectors * eigvals_mtx * mtx_eig.vectors'
         StatsBase._symmetrize!(newmtx)
         if verbose
             Δmtx = newmtx .- mtx
