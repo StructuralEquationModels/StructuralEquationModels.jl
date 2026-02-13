@@ -23,6 +23,31 @@ is_hessian_required(::EvaluationTargets{<:Any, <:Any, H}) where {H} = H
 
 (targets::EvaluationTargets)(arg_tuple::Tuple) = targets(arg_tuple...)
 
+"""
+    evaluate!(objective, gradient, hessian [, lossfun], model, params)
+
+Evaluates the objective, gradient, and/or Hessian at the given parameter vector.
+If a loss function is passed, only this specific loss function is evaluated, otherwise,
+the sum of all loss functions in the model is evaluated.
+
+If objective, gradient or hessian are `nothing`, they are not evaluated.
+For example, since many numerical optimization algorithms don't require a Hessian,
+the computation will be turned off by setting `hessian` to `nothing`.
+
+# Arguments
+- `objective`: a Number if the objective should be evaluated, otherwise `nothing`
+- `gradient`: a pre-allocated vector the gradient should be written to, otherwise `nothing`
+- `hessian`: a pre-allocated matrix the Hessian should be written to, otherwise `nothing`
+- `lossfun::SemLossFunction`: loss function to evaluate
+- `model::AbstractSem`: model to evaluate
+- `params`: vector of parameters
+
+# Implementing a new loss function
+To implement a new loss function, a new method for `evaluate!` has to be defined.
+This is explained in the online documentation on [Custom loss functions](@ref).
+"""
+function evaluate! end
+
 # dispatch on SemImplied
 evaluate!(objective, gradient, hessian, loss::SemLossFunction, model::AbstractSem, params) =
     evaluate!(objective, gradient, hessian, loss, implied(model), model, params)
