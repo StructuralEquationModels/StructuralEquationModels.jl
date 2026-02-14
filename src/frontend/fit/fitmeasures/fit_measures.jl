@@ -1,19 +1,15 @@
-fit_measures(sem_fit) =
-    fit_measures(sem_fit, nparams, dof, AIC, BIC, RMSEA, χ², p_value, minus2ll)
+fit_measures(fit) =
+    fit_measures(fit, nparams, dof, AIC, BIC, RMSEA, χ², p_value, minus2ll)
 
-function fit_measures(sem_fit, args...)
-    measures = Dict{Symbol, Union{Float64, Missing}}()
-
-    for arg in args
-        push!(measures, Symbol(arg) => arg(sem_fit))
-    end
-
-    return measures
-end
+fit_measures(fit, measures...) = Dict(Symbol(fn) => fn(fit) for fn in measures)
 
 """
-    fit_measures(sem_fit, args...)
+    fit_measures(fit, measures...)
 
-Return a default set of fit measures or the fit measures passed as `args...`.
+Calculate fit measures for the SEM solution.
+
+Returns a dictionary of the fit measures for the given SEM solution.
+The keys are the measure names. The `measures` are functions that take SEM solution as an input.
+If no `measures` are specified, the default set of measures is used.
 """
-function fit_measures end
+fit_measures

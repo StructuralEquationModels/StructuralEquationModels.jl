@@ -1,5 +1,7 @@
 using StructuralEquationModels, Distributions, Random, Optim, LineSearches
 
+SEM = StructuralEquationModels
+
 include(
     joinpath(
         chop(dirname(pathof(StructuralEquationModels)), tail = 3),
@@ -53,19 +55,16 @@ start = [
     repeat([0.5], 4)
 ]
 
-implied_ml = RAMSymbolic(; specification = ram_matrices, start_val = start)
+implied_ml = RAMSymbolic(ram_matrices)
 
 implied_ml.Σ_eval!(implied_ml.Σ, true_val)
 
 true_dist = MultivariateNormal(implied_ml.Σ)
 
 Random.seed!(1234)
-x = transpose(rand(true_dist, 100_000))
-semobserved = SemObservedData(data = x, specification = nothing)
+x = permutedims(rand(true_dist, 10^5), (2, 1))
 
-loss_ml = SemLoss(SemML(; observed = semobserved, nparams = length(start)))
-
-model_ml = Sem(semobserved, implied_ml, loss_ml)
+model_ml = Sem(SemML(SemObservedData(data = x, specification = ram_matrices), implied_ml))
 objective!(model_ml, true_val)
 
 optimizer = SemOptimizer(
@@ -73,6 +72,6 @@ optimizer = SemOptimizer(
     Optim.Options(; f_reltol = 1e-10, x_abstol = 1.5e-8),
 )
 
-solution_ml = fit(optimizer, model_ml)
+solution_ml = fit(optimizer, model_ml, start_val = start)
 
-@test true_val ≈ solution(solution_ml) atol = 0.05
+@test solution(solution_ml) ≈ true_val atol = 0.05

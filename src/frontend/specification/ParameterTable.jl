@@ -244,6 +244,18 @@ See [sort_vars!](@ref) for in-place version.
 """
 sort_vars(partable::ParameterTable) = sort_vars!(deepcopy(partable))
 
+function reorder_observed_vars!(partable::ParameterTable, new_order::AbstractVector{Symbol})
+    # just check that it's 1-to-1
+    source_to_dest_perm(
+        partable.observed_vars,
+        new_order,
+        one_to_one = true,
+        entities = "observed_vars",
+    )
+    copy!(partable.observed_vars, new_order)
+    return partable
+end
+
 # add a row --------------------------------------------------------------------------------
 
 function Base.push!(partable::ParameterTable, d::Union{AbstractDict{Symbol}, NamedTuple})
@@ -290,11 +302,11 @@ function update_partable!(
 end
 
 """
-    (1) update_partable!(partable::AbstractParameterTable, column, fitted:SemFit, params, default = nothing)
-    
-    (2) update_partable!(partable::AbstractParameterTable, column, param_labels::Vector{Symbol}, params, default = nothing)
+    update_partable!(partable::AbstractParameterTable, column, fitted:SemFit, params, default = nothing)
 
-Add a new column to a parameter table. 
+    update_partable!(partable::AbstractParameterTable, column, param_labels::Vector{Symbol}, params, default = nothing)
+
+Add a new column to a parameter table.
 `column` is the name of the column, `params` contains the values of the new column,
 and `fitted` or `param_labels` is used to match the values to the correct parameter labels.
 The `default` value is used if a parameter in `partable` does not occur in `param_labels`.
@@ -400,6 +412,18 @@ function update_se_hessian!(
 )
     se = se_hessian(fit; method)
     return update_partable!(partable, :se, param_labels(fit), se)
+end
+
+function variance_params(partable::ParameterTable)
+    res = [
+        param for (param, rel, from, to) in zip(
+            partable.columns.param,
+            partable.columns.relation,
+            partable.columns.from,
+            partable.columns.to,
+        ) if (rel == :↔) && (from == to)
+    ]
+    unique!(res)
 end
 
 """
@@ -537,3 +561,78 @@ lavaan_params(
     lav_col::Symbol = :est,
     lav_group = nothing,
 ) = lavaan_params!(fill(NaN, nparams(partable)), partable_lav, partable, lav_col, lav_group)
+
+"""
+    lavaan_model(partable::ParameterTable)
+
+Generate lavaan model definition from a `partable`.
+"""
+function lavaan_model(partable::ParameterTable)
+    latent_vars = Set(partable.variables.latent)
+    observed_vars = Set(partable.variables.observed)
+
+    variance_defs = Dict{Symbol, IOBuffer}()
+    latent_dep_defs = Dict{Symbol, IOBuffer}()
+    latent_regr_defs = Dict{Symbol, IOBuffer}()
+    observed_regr_defs = Dict{Symbol, IOBuffer}()
+
+    model = IOBuffer()
+    for (from, to, rel, param, value, free) in zip(
+        partable.columns.from,
+        partable.columns.to,
+        partable.columns.relation,
+        partable.columns.param,
+        partable.columns.value_fixed,
+        partable.columns.free,
+    )
+        function append_param(io)
+            if free
+                @assert param != :const
+                param == Symbol("") || write(io, "$param * ")
+            else
+                write(io, "$value * ")
+            end
+        end
+        function append_rhs(io)
+            if position(io) > 0
+                write(io, " + ")
+            end
+            append_param(io)
+            write(io, "$to")
+        end
+
+        if from == Symbol("1")
+            write(model, "$to ~ ")
+            append_param(model)
+            write(model, "1\n")
+        else
+            if rel == :↔
+                variance_def = get!(() -> IOBuffer(), variance_defs, from)
+                append_rhs(variance_def)
+            elseif rel == :→
+                if (from ∈ latent_vars) && (to ∈ observed_vars)
+                    latent_dep_def = get!(() -> IOBuffer(), latent_dep_defs, from)
+                    append_rhs(latent_dep_def)
+                elseif (from ∈ latent_vars) && (to ∈ latent_vars)
+                    latent_regr_def = get!(() -> IOBuffer(), latent_regr_defs, from)
+                    append_rhs(latent_regr_def)
+                else
+                    observed_regr_def = get!(() -> IOBuffer(), observed_regr_defs, from)
+                    append_rhs(observed_regr_def)
+                end
+            end
+        end
+    end
+    function write_rules(io, defs, relation)
+        vars = sort!(collect(keys(defs)))
+        for var in vars
+            write(io, String(var), " ", relation, " ")
+            write(io, String(take!(defs[var])), "\n")
+        end
+    end
+    write_rules(model, latent_dep_defs, "=~")
+    write_rules(model, latent_regr_defs, "~")
+    write_rules(model, observed_regr_defs, "~")
+    write_rules(model, variance_defs, "~~")
+    return String(take!(model))
+end

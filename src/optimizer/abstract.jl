@@ -137,13 +137,13 @@ fit(model::AbstractSem; engine::Symbol = :Optim, start_val = nothing, kwargs...)
 fit(optim::SemOptimizer, model::AbstractSem, start_params; kwargs...) =
     error("Optimizer $(optim) support not implemented.")
 
-# FABIN3 is the default method for single models
-prepare_start_params(start_val::Nothing, model::AbstractSemSingle; kwargs...) =
-    start_fabin3(model; kwargs...)
-
-# simple algorithm is the default method for ensembles
-prepare_start_params(start_val::Nothing, model::AbstractSem; kwargs...) =
-    start_simple(model; kwargs...)
+# defaults when no starting parameters are specified
+function prepare_start_params(start_val::Nothing, model::AbstractSem; kwargs...)
+    sems = sem_terms(model)
+    # FABIN3 for single models, simple algorithm for ensembles
+    return length(sems) == 1 ? start_fabin3(loss(sems[1]); kwargs...) :
+           start_simple(model; kwargs...)
+end
 
 # first argument is a function
 prepare_start_params(start_val, model::AbstractSem; kwargs...) = start_val(model; kwargs...)
@@ -154,11 +154,18 @@ function prepare_start_params(start_val::AbstractVector, model::AbstractSem; kwa
             "The length of `start_val` vector ($(length(start_val))) does not match the number of model parameters ($(nparams(model))).",
         ),
     )
+    (eltype(start_val) <: Number) || throw(
+        TypeError(
+            :prepare_start_params, "start_val elements must be numeric",
+            Number, eltype(start_val),
+        ),
+    )
     return start_val
 end
 
 function prepare_start_params(start_val::AbstractDict, model::AbstractSem; kwargs...)
-    return [start_val[param] for param in params(model)] # convert to a vector
+    # convert to a vector
+    return prepare_start_params([start_val[param] for param in params(model)], model; kwargs...)
 end
 
 # get from the ParameterTable (potentially from a different model with match param names)
