@@ -11,17 +11,8 @@ function start_fabin3(model::AbstractSemSingle; kwargs...)
     return start_fabin3(model.observed, model.implied, model.loss.functions..., kwargs...)
 end
 
-function start_fabin3(observed, implied, args...; kwargs...)
+function start_fabin3(observed::SemObserved, implied::SemImplied, args...; kwargs...)
     return start_fabin3(implied.ram_matrices, obs_cov(observed), obs_mean(observed))
-end
-
-# SemObservedMissing
-function start_fabin3(observed::SemObservedMissing, implied, args...; kwargs...)
-    if !observed.em_model.fitted
-        em_mvn!(observed; kwargs...)
-    end
-
-    return start_fabin3(implied.ram_matrices, observed.em_model.Σ, observed.em_model.μ)
 end
 
 function start_fabin3(

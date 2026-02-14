@@ -1,16 +1,85 @@
 ############################################################################################
 ### Types
 ############################################################################################
+
+# state of SemFIML for a specific missing pattern (`SemObservedMissingPattern` type)
+struct SemFIMLPattern{T}
+    ∇ind::Vector{Int}   # indices of co-observed variable pairs
+    Σ⁻¹::Matrix{T}      # preallocated inverse of implied cov
+    logdet::Ref{T}      # logdet of implied cov
+    μ_diff::Vector{T}   # implied mean difference
+end
+
+# allocate arrays for pattern FIML
+function SemFIMLPattern(pat::SemObservedMissingPattern)
+    nobs_vars = nobserved_vars(pat)
+    nmeas_vars = nmeasured_vars(pat)
+
+    # generate linear indicies of co-observed variable pairs for each pattern
+    Σ_linind = LinearIndices((nobs_vars, nobs_vars))
+    pat_vars = findall(pat.measured_mask)
+    ∇ind = vec(Σ_linind[pat_vars, pat_vars])
+
+    return SemFIMLPattern(∇ind, zeros(nmeas_vars, nmeas_vars), Ref(NaN), zeros(nmeas_vars))
+end
+
+function prepare!(
+    fiml::SemFIMLPattern,
+    pat::SemObservedMissingPattern,
+    Σ::AbstractMatrix,
+    μ::AbstractVector,
+)
+    @inbounds @. @views begin
+        fiml.Σ⁻¹ = Σ[pat.measured_mask, pat.measured_mask]
+        fiml.μ_diff = pat.measured_mean - μ[pat.measured_mask]
+    end
+    Σ_chol = cholesky!(Symmetric(fiml.Σ⁻¹))
+    fiml.logdet[] = logdet(Σ_chol)
+    LinearAlgebra.inv!(Σ_chol) # updates fiml.Σ⁻¹
+    return fiml
+end
+
+prepare!(fiml::SemFIMLPattern, pat::SemObservedMissingPattern, implied::SemImplied) =
+    prepare!(fiml, pat, implied.Σ, implied.μ)
+
+function objective(fiml::SemFIMLPattern{T}, pat::SemObservedMissingPattern) where {T}
+    F = fiml.logdet[] + dot(fiml.μ_diff, fiml.Σ⁻¹, fiml.μ_diff)
+    if nsamples(pat) > 1
+        F += dot(pat.measured_cov, fiml.Σ⁻¹)
+        F *= nsamples(pat)
+    end
+    return F
+end
+
+function gradient!(JΣ, Jμ, fiml::SemFIMLPattern, pat::SemObservedMissingPattern)
+    Σ⁻¹ = Symmetric(fiml.Σ⁻¹)
+    μ_diff⨉Σ⁻¹ = fiml.μ_diff' * Σ⁻¹
+    if nsamples(pat) > 1
+        JΣ_pat = Σ⁻¹ * (I - pat.measured_cov * Σ⁻¹ - fiml.μ_diff * μ_diff⨉Σ⁻¹)
+        JΣ_pat .*= nsamples(pat)
+    else
+        JΣ_pat = Σ⁻¹ * (I - fiml.μ_diff * μ_diff⨉Σ⁻¹)
+    end
+    @inbounds vec(JΣ)[fiml.∇ind] .+= vec(JΣ_pat)
+
+    lmul!(2 * nsamples(pat), μ_diff⨉Σ⁻¹)
+    @inbounds Jμ[pat.measured_mask] .+= μ_diff⨉Σ⁻¹'
+    return nothing
+end
+
 """
-Full information maximum likelihood estimation. Can handle observed data with missings.
+    SemFIML{T, W} <: SemLossFunction
+
+Full information maximum likelihood (FIML) estimation.
+Can handle observed data with missing values.
 
 # Constructor
 
-    SemFIML(;observed, specification, kwargs...)
+    SemFIML(; observed::SemObservedMissing, specification, kwargs...)
 
 # Arguments
-- `observed::SemObservedMissing`: the observed part of the model
-- `specification`: either a `RAMMatrices` or `ParameterTable` object
+- `observed`: the observed data with missing values (see [`SemObservedMissing`](@ref))
+- `specification`: [`SemSpecification`](@ref) object
 
 # Examples
 ```julia
@@ -20,19 +89,11 @@ my_fiml = SemFIML(observed = my_observed, specification = my_parameter_table)
 # Interfaces
 Analytic gradients are available.
 """
-mutable struct SemFIML{INV, C, L, O, M, IM, I, T, W} <: SemLossFunction
+struct SemFIML{T, W} <: SemLossFunction
     hessianeval::ExactHessian
-    inverses::INV #preallocated inverses of imp_cov
-    choleskys::C #preallocated choleskys
-    logdets::L #logdets of implied covmats
+    patterns::Vector{SemFIMLPattern{T}}
 
-    ∇ind::O
-
-    imp_mean::IM
-    meandiff::M
-    imp_inv::I
-
-    mult::T
+    imp_inv::Matrix{T}  # implied inverse
 
     commutator::CommutationMatrix
 
@@ -44,44 +105,17 @@ end
 ############################################################################################
 
 function SemFIML(; observed::SemObservedMissing, implied, specification, kwargs...)
-
-    if implied.meanstruct isa NoMeanStruct
-        throw(ArgumentError(
-            "Full information maximum likelihood (FIML) can only be used with a meanstructure.
-            Did you forget to set `Sem(..., meanstructure = true)`?"))
-    end
-
-    inverses =
-        [zeros(nmeasured_vars(pat), nmeasured_vars(pat)) for pat in observed.patterns]
-    choleskys = Array{Cholesky{Float64, Array{Float64, 2}}, 1}(undef, length(inverses))
-
-    n_patterns = length(observed.patterns)
-    logdets = zeros(n_patterns)
-
-    imp_mean = [zeros(nmeasured_vars(pat)) for pat in observed.patterns]
-    meandiff = [zeros(nmeasured_vars(pat)) for pat in observed.patterns]
-
-    nobs_vars = nobserved_vars(observed)
-    imp_inv = zeros(nobs_vars, nobs_vars)
-    mult = similar.(inverses)
-
-    # generate linear indicies of co-observed variable pairs for each pattern
-    Σ_linind = LinearIndices((nobs_vars, nobs_vars))
-    ∇ind = map(observed.patterns) do pat
-        pat_vars = findall(pat.measured_mask)
-        vec(Σ_linind[pat_vars, pat_vars])
+    if MeanStruct(implied) === NoMeanStruct
+        ArgumentError(
+            "Full information maximum likelihood (FIML) can only be used with a meanstructure.\n" *
+            "Did you forget to set `Sem(..., meanstructure = true)`?",
+        ) |> throw
     end
 
     return SemFIML(
         ExactHessian(),
-        inverses,
-        choleskys,
-        logdets,
-        ∇ind,
-        imp_mean,
-        meandiff,
-        imp_inv,
-        mult,
+        [SemFIMLPattern(pat) for pat in observed.patterns],
+        zeros(nobserved_vars(observed), nobserved_vars(observed)),
         CommutationMatrix(nvars(specification)),
         nothing,
     )
@@ -95,26 +129,26 @@ function evaluate!(
     objective,
     gradient,
     hessian,
-    semfiml::SemFIML,
+    fiml::SemFIML,
     implied::SemImplied,
     model::AbstractSemSingle,
-    param_labels,
+    params,
 )
     isnothing(hessian) || error("Hessian not implemented for FIML")
 
-    if !check_fiml(semfiml, model)
-        isnothing(objective) || (objective = non_posdef_return(param_labels))
+    if !check(fiml, model)
+        isnothing(objective) || (objective = non_posdef_return(params))
         isnothing(gradient) || fill!(gradient, 1)
         return objective
     end
 
-    prepare_SemFIML!(semfiml, model)
+    prepare!(fiml, model)
 
     scale = inv(nsamples(observed(model)))
     isnothing(objective) ||
-        (objective = scale * F_FIML(observed(model), semfiml, model, param_labels))
+        (objective = scale * F_FIML(eltype(params), fiml, observed(model), model))
     isnothing(gradient) ||
-        (∇F_FIML!(gradient, observed(model), semfiml, model); gradient .*= scale)
+        (∇F_FIML!(gradient, fiml, observed(model), model); gradient .*= scale)
 
     return objective
 end
@@ -130,37 +164,32 @@ update_observed(lossfun::SemFIML, observed::SemObserved; kwargs...) =
 ### additional functions
 ############################################################################################
 
-function F_one_pattern(meandiff, inverse, obs_cov, logdet, N)
-    F = logdet + dot(meandiff, inverse, meandiff)
-    if N > one(N)
-        F += dot(obs_cov, inverse)
+function prepare!(fiml::SemFIML, observed::SemObservedMissing, implied::SemImplied)
+    @inbounds for (pat_fiml, pat) in zip(fiml.patterns, observed.patterns)
+        prepare!(pat_fiml, pat, implied.Σ, implied.μ)
     end
-    return F * N
+    #batch_sym_inv_update!(fiml, model)
 end
 
-function ∇F_one_pattern(μ_diff, Σ⁻¹, S, obs_mask, ∇ind, N, Jμ, JΣ, model)
-    diff⨉inv = μ_diff' * Σ⁻¹
+prepare!(fiml::SemFIML, model::AbstractSemSingle) =
+    prepare!(fiml, observed(model), implied(model))
 
-    if N > one(N)
-        JΣ[∇ind] .+= N * vec(Σ⁻¹ * (I - S * Σ⁻¹ - μ_diff * diff⨉inv))
-        @. Jμ[obs_mask] += (N * 2 * diff⨉inv)'
-
-    else
-        JΣ[∇ind] .+= vec(Σ⁻¹ * (I - μ_diff * diff⨉inv))
-        @. Jμ[obs_mask] += (2 * diff⨉inv)'
-    end
+function check(fiml::SemFIML, model::AbstractSemSingle)
+    copyto!(fiml.imp_inv, implied(model).Σ)
+    a = cholesky!(Symmetric(fiml.imp_inv); check = false)
+    return isposdef(a)
 end
 
-function ∇F_fiml_outer!(G, JΣ, Jμ, implied::SemImpliedSymbolic, model, semfiml)
+function ∇F_fiml_outer!(G, JΣ, Jμ, fiml::SemFIML, implied::SemImpliedSymbolic, model)
     mul!(G, implied.∇Σ', JΣ) # should be transposed
     mul!(G, implied.∇μ', Jμ, -1, 1)
 end
 
-function ∇F_fiml_outer!(G, JΣ, Jμ, implied, model, semfiml)
+function ∇F_fiml_outer!(G, JΣ, Jμ, fiml::SemFIML, implied, model)
     Iₙ = sparse(1.0I, size(implied.A)...)
     P = kron(implied.F⨉I_A⁻¹, implied.F⨉I_A⁻¹)
     Q = kron(implied.S * implied.I_A⁻¹', Iₙ)
-    Q .+= semfiml.commutator * Q
+    Q .+= fiml.commutator * Q
 
     ∇Σ = P * (implied.∇S + Q * implied.∇A)
 
@@ -172,70 +201,25 @@ function ∇F_fiml_outer!(G, JΣ, Jμ, implied, model, semfiml)
     mul!(G, ∇μ', Jμ, -1, 1)
 end
 
-function F_FIML(observed::SemObservedMissing, semfiml, model, param_labels)
-    F = zero(eltype(param_labels))
-    for (i, pat) in enumerate(observed.patterns)
-        F += F_one_pattern(
-            semfiml.meandiff[i],
-            semfiml.inverses[i],
-            pat.measured_cov,
-            semfiml.logdets[i],
-            nsamples(pat),
-        )
+function F_FIML(
+    ::Type{T},
+    fiml::SemFIML,
+    observed::SemObservedMissing,
+    model::AbstractSemSingle,
+) where {T}
+    F = zero(T)
+    for (pat_fiml, pat) in zip(fiml.patterns, observed.patterns)
+        F += objective(pat_fiml, pat)
     end
     return F
 end
 
-function ∇F_FIML!(G, observed::SemObservedMissing, semfiml, model)
+function ∇F_FIML!(G, fiml::SemFIML, observed::SemObservedMissing, model::AbstractSemSingle)
     Jμ = zeros(nobserved_vars(model))
     JΣ = zeros(nobserved_vars(model)^2)
 
-    for (i, pat) in enumerate(observed.patterns)
-        ∇F_one_pattern(
-            semfiml.meandiff[i],
-            semfiml.inverses[i],
-            pat.measured_cov,
-            pat.measured_mask,
-            semfiml.∇ind[i],
-            nsamples(pat),
-            Jμ,
-            JΣ,
-            model,
-        )
+    for (pat_fiml, pat) in zip(fiml.patterns, observed.patterns)
+        gradient!(JΣ, Jμ, pat_fiml, pat)
     end
-    return ∇F_fiml_outer!(G, JΣ, Jμ, implied(model), model, semfiml)
-end
-
-function prepare_SemFIML!(semfiml, model)
-    copy_per_pattern!(semfiml, model)
-    batch_cholesky!(semfiml, model)
-    #batch_sym_inv_update!(semfiml, model)
-    batch_inv!(semfiml, model)
-    for (i, pat) in enumerate(observed(model).patterns)
-        semfiml.meandiff[i] .= pat.measured_mean .- semfiml.imp_mean[i]
-    end
-end
-
-function copy_per_pattern!(fiml::SemFIML, model::AbstractSem)
-    Σ = implied(model).Σ
-    μ = implied(model).μ
-    data = observed(model)
-    @inbounds @views for (i, pat) in enumerate(data.patterns)
-        fiml.inverses[i] .= Σ[pat.measured_mask, pat.measured_mask]
-        fiml.imp_mean[i] .= μ[pat.measured_mask]
-    end
-end
-
-function batch_cholesky!(semfiml, model)
-    for i in 1:size(semfiml.inverses, 1)
-        semfiml.choleskys[i] = cholesky!(Symmetric(semfiml.inverses[i]))
-        semfiml.logdets[i] = logdet(semfiml.choleskys[i])
-    end
-    return true
-end
-
-function check_fiml(semfiml, model)
-    copyto!(semfiml.imp_inv, implied(model).Σ)
-    a = cholesky!(Symmetric(semfiml.imp_inv); check = false)
-    return isposdef(a)
+    ∇F_fiml_outer!(G, JΣ, Jμ, fiml, implied(model), model)
 end

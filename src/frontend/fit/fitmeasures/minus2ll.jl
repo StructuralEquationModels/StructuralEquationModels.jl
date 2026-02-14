@@ -40,22 +40,22 @@ end
 # compute likelihood for missing data - H1 -------------------------------------------------
 # -2ll =  ∑ log(2π)*(nᵢ + mᵢ) + ln(Σᵢ) + (mᵢ - μᵢ)ᵀ Σᵢ⁻¹ (mᵢ - μᵢ)) + tr(SᵢΣᵢ)
 function minus2ll(observed::SemObservedMissing)
-    # fit EM-based mean and cov if not yet fitted
-    # FIXME EM could be very computationally expensive
-    observed.em_model.fitted || em_mvn!(observed)
+    Σ, μ = obs_cov(observed), obs_mean(observed)
 
-    Σ = observed.em_model.Σ
-    μ = observed.em_model.μ
-
+    # FIXME: this code is duplicate to objective(fiml, ...)
     F = sum(observed.patterns) do pat
         # implied covariance/mean
         Σᵢ = Σ[pat.measured_mask, pat.measured_mask]
         Σᵢ_chol = cholesky!(Σᵢ)
         ld = logdet(Σᵢ_chol)
         Σᵢ⁻¹ = LinearAlgebra.inv!(Σᵢ_chol)
-        meandiffᵢ = pat.measured_mean - μ[pat.measured_mask]
+        μ_diffᵢ = pat.measured_mean - μ[pat.measured_mask]
 
-        F_one_pattern(meandiffᵢ, Σᵢ⁻¹, pat.measured_cov, ld, nsamples(pat))
+        F_pat = ld + dot(μ_diffᵢ, Σᵢ⁻¹, μ_diffᵢ)
+        if nsamples(pat) > 1
+            F_pat += dot(pat.measured_cov, Σᵢ⁻¹)
+        end
+        F_pat * nsamples(pat)
     end
 
     F += log(2π) * sum(pat -> nsamples(pat) * nmeasured_vars(pat), observed.patterns)
