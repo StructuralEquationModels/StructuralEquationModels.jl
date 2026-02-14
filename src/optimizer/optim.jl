@@ -132,3 +132,9 @@ function fit(
         SemOptimResult(optim, result),
     )
 end
+
+############################################################################################
+# pretty printing
+############################################################################################
+
+Base.show(io::IO, result::SemOptimResult) = Base.show(io, result.result)
