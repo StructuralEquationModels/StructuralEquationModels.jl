@@ -6,36 +6,31 @@ Calculate the *-2⋅log(likelihood(fit))*.
 # See also
 [`fit_measures`](@ref)
 """
-function minus2ll end
+minus2ll(fit::SemFit) = minus2ll(fit, fit.model)
 
 ############################################################################################
 # Single Models
 ############################################################################################
 
-minus2ll(fit::SemFit) = minus2ll(fit, fit.model)
-
 function minus2ll(fit::SemFit, model::AbstractSemSingle)
-    minimum = objective(model, fit.solution)
-    return minus2ll(minimum, model)
+    check_single_lossfun(model; throw_error = true)
+    return minus2ll(model.loss.functions[1], fit, model)
 end
 
-minus2ll(minimum::Number, model::AbstractSemSingle) =
-    sum(lossfun -> minus2ll(lossfun, minimum, model), model.loss.functions)
-
 # SemML ------------------------------------------------------------------------------------
-function minus2ll(lossfun::SemML, minimum::Number, model::AbstractSemSingle)
+function minus2ll(::SemML, fit::SemFit, model::AbstractSemSingle)
     obs = observed(model)
-    return nsamples(obs) * (minimum + log(2π) * nobserved_vars(obs))
+    return nsamples(obs) * (fit.minimum + log(2π) * nobserved_vars(obs))
 end
 
 # WLS --------------------------------------------------------------------------------------
-minus2ll(lossfun::SemWLS, minimum::Number, model::AbstractSemSingle) = missing
+minus2ll(::SemWLS, ::SemFit, ::AbstractSemSingle) = missing
 
 # compute likelihood for missing data - H0 -------------------------------------------------
-# -2ll = (∑ log(2π)*(nᵢ + mᵢ)) + F*n
-function minus2ll(lossfun::SemFIML, minimum::Number, model::AbstractSemSingle)
+# -2ll = (∑ log(2π)*(nᵢ*mᵢ)) + F*n
+function minus2ll(::SemFIML, fit::SemFit, model::AbstractSemSingle)
     obs = observed(model)::SemObservedMissing
-    F = minimum * nsamples(obs)
+    F = fit.minimum * nsamples(obs)
     F += log(2π) * sum(pat -> nsamples(pat) * nmeasured_vars(pat), obs.patterns)
     return F
 end
