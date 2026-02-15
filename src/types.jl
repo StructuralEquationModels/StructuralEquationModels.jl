@@ -192,10 +192,7 @@ end
 function SemEnsemble(models...; weights = nothing, groups = nothing, kwargs...)
     n = length(models)
     # default weights
-    if isnothing(weights)
-        nsamples_total = sum(nsamples, models)
-        weights = [nsamples(model) / nsamples_total for model in models]
-    end
+    weights = isnothing(weights) ? multigroup_weights(models, n) : weights
     # default group labels
     groups = isnothing(groups) ? Symbol.(:g, 1:n) : groups
     # check parameters equality
@@ -226,7 +223,25 @@ function SemEnsemble(; specification, data, groups, column = :group, kwargs...)
         model = Sem(; specification = ram_matrices, data = data_group, kwargs...)
         push!(models, model)
     end
-    return SemEnsemble(models...; weights = nothing, groups = groups, kwargs...)
+    return SemEnsemble(models...; groups = groups, kwargs...)
+end
+
+function multigroup_weights(models, n)
+    nsamples_total = sum(nsamples, models)
+    uniform_lossfun = check_single_lossfun(models...; throw_error = false)
+    if !uniform_lossfun
+        @info "Your ensemble model contains heterogeneous loss functions.
+                Default weights of (#samples per group/#total samples) will be used".
+        return [(nsamples(model)) / (nsamples_total) for model in models]
+    end
+    lossfun = models[1].loss.functions[1]
+    if !applicable(dof_correction, lossfun)
+        @info "We don't know how to choose group weights for the specified loss function.
+                Default weights of (#samples per group/#total samples) will be used".
+        return [(nsamples(model)) / (nsamples_total) for model in models]
+    end
+    dc = dof_correction(lossfun)
+    return [(nsamples(model)-dc) / (nsamples_total-n*dc) for model in models]
 end
 
 param_labels(ensemble::SemEnsemble) = ensemble.param_labels
