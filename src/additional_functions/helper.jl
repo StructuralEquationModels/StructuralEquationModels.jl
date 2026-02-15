@@ -115,3 +115,37 @@ function nonunique(values::AbstractVector)
     end
     return res
 end
+
+# check that a model only has a single lossfun
+function check_single_lossfun(model::AbstractSemSingle; throw_error)
+    if (length(model.loss.functions) > 1) & throw_error
+        @error "The model has $(length(sem.loss.functions)) loss functions.
+            Only a single loss function is supported."
+    end
+    return isone(length(model.loss.functions))
+end
+
+# check that all models use the same single loss function
+function check_single_lossfun(models::AbstractSemSingle...; throw_error)
+    uniform = true
+    lossfun = models[1].loss.functions[1]
+    L = typeof(lossfun)
+    for (i, model) in enumerate(models)
+        uniform &= check_single_lossfun(model; throw_error = throw_error)
+        cur_lossfun = model.loss.functions[1]
+        if !isa(cur_lossfun, L) & throw_error
+            @error "Loss function for group #$i model is $(typeof(cur_lossfun)), expected $L.
+            Heterogeneous loss functions are not supported."
+        end
+        uniform &= isa(cur_lossfun, L)
+    end
+    return uniform
+end
+
+check_single_lossfun(model::SemEnsemble; throw_error) = 
+    check_single_lossfun(model.sems...; throw_error)
+
+# sclaing corrections for fit measures and multigroup models
+dof_correction(::SemFIML) = 0
+dof_correction(::SemML) = -1
+dof_correction(::SemWLS) = -1
