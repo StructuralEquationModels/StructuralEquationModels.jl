@@ -65,4 +65,7 @@ end
 # Collection
 ############################################################################################
 
-minus2ll(fit::SemFit, model::SemEnsemble) = sum(Base.Fix1(minus2ll, fit), model.sems)
+function minus2ll(fit::SemFit, model::SemEnsemble)
+    check_single_lossfun(model; throw_error = true)
+    return sum(Base.Fix1(minus2ll, fit), model.sems)
+end
