@@ -14,23 +14,23 @@ minus2ll(fit::SemFit) = minus2ll(fit, fit.model)
 
 function minus2ll(fit::SemFit, model::AbstractSemSingle)
     check_single_lossfun(model; throw_error = true)
-    return minus2ll(model.loss.functions[1], fit, model)
+    F = objective(model, fit.solution)
+    return minus2ll(model.loss.functions[1], F, model)
 end
 
 # SemML ------------------------------------------------------------------------------------
-function minus2ll(::SemML, fit::SemFit, model::AbstractSemSingle)
-    obs = observed(model)
-    return nsamples(obs) * (fit.minimum + log(2π) * nobserved_vars(obs))
+function minus2ll(::SemML, F, model::AbstractSemSingle)
+    return nsamples(model) * (F + log(2π) * nobserved_vars(model))
 end
 
 # WLS --------------------------------------------------------------------------------------
-minus2ll(::SemWLS, ::SemFit, ::AbstractSemSingle) = missing
+minus2ll(::SemWLS, F, ::AbstractSemSingle) = missing
 
 # compute likelihood for missing data - H0 -------------------------------------------------
 # -2ll = (∑ log(2π)*(nᵢ*mᵢ)) + F*n
-function minus2ll(::SemFIML, fit::SemFit, model::AbstractSemSingle)
+function minus2ll(::SemFIML, F, model::AbstractSemSingle)
     obs = observed(model)::SemObservedMissing
-    F = fit.minimum * nsamples(obs)
+    F *= nsamples(obs)
     F += log(2π) * sum(pat -> nsamples(pat) * nmeasured_vars(pat), obs.patterns)
     return F
 end

@@ -23,7 +23,7 @@ end
 
 χ²(::SemML, fit::SemFit, model::AbstractSemSingle) =
     (nsamples(fit) - 1) *
-    (fit.minimum - logdet(obs_cov(observed(model))) - nobserved_vars(observed(model)))
+    (fit.minimum - logdet(obs_cov(observed(model))) - nobserved_vars(model))
 
 # bollen, p. 115, only correct for GLS weight matrix
 χ²(::SemWLS, fit::SemFit, model::AbstractSemSingle) =
@@ -51,11 +51,14 @@ function χ²(::SemWLS, fit::SemFit, models::SemEnsemble)
 end
 
 function χ²(::SemML, fit::SemFit, models::SemEnsemble)
-    G = sum(zip(models.weights, models.sems)) do (w, model)
-        data = observed(model)
-        w * (logdet(obs_cov(data)) + nobserved_vars(data))
+    F = 0
+    for model in models.sems
+        Fᵢ = objective(model, fit.solution)
+        Fᵢ -= logdet(obs_cov(observed(model))) + nobserved_vars(model)
+        Fᵢ *= nsamples(model) - 1
+        F += Fᵢ
     end
-    return (nsamples(models) - models.n) * (fit.minimum - G)
+    return F
 end
 
 function χ²(::SemFIML, fit::SemFit, models::SemEnsemble)

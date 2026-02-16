@@ -145,7 +145,7 @@ end
 check_single_lossfun(model::SemEnsemble; throw_error) = 
     check_single_lossfun(model.sems...; throw_error)
 
-# sclaing corrections for fit measures and multigroup models
-dof_correction(::SemFIML) = 0
-dof_correction(::SemML) = -1
-dof_correction(::SemWLS) = -1
+# scaling corrections for multigroup models
+mg_correction(::SemFIML) = 0
+mg_correction(::SemML) = 0
+mg_correction(::SemWLS) = -1
