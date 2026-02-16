@@ -58,24 +58,24 @@ function SemWLS(;
     meanstructure = false,
     kwargs...,
 )
-
     if observed isa SemObservedMissing
-        throw(ArgumentError(
-            "WLS estimation can't be used with `SemObservedMissing`.
-            Use full information maximum likelihood (FIML) estimation or remove missing 
-            values in your data.
-            A FIML model can be constructed with 
-            Sem(
-                ...,
-                observed = SemObservedMissing,
-                loss = SemFIML,
-                meanstructure = true
-            )"))
+        @warn """
+        WLS estimation with `SemObservedMissing` will use an approximate covariance and mean estimated with EM algorithm.
+        For more accurate results, consider using full information maximum likelihood (FIML) estimation or remove missing values in your data.
+        A FIML model can be constructed with
+        Sem(
+            ...,
+            observed = SemObservedMissing,
+            loss = SemFIML,
+            meanstructure = true
+        )
+        """
     end
 
-    if !(implied isa RAMSymbolic) 
-        throw(ArgumentError(
-            "WLS estimation is only available with the implied type RAMSymbolic at the moment."))
+    if !(implied isa RAMSymbolic)
+        "WLS estimation is only available with the implied type RAMSymbolic at the moment." |>
+        ArgumentError |>
+        throw
     end
 
     nobs_vars = nobserved_vars(observed)
