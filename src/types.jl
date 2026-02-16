@@ -235,13 +235,13 @@ function multigroup_weights(models, n)
         return [(nsamples(model)) / (nsamples_total) for model in models]
     end
     lossfun = models[1].loss.functions[1]
-    if !applicable(dof_correction, lossfun)
+    if !applicable(mg_correction, lossfun)
         @info "We don't know how to choose group weights for the specified loss function.
                 Default weights of (#samples per group/#total samples) will be used".
         return [(nsamples(model)) / (nsamples_total) for model in models]
     end
-    dc = dof_correction(lossfun)
-    return [(nsamples(model)-dc) / (nsamples_total-n*dc) for model in models]
+    c = mg_correction(lossfun)
+    return [(nsamples(model)+c) / (nsamples_total+n*c) for model in models]
 end
 
 param_labels(ensemble::SemEnsemble) = ensemble.param_labels
