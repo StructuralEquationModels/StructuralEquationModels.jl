@@ -20,7 +20,7 @@ import StatsAPI: params, coef, coefnames, dof, fit, nobs, coeftable
 
 using InteractiveUtils: subtypes
 
-export StenoGraphs, @StenoGraph, meld, SimpleNode
+export @StenoGraph, meld
 
 const SEM = StructuralEquationModels
 
