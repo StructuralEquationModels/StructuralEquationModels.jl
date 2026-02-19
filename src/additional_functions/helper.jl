@@ -142,7 +142,7 @@ function check_single_lossfun(models::AbstractSemSingle...; throw_error)
     return uniform
 end
 
-check_single_lossfun(model::SemEnsemble; throw_error) = 
+check_single_lossfun(model::SemEnsemble; throw_error) =
     check_single_lossfun(model.sems...; throw_error)
 
 # scaling corrections for multigroup models
