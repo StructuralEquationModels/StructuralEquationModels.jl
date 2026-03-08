@@ -27,161 +27,270 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE. =#
 
 """
-    em_mvn!(;
-        observed::SemObservedMissing,
-        start_em = start_em_observed,
-        max_iter_em = 100,
-        rtol_em = 1e-4,
-        kwargs...)
+    em_mvn(patterns::AbstractVector{SemObservedMissingPattern};
+           max_iter_em = 100,
+           rtol_em = 1e-4,
+           max_nsamples_em = nothing,
+           min_eigval = nothing,
+           start_em = start_em_observed,
+           start_kwargs...)
 
-Estimates the covariance matrix and mean vector of the normal distribution via expectation maximization for `observed`.
-Overwrites the statistics stored in `observed`.
+Estimate the covariance and the mean for data with missing values using
+the expectation maximization (EM) algorithm.
 
-Uses the EM algorithm for MVN-distributed data with missing values
+# Arguments
+- `patterns`: the observed data with missing values, grouped by missingness pattern (see [`
+  SemObservedMissingPattern`](@ref))
+- `max_iter_em`: the maximum number of EM iterations
+- `rtol_em`: the relative tolerance for convergence of the EM algorithm
+- `max_nsamples_em`: the maximum number of samples to use for each pattern in each EM iteration,
+  by default all samples are used, but for large datasets it may be desirable to use a random
+  subset of the data for each pattern in each EM iteration to speed up the algorithm
+- `min_eigval`: the minimum eigenvalue for the covariance matrix;
+   if not `nothing`, the covariance matrix is regularized in each EM iteration to ensure that
+   all eigenvalues are not smaller than `min_eigval`, which can help with convergence;
+- `start_em`: the function to generate starting values for the EM algorithm, by default
+  `start_em_observed` which uses the mean and covariance of the full cases if available
+- `start_kwargs...`: keyword arguments to pass to the `start_em` function
+
+Returns the tuple of the covariance matrix and the mean vector for the estimated
+multivariate normal (MVN) distribution.
+
+# References
+
+Based on the EM algorithm for MVN-distributed data with missing values
 adapted from the supplementary material to the book *Machine Learning: A Probabilistic Perspective*,
 copyright (2010) Kevin Murphy and Matt Dunham: see
 [*gaussMissingFitEm.m*](https://github.com/probml/pmtk3/blob/master/toolbox/BasicModels/gauss/sub/gaussMissingFitEm.m) and
 [*emAlgo.m*](https://github.com/probml/pmtk3/blob/master/toolbox/Algorithms/optimization/emAlgo.m) scripts.
 """
-function em_mvn!(
-    observed::SemObservedMissing;
+function em_mvn(
+    patterns::AbstractVector{<:SemObservedMissingPattern};
+    max_iter_em::Integer = 100,
+    rtol_em::Number = 1e-4,
+    max_nsamples_em::Union{Integer, Nothing} = nothing,
+    min_eigval::Union{Number, Nothing} = nothing,
+    verbose::Bool = false,
     start_em = start_em_observed,
-    max_iter_em = 100,
-    rtol_em = 1e-4,
-    kwargs...,
+    start_kwargs...,
 )
-    nvars = nobserved_vars(observed)
-    nsamps = nsamples(observed)
+    nobs_vars = nobserved_vars(patterns[1])
 
-    # preallocate stuff
-    𝔼x_pre = zeros(nvars)
-    𝔼xxᵀ_pre = zeros(nvars, nvars)
-
-    ### precompute for full cases
-    fullpat = observed.patterns[1]
-    if nmissed_vars(fullpat) == 0
-        for row in eachrow(fullpat.data)
-            𝔼x_pre += row
-            𝔼xxᵀ_pre += row * row'
+    verbose && @info "Estimating N(μ, Σ) for complete observations..."
+    𝔼x_full = zeros(nobs_vars)
+    𝔼xxᵀ_full = zeros(nobs_vars, nobs_vars)
+    nsamples_full = 0
+    for pat in patterns
+        if nmissed_vars(pat) == 0
+            𝔼x_full .+= sum(pat.data, dims = 2)
+            mul!(𝔼xxᵀ_full, pat.data, pat.data', 1, 1)
+            nsamples_full += nsamples(pat)
         end
     end
-
-    # initialize
-    em_model = start_em(observed; kwargs...)
-    em_model_prev = EmMVNModel(zeros(nvars, nvars), zeros(nvars), false)
-    iter = 1
-    done = false
-    𝔼x = zeros(nvars)
-    𝔼xxᵀ = zeros(nvars, nvars)
-
-    while !done
-        em_mvn_Estep!(𝔼x, 𝔼xxᵀ, em_model, observed, 𝔼x_pre, 𝔼xxᵀ_pre)
-        em_mvn_Mstep!(em_model, nsamps, 𝔼x, 𝔼xxᵀ)
-
-        if iter > max_iter_em
-            done = true
-            @warn "EM Algorithm for MVN missing data did not converge. Likelihood for FIML is not interpretable.
-            Maybe try passing different starting values via 'start_em = ...' "
-        elseif iter > 1
-            done =
-                isapprox(em_model_prev.μ, em_model.μ; rtol = rtol_em) &
-                isapprox(em_model_prev.Σ, em_model.Σ; rtol = rtol_em)
-        end
-
-        iter = iter + 1
-        em_model_prev.μ, em_model_prev.Σ = em_model.μ, em_model.Σ
+    if nsamples_full == 0
+        @warn "No full cases in data"
     end
 
-    # update EM Mode in observed
-    observed.em_model.Σ .= em_model.Σ
-    observed.em_model.μ .= em_model.μ
-    observed.em_model.fitted = true
+    verbose && @info "Estimating initial μ and Σ..."
+    Σ₀, μ = start_em(patterns; start_kwargs...)
+    Σ = convert(Matrix, Σ₀)
+    @assert all(isfinite, Σ) all(isfinite, μ)
+    Σ_prev, μ_prev = copy(Σ), copy(μ)
 
-    return nothing
+    iter = 0
+    converged = false
+    Δμ_rel = NaN
+    ΔΣ_rel = NaN
+    progress = Progress(
+        max_iter_em,
+        dt = 1.0,
+        showspeed = true,
+        desc = "EM inference of MVN(μ, Σ)",
+    )
+    while !converged && (iter < max_iter_em)
+        em_step!(
+            Σ,
+            μ,
+            Σ_prev,
+            μ_prev,
+            patterns,
+            𝔼xxᵀ_full,
+            𝔼x_full,
+            nsamples_full;
+            max_nsamples_em,
+            min_eigval,
+        )
+
+        if iter > 0
+            Δμ = norm(μ - μ_prev)
+            ΔΣ = norm(Σ - Σ_prev)
+            Δμ_rel = Δμ / max(norm(μ_prev), norm(μ))
+            ΔΣ_rel = ΔΣ / max(norm(Σ_prev), norm(Σ))
+            #@info "Iteration #$iter: ΔΣ=$(ΔΣ) ΔΣ/Σ=$(ΔΣ_rel) Δμ=$(Δμ) Δμ/μ=$(Δμ_rel)"
+            # converged = isapprox(ll, ll_prev; rtol = rtol)
+            converged = ΔΣ_rel <= rtol_em && Δμ_rel <= rtol_em
+        end
+        if !converged
+            Σ, Σ_prev = Σ_prev, Σ
+            μ, μ_prev = μ_prev, μ
+        end
+        iter += 1
+        next!(progress, step = 1, showvalues = [("ΔΣ/Σ", ΔΣ_rel), ("Δμ/μ", Δμ_rel)])
+    end
+    finish!(progress)
+
+    if !converged
+        @warn "EM inference for MVN missing data did not converge in $iter iterations.\n" *
+              "Final tolerances: ΔΣ/Σ=$(ΔΣ_rel), Δμ/μ=$(Δμ_rel).\n" *
+              "Likelihood for FIML is not interpretable.\n" *
+              "Maybe try passing different starting values via 'start_em = ...' "
+    else
+        verbose &&
+            @info "EM for MVN missing data converged in $iter iterations: ΔΣ/Σ=$(ΔΣ_rel), Δμ/μ=$(Δμ_rel)."
+    end
+
+    StatsBase._symmetrize!(Σ)
+
+    return Σ, μ
 end
 
-# E and M step -----------------------------------------------------------------------------
-
-function em_mvn_Estep!(𝔼x, 𝔼xxᵀ, em_model, observed, 𝔼x_pre, 𝔼xxᵀ_pre)
-    𝔼x .= 0.0
-    𝔼xxᵀ .= 0.0
-
-    𝔼xᵢ = copy(𝔼x)
-    𝔼xxᵀᵢ = copy(𝔼xxᵀ)
-
-    μ = em_model.μ
-    Σ = em_model.Σ
+# E and M steps combined
+function em_step!(
+    Σ::AbstractMatrix,
+    μ::AbstractVector,
+    Σ₀::AbstractMatrix,
+    μ₀::AbstractVector,
+    patterns::AbstractVector{<:SemObservedMissingPattern},
+    𝔼xxᵀ_full::AbstractMatrix,
+    𝔼x_full::AbstractVector,
+    nsamples_full::Integer;
+    max_nsamples_em::Union{Integer, Nothing} = nothing,
+    min_eigval::Union{Number, Nothing} = nothing,
+)
+    # E step: update 𝔼x and 𝔼xxᵀ
+    copy!(μ, 𝔼x_full)
+    copy!(Σ, 𝔼xxᵀ_full)
+    nsamples_used = nsamples_full
+    mul!(Σ, μ₀, μ₀', -nsamples_used, 1)
+    axpy!(-nsamples_used, μ₀, μ)
 
     # Compute the expected sufficient statistics
-    for pat in observed.patterns
-        (nmissed_vars(pat) == 0) && continue # skip full cases
+    for pat in patterns
+        (nmissed_vars(pat) == 0) && continue # full cases already accounted for
 
         # observed and unobserved vars
         u = pat.miss_mask
         o = pat.measured_mask
 
-        # precompute for pattern
-        Σoo = Σ[o, o]
-        Σuo = Σ[u, o]
-        μu = μ[u]
-        μo = μ[o]
+        # compute cholesky to speed-up ldiv!()
+        Σ₀oo_chol = cholesky(Symmetric(Σ₀[o, o]))
+        Σ₀uo = Σ₀[u, o]
+        μ₀u = μ₀[u]
+        μ₀o = μ₀[o]
 
-        V = Σ[u, u] - Σuo * (Σoo \ Σ[o, u])
+        # get pattern observations
+        nsamples_pat =
+            !isnothing(max_nsamples_em) ? min(max_nsamples_em, nsamples(pat)) :
+            nsamples(pat)
+        zo =
+            nsamples_pat < nsamples(pat) ?
+            pat.data[:, sort!(sample(1:nsamples(pat), nsamples_pat, replace = false))] :
+            copy(pat.data)
+        zo .-= μ₀o # subtract current mean from observations
 
-        # loop trough data
-        for rowdata in eachrow(pat.data)
-            m = μu + Σuo * (Σoo \ (rowdata - μo))
+        𝔼zo = sum(zo, dims = 2)
+        𝔼zu = fill!(similar(μ₀u), 0)
 
-            𝔼xᵢ[u] = m
-            𝔼xᵢ[o] = rowdata
-            𝔼xxᵀᵢ[u, u] = 𝔼xᵢ[u] * 𝔼xᵢ[u]' + V
-            𝔼xxᵀᵢ[o, o] = 𝔼xᵢ[o] * 𝔼xᵢ[o]'
-            𝔼xxᵀᵢ[o, u] = 𝔼xᵢ[o] * 𝔼xᵢ[u]'
-            𝔼xxᵀᵢ[u, o] = 𝔼xᵢ[u] * 𝔼xᵢ[o]'
+        𝔼zzᵀuo = fill!(similar(Σ₀uo), 0)
+        𝔼zzᵀuu = nsamples_pat * Σ₀[u, u]
+        mul!(𝔼zzᵀuu, Σ₀uo, Σ₀oo_chol \ Σ₀uo', -nsamples_pat, 1)
 
-            𝔼x .+= 𝔼xᵢ
-            𝔼xxᵀ .+= 𝔼xxᵀᵢ
+        # loop through observations
+        yᵢo = similar(μ₀o)
+        𝔼zᵢu = similar(μ₀u)
+        @inbounds for zᵢo in eachcol(zo)
+            ldiv!(yᵢo, Σ₀oo_chol, zᵢo)
+            mul!(𝔼zᵢu, Σ₀uo, yᵢo)
+            mul!(𝔼zzᵀuu, 𝔼zᵢu, 𝔼zᵢu', 1, 1)
+            mul!(𝔼zzᵀuo, 𝔼zᵢu, zᵢo', 1, 1)
+            𝔼zu .+= 𝔼zᵢu
         end
+        # correct 𝔼zzᵀ by adding back μ₀×𝔼z' + 𝔼z'×μ₀
+        mul!(𝔼zzᵀuo, μ₀u, 𝔼zo', 1, 1)
+        mul!(𝔼zzᵀuo, 𝔼zu, μ₀o', 1, 1)
+
+        mul!(𝔼zzᵀuu, μ₀u, 𝔼zu', 1, 1)
+        mul!(𝔼zzᵀuu, 𝔼zu, μ₀u', 1, 1)
+
+        𝔼zzᵀoo = zo * zo'
+        mul!(𝔼zzᵀoo, μ₀o, 𝔼zo', 1, 1)
+        mul!(𝔼zzᵀoo, 𝔼zo, μ₀o', 1, 1)
+
+        # update Σ and μ
+        Σ[o, o] .+= 𝔼zzᵀoo
+        Σ[u, o] .+= 𝔼zzᵀuo
+        Σ[o, u] .+= 𝔼zzᵀuo'
+        Σ[u, u] .+= 𝔼zzᵀuu
+
+        μ[o] .+= 𝔼zo
+        μ[u] .+= 𝔼zu
+
+        nsamples_used += nsamples_pat
     end
 
-    𝔼x .+= 𝔼x_pre
-    𝔼xxᵀ .+= 𝔼xxᵀ_pre
-end
+    # M step: update Σ and μ
+    lmul!(1 / nsamples_used, Σ)
+    lmul!(1 / nsamples_used, μ)
+    # at this point μ = μ - μ₀
+    # and Σ = Σ + (μ - μ₀)×(μ - μ₀)' - μ₀×μ₀'
+    mul!(Σ, μ, μ₀', -1, 1)
+    mul!(Σ, μ₀, μ', -1, 1)
+    mul!(Σ, μ, μ', -1, 1)
+    μ .+= μ₀
 
-function em_mvn_Mstep!(em_model, nsamples, 𝔼x, 𝔼xxᵀ)
-    em_model.μ = 𝔼x / nsamples
-    Σ = Symmetric(𝔼xxᵀ / nsamples - em_model.μ * em_model.μ')
-    em_model.Σ = Σ
-    return nothing
+    StatsBase._symmetrize!(Σ) # correct numerical errors
+    if !isnothing(min_eigval)
+        # try to fix non-positive-definite Σ
+        reg_Σ = trunc_eigvals(Σ, min_eigval)
+        # if no truncation was done, reg_Σ will be the same object
+        (reg_Σ === Σ) || copyto!(Σ, reg_Σ)
+    end
+
+    return Σ, μ
 end
 
 # generate starting values -----------------------------------------------------------------
 
 # use μ and Σ of full cases
-function start_em_observed(observed::SemObservedMissing; kwargs...)
-    fullpat = observed.patterns[1]
-    if (nmissed_vars(fullpat) == 0) && (nobserved_vars(fullpat) > 1)
+function start_em_observed(patterns::AbstractVector{<:SemObservedMissingPattern}; kwargs...)
+    fullpat = patterns[1]
+    if (nmissed_vars(fullpat) == 0) && (nsamples(fullpat) > 1)
         μ = copy(fullpat.measured_mean)
-        Σ = copy(Symmetric(fullpat.measured_cov))
+        Σ = copy(parent(fullpat.measured_cov))
         if !isposdef(Σ)
-            Σ = Matrix(Diagonal(Σ))
+            Σ = Diagonal(Σ)
         end
-        return EmMVNModel(Σ, μ, false)
+        return Σ, μ
     else
-        return start_em_simple(observed, kwargs...)
+        return start_em_simple(patterns, kwargs...)
     end
 end
 
 # use μ = O and Σ = I
-function start_em_simple(observed::SemObservedMissing; kwargs...)
-    nvars = nobserved_vars(observed)
-    μ = zeros(nvars)
-    Σ = rand(nvars, nvars)
+function start_em_simple(patterns::AbstractVector{<:SemObservedMissingPattern}; kwargs...)
+    nobs_vars = nobserved_vars(first(patterns))
+    μ = zeros(nobs_vars)
+    Σ = rand(nobs_vars, nobs_vars)
     Σ = Σ * Σ'
-    return EmMVNModel(Σ, μ, false)
+    return Σ, μ
 end
 
 # set to passed values
-function start_em_set(observed::SemObservedMissing; model_em, kwargs...)
-    return em_model
+function start_em_set(
+    patterns::AbstractVector{<:SemObservedMissingPattern};
+    obs_cov::AbstractMatrix,
+    obs_mean::AbstractVector,
+    kwargs...,
+)
+    return copy(obs_cov), copy(obs_mean)
 end
