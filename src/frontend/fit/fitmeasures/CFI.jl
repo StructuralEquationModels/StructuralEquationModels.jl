@@ -14,7 +14,6 @@ without any equality constraints between groups.
 """
 function CFI end
 
-
 # if the user provides a baseline model
 CFI(fit::SemFit, fit_baseline::SemFit) =
     CFI(χ²(fit), dof(fit), χ²(fit_baseline), dof(fit_baseline))
