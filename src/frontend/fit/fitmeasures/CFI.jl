@@ -1,7 +1,16 @@
 """
-    CFI(fit::SemFit)
+    (1) CFI(fit::SemFit, fit_baseline::SemFit)
 
-Return the CFI.
+    (2) CFI(fit::SemFit)
+
+Calculate the Comparative Fit Index (CFI).
+
+The CFI ranges from 0-1 and measures how much better the model 
+fits the data compared to a baseline model.
+If no baseline model is provided, a model with unconstrained
+variances (and means) is compaired against.
+For multigroup models, variances (and means) per group are free 
+without any equality constraints between groups.
 """
 function CFI end
 
