@@ -71,7 +71,7 @@ end
     test_fitmeasures(
         Dict(:CFI => CFI(solution_ml)),
         solution_lav[:fitmeasures_ml];
-        fitmeasure_names = Dict(:CFI => "cfi")
+        fitmeasure_names = Dict(:CFI => "cfi"),
     )
 
     update_se_hessian!(partable, solution_ml)
@@ -94,7 +94,7 @@ end
     test_fitmeasures(
         Dict(:CFI => CFI(solution_ml)),
         solution_lav[:fitmeasures_ml];
-        fitmeasure_names = Dict(:CFI => "cfi")
+        fitmeasure_names = Dict(:CFI => "cfi"),
     )
 
     update_se_hessian!(partable, solution_ml)
@@ -160,7 +160,7 @@ end
     test_fitmeasures(
         Dict(:CFI => CFI(solution_ml)),
         solution_lav[:fitmeasures_ml];
-        fitmeasure_names = Dict(:CFI => "cfi")
+        fitmeasure_names = Dict(:CFI => "cfi"),
     )
 
     update_se_hessian!(partable_s, solution_ml)
@@ -279,7 +279,7 @@ end
     test_fitmeasures(
         Dict(:CFI => CFI(solution_ls)),
         solution_lav[:fitmeasures_ls];
-        fitmeasure_names = Dict(:CFI => "cfi")
+        fitmeasure_names = Dict(:CFI => "cfi"),
     )
 
     @suppress update_se_hessian!(partable, solution_ls)
@@ -397,7 +397,7 @@ if !isnothing(specification_miss_g1)
         test_fitmeasures(
             Dict(:CFI => CFI(solution, solution_varonly)),
             solution_lav[:fitmeasures_fiml];
-            fitmeasure_names = Dict(:CFI => "cfi")
+            fitmeasure_names = Dict(:CFI => "cfi"),
         )
         update_se_hessian!(partable_miss, solution)
         test_estimates(
@@ -419,7 +419,7 @@ if !isnothing(specification_miss_g1)
         test_fitmeasures(
             Dict(:CFI => CFI(solution, solution_varonly)),
             solution_lav[:fitmeasures_fiml];
-            fitmeasure_names = Dict(:CFI => "cfi")
+            fitmeasure_names = Dict(:CFI => "cfi"),
         )
 
         update_se_hessian!(partable_miss, solution)

@@ -16,7 +16,7 @@ function CFI end
 
 
 # if the user provides a baseline model
-CFI(fit::SemFit, fit_baseline::SemFit) = 
+CFI(fit::SemFit, fit_baseline::SemFit) =
     CFI(χ²(fit), dof(fit), χ²(fit_baseline), dof(fit_baseline))
 
 # no baseline -> variance only model
@@ -67,7 +67,9 @@ function χ²_varonly(::SemFIML, model)
     """
     Computing the CFI with FIML requires explicitely passing a fitted baseline model as
         CFI(fit::SemFit, fit_baseline::SemFit)
-    """ |> ArgumentError |> throw
+    """ |>
+    ArgumentError |>
+    throw
 end
 
 function dof_varonly(model::AbstractSemSingle)
