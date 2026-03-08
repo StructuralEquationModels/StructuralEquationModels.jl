@@ -237,7 +237,8 @@ graph_varonly = @StenoGraph begin
     Symbol(1) → _(observed_vars)
 end
 
-spec_varonly = ParameterTable(graph_varonly, latent_vars = latent_vars, observed_vars = observed_vars)
+spec_varonly =
+    ParameterTable(graph_varonly, latent_vars = latent_vars, observed_vars = observed_vars)
 
 start_test = [fill(0.5, 8); fill(0.05, 3); fill(1.0, 11); fill(0.05, 9)]
 start_test_mean =
