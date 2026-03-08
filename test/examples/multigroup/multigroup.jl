@@ -152,6 +152,19 @@ specification_miss = convert(Dict{Symbol, RAMMatrices}, partable_miss)
 specification_miss_g1 = specification_miss[:Pasteur]
 specification_miss_g2 = specification_miss[:Grant_White]
 
+# CFI baseline model
+graph_varonly = @StenoGraph begin
+    _(observed_vars) ↔ _(observed_vars)
+    Symbol(1) → _(observed_vars)
+end
+
+partable_varonly = EnsembleParameterTable(
+    graph_varonly;
+    observed_vars = observed_vars,
+    latent_vars = latent_vars,
+    groups = [:Pasteur, :Grant_White],
+)
+
 start_test = [
     fill(0.5, 6)
     fill(1.0, 9)

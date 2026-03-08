@@ -68,6 +68,12 @@ end
         rtol = 1e-2,
         atol = 1e-7,
     )
+    test_fitmeasures(
+        Dict(:CFI => CFI(solution_ml)),
+        solution_lav[:fitmeasures_ml];
+        fitmeasure_names = Dict(:CFI => "cfi")
+    )
+
     update_se_hessian!(partable, solution_ml)
     test_estimates(
         partable,
@@ -85,6 +91,12 @@ end
         rtol = 1e-2,
         atol = 1e-7,
     )
+    test_fitmeasures(
+        Dict(:CFI => CFI(solution_ml)),
+        solution_lav[:fitmeasures_ml];
+        fitmeasure_names = Dict(:CFI => "cfi")
+    )
+
     update_se_hessian!(partable, solution_ml)
     test_estimates(
         partable,
@@ -144,6 +156,11 @@ end
         solution_lav[:fitmeasures_ml];
         rtol = 1e-2,
         atol = 1e-7,
+    )
+    test_fitmeasures(
+        Dict(:CFI => CFI(solution_ml)),
+        solution_lav[:fitmeasures_ml];
+        fitmeasure_names = Dict(:CFI => "cfi")
     )
 
     update_se_hessian!(partable_s, solution_ml)
@@ -259,6 +276,11 @@ end
         rtol = 1e-2,
         atol = 1e-5,
     )
+    test_fitmeasures(
+        Dict(:CFI => CFI(solution_ls)),
+        solution_lav[:fitmeasures_ls];
+        fitmeasure_names = Dict(:CFI => "cfi")
+    )
 
     @suppress update_se_hessian!(partable, solution_ls)
     test_estimates(
@@ -297,6 +319,16 @@ if !isnothing(specification_miss_g1)
     model_ml_multigroup = SemEnsemble(model_g1, model_g2)
     model_ml_multigroup2 = SemEnsemble(
         specification = partable_miss,
+        data = dat_missing,
+        column = :school,
+        groups = [:Pasteur, :Grant_White],
+        loss = SemFIML,
+        observed = SemObservedMissing,
+        meanstructure = true,
+    )
+
+    model_ml_varonly = SemEnsemble(
+        specification = partable_varonly,
         data = dat_missing,
         column = :school,
         groups = [:Pasteur, :Grant_White],
@@ -361,6 +393,12 @@ if !isnothing(specification_miss_g1)
             rtol = 1e-3,
             atol = 0,
         )
+        solution_varonly = fit(semoptimizer, model_ml_varonly)
+        test_fitmeasures(
+            Dict(:CFI => CFI(solution, solution_varonly)),
+            solution_lav[:fitmeasures_fiml];
+            fitmeasure_names = Dict(:CFI => "cfi")
+        )
         update_se_hessian!(partable_miss, solution)
         test_estimates(
             partable_miss,
@@ -378,6 +416,12 @@ if !isnothing(specification_miss_g1)
             rtol = 1e-3,
             atol = 0,
         )
+        test_fitmeasures(
+            Dict(:CFI => CFI(solution, solution_varonly)),
+            solution_lav[:fitmeasures_fiml];
+            fitmeasure_names = Dict(:CFI => "cfi")
+        )
+
         update_se_hessian!(partable_miss, solution)
         test_estimates(
             partable_miss,

@@ -115,7 +115,16 @@ end
 
 @testset "fitmeasures/se_ml" begin
     solution_ml = fit(semoptimizer, model_ml)
-    test_fitmeasures(fit_measures(solution_ml), solution_lav[:fitmeasures_ml]; atol = 1e-3)
+    test_fitmeasures(
+        fit_measures(solution_ml),
+        solution_lav[:fitmeasures_ml];
+        atol = 1e-3
+    )
+    test_fitmeasures(
+        Dict(:CFI => CFI(solution_ml)),
+        solution_lav[:fitmeasures_ml];
+        fitmeasure_names = Dict(:CFI => "cfi")
+    )
 
     update_se_hessian!(partable, solution_ml)
     test_estimates(
@@ -136,6 +145,12 @@ end
         atol = 1e-3,
         fitmeasure_names = fitmeasure_names_ls,
     )
+    test_fitmeasures(
+        Dict(:CFI => CFI(solution_ls)),
+        solution_lav[:fitmeasures_ls];
+        fitmeasure_names = Dict(:CFI => "cfi")
+    )
+
     @test ismissing(fm[:AIC]) && ismissing(fm[:BIC]) && ismissing(fm[:minus2ll])
 
     @suppress update_se_hessian!(partable, solution_ls)
@@ -312,6 +327,11 @@ end
         solution_lav[:fitmeasures_ml_mean];
         atol = 0.002,
     )
+    test_fitmeasures(
+        Dict(:CFI => CFI(solution_ml)),
+        solution_lav[:fitmeasures_ml_mean];
+        fitmeasure_names = Dict(:CFI => "cfi")
+    )
 
     update_se_hessian!(partable_mean, solution_ml)
     test_estimates(
@@ -333,6 +353,11 @@ end
         fitmeasure_names = fitmeasure_names_ls,
     )
     @test ismissing(fm[:AIC]) && ismissing(fm[:BIC]) && ismissing(fm[:minus2ll])
+    test_fitmeasures(
+        Dict(:CFI => CFI(solution_ls)),
+        solution_lav[:fitmeasures_ls_mean];
+        fitmeasure_names = Dict(:CFI => "cfi")
+    )
 
     @suppress update_se_hessian!(partable_mean, solution_ls)
     test_estimates(
@@ -407,6 +432,16 @@ model_ml_sym = Sem(
     meanstructure = true,
 )
 
+if !ismissing(spec_varonly)
+    model_varonly = Sem(
+        specification = spec_varonly,
+        data = dat_missing,
+        observed = SemObservedMissing,
+        loss = SemFIML,
+        meanstructure = true,
+    )
+end
+
 ############################################################################################
 ### test gradients
 ############################################################################################
@@ -446,6 +481,14 @@ end
         solution_lav[:fitmeasures_fiml];
         atol = 1e-3,
     )
+    if !ismissing(spec_varonly)
+        solution_varonly = fit(semoptimizer, model_varonly)
+        test_fitmeasures(
+            Dict(:CFI => CFI(solution_ml, solution_varonly)),
+            solution_lav[:fitmeasures_fiml];
+            fitmeasure_names = Dict(:CFI => "cfi")
+        )
+    end
 
     update_se_hessian!(partable_mean, solution_ml)
     test_estimates(

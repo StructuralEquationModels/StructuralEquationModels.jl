@@ -104,6 +104,8 @@ partable_mean = ParameterTable(spec_mean)
 
 @test SEM.param_labels(partable_mean) == SEM.param_labels(spec_mean)
 
+spec_varonly = missing
+
 start_test = [fill(1.0, 11); fill(0.05, 3); fill(0.05, 6); fill(0.5, 8); fill(0.05, 3)]
 start_test_mean =
     [fill(1.0, 11); fill(0.05, 3); fill(0.05, 6); fill(0.5, 8); fill(0.05, 3); fill(0.1, 7)]
@@ -144,6 +146,7 @@ spec_mean = ParameterTable(spec_mean)
 
 partable = spec
 partable_mean = spec_mean
+spec_varonly = missing
 
 opt_engine = :Optim
 @testset "RAMMatrices → ParameterTable | constructor | Optim" begin
@@ -227,6 +230,14 @@ spec_mean = ParameterTable(graph, latent_vars = latent_vars, observed_vars = obs
 sort_vars!(spec_mean)
 
 partable_mean = spec_mean
+
+# varonly model for CFI
+graph_varonly = @StenoGraph begin
+    _(observed_vars) ↔ _(observed_vars)
+    Symbol(1) → _(observed_vars)
+end
+
+spec_varonly = ParameterTable(graph_varonly, latent_vars = latent_vars, observed_vars = observed_vars)
 
 start_test = [fill(0.5, 8); fill(0.05, 3); fill(1.0, 11); fill(0.05, 9)]
 start_test_mean =

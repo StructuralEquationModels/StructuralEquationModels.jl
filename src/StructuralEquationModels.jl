@@ -84,6 +84,7 @@ include("frontend/fit/fitmeasures/dof.jl")
 include("frontend/fit/fitmeasures/minus2ll.jl")
 include("frontend/fit/fitmeasures/p.jl")
 include("frontend/fit/fitmeasures/RMSEA.jl")
+include("frontend/fit/fitmeasures/CFI.jl")
 include("frontend/fit/fitmeasures/fit_measures.jl")
 # standard errors
 include("frontend/fit/standard_errors/hessian.jl")
@@ -186,6 +187,7 @@ export AbstractSem,
     minus2ll,
     p_value,
     RMSEA,
+    CFI,
     EmMVNModel,
     se_hessian,
     se_bootstrap,

@@ -110,7 +110,16 @@ end
 
 @testset "fitmeasures/se_ml" begin
     solution_ml = fit(optimizer_obj, model_ml)
-    test_fitmeasures(fit_measures(solution_ml), solution_lav[:fitmeasures_ml]; atol = 1e-3)
+    test_fitmeasures(
+        fit_measures(solution_ml),
+        solution_lav[:fitmeasures_ml];
+        atol = 1e-3
+    )
+    test_fitmeasures(
+        Dict(:CFI => CFI(solution_ml)),
+        solution_lav[:fitmeasures_ml];
+        fitmeasure_names = Dict(:CFI => "cfi")
+    )
 
     update_se_hessian!(partable, solution_ml)
     test_estimates(
@@ -130,6 +139,11 @@ end
         solution_lav[:fitmeasures_ls];
         atol = 1e-3,
         fitmeasure_names = fitmeasure_names_ls,
+    )
+    test_fitmeasures(
+        Dict(:CFI => CFI(solution_ls)),
+        solution_lav[:fitmeasures_ls];
+        fitmeasure_names = Dict(:CFI => "cfi")
     )
     @test (fm[:AIC] === missing) & (fm[:BIC] === missing) & (fm[:minus2ll] === missing)
 
@@ -273,6 +287,11 @@ end
         solution_lav[:fitmeasures_ml_mean];
         atol = 1e-3,
     )
+    test_fitmeasures(
+        Dict(:CFI => CFI(solution_ml)),
+        solution_lav[:fitmeasures_ml_mean];
+        fitmeasure_names = Dict(:CFI => "cfi")
+    )
 
     update_se_hessian!(partable_mean, solution_ml)
     test_estimates(
@@ -292,6 +311,11 @@ end
         solution_lav[:fitmeasures_ls_mean];
         atol = 1e-3,
         fitmeasure_names = fitmeasure_names_ls,
+    )
+    test_fitmeasures(
+        Dict(:CFI => CFI(solution_ls)),
+        solution_lav[:fitmeasures_ls_mean];
+        fitmeasure_names = Dict(:CFI => "cfi")
     )
     @test (fm[:AIC] === missing) & (fm[:BIC] === missing) & (fm[:minus2ll] === missing)
 
