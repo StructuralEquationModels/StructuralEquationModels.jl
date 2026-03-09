@@ -19,7 +19,7 @@ Return bootstrap samples for `statistic`.
 - `n_boot`: number of boostrap samples
 - `data`: data to sample from. Only needed if different than the data from `sem_fit`
 - `specification`: a `ParameterTable` or `RAMMatrices` object passed to `replace_observed`.
-   Necessary for FIML models.
+   Necessary for FIML / WLS models.
 - `engine`: optimizer engine, passed to `fit`.
 - `parallel`: if `true`, run bootstrap samples in parallel on all available threads.
   The number of threads is controlled by the `JULIA_NUM_THREADS` environment variable or
@@ -143,7 +143,7 @@ Return bootstrap standard errors.
 - `n_boot`: number of boostrap samples
 - `data`: data to sample from. Only needed if different than the data from `sem_fit`
 - `specification`: a `ParameterTable` or `RAMMatrices` object passed to `replace_observed`.
-   Necessary for FIML models.
+   Necessary for FIML / WLS models.
 - `engine`: optimizer engine, passed to `fit`.
 - `parallel`: if `true`, run bootstrap samples in parallel on all available threads.
   The number of threads is controlled by the `JULIA_NUM_THREADS` environment variable or

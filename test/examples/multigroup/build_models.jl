@@ -83,7 +83,7 @@ end
         lav_col = :se,
         lav_groups = Dict(:Pasteur => 1, :Grant_White => 2),
     )
-    test_bootstrap(solution_ml)
+    test_bootstrap(solution_ml, partable)
     smoketest_CI_z(solution_ml, partable)
 
     solution_ml = fit(model_ml_multigroup2)
@@ -293,7 +293,7 @@ end
         lav_col = :se,
         lav_groups = Dict(:Pasteur => 1, :Grant_White => 2),
     )
-    test_bootstrap(solution_ls)
+    test_bootstrap(solution_ls, partable)
     smoketest_CI_z(solution_ls, partable)
 end
 
@@ -412,7 +412,7 @@ if !isnothing(specification_miss_g1)
             lav_col = :se,
             lav_groups = Dict(:Pasteur => 1, :Grant_White => 2),
         )
-        test_bootstrap(solution; n_boot = 500)
+        test_bootstrap(solution, partable_miss)
         smoketest_CI_z(solution, partable_miss)
 
         solution = fit(semoptimizer, model_ml_multigroup2)
