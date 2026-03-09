@@ -134,6 +134,10 @@ end
 SEM.algorithm_name(res::NLoptResult) = res.problem.algorithm
 SEM.n_iterations(res::NLoptResult) = res.problem.numevals
 SEM.convergence(res::NLoptResult) = res.result[3]
+function SEM.converged(res::NLoptResult)
+    flag = res.result[3]
+    return flag ∈ [:SUCCESS, :STOPVAL_REACHED, :FTOL_REACHED, :XTOL_REACHED]
+end
 
 # construct NLopt.jl problem
 function NLopt_problem(algorithm, options, npar)

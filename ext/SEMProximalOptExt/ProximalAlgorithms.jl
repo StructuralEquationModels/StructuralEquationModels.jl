@@ -90,10 +90,12 @@ SEM.algorithm_name(res::ProximalResult) = SEM.algorithm_name(res.optimizer.algor
 SEM.algorithm_name(
     ::ProximalAlgorithms.IterativeAlgorithm{I, H, S, D, K},
 ) where {I, H, S, D, K} = nameof(I)
-
 SEM.convergence(
     ::ProximalResult,
 ) = "No standard convergence criteria for proximal \n algorithms available."
+SEM.converged(
+    ::ProximalResult,
+) = missing
 SEM.n_iterations(res::ProximalResult) = res.n_iterations
 
 ############################################################################################

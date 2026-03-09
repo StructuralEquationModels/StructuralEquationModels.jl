@@ -15,7 +15,8 @@ Fitted structural equation model.
 
 - `algorithm_name(::SemFit)` -> optimization algorithm
 - `n_iterations(::SemFit)` -> number of iterations
-- `convergence(::SemFit)` -> convergence properties
+- `convergence(::SemFit)` -> convergence flags
+- `converged(::SemFit)` -> convergence success
 """
 mutable struct SemFit{Mi, So, St, Mo, O}
     minimum::Mi
@@ -71,3 +72,4 @@ optimizer_engine(sem_fit::SemFit) = optimizer_engine(optimization_result(sem_fit
 algorithm_name(sem_fit::SemFit) = algorithm_name(optimization_result(sem_fit))
 n_iterations(sem_fit::SemFit) = n_iterations(optimization_result(sem_fit))
 convergence(sem_fit::SemFit) = convergence(optimization_result(sem_fit))
+converged(sem_fit::SemFit) = converged(optimization_result(sem_fit))
