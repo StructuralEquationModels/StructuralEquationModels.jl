@@ -40,7 +40,10 @@ function se_bootstrap(
             sample_data = bootstrap_sample(data)
             new_model = replace_observed(
                 fitted.model;
-                data = sample_data, specification = specification, kwargs...)
+                data = sample_data,
+                specification = specification,
+                kwargs...,
+            )
             try
                 sol = solution(fit(new_model; start_val = start))
                 @. total_sum         += sol
@@ -64,7 +67,10 @@ function se_bootstrap(
                 sample_data = bootstrap_sample(data)
                 new_model = replace_observed(
                     thread_model;
-                    data = sample_data, specification = specification, kwargs...)
+                    data = sample_data,
+                    specification = specification,
+                    kwargs...,
+                )
                 sol = solution(fit(new_model; start_val = start))
                 lock(lk) do
                     @. total_sum         += sol
