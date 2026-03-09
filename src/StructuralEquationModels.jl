@@ -90,6 +90,8 @@ include("frontend/fit/fitmeasures/fit_measures.jl")
 # standard errors
 include("frontend/fit/standard_errors/hessian.jl")
 include("frontend/fit/standard_errors/bootstrap.jl")
+include("frontend/fit/standard_errors/z_test.jl")
+include("frontend/fit/standard_errors/confidence_intervals.jl")
 
 export AbstractSem,
     AbstractSemSingle,
@@ -129,6 +131,7 @@ export AbstractSem,
     optimizer_engine_doc,
     optimizer_engines,
     n_iterations,
+    converged,
     convergence,
     SemObserved,
     SemObservedData,
@@ -191,7 +194,12 @@ export AbstractSem,
     CFI,
     EmMVNModel,
     se_hessian,
+    bootstrap,
     se_bootstrap,
+    normal_CI,
+    normal_CI!,
+    z_test,
+    z_test!,
     example_data,
     replace_observed,
     update_observed,
