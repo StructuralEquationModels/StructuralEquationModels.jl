@@ -48,7 +48,7 @@ function bootstrap(
     engine = :Optim,
     parallel = false,
     fit_kwargs = Dict(),
-    replace_kwargs = Dict()
+    replace_kwargs = Dict(),
 )
     # access data and convert to matrix
     data = prepare_data_bootstrap(data, fitted.model)
@@ -121,7 +121,8 @@ function bootstrap(
         :n_boot => n_boot,
         :n_converged => sum(conv),
         :converged => conv,
-        :n_errored => n_failed[])
+        :n_errored => n_failed[],
+    )
 end
 
 """
@@ -171,7 +172,7 @@ function se_bootstrap(
     engine = :Optim,
     parallel = false,
     fit_kwargs = Dict(),
-    replace_kwargs = Dict()
+    replace_kwargs = Dict(),
 )
     # access data and convert to matrix
     data = prepare_data_bootstrap(data, fitted.model)
@@ -196,7 +197,7 @@ function se_bootstrap(
                 sol = solution(new_fit)
                 conv = converged(new_fit)
                 if conv
-                    n_conv[] += 1
+                    n_conv[]             += 1
                     @. total_sum         += sol
                     @. total_squared_sum += sol^2
                 end
@@ -228,7 +229,7 @@ function se_bootstrap(
                 conv = converged(new_fit)
                 if conv
                     lock(lk) do
-                        n_conv[] += 1
+                        n_conv[]             += 1
                         @. total_sum         += sol
                         @. total_squared_sum += sol^2
                     end
