@@ -114,10 +114,10 @@ function details(
         print("\n")
         pretty_table(
             loading_array;
-            header = header_cols,
-            tf = PrettyTables.tf_borderless,
+            column_labels = header_cols,
+            table_format = TextTableFormat(borders = text_table_borders__borderless),
             alignment = :l,
-            formatters = (v, i, j) -> isa(v, Number) && isnan(v) ? "" : v,
+            formatters = [(v, i, j) -> isa(v, Number) && isnan(v) ? "" : v],
         )
         print("\n")
     end
@@ -152,10 +152,10 @@ function details(
     print("\n")
     pretty_table(
         regression_array;
-        header = regression_columns,
-        tf = PrettyTables.tf_borderless,
+        column_labels = regression_columns,
+        table_format = TextTableFormat(borders = text_table_borders__borderless),
         alignment = :l,
-        formatters = (v, i, j) -> isa(v, Number) && isnan(v) ? "" : v,
+        formatters = [(v, i, j) -> isa(v, Number) && isnan(v) ? "" : v],
     )
     print("\n")
 
@@ -179,10 +179,10 @@ function details(
     print("\n")
     pretty_table(
         var_array;
-        header = var_columns,
-        tf = PrettyTables.tf_borderless,
+        column_labels = var_columns,
+        table_format = TextTableFormat(borders = text_table_borders__borderless),
         alignment = :l,
-        formatters = (v, i, j) -> isa(v, Number) && isnan(v) ? "" : v,
+        formatters = [(v, i, j) -> isa(v, Number) && isnan(v) ? "" : v],
     )
     print("\n")
 
@@ -206,10 +206,10 @@ function details(
     print("\n")
     pretty_table(
         covar_array;
-        header = covar_columns,
-        tf = PrettyTables.tf_borderless,
+        column_labels = covar_columns,
+        table_format = TextTableFormat(borders = text_table_borders__borderless),
         alignment = :l,
-        formatters = (v, i, j) -> isa(v, Number) && isnan(v) ? "" : v,
+        formatters = [(v, i, j) -> isa(v, Number) && isnan(v) ? "" : v],
     )
     print("\n")
 
@@ -236,10 +236,10 @@ function details(
         print("\n")
         pretty_table(
             mean_array;
-            header = mean_columns,
-            tf = PrettyTables.tf_borderless,
+            column_labels = mean_columns,
+            table_format = TextTableFormat(borders = text_table_borders__borderless),
             alignment = :l,
-            formatters = (v, i, j) -> isa(v, Number) && isnan(v) ? "" : v,
+            formatters = [(v, i, j) -> isa(v, Number) && isnan(v) ? "" : v],
         )
         print("\n")
     end
