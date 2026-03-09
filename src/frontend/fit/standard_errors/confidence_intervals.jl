@@ -21,8 +21,7 @@ Return normal-theory confidence intervals for all model parameters.
 """
 
 @doc "$(_doc_normal_CI)"
-function normal_CI(
-        fitted, se; α = 0.05, name_lower = :ci_lower, name_upper = :ci_upper)
+function normal_CI(fitted, se; α = 0.05, name_lower = :ci_lower, name_upper = :ci_upper)
     qnt = quantile(Normal(0, 1), 1-α/2);
     sol = solution(fitted)
     return Dict(name_lower => sol - qnt*se, name_upper => sol + qnt*se)
@@ -30,14 +29,14 @@ end
 
 @doc "$(_doc_normal_CI)"
 function normal_CI!(
-        partable,
-        fitted,
-        se;
-        α = 0.05,
-        name_lower = :ci_lower,
-        name_upper = :ci_upper)
-    cis = normal_CI(
-        fitted, se; α, name_lower, name_upper)
+    partable,
+    fitted,
+    se;
+    α = 0.05,
+    name_lower = :ci_lower,
+    name_upper = :ci_upper,
+)
+    cis = normal_CI(fitted, se; α, name_lower, name_upper)
     update_partable!(partable, name_lower, fitted, cis[name_lower])
     update_partable!(partable, name_upper, fitted, cis[name_upper])
     return cis

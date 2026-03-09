@@ -22,7 +22,7 @@ Tests the null hypothesis that each parameter is zero using the test statistic
 
 @doc "$(_doc_z_test)"
 function z_test(fitted, se)
-    dev = solution(fitted)./se
+    dev = solution(fitted) ./ se
     dist = Normal(0, 1)
     p = 2*ccdf.(dist, abs.(dev))
     return p

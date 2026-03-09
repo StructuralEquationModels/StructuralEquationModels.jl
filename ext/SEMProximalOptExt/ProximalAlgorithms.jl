@@ -93,9 +93,7 @@ SEM.algorithm_name(
 SEM.convergence(
     ::ProximalResult,
 ) = "No standard convergence criteria for proximal \n algorithms available."
-SEM.converged(
-    ::ProximalResult,
-) = missing
+SEM.converged(::ProximalResult) = missing
 SEM.n_iterations(res::ProximalResult) = res.n_iterations
 
 ############################################################################################
