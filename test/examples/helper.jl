@@ -136,13 +136,13 @@ function test_estimates(
     end
 end
 
-function test_bootstrap(model_fit; n_boot = 500)
+function test_bootstrap(model_fit, spec; n_boot = 500)
     # hessian and bootstrap se are close
     se_he = se_hessian(model_fit)
-    se_bs = se_bootstrap(model_fit; n_boot = n_boot)
+    se_bs = se_bootstrap(model_fit; specification = spec, n_boot = n_boot)
     @test isapprox(se_bs, se_he, rtol = 0.2)
     # se_bootstrap and bootstrap |> se are close
-    bs_samples = bootstrap(model_fit; n_boot = n_boot)
+    bs_samples = bootstrap(model_fit; specification = spec, n_boot = n_boot)
     @test bs_samples[:n_converged] > 0.95*n_boot
     bs_samples = cat(bs_samples[:samples][BitVector(bs_samples[:converged])]..., dims = 2)
     se_bs_2 = sqrt.(var(bs_samples, corrected = false, dims = 2))
