@@ -77,7 +77,17 @@ end
 
 algorithm_name(res::SemOptimResult) = Optim.summary(res.result)
 n_iterations(res::SemOptimResult) = Optim.iterations(res.result)
-convergence(res::SemOptimResult) = Optim.converged(res.result)
+function convergence(res::SemOptimResult)
+    flags = res.result.stopped_by
+    active_flags = Symbol[]
+    for key in keys(flags)
+        if flags[key]
+            push!(active_flags, key)
+        end
+    end
+    return active_flags
+end
+converged(res::SemOptimResult) = Optim.converged(res.result)
 
 function fit(
     optim::SemOptimizerOptim,
