@@ -135,3 +135,22 @@ function test_estimates(
         @test actual ≈ expected rtol = rtol atol = atol norm = Base.Fix2(norm, Inf)
     end
 end
+
+function test_bootstrap(model_fit; n_boot = 500)
+    # hessian and bootstrap se are close
+    se_he = se_hessian(model_fit)
+    se_bs = se_bootstrap(model_fit; n_boot = n_boot)
+    @test isapprox(se_bs, se_he, rtol = 0.2)
+    # se_bootstrap and bootstrap |> se are close
+    bs_samples = bootstrap(model_fit; n_boot = n_boot)
+    @test bs_samples[:n_converged] > 990
+    bs_samples = cat(bs_samples[:samples][BitVector(bs_samples[:converged])]..., dims = 2)
+    se_bs_2 = sqrt.(var(bs_samples, corrected = false, dims = 2))
+    @test isapprox(se_bs_2, se_bs, rtol = 0.05)
+end
+
+function smoketest_CI_z(model_fit, partable)
+    se_he = se_hessian(model_fit)
+    normal_CI!(partable, model_fit, se_he)
+    z_test!(partable, model_fit, se_he)
+end

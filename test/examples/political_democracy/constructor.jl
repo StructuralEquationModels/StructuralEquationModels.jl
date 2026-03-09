@@ -130,6 +130,9 @@ end
         col = :se,
         lav_col = :se,
     )
+
+    test_bootstrap(solution_ml)
+    smoketest_CI_z(solution_ml, partable)
 end
 
 @testset "fitmeasures/se_ls" begin
@@ -157,6 +160,9 @@ end
         col = :se,
         lav_col = :se,
     )
+
+    test_bootstrap(solution_ls)
+    smoketest_CI_z(solution_ls, partable)
 end
 
 ############################################################################################
@@ -337,6 +343,9 @@ end
         col = :se,
         lav_col = :se,
     )
+
+    test_bootstrap(solution_ml)
+    smoketest_CI_z(solution_ml, partable_mean)
 end
 
 @testset "fitmeasures/se_ls_mean" begin
@@ -363,6 +372,9 @@ end
         col = :se,
         lav_col = :se,
     )
+
+    test_bootstrap(solution_ls)
+    smoketest_CI_z(solution_ls, partable_mean)
 end
 
 ############################################################################################
@@ -494,4 +506,7 @@ end
         col = :se,
         lav_col = :se,
     )
+
+    test_bootstrap(solution_ml)
+    smoketest_CI_z(solution_ml, partable_mean)
 end
