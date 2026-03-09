@@ -1,5 +1,6 @@
 using StructuralEquationModels, Test, FiniteDiff, Suppressor
 using LinearAlgebra: diagind, LowerTriangular
+using Statistics: var
 
 const SEM = StructuralEquationModels
 

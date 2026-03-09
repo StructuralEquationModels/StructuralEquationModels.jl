@@ -1,5 +1,5 @@
 using StructuralEquationModels, Test, Suppressor, FiniteDiff
-using Statistics: cov, mean
+using Statistics: cov, mean, var
 using Random, NLopt
 
 SEM = StructuralEquationModels
