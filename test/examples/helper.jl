@@ -136,12 +136,19 @@ function test_estimates(
     end
 end
 
-function test_bootstrap(model_fit, spec; compare_hessian = true, compare_bs = true, n_boot = 500)
+function test_bootstrap(
+        model_fit,
+        spec;
+        compare_hessian = true,
+        rtol_hessian = 0.2,
+        compare_bs = true,
+        rtol_bs = 0.1,
+        n_boot = 500)
     se_bs = se_bootstrap(model_fit, spec; n_boot = n_boot)
     # hessian and bootstrap se are close
     if compare_hessian
         se_he = se_hessian(model_fit)
-        @test isapprox(se_bs, se_he, rtol = 0.2)
+        @test isapprox(se_bs, se_he, rtol = rtol_hessian)
     end
     # se_bootstrap and bootstrap |> se are close
     if compare_bs
@@ -149,7 +156,7 @@ function test_bootstrap(model_fit, spec; compare_hessian = true, compare_bs = tr
         @test bs_samples[:n_converged] > 0.95*n_boot
         bs_samples = cat(bs_samples[:samples][BitVector(bs_samples[:converged])]..., dims = 2)
         se_bs_2 = sqrt.(var(bs_samples, corrected = false, dims = 2))
-        @test isapprox(se_bs_2, se_bs, rtol = 0.1)
+        @test isapprox(se_bs_2, se_bs, rtol = rtol_bs)
     end
 end
 
