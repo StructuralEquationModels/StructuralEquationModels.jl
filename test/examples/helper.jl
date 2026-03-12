@@ -136,17 +136,28 @@ function test_estimates(
     end
 end
 
-function test_bootstrap(model_fit, spec; n_boot = 500)
+function test_bootstrap(model_fit, spec; compare_hessian = true, compare_bs = true, n_boot = 500)
+    se_bs = se_bootstrap(model_fit, spec; n_boot = n_boot)
     # hessian and bootstrap se are close
-    se_he = se_hessian(model_fit)
-    se_bs = se_bootstrap(model_fit; specification = spec, n_boot = n_boot)
-    @test isapprox(se_bs, se_he, rtol = 0.2)
+    if compare_hessian
+        se_he = se_hessian(model_fit)
+        @test isapprox(se_bs, se_he, rtol = 0.2)
+    end
     # se_bootstrap and bootstrap |> se are close
-    bs_samples = bootstrap(model_fit; specification = spec, n_boot = n_boot)
-    @test bs_samples[:n_converged] > 0.95*n_boot
-    bs_samples = cat(bs_samples[:samples][BitVector(bs_samples[:converged])]..., dims = 2)
-    se_bs_2 = sqrt.(var(bs_samples, corrected = false, dims = 2))
-    @test isapprox(se_bs_2, se_bs, rtol = 0.05)
+    if compare_bs
+        bs_samples = bootstrap(model_fit, spec; n_boot = n_boot)
+        @test bs_samples[:n_converged] > 0.95*n_boot
+        bs_samples = cat(bs_samples[:samples][BitVector(bs_samples[:converged])]..., dims = 2)
+        se_bs_2 = sqrt.(var(bs_samples, corrected = false, dims = 2))
+        @test isapprox(se_bs_2, se_bs, rtol = 0.05)
+    end
+end
+
+function smoketest_bootstrap(model_fit, spec; n_boot = 5)
+    # hessian and bootstrap se are close
+    se_bs = se_bootstrap(model_fit, spec; n_boot = n_boot)
+    bs_samples = bootstrap(model_fit, spec; n_boot = n_boot)
+    return se_bs, bs_samples
 end
 
 function smoketest_CI_z(model_fit, partable)

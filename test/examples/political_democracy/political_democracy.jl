@@ -2,6 +2,8 @@ using StructuralEquationModels, Test, Suppressor, FiniteDiff
 using Statistics: cov, mean, var
 using Random, NLopt
 
+Random.seed!(464577)
+
 SEM = StructuralEquationModels
 
 include(

@@ -1,10 +1,10 @@
 """
     bootstrap(
-        fitted::SemFit;
+        fitted::SemFit,
+        specification::SemSpecification;
         statistic = solution,
         n_boot = 3000,
         data = nothing,
-        specification = nothing,
         engine = :Optim,
         parallel = false,
         fit_kwargs = Dict(),
@@ -14,12 +14,11 @@ Return bootstrap samples for `statistic`.
 
 # Arguments
 - `fitted`: a fitted SEM.
+- `specification`: a `ParameterTable` or `RAMMatrices` object passed to `replace_observed`.
 - `statistic`: any function that can be called on a `SemFit` object.
   The output will be returned as the bootstrap sample.
 - `n_boot`: number of boostrap samples
 - `data`: data to sample from. Only needed if different than the data from `sem_fit`
-- `specification`: a `ParameterTable` or `RAMMatrices` object passed to `replace_observed`.
-   Necessary for FIML / WLS models.
 - `engine`: optimizer engine, passed to `fit`.
 - `parallel`: if `true`, run bootstrap samples in parallel on all available threads.
   The number of threads is controlled by the `JULIA_NUM_THREADS` environment variable or
@@ -40,11 +39,11 @@ bootstrap(
 ```
 """
 function bootstrap(
-    fitted::SemFit;
+    fitted::SemFit,
+    specification::SemSpecification;
     statistic = solution,
     n_boot = 3000,
     data = nothing,
-    specification = nothing,
     engine = :Optim,
     parallel = false,
     fit_kwargs = Dict(),
@@ -56,6 +55,7 @@ function bootstrap(
     # pre-allocations
     out = []
     conv = []
+    errors = []
     n_failed = Ref(0)
     # fit to bootstrap samples
     if !parallel
@@ -73,8 +73,9 @@ function bootstrap(
                 c = converged(new_fit)
                 push!(out, sample)
                 push!(conv, c)
-            catch
+            catch e
                 n_failed[] += 1
+                push!(errors, e)
             end
         end
     else
@@ -103,9 +104,10 @@ function bootstrap(
                     push!(out, sample)
                     push!(conv, c)
                 end
-            catch
+            catch e
                 lock(lk) do
                     n_failed[] += 1
+                    push!(errors, e)
                 end
             finally
                 put!(model_pool, thread_model)
@@ -119,19 +121,19 @@ function bootstrap(
     return Dict(
         :samples => out,
         :n_boot => n_boot,
-        :n_converged => sum(conv),
+        :n_converged => isempty(conv) ? 0 : sum(conv),
         :converged => conv,
         :n_errored => n_failed[],
+        :errors => errors
     )
 end
 
 """
     se_bootstrap(
-        fitted::SemFit;
+        fitted::SemFit,
+        specification::SemSpecification;
         n_boot = 3000,
         data = nothing,
-        specification = nothing,
-        engine = :Optim,
         parallel = false,
         fit_kwargs = Dict(),
         replace_kwargs = Dict())
@@ -140,10 +142,9 @@ Return bootstrap standard errors.
 
 # Arguments
 - `fitted`: a fitted SEM.
+- `specification`: a `ParameterTable` or `RAMMatrices` object passed to `replace_observed`.
 - `n_boot`: number of boostrap samples
 - `data`: data to sample from. Only needed if different than the data from `sem_fit`
-- `specification`: a `ParameterTable` or `RAMMatrices` object passed to `replace_observed`.
-   Necessary for FIML / WLS models.
 - `engine`: optimizer engine, passed to `fit`.
 - `parallel`: if `true`, run bootstrap samples in parallel on all available threads.
   The number of threads is controlled by the `JULIA_NUM_THREADS` environment variable or
@@ -165,10 +166,10 @@ se_bootstrap(
 ```
 """
 function se_bootstrap(
-    fitted::SemFit;
+    fitted::SemFit,
+    specification::SemSpecification;
     n_boot = 3000,
     data = nothing,
-    specification = nothing,
     engine = :Optim,
     parallel = false,
     fit_kwargs = Dict(),

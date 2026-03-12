@@ -1,6 +1,9 @@
 using StructuralEquationModels, Test, FiniteDiff, Suppressor
 using LinearAlgebra: diagind, LowerTriangular
 using Statistics: var
+using Random
+
+Random.seed!(948723)
 
 const SEM = StructuralEquationModels
 
