@@ -160,27 +160,24 @@ function se_bootstrap(
     # pre-allocations
     total_sum         = zero(start)
     total_squared_sum = zero(start)
+    n_conv            = Ref(0)
     # fit to bootstrap samples
     if !parallel
         for _ in 1:n_boot
-            try
-                sample_data = bootstrap_sample(data)
-                new_model = replace_observed(
-                    fitted.model;
-                    data = sample_data,
-                    specification = specification,
-                    replace_kwargs...,
-                )
-                new_fit = fit(new_model; start_val = start, engine = engine, fit_kwargs...)
-                sol = solution(new_fit)
-                conv = converged(new_fit)
-                if conv
-                    n_conv[]             += 1
-                    @. total_sum         += sol
-                    @. total_squared_sum += sol^2
-                end
-            catch
-                n_failed[] += 1
+            sample_data = bootstrap_sample(data)
+            new_model = replace_observed(
+                fitted.model;
+                data = sample_data,
+                specification = specification,
+                replace_kwargs...,
+            )
+            new_fit = fit(new_model; start_val = start, engine = engine, fit_kwargs...)
+            sol = solution(new_fit)
+            conv = converged(new_fit)
+            if conv
+                n_conv[]             += 1
+                @. total_sum         += sol
+                @. total_squared_sum += sol^2
             end
         end
     else
