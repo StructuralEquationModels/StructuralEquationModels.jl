@@ -237,6 +237,9 @@ function update_observed(lossfun::SemML, observed::SemObserved; kwargs...)
     if size(lossfun.Σ⁻¹) == size(obs_cov(observed))
         return lossfun
     else
-        return SemML(; observed = observed, kwargs...)
+        return SemML(;
+        observed = observed,
+        approximate_hessian = HessianEval(lossfun) == ApproxHessian,
+        kwargs...)
     end
 end

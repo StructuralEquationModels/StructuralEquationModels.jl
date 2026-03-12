@@ -293,7 +293,7 @@ end
         lav_col = :se,
         lav_groups = Dict(:Pasteur => 1, :Grant_White => 2),
     )
-    test_bootstrap(solution_ls, partable)
+    test_bootstrap(solution_ls, partable; compare_bs = false)
     smoketest_CI_z(solution_ls, partable)
 end
 

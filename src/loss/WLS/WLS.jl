@@ -173,5 +173,7 @@ end
 ### Recommended methods
 ############################################################################################
 
-update_observed(lossfun::SemWLS, observed::SemObserved; kwargs...) =
-    SemWLS(; observed = observed, kwargs...)
+update_observed(lossfun::SemWLS, observed::SemObserved; kwargs...) = SemWLS(;
+    observed = observed,
+    meanstructure = MeanStruct(kwargs[:implied]) == HasMeanStruct,
+    kwargs...)

@@ -210,10 +210,17 @@ end
 ############################################################################################
 
 function update_observed(implied::RAMSymbolic, observed::SemObserved; kwargs...)
-    if nobserved_vars(observed) == size(implied.Σ, 1)
+    if nobserved_vars(observed) == nobserved_vars(implied)
         return implied
     else
-        return RAMSymbolic(; observed = observed, kwargs...)
+        return RAMSymbolic(;
+        observed = observed,
+        vech = implied.Σ isa Vector,
+        gradient = !isnothing(implied.∇Σ),
+        hessian = !isnothing(implied.∇²Σ),
+        meanstructure = MeanStruct(implied) == HasMeanStruct,
+        approximate_hessian = isnothing(implied.∇²Σ),
+        kwargs...)
     end
 end
 
