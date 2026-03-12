@@ -55,28 +55,21 @@ function bootstrap(
     # pre-allocations
     out = []
     conv = []
-    errors = []
-    n_failed = Ref(0)
     # fit to bootstrap samples
     if !parallel
         for _ in 1:n_boot
-            try
-                sample_data = bootstrap_sample(data)
-                new_model = replace_observed(
-                    fitted.model;
-                    data = sample_data,
-                    specification = specification,
-                    replace_kwargs...,
-                )
-                new_fit = fit(new_model; start_val = start, engine = engine, fit_kwargs...)
-                sample = statistic(new_fit)
-                c = converged(new_fit)
-                push!(out, sample)
-                push!(conv, c)
-            catch e
-                n_failed[] += 1
-                push!(errors, e)
-            end
+            sample_data = bootstrap_sample(data)
+            new_model = replace_observed(
+                fitted.model;
+                data = sample_data,
+                specification = specification,
+                replace_kwargs...,
+            )
+            new_fit = fit(new_model; start_val = start, engine = engine, fit_kwargs...)
+            sample = statistic(new_fit)
+            c = converged(new_fit)
+            push!(out, sample)
+            push!(conv, c)
         end
     else
         n_threads = Threads.nthreads()
@@ -89,42 +82,28 @@ function bootstrap(
         lk = ReentrantLock()
         Threads.@threads for _ in 1:n_boot
             thread_model = take!(model_pool)
-            try
-                sample_data = bootstrap_sample(data)
-                new_model = replace_observed(
-                    thread_model;
-                    data = sample_data,
-                    specification = specification,
-                    replace_kwargs...,
-                )
-                new_fit = fit(new_model; start_val = start, engine = engine, fit_kwargs...)
-                sample = statistic(new_fit)
-                c = converged(new_fit)
-                lock(lk) do
-                    push!(out, sample)
-                    push!(conv, c)
-                end
-            catch e
-                lock(lk) do
-                    n_failed[] += 1
-                    push!(errors, e)
-                end
-            finally
-                put!(model_pool, thread_model)
+            sample_data = bootstrap_sample(data)
+            new_model = replace_observed(
+                thread_model;
+                data = sample_data,
+                specification = specification,
+                replace_kwargs...,
+            )
+            new_fit = fit(new_model; start_val = start, engine = engine, fit_kwargs...)
+            sample = statistic(new_fit)
+            c = converged(new_fit)
+            lock(lk) do
+                push!(out, sample)
+                push!(conv, c)
             end
+            put!(model_pool, thread_model)
         end
-    end
-    # compute parameters
-    if !iszero(n_failed[])
-        @warn "During bootstrap sampling, "*string(n_failed[])*" samples errored."
     end
     return Dict(
         :samples => out,
         :n_boot => n_boot,
         :n_converged => isempty(conv) ? 0 : sum(conv),
         :converged => conv,
-        :n_errored => n_failed[],
-        :errors => errors
     )
 end
 
@@ -181,8 +160,6 @@ function se_bootstrap(
     # pre-allocations
     total_sum         = zero(start)
     total_squared_sum = zero(start)
-    n_failed          = Ref(0)
-    n_conv            = Ref(0)
     # fit to bootstrap samples
     if !parallel
         for _ in 1:n_boot
@@ -217,39 +194,29 @@ function se_bootstrap(
         lk = ReentrantLock()
         Threads.@threads for _ in 1:n_boot
             thread_model = take!(model_pool)
-            try
-                sample_data = bootstrap_sample(data)
-                new_model = replace_observed(
-                    thread_model;
-                    data = sample_data,
-                    specification = specification,
-                    replace_kwargs...,
-                )
-                new_fit = fit(new_model; start_val = start, engine = engine, fit_kwargs...)
-                sol = solution(new_fit)
-                conv = converged(new_fit)
-                if conv
-                    lock(lk) do
-                        n_conv[]             += 1
-                        @. total_sum         += sol
-                        @. total_squared_sum += sol^2
-                    end
-                end
-            catch
+            sample_data = bootstrap_sample(data)
+            new_model = replace_observed(
+                thread_model;
+                data = sample_data,
+                specification = specification,
+                replace_kwargs...,
+            )
+            new_fit = fit(new_model; start_val = start, engine = engine, fit_kwargs...)
+            sol = solution(new_fit)
+            conv = converged(new_fit)
+            if conv
                 lock(lk) do
-                    n_failed[] += 1
+                    n_conv[]             += 1
+                    @. total_sum         += sol
+                    @. total_squared_sum += sol^2
                 end
-            finally
-                put!(model_pool, thread_model)
             end
+            put!(model_pool, thread_model)
         end
     end
     # compute parameters
     n_conv = n_conv[]
     sd = sqrt.(total_squared_sum / n_conv - (total_sum / n_conv) .^ 2)
-    if !iszero(n_failed[])
-        @warn "During bootstrap sampling, "*string(n_failed[])*" samples errored"
-    end
     @info string(n_conv)*" models converged"
     return sd
 end

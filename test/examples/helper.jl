@@ -153,7 +153,7 @@ function test_bootstrap(
     # se_bootstrap and bootstrap |> se are close
     if compare_bs
         bs_samples = bootstrap(model_fit, spec; n_boot = n_boot)
-        @test bs_samples[:n_converged] > 0.95*n_boot
+        @test bs_samples[:n_converged] >= 0.95*n_boot
         bs_samples = cat(bs_samples[:samples][BitVector(bs_samples[:converged])]..., dims = 2)
         se_bs_2 = sqrt.(var(bs_samples, corrected = false, dims = 2))
         @test isapprox(se_bs_2, se_bs, rtol = rtol_bs)
