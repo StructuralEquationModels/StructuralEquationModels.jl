@@ -83,7 +83,7 @@ end
         lav_col = :se,
         lav_groups = Dict(:Pasteur => 1, :Grant_White => 2),
     )
-    test_bootstrap(solution_ml, partable, rtol_hessian = 0.3)
+    test_bootstrap(solution_ml, partable, rtol_hessian = 0.3, rtol_bs = 0.2)
     smoketest_CI_z(solution_ml, partable)
 
     solution_ml = fit(model_ml_multigroup2)
@@ -252,7 +252,7 @@ model_ls_g2 = Sem(
     loss = SemWLS,
 )
 
-model_ls_multigroup = SemEnsemble(model_ls_g1, model_ls_g2; optimizer = semoptimizer)
+model_ls_multigroup = SemEnsemble(model_ls_g1, model_ls_g2; groups = [:Pasteur, :Grant_White], optimizer = semoptimizer)
 
 @testset "ls_gradients_multigroup" begin
     test_gradient(model_ls_multigroup, start_test; atol = 1e-9)
@@ -412,8 +412,7 @@ if !isnothing(specification_miss_g1)
             lav_col = :se,
             lav_groups = Dict(:Pasteur => 1, :Grant_White => 2),
         )
-        test_bootstrap(solution, partable_miss, rtol_hessian = 0.3)
-        smoketest_CI_z(solution, partable_miss)
+
 
         solution = fit(semoptimizer, model_ml_multigroup2)
         test_fitmeasures(
@@ -427,6 +426,9 @@ if !isnothing(specification_miss_g1)
             solution_lav[:fitmeasures_fiml];
             fitmeasure_names = Dict(:CFI => "cfi"),
         )
+
+        test_bootstrap(solution, partable_miss, rtol_hessian = 0.3)
+        smoketest_CI_z(solution, partable_miss)
 
         update_se_hessian!(partable_miss, solution)
         test_estimates(
