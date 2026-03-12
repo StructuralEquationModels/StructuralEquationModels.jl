@@ -12,7 +12,7 @@ model_g2 = Sem(specification = specification_g2, data = dat_g2, implied = RAM)
       SEM.param_labels(model_g2.implied.ram_matrices)
 
 # test the different constructors
-model_ml_multigroup = SemEnsemble(model_g1, model_g2)
+model_ml_multigroup = SemEnsemble(model_g1, model_g2; groups = [:Pasteur, :Grant_White])
 model_ml_multigroup2 = SemEnsemble(
     specification = partable,
     data = dat,
