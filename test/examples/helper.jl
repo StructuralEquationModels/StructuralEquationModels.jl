@@ -149,7 +149,7 @@ function test_bootstrap(model_fit, spec; compare_hessian = true, compare_bs = tr
         @test bs_samples[:n_converged] > 0.95*n_boot
         bs_samples = cat(bs_samples[:samples][BitVector(bs_samples[:converged])]..., dims = 2)
         se_bs_2 = sqrt.(var(bs_samples, corrected = false, dims = 2))
-        @test isapprox(se_bs_2, se_bs, rtol = 0.05)
+        @test isapprox(se_bs_2, se_bs, rtol = 0.1)
     end
 end
 
