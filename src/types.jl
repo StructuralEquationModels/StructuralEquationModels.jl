@@ -231,13 +231,13 @@ function multigroup_weights(models, n)
     uniform_lossfun = check_single_lossfun(models...; throw_error = false)
     if !uniform_lossfun
         @info "Your ensemble model contains heterogeneous loss functions.
-                Default weights of (#samples per group/#total samples) will be used".
+                Default weights of (#samples per group/#total samples) will be used."
         return [(nsamples(model)) / (nsamples_total) for model in models]
     end
     lossfun = models[1].loss.functions[1]
     if !applicable(mg_correction, lossfun)
         @info "We don't know how to choose group weights for the specified loss function.
-                Default weights of (#samples per group/#total samples) will be used".
+                Default weights of (#samples per group/#total samples) will be used."
         return [(nsamples(model)) / (nsamples_total) for model in models]
     end
     c = mg_correction(lossfun)
