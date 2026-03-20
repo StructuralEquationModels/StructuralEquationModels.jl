@@ -1,4 +1,5 @@
 using LinearAlgebra: norm
+using Suppressor
 
 function is_extended_tests()
     return lowercase(get(ENV, "JULIA_EXTENDED_TESTS", "false")) == "true"
@@ -144,19 +145,23 @@ function test_bootstrap(
         compare_bs = true,
         rtol_bs = 0.1,
         n_boot = 500)
-    se_bs = se_bootstrap(model_fit, spec; n_boot = n_boot)
-    # hessian and bootstrap se are close
-    if compare_hessian
-        se_he = se_hessian(model_fit)
-        @test isapprox(se_bs, se_he, rtol = rtol_hessian)
-    end
-    # se_bootstrap and bootstrap |> se are close
-    if compare_bs
-        bs_samples = bootstrap(model_fit, spec; n_boot = n_boot)
-        @test bs_samples[:n_converged] >= 0.95*n_boot
-        bs_samples = cat(bs_samples[:samples][BitVector(bs_samples[:converged])]..., dims = 2)
-        se_bs_2 = sqrt.(var(bs_samples, corrected = false, dims = 2))
-        @test isapprox(se_bs_2, se_bs, rtol = rtol_bs)
+    @testset rng = Random.seed!(32432) "bootstrap" begin
+        se_bs = @suppress se_bootstrap(model_fit, spec; n_boot = n_boot)
+        # hessian and bootstrap se are close
+        if compare_hessian
+            se_he = @suppress se_hessian(model_fit)
+            #println(maximum(abs.(se_he - se_bs)))
+            @test isapprox(se_bs, se_he, rtol = rtol_hessian)
+        end
+        # se_bootstrap and bootstrap |> se are close
+        if compare_bs
+            bs_samples = bootstrap(model_fit, spec; n_boot = n_boot)
+            @test bs_samples[:n_converged] >= 0.95*n_boot
+            bs_samples = cat(bs_samples[:samples][BitVector(bs_samples[:converged])]..., dims = 2)
+            se_bs_2 = sqrt.(var(bs_samples, corrected = false, dims = 2))
+            #println(maximum(abs.(se_bs_2 - se_bs)))
+            @test isapprox(se_bs_2, se_bs, rtol = rtol_bs)
+        end
     end
 end
 
@@ -168,7 +173,7 @@ function smoketest_bootstrap(model_fit, spec; n_boot = 5)
 end
 
 function smoketest_CI_z(model_fit, partable)
-    se_he = se_hessian(model_fit)
+    se_he = @suppress se_hessian(model_fit)
     normal_CI!(partable, model_fit, se_he)
     z_test!(partable, model_fit, se_he)
 end
