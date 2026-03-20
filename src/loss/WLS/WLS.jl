@@ -173,7 +173,12 @@ end
 ### Recommended methods
 ############################################################################################
 
-function update_observed(lossfun::SemWLS, observed::SemObserved; recompute_V = true, kwargs...)
+function update_observed(
+    lossfun::SemWLS,
+    observed::SemObserved;
+    recompute_V = true,
+    kwargs...,
+)
     if recompute_V
         return SemWLS(;
             observed = observed,
@@ -188,6 +193,5 @@ function update_observed(lossfun::SemWLS, observed::SemObserved; recompute_V = t
             meanstructure = MeanStruct(kwargs[:implied]) == HasMeanStruct,
             kwargs...,
         )
-
     end
 end

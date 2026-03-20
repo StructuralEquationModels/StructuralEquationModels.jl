@@ -419,7 +419,6 @@ if !isnothing(specification_miss_g1)
             lav_groups = Dict(:Pasteur => 1, :Grant_White => 2),
         )
 
-
         solution = fit(semoptimizer, model_ml_multigroup2)
         test_fitmeasures(
             fit_measures(solution),
