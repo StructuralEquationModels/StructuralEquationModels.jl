@@ -214,13 +214,14 @@ function update_observed(implied::RAMSymbolic, observed::SemObserved; kwargs...)
         return implied
     else
         return RAMSymbolic(;
-        observed = observed,
-        vech = implied.Σ isa Vector,
-        gradient = !isnothing(implied.∇Σ),
-        hessian = !isnothing(implied.∇²Σ),
-        meanstructure = MeanStruct(implied) == HasMeanStruct,
-        approximate_hessian = isnothing(implied.∇²Σ),
-        kwargs...)
+            observed = observed,
+            vech = implied.Σ isa Vector,
+            gradient = !isnothing(implied.∇Σ),
+            hessian = !isnothing(implied.∇²Σ),
+            meanstructure = MeanStruct(implied) == HasMeanStruct,
+            approximate_hessian = isnothing(implied.∇²Σ),
+            kwargs...,
+        )
     end
 end
 

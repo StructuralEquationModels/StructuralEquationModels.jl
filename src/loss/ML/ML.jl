@@ -238,8 +238,9 @@ function update_observed(lossfun::SemML, observed::SemObserved; kwargs...)
         return lossfun
     else
         return SemML(;
-        observed = observed,
-        approximate_hessian = HessianEval(lossfun) == ApproxHessian,
-        kwargs...)
+            observed = observed,
+            approximate_hessian = HessianEval(lossfun) == ApproxHessian,
+            kwargs...,
+        )
     end
 end

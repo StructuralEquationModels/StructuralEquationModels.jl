@@ -53,11 +53,11 @@ function bootstrap(
     data = prepare_data_bootstrap(data, fitted.model)
     start = solution(fitted)
     # pre-allocations
-    out = []
-    conv = []
+    out = Vector{Any}(nothing, n_boot)
+    conv = fill(false, n_boot)
     # fit to bootstrap samples
     if !parallel
-        for _ in 1:n_boot
+        for i in 1:n_boot
             sample_data = bootstrap_sample(data)
             new_model = replace_observed(
                 fitted.model;
@@ -68,8 +68,8 @@ function bootstrap(
             new_fit = fit(new_model; start_val = start, engine = engine, fit_kwargs...)
             sample = statistic(new_fit)
             c = converged(new_fit)
-            push!(out, sample)
-            push!(conv, c)
+            out[i] = sample
+            conv[i] = c
         end
     else
         n_threads = Threads.nthreads()
@@ -80,7 +80,7 @@ function bootstrap(
         end
         # fit models in parallel
         lk = ReentrantLock()
-        Threads.@threads for _ in 1:n_boot
+        Threads.@threads for i in 1:n_boot
             thread_model = take!(model_pool)
             sample_data = bootstrap_sample(data)
             new_model = replace_observed(
@@ -92,17 +92,15 @@ function bootstrap(
             new_fit = fit(new_model; start_val = start, engine = engine, fit_kwargs...)
             sample = statistic(new_fit)
             c = converged(new_fit)
-            lock(lk) do
-                push!(out, sample)
-                push!(conv, c)
-            end
+            out[i] = sample
+            conv[i] = c
             put!(model_pool, thread_model)
         end
     end
     return Dict(
-        :samples => out,
+        :samples => collect(a for a in out),
         :n_boot => n_boot,
-        :n_converged => isempty(conv) ? 0 : sum(conv),
+        :n_converged => sum(conv),
         :converged => conv,
     )
 end

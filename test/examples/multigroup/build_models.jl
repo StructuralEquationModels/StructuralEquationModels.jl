@@ -253,7 +253,12 @@ model_ls_g2 = Sem(
     loss = SemWLS,
 )
 
-model_ls_multigroup = SemEnsemble(model_ls_g1, model_ls_g2; groups = [:Pasteur, :Grant_White], optimizer = semoptimizer)
+model_ls_multigroup = SemEnsemble(
+    model_ls_g1,
+    model_ls_g2;
+    groups = [:Pasteur, :Grant_White],
+    optimizer = semoptimizer,
+)
 
 @testset "ls_gradients_multigroup" begin
     test_gradient(model_ls_multigroup, start_test; atol = 1e-9)

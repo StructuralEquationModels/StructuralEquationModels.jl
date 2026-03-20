@@ -178,14 +178,16 @@ function update_observed(lossfun::SemWLS, observed::SemObserved; recompute_V = t
         return SemWLS(;
             observed = observed,
             meanstructure = MeanStruct(kwargs[:implied]) == HasMeanStruct,
-            kwargs...)
+            kwargs...,
+        )
     else
         return SemWLS(;
             observed = observed,
             wls_weight_matrix = lossfun.V,
             wls_weight_matrix_mean = lossfun.V_μ,
             meanstructure = MeanStruct(kwargs[:implied]) == HasMeanStruct,
-            kwargs...)
+            kwargs...,
+        )
 
     end
 end
