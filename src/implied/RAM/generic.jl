@@ -179,20 +179,3 @@ function update!(targets::EvaluationTargets, implied::RAM, params)
         mul!(implied.μ, implied.F⨉I_A⁻¹, implied.M)
     end
 end
-
-############################################################################################
-### Recommended methods
-############################################################################################
-
-function update_observed(implied::RAM, observed::SemObserved; kwargs...)
-    if nobserved_vars(observed) == nobserved_vars(implied)
-        return implied
-    else
-        return RAM(;
-            observed = observed,
-            gradient_required = !isnothing(implied.∇A),
-            meanstructure = MeanStruct(implied) == HasMeanStruct,
-            kwargs...,
-        )
-    end
-end

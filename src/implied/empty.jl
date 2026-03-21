@@ -46,9 +46,3 @@ end
 ############################################################################################
 
 update!(targets::EvaluationTargets, implied::ImpliedEmpty, par) = nothing
-
-############################################################################################
-### Recommended methods
-############################################################################################
-
-update_observed(implied::ImpliedEmpty, observed::SemObserved; kwargs...) = implied

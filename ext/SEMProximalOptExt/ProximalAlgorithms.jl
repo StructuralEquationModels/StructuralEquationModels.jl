@@ -34,13 +34,6 @@ SemOptimizerProximal(;
 
 SEM.sem_optimizer_subtype(::Val{:Proximal}) = SemOptimizerProximal
 
-############################################################################################
-### Recommended methods
-############################################################################################
-
-SEM.update_observed(optimizer::SemOptimizerProximal, observed::SemObserved; kwargs...) =
-    optimizer
-
 ############################################################################
 ### Model fitting
 ############################################################################

@@ -436,12 +436,118 @@ function build_SemTerms(loss, observed, implied; kwargs...)
     end
 end
 
-function update_observed(sem::Sem, new_observed; kwargs...)
-    new_terms = Tuple(
-        update_observed(lossterm.loss, new_observed; kwargs...) for
-        lossterm in loss_terms(sem)
+##############################################################
+# replace_observed: Sem level
+##############################################################
+
+"""
+    replace_observed(model::Sem, observed::SemObserved)
+    replace_observed(model::Sem, data::AbstractDict{Symbol})
+    replace_observed(model::Sem, data::AbstractDataFrame; [semterm_column])
+    replace_observed(loss::SemLoss, observed::SemObserved)
+    replace_observed(loss::SemLoss, data::Union{AbstractMatrix, DataFrame})
+
+Construct a new SEM model or SEM loss with replaced observed data.
+
+The SEM structure (implied covariance, loss type) is preserved;
+only the observed data is swapped.
+
+# Single-term models
+
+Pass a `SemObserved` object, a data matrix, or a `DataFrame`:
+```julia
+replace_observed(model, new_data_matrix)
+replace_observed(model, new_sem_observed)
+replace_observed(model, new_df)
+```
+
+# Multi-term models
+
+Pass a `Dict{Symbol}` mapping term ids to data or `SemObserved` objects:
+```julia
+replace_observed(model, Dict(:g1 => data1, :g2 => data2))
+```
+
+Or pass a `DataFrame` with a `semterm_column` identifying the group:
+```julia
+replace_observed(model, new_df; semterm_column = :group)
+```
+"""
+function replace_observed end
+
+function replace_observed(sem::Sem, data::Union{SemObserved, AbstractMatrix})
+    nsem_terms(sem) > 1 && throw(
+        ArgumentError(
+            "Model contains $(nsem_terms(sem)) SEM terms. " *
+            "Use a Dict{Symbol} or a DataFrame with `semterm_column` to provide per-term data.",
+        ),
     )
-    return Sem(new_terms...)
+    updated_terms = Tuple(replace_observed(term, data) for term in loss_terms(sem))
+    return Sem(updated_terms...)
+end
+
+function replace_observed(sem::Sem, data::AbstractDict{Symbol})
+    term_ids = Set(
+        if !isnothing(id(term))
+            id(term)
+        else
+            "Multigroup replace_observed(sem, data::Dict) requires all SEM terms to have ids." |>
+            ArgumentError |>
+            throw
+        end for term in loss_terms(sem) if issemloss(term)
+    )
+    # check for extra ids
+    extra_term_ids = setdiff(keys(data), term_ids)
+    isempty(extra_term_ids) ||
+        @warn "Ignoring data with ids=$(collect(extra_term_ids)): no such SEM terms exist in the model"
+
+    updated_terms = map(loss_terms(sem)) do term
+        issemloss(term) || return term
+        tid = id(term)
+        term_data = get(data, tid, nothing)
+        isnothing(term_data) &&
+            throw(ArgumentError("No data provided for SEM term :$tid"))
+        return replace_observed(term, term_data)
+    end
+    return Sem(Tuple(updated_terms)...)
+end
+
+function replace_observed(sem::Sem, data::AbstractVector)
+    nsem = nsem_terms(sem)
+    nsem == length(data) || throw(
+        ArgumentError(
+            "Length of data ($(length(data))) does not match number of SEM terms ($nsem)",
+        ),
+    )
+    updated_terms = map(enumerate(loss_terms(sem))) do (i, term)
+        issemloss(term) ? replace_observed(term, data[i]) : term
+    end
+    return Sem(Tuple(updated_terms)...)
+end
+
+function replace_observed(
+    sem::Sem,
+    data::AbstractDataFrame;
+    semterm_column::Union{Symbol, Nothing} = nothing,
+)
+    if isnothing(semterm_column)
+        # single-term shortcut
+        nsem_terms(sem) > 1 && throw(
+            ArgumentError(
+                "Model contains $(nsem_terms(sem)) SEM terms. " *
+                "Provide `semterm_column` to specify which DataFrame column identifies the groups.",
+            ),
+        )
+        updated_terms = Tuple(replace_observed(term, data) for term in loss_terms(sem))
+        return Sem(updated_terms...)
+    end
+
+    # multi-term: split DataFrame by semterm_column
+    terms_data = Dict(
+        g[semterm_column] => group_data for
+        (g, group_data) in pairs(groupby(data, semterm_column))
+    )
+    return replace_observed(sem, terms_data)
 end
 
 ##############################################################

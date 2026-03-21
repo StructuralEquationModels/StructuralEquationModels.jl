@@ -235,23 +235,3 @@ function non_posdef_return(par)
         return typemax(eltype(par))
     end
 end
-
-############################################################################################
-### recommended methods
-############################################################################################
-
-update_observed(loss::SemML, observed::SemObservedMissing; kwargs...) =
-    error("ML estimation does not work with missing data - use FIML instead")
-
-function update_observed(loss::SemML, observed::SemObserved; kwargs...)
-    if (obs_cov(loss) == obs_cov(observed)) && (obs_mean(loss) == obs_mean(observed))
-        return loss # no change
-    else
-        return SemML(
-            observed,
-            loss.implied;
-            approximate_hessian = HessianEval(loss) == ApproxHessian,
-            kwargs...,
-        )
-    end
-end

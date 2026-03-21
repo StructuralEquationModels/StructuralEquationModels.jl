@@ -12,12 +12,6 @@ struct SemOptimizerEmpty <: SemOptimizer{:Empty} end
 sem_optimizer_subtype(::Val{:Empty}) = SemOptimizerEmpty
 
 ############################################################################################
-### Recommended methods
-############################################################################################
-
-update_observed(optimizer::SemOptimizerEmpty, observed::SemObserved; kwargs...) = optimizer
-
-############################################################################################
 ### Pretty Printing
 ############################################################################################
 

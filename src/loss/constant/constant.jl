@@ -35,9 +35,3 @@ SemConstant(; constant_loss::Number, kwargs...) = SemConstant(constant_loss)
 objective(loss::SemConstant, par) = convert(eltype(par), loss.c)
 gradient(loss::SemConstant, par) = zero(par)
 hessian(loss::SemConstant, par) = zeros(eltype(par), length(par), length(par))
-
-############################################################################################
-### Recommended methods
-############################################################################################
-
-update_observed(loss::SemConstant, observed::SemObserved; kwargs...) = loss

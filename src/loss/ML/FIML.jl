@@ -159,14 +159,6 @@ function evaluate!(objective, gradient, hessian, loss::SemFIML, params)
 
     return objective
 end
-
-############################################################################################
-### Recommended methods
-############################################################################################
-
-update_observed(loss::SemFIML, observed::SemObserved; kwargs...) =
-    SemFIML(; observed = observed, kwargs...)
-
 ############################################################################################
 ### additional functions
 ############################################################################################
