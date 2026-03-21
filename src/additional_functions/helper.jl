@@ -115,8 +115,3 @@ function nonunique(values::AbstractVector)
     end
     return res
 end
-
-# scaling corrections for multigroup models
-mg_correction(::SemFIML) = 0
-mg_correction(::SemML) = 0
-mg_correction(::SemWLS) = -1
