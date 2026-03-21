@@ -40,6 +40,8 @@ its computation will be turned off by setting `hessian` to `nothing`.
 During the evaluation, the internal state of the loss term or of the model
 could be modified.
 
+Returns the objective value or `nothing`.
+
 # Arguments
 - `objective`: a Number if the objective should be evaluated, otherwise `nothing`
 - `gradient`: a pre-allocated vector the gradient should be written to, otherwise `nothing`
