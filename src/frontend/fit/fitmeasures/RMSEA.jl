@@ -21,14 +21,9 @@ For multigroup models, the correction proposed by J.H. Steiger is applied
 """
 RMSEA(fit::SemFit) = RMSEA(fit, fit.model)
 
-# scaling corrections
-RMSEA_corr_scale(::Type{<:SemFIML}) = 0
-RMSEA_corr_scale(::Type{<:SemML}) = -1
-RMSEA_corr_scale(::Type{<:SemWLS}) = -1
-
 function RMSEA(fit::SemFit, model::AbstractSem)
     term_type = check_same_semterm_type(model; throw_error = true)
-    n = nsamples(fit) + nsem_terms(model) * RMSEA_corr_scale(term_type)
+    n = nsamples(fit) + nsem_terms(model) * multigroup_correction_scale(term_type)
     sqrt(nsem_terms(model)) * RMSEA(dof(fit), χ²(fit), n)
 end
 

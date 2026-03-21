@@ -45,31 +45,45 @@ function Base.show(io::IO, term::LossTerm)
     end
 end
 
-############################################################################################
-# constructor for Sem types
-############################################################################################
+# scaling corrections for multigroup models
 
-function multigroup_weights(models, n)
-    nsamples_total = sum(nsamples, models)
+# fallback method for non-standard SemLoss type
+multigroup_correction_scale(::Type{<:SemLoss}) = nothing
+
+multigroup_correction_scale(::Type{<:SemFIML}) = 0
+multigroup_correction_scale(::Type{<:SemML}) = 0
+multigroup_correction_scale(::Type{<:SemWLS}) = -1
+
+multigroup_correction_scale(loss::SemLoss) = multigroup_correction_scale(typeof(loss))
+
+# calculate sem term weights for multigroup models
+# correcting for the number of samples and the loss type
+function multigroup_weights(semterms...)
+    n = length(semterms)
+    nsamples_total = sum(nsamples, semterms)
     semloss_type = check_same_semterm_type(semterms; throw_error = false)
     if isnothing(semloss_type)
         @info """
         Your ensemble model contains heterogeneous loss functions.
         Default weights of (#samples per group/#total samples) will be used
         """
-        return [(nsamples(model)) / (nsamples_total) for model in models]
+        c = 0
+    else
+        c = multigroup_correction_scale(semloss_type)
+        if isnothing(c)
+            @info """
+            We don't know how to choose group weights for the specified loss function.
+            Default weights of (#samples per group/#total samples) will be used
+            """
+            c = 0
+        end
     end
-    lossfun = models[1].loss.functions[1]
-    if !applicable(mg_correction, lossfun)
-        @info """
-        We don't know how to choose group weights for the specified loss function.
-        Default weights of (#samples per group/#total samples) will be used
-        """
-        return [(nsamples(model)) / (nsamples_total) for model in models]
-    end
-    c = mg_correction(lossfun)
-    return [(nsamples(model)+c) / (nsamples_total+n*c) for model in models]
+    return [(nsamples(term)+c) / (nsamples_total+n*c) for term in semterms]
 end
+
+############################################################################################
+# constructor for Sem types
+############################################################################################
 
 function Sem(
     loss_terms...;
