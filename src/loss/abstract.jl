@@ -40,3 +40,32 @@ function check_observed_vars(observed::SemObserved, implied::SemImplied)
 end
 
 check_observed_vars(sem::SemLoss) = check_observed_vars(observed(sem), implied(sem))
+
+############################################################################################
+# replace_observed: SemLoss, AbstractLoss, LossTerm
+############################################################################################
+
+function replace_observed(loss::SemLoss, new_observed::SemObserved)
+    old_obs = SEM.observed(loss)
+    observed_vars(old_obs) == observed_vars(new_observed) || throw(
+        ArgumentError(
+            "observed_vars of the new data do not match the model: " *
+            "expected $(observed_vars(old_obs)), got $(observed_vars(new_observed))",
+        ),
+    )
+    return typeof(loss).name.wrapper(new_observed, SEM.implied(loss))
+end
+
+function replace_observed(loss::SemLoss, data::Union{AbstractMatrix, DataFrame})
+    old_obs = SEM.observed(loss)
+    new_observed =
+        typeof(old_obs).name.wrapper(data = data, observed_vars = observed_vars(old_obs))
+    return replace_observed(loss, new_observed)
+end
+
+# non-SEM loss terms are unchanged
+replace_observed(loss::AbstractLoss, ::Any) = loss
+
+# LossTerm: delegate to inner loss
+replace_observed(term::LossTerm, data) =
+    LossTerm(replace_observed(loss(term), data), id(term), weight(term))

@@ -179,26 +179,3 @@ function evaluate!(objective, gradient, hessian, loss::SemWLS, par)
 
     return objective
 end
-
-############################################################################################
-### Recommended methods
-############################################################################################
-
-function update_observed(
-    loss::SemWLS,
-    observed::SemObserved;
-    recompute_V = true,
-    kwargs...,
-)
-    if recompute_V
-        return SemWLS(observed, loss.implied; kwargs...)
-    else
-        return SemWLS(
-            observed,
-            loss.implied;
-            wls_weight_matrix = loss.V,
-            wls_weight_matrix_mean = loss.V_μ,
-            kwargs...,
-        )
-    end
-end

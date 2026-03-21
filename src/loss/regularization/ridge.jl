@@ -85,9 +85,3 @@ function hessian(ridge::SemRidge, par)
     @views @. ridge.hessian[ridge.which_H] .= 2 * ridge.α
     return ridge.hessian
 end
-
-############################################################################################
-### Recommended methods
-############################################################################################
-
-update_observed(loss::SemRidge, observed::SemObserved; kwargs...) = loss
