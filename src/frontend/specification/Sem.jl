@@ -109,7 +109,15 @@ function get_fields!(kwargs, specification, observed, implied, loss)
 
     # implied
     if !isa(implied, SemImplied)
-        implied = implied(; specification, kwargs...)
+        # FIXME remove this implicit logic
+        # SemWLS only accepts vech-ed implied covariance
+        if isa(loss, Type) && (loss <: SemWLS) && !haskey(kwargs, :vech)
+            implied_kwargs = copy(kwargs)
+            implied_kwargs[:vech] = true
+        else
+            implied_kwargs = kwargs
+        end
+        implied = implied(specification; implied_kwargs...)
     end
 
     kwargs[:implied] = implied

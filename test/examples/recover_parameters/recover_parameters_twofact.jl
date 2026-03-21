@@ -53,7 +53,7 @@ start = [
     repeat([0.5], 4)
 ]
 
-implied_ml = RAMSymbolic(; specification = ram_matrices, start_val = start)
+implied_ml = RAMSymbolic(ram_matrices; start_val = start)
 
 implied_ml.Σ_eval!(implied_ml.Σ, true_val)
 
