@@ -15,34 +15,11 @@ Return a vector of simple starting values.
 """
 function start_simple end
 
-# Single Models ----------------------------------------------------------------------------
-function start_simple(model::AbstractSemSingle; kwargs...)
-    return start_simple(model.observed, model.implied, model.loss.functions...; kwargs...)
-end
+start_simple(model::SemLoss; kwargs...) =
+    start_simple(observed(model), implied(model); kwargs...)
 
-function start_simple(observed, implied, args...; kwargs...)
-    return start_simple(implied.ram_matrices; kwargs...)
-end
-
-# Ensemble Models --------------------------------------------------------------------------
-function start_simple(model::SemEnsemble; kwargs...)
-    start_vals = []
-
-    for sem in model.sems
-        push!(start_vals, start_simple(sem; kwargs...))
-    end
-
-    has_start_val = [.!iszero.(start_val) for start_val in start_vals]
-
-    start_val = similar(start_vals[1])
-    start_val .= 0.0
-
-    for (j, indices) in enumerate(has_start_val)
-        start_val[indices] .= start_vals[j][indices]
-    end
-
-    return start_val
-end
+start_simple(observed::SemObserved, implied::SemImplied; kwargs...) =
+    start_simple(implied.ram_matrices; kwargs...)
 
 function start_simple(
     ram_matrices::RAMMatrices;
@@ -103,3 +80,6 @@ function start_simple(
     end
     return start_val
 end
+
+# multigroup models
+start_simple(model::AbstractSem; kwargs...) = start_values(start_simple, model; kwargs...)

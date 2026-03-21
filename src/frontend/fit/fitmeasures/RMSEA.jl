@@ -19,28 +19,18 @@ for the SEM model.
 For multigroup models, the correction proposed by J.H. Steiger is applied
 (see [Steiger, J. H. (1998). *A note on multiple sample extensions of the RMSEA fit index*](https://doi.org/10.1080/10705519809540115)).
 """
-function RMSEA end
-
 RMSEA(fit::SemFit) = RMSEA(fit, fit.model)
 
-function RMSEA(fit::SemFit, model::AbstractSemSingle)
-    check_single_lossfun(model; throw_error = true)
-    return RMSEA(dof(fit), χ²(fit), nsamples(fit)+rmsea_correction(model.loss.functions[1]))
-end
-
-function RMSEA(fit::SemFit, model::SemEnsemble)
-    check_single_lossfun(model; throw_error = true)
-    n = nsamples(fit)+model.n*rmsea_correction(model.sems[1].loss.functions[1])
-    return sqrt(length(model.sems)) * RMSEA(dof(fit), χ²(fit), n)
-end
-
-function RMSEA(dof, chi2, N⁻)
-    rmsea = (chi2 - dof) / (N⁻ * dof)
-    rmsea = rmsea > 0 ? rmsea : 0
-    return sqrt(rmsea)
-end
-
 # scaling corrections
-rmsea_correction(::SemFIML) = 0
-rmsea_correction(::SemML) = -1
-rmsea_correction(::SemWLS) = -1
+RMSEA_corr_scale(::Type{<:SemFIML}) = 0
+RMSEA_corr_scale(::Type{<:SemML}) = -1
+RMSEA_corr_scale(::Type{<:SemWLS}) = -1
+
+function RMSEA(fit::SemFit, model::AbstractSem)
+    term_type = check_single_lossfun(model; throw_error = true)
+    n = nsamples(fit) + nsem_terms(model) * RMSEA_corr_scale(term_type)
+    sqrt(nsem_terms(model)) * RMSEA(dof(fit), χ²(fit), n)
+end
+
+RMSEA(dof::Number, chi2::Number, nsamples::Number) =
+    sqrt(max((chi2 - dof) / (nsamples * dof), 0.0))

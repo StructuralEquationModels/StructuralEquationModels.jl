@@ -4,6 +4,8 @@
 ### Types
 ############################################################################################
 """
+    SemConstant{C <: Number} <: AbstractLoss
+
 Constant loss term. Can be used for comparability to other packages.
 
 # Constructor
@@ -15,37 +17,27 @@ Constant loss term. Can be used for comparability to other packages.
 
 # Examples
 ```julia
-    my_constant = SemConstant(constant_loss = 42.0)
+    my_constant = SemConstant(42.0)
 ```
 
 # Interfaces
 Analytic gradients and hessians are available.
 """
-struct SemConstant{C} <: SemLossFunction
+struct SemConstant{C <: Number} <: AbstractLoss
     hessianeval::ExactHessian
     c::C
+
+    SemConstant(c::Number) = new{typeof(c)}(ExactHessian(), c)
 end
 
-############################################################################################
-### Constructors
-############################################################################################
+SemConstant(; constant_loss::Number, kwargs...) = SemConstant(constant_loss)
 
-function SemConstant(; constant_loss, kwargs...)
-    return SemConstant(ExactHessian(), constant_loss)
-end
-
-############################################################################################
-### methods
-############################################################################################
-
-objective(constant::SemConstant, model::AbstractSem, par) = constant.c
-gradient(constant::SemConstant, model::AbstractSem, par) = zero(par)
-hessian(constant::SemConstant, model::AbstractSem, par) =
-    zeros(eltype(par), length(par), length(par))
+objective(loss::SemConstant, par) = convert(eltype(par), loss.c)
+gradient(loss::SemConstant, par) = zero(par)
+hessian(loss::SemConstant, par) = zeros(eltype(par), length(par), length(par))
 
 ############################################################################################
 ### Recommended methods
 ############################################################################################
 
-update_observed(loss_function::SemConstant, observed::SemObserved; kwargs...) =
-    loss_function
+update_observed(loss::SemConstant, observed::SemObserved; kwargs...) = loss

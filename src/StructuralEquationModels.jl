@@ -44,6 +44,7 @@ include("frontend/specification/EnsembleParameterTable.jl")
 include("frontend/specification/StenoGraphs.jl")
 include("frontend/fit/summary.jl")
 include("frontend/StatsAPI.jl")
+include("frontend/finite_diff.jl")
 # pretty printing
 include("frontend/pretty_printing.jl")
 # observed
@@ -53,26 +54,28 @@ include("observed/covariance.jl")
 include("observed/missing_pattern.jl")
 include("observed/missing.jl")
 include("observed/EM.jl")
-# constructor
-include("frontend/specification/Sem.jl")
-include("frontend/specification/documentation.jl")
 # implied
 include("implied/abstract.jl")
 include("implied/RAM/symbolic.jl")
 include("implied/RAM/generic.jl")
 include("implied/empty.jl")
 # loss
+include("loss/abstract.jl")
 include("loss/ML/ML.jl")
 include("loss/ML/FIML.jl")
 include("loss/regularization/ridge.jl")
 include("loss/WLS/WLS.jl")
 include("loss/constant/constant.jl")
+# constructor
+include("frontend/specification/Sem.jl")
+include("frontend/specification/documentation.jl")
 # optimizer
 include("optimizer/abstract.jl")
 include("optimizer/Empty.jl")
 include("optimizer/optim.jl")
 # helper functions
 include("additional_functions/helper.jl")
+include("additional_functions/start_val/common.jl")
 include("additional_functions/start_val/start_fabin3.jl")
 include("additional_functions/start_val/start_simple.jl")
 include("additional_functions/artifacts.jl")
@@ -94,14 +97,11 @@ include("frontend/fit/standard_errors/z_test.jl")
 include("frontend/fit/standard_errors/confidence_intervals.jl")
 
 export AbstractSem,
-    AbstractSemSingle,
-    AbstractSemCollection,
     coef,
     coefnames,
     coeftable,
     Sem,
     SemFiniteDiff,
-    SemEnsemble,
     MeanStruct,
     NoMeanStruct,
     HasMeanStruct,
@@ -116,8 +116,8 @@ export AbstractSem,
     start_val,
     start_fabin3,
     start_simple,
+    AbstractLoss,
     SemLoss,
-    SemLossFunction,
     SemML,
     SemFIML,
     em_mvn,
@@ -125,6 +125,9 @@ export AbstractSem,
     SemConstant,
     SemWLS,
     loss,
+    nsem_terms,
+    sem_terms,
+    sem_term,
     SemOptimizer,
     optimizer,
     optimizer_engine,
