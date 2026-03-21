@@ -62,6 +62,6 @@ end
 ############################################################################################
 
 function minus2ll(model::AbstractSem, fit::SemFit)
-    check_single_lossfun(model; throw_error = true)
+    check_same_semterm_type(model; throw_error = true)
     sum(Base.Fix2(minus2ll, fit) ∘ _unwrap ∘ loss, sem_terms(model))
 end
