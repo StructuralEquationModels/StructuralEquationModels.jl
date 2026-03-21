@@ -27,7 +27,7 @@ RMSEA_corr_scale(::Type{<:SemML}) = -1
 RMSEA_corr_scale(::Type{<:SemWLS}) = -1
 
 function RMSEA(fit::SemFit, model::AbstractSem)
-    term_type = check_single_lossfun(model; throw_error = true)
+    term_type = check_same_semterm_type(model; throw_error = true)
     n = nsamples(fit) + nsem_terms(model) * RMSEA_corr_scale(term_type)
     sqrt(nsem_terms(model)) * RMSEA(dof(fit), χ²(fit), n)
 end

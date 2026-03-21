@@ -51,8 +51,8 @@ end
 
 function multigroup_weights(models, n)
     nsamples_total = sum(nsamples, models)
-    uniform_lossfun = check_single_lossfun(models...; throw_error = false)
-    if !uniform_lossfun
+    semloss_type = check_same_semterm_type(semterms; throw_error = false)
+    if isnothing(semloss_type)
         @info """
         Your ensemble model contains heterogeneous loss functions.
         Default weights of (#samples per group/#total samples) will be used
@@ -256,6 +256,49 @@ function sem_term(model::AbstractSem, _::Nothing = nothing)
         issemloss(term) && return loss(term)
     end
     error("Unreachable reached")
+end
+
+# check that all models use the same single loss function
+# returns the type of the single SEM loss function, SemLoss if there are multiple different SEM losses,
+# nothing if there are no SEM terms.
+# If throw_error=true, throws an error if there are multiple different SEM loss functions
+check_same_semterm_type(model::AbstractSem; throw_error::Bool = true) =
+    check_same_semterm_type(sem_terms(model); throw_error = throw_error)
+
+# check that all models use the same single loss function
+# returns the type of the single SEM loss function,
+# nothing if there are multiple different SEM losses or no SEM terms.
+# If throw_error=true, throws an error if there are multiple different SEM loss functions
+function check_same_semterm_type(terms::Tuple; throw_error::Bool = true)
+    isempty(terms) && return nothing
+
+    _semloss(term::SemLoss) = _unwrap(term)
+    _semloss(term::LossTerm) = _semloss(loss(term))
+    _semloss(term) = throw(ArgumentError("SemLoss term expected, $(typeof(term)) found"))
+    _semloss_label(i::Integer, _::Union{SemLoss, LossTerm{<:SemLoss, Nothing}}) = "#$i"
+    _semloss_label(i::Integer, term::LossTerm{<:SemLoss, Symbol}) = "#$i ($(SEM.id(term)))"
+
+    term1 = _semloss(terms[1])
+    L = typeof(term1).name
+
+    # check that all SemLoss terms are of the same class (ML, FIML, WLS etc), ignore typeparams
+    for (i, term) in enumerate(terms)
+        lossterm = _semloss(term)
+        @assert lossterm isa SemLoss
+        if typeof(lossterm).name != L
+            if throw_error
+                error(
+                    "SemLoss term $(_semloss_label(i, term)) is $(typeof(lossterm).name), expected $L. Heterogeneous loss functions are not supported",
+                )
+            else
+                return nothing
+            end
+        end
+    end
+
+    # return the type of the first SEM term
+    # note that type params of the SEM terms might be different
+    return typeof(term1)
 end
 
 # wrappers arounds a single SemLoss term

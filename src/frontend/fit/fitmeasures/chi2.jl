@@ -14,21 +14,10 @@ with the *observed* covariance matrix.
 
 function χ²(fit::SemFit, model::AbstractSem)
     terms = sem_terms(model)
-    isempty(terms) && return 0.0
+    @assert !isempty(terms)
 
-    term1 = _unwrap(loss(terms[1]))
-    L = typeof(term1).name
-
-    # check that all SemLoss terms are of the same class (ML, FIML, WLS etc), ignore typeparams
-    for (i, term) in enumerate(terms)
-        lossterm = _unwrap(loss(term))
-        @assert lossterm isa SemLoss
-        if typeof(_unwrap(lossterm)).name != L
-            @error "SemLoss term #$i is $(typeof(_unwrap(lossterm)).name), expected $L. Heterogeneous loss functions are not supported"
-        end
-    end
-
-    return χ²(typeof(term1), fit, model)
+    L = check_same_semterm_type(model; throw_error = true)
+    return χ²(L, fit, model)
 end
 
 # bollen, p. 115, only correct for GLS weight matrix
