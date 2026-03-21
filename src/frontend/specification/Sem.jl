@@ -183,6 +183,7 @@ end
 ############################################################################################
 
 params(model::AbstractSem) = model.params
+param_labels(model::AbstractSem) = params(model)  # alias
 
 """
     loss_terms(model::AbstractSem)
