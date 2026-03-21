@@ -176,12 +176,7 @@ end
 ### objective, gradient, hessian
 ############################################################################################
 
-function update!(
-    targets::EvaluationTargets,
-    implied::RAMSymbolic,
-    model::AbstractSemSingle,
-    par,
-)
+function update!(targets::EvaluationTargets, implied::RAMSymbolic, par)
     implied.Σ_eval!(implied.Σ, par)
     if MeanStruct(implied) === HasMeanStruct
         implied.μ_eval!(implied.μ, par)
@@ -223,7 +218,10 @@ end
 function eval_Σ_symbolic(S, I_A⁻¹, F; vech::Bool = false, simplify::Bool = false)
     Σ = F * I_A⁻¹ * S * permutedims(I_A⁻¹) * permutedims(F)
     Σ = Array(Σ)
-    vech && (Σ = SEM.vech(Σ))
+    if vech
+        n = size(Σ, 1)
+        Σ = [Σ[i, j] for j in 1:n for i in j:n]
+    end
     if simplify
         Threads.@threads for i in eachindex(Σ)
             Σ[i] = Symbolics.simplify(Σ[i])

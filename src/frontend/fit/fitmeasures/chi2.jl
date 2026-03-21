@@ -12,57 +12,42 @@ with the *observed* covariance matrix.
 """
 χ²(fit::SemFit) = χ²(fit, fit.model)
 
-############################################################################################
-# Single Models
-############################################################################################
+function χ²(fit::SemFit, model::AbstractSem)
+    terms = sem_terms(model)
+    isempty(terms) && return 0.0
 
-function χ²(fit::SemFit, model::AbstractSemSingle)
-    check_single_lossfun(model; throw_error = true)
-    return χ²(model.loss.functions[1], fit::SemFit, model::AbstractSemSingle)
+    term1 = _unwrap(loss(terms[1]))
+    L = typeof(term1).name
+
+    # check that all SemLoss terms are of the same class (ML, FIML, WLS etc), ignore typeparams
+    for (i, term) in enumerate(terms)
+        lossterm = _unwrap(loss(term))
+        @assert lossterm isa SemLoss
+        if typeof(_unwrap(lossterm)).name != L
+            @error "SemLoss term #$i is $(typeof(_unwrap(lossterm)).name), expected $L. Heterogeneous loss functions are not supported"
+        end
+    end
+
+    return χ²(typeof(term1), fit, model)
 end
-
-χ²(::SemML, fit::SemFit, model::AbstractSemSingle) =
-    (nsamples(fit) - 1) *
-    (fit.minimum - logdet(obs_cov(observed(model))) - nobserved_vars(model))
 
 # bollen, p. 115, only correct for GLS weight matrix
-χ²(::SemWLS, fit::SemFit, model::AbstractSemSingle) =
-    (nsamples(fit) - 1) * fit.minimum
+χ²(::Type{<:SemWLS}, fit::SemFit, model::AbstractSem) = (nsamples(model) - 1) * fit.minimum
 
-# FIML
-function χ²(::SemFIML, fit::SemFit, model::AbstractSemSingle)
-    ll_H0 = minus2ll(fit)
-    ll_H1 = minus2ll(observed(model))
-    return ll_H0 - ll_H1
-end
-
-############################################################################################
-# Collections
-############################################################################################
-
-function χ²(fit::SemFit, model::SemEnsemble)
-    check_single_lossfun(model; throw_error = true)
-    lossfun = model.sems[1].loss.functions[1]
-    return χ²(lossfun, fit, model)
-end
-
-function χ²(::SemWLS, fit::SemFit, models::SemEnsemble)
-    return (nsamples(models) - models.n) * fit.minimum
-end
-
-function χ²(::SemML, fit::SemFit, models::SemEnsemble)
-    F = 0
-    for model in models.sems
-        Fᵢ = objective(model, fit.solution)
-        Fᵢ -= logdet(obs_cov(observed(model))) + nobserved_vars(model)
-        Fᵢ *= nsamples(model) - 1
-        F += Fᵢ
+function χ²(::Type{<:SemML}, fit::SemFit, model::AbstractSem)
+    G = sum(loss_terms(model)) do term
+        if issemloss(term)
+            data = observed(term)
+            something(weight(term), 1.0) * (logdet(obs_cov(data)) + nobserved_vars(data))
+        else
+            return 0.0
+        end
     end
-    return F
+    return (nsamples(model) - 1) * (fit.minimum - G)
 end
 
-function χ²(::SemFIML, fit::SemFit, models::SemEnsemble)
+function χ²(::Type{<:SemFIML}, fit::SemFit, model::AbstractSem)
     ll_H0 = minus2ll(fit)
-    ll_H1 = sum(minus2ll ∘ observed, models.sems)
+    ll_H1 = sum(minus2ll ∘ observed, sem_terms(model))
     return ll_H0 - ll_H1
 end

@@ -1,5 +1,7 @@
 using StructuralEquationModels, Distributions, Random, Optim, LineSearches
 
+SEM = StructuralEquationModels
+
 include(
     joinpath(
         chop(dirname(pathof(StructuralEquationModels)), tail = 3),
@@ -7,7 +9,7 @@ include(
     ),
 )
 
-x = Symbol.("x", 1:13)
+pars = Symbol.("x", 1:13)
 
 S = [
     :x1 0 0 0 0 0 0 0
@@ -40,7 +42,7 @@ A = [
     0 0 0 0 0 0 0    0
 ]
 
-ram_matrices = RAMMatrices(; A = A, S = S, F = F, param_labels = x, vars = nothing)
+ram_matrices = RAMMatrices(; A = A, S = S, F = F, param_labels = pars, vars = nothing)
 
 true_val = [
     repeat([1], 8)
@@ -53,19 +55,19 @@ start = [
     repeat([0.5], 4)
 ]
 
-implied_ml = RAMSymbolic(ram_matrices; start_val = start)
+implied_sym = RAMSymbolic(ram_matrices)
 
-implied_ml.Σ_eval!(implied_ml.Σ, true_val)
+implied_sym.Σ_eval!(implied_sym.Σ, true_val)
 
-true_dist = MultivariateNormal(implied_ml.Σ)
+true_dist = MultivariateNormal(implied_sym.Σ)
 
 Random.seed!(1234)
-x = transpose(rand(true_dist, 100_000))
-semobserved = SemObservedData(data = x, specification = nothing)
+x = permutedims(rand(true_dist, 10^5), (2, 1))
 
-loss_ml = SemLoss(SemML(; observed = semobserved, nparams = length(start)))
+observed = SemObservedData(data = x, specification = ram_matrices)
 
-model_ml = Sem(semobserved, implied_ml, loss_ml)
+model_ml = Sem(SemML(observed, implied_sym))
+
 objective!(model_ml, true_val)
 
 optimizer = SemOptimizer(
@@ -73,6 +75,6 @@ optimizer = SemOptimizer(
     Optim.Options(; f_reltol = 1e-10, x_abstol = 1.5e-8),
 )
 
-solution_ml = fit(optimizer, model_ml)
+solution_ml = fit(optimizer, model_ml, start_val = start)
 
-@test true_val ≈ solution(solution_ml) atol = 0.05
+@test solution(solution_ml) ≈ true_val atol = 0.05

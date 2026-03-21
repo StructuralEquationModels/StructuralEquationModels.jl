@@ -8,36 +8,41 @@ Maximum likelihood estimation.
 
 # Constructor
 
-    SemML(; observed, approximate_hessian = false, kwargs...)
+    SemML(observed, implied; approximate_hessian = false)
 
 # Arguments
 - `observed::SemObserved`: the observed part of the model
+- `implied::SemImplied`: [`SemImplied`](@ref) instance
 - `approximate_hessian::Bool`: if hessian-based optimization is used, should the hessian be swapped for an approximation
 
 # Examples
 ```julia
-my_ml = SemML(observed = my_observed)
+my_ml = SemML(my_observed, my_implied)
 ```
 
 # Interfaces
 Analytic gradients are available, and for models without a meanstructure
-and RAMSymbolic implied type, also analytic hessians.
+and `RAMSymbolic` implied type, also analytic hessians.
 """
-struct SemML{HE <: HessianEval, INV, M, M2} <: SemLossFunction
+struct SemML{O, I, HE <: HessianEval, INV, M, M2} <: SemLoss{O, I}
+    observed::O
+    implied::I
     hessianeval::HE
     Σ⁻¹::INV
     Σ⁻¹Σₒ::M
     meandiff::M2
-
-    SemML{HE}(args...) where {HE <: HessianEval} =
-        new{HE, map(typeof, args)...}(HE(), args...)
 end
 
 ############################################################################################
 ### Constructors
 ############################################################################################
 
-function SemML(; observed::SemObserved, approximate_hessian::Bool = false, kwargs...)
+function SemML(
+    observed::SemObserved,
+    implied::SemImplied;
+    approximate_hessian::Bool = false,
+    kwargs...,
+)
     if observed isa SemObservedMissing
         @warn """
         ML estimation with `SemObservedMissing` will use an approximate covariance and mean estimated with EM algorithm.
@@ -51,12 +56,25 @@ function SemML(; observed::SemObserved, approximate_hessian::Bool = false, kwarg
         )
         """
     end
+    # check integrity
+    check_observed_vars(observed, implied)
 
+    he = approximate_hessian ? ApproxHessian() : ExactHessian()
     obsmean = obs_mean(observed)
     obscov = obs_cov(observed)
     meandiff = isnothing(obsmean) ? nothing : copy(obsmean)
 
-    return SemML{approximate_hessian ? ApproxHessian : ExactHessian}(
+    return SemML{
+        typeof(observed),
+        typeof(implied),
+        typeof(he),
+        typeof(obscov),
+        typeof(obscov),
+        typeof(meandiff),
+    }(
+        observed,
+        implied,
+        he,
         similar(obscov),
         similar(obscov),
         meandiff,
@@ -74,20 +92,20 @@ function evaluate!(
     objective,
     gradient,
     hessian,
-    semml::SemML,
-    implied::SemImpliedSymbolic,
-    model::AbstractSemSingle,
+    loss::SemML{<:Any, <:SemImpliedSymbolic},
     par,
 )
+    implied = SEM.implied(loss)
+
     if !isnothing(hessian)
         (MeanStruct(implied) === HasMeanStruct) &&
             throw(DomainError(H, "hessian of ML + meanstructure is not available"))
     end
 
     Σ = implied.Σ
-    Σₒ = obs_cov(observed(model))
-    Σ⁻¹Σₒ = semml.Σ⁻¹Σₒ
-    Σ⁻¹ = semml.Σ⁻¹
+    Σₒ = obs_cov(observed(loss))
+    Σ⁻¹Σₒ = loss.Σ⁻¹Σₒ
+    Σ⁻¹ = loss.Σ⁻¹
 
     copyto!(Σ⁻¹, Σ)
     Σ_chol = cholesky!(Symmetric(Σ⁻¹); check = false)
@@ -105,7 +123,7 @@ function evaluate!(
 
     if MeanStruct(implied) === HasMeanStruct
         μ = implied.μ
-        μₒ = obs_mean(observed(model))
+        μₒ = obs_mean(observed(loss))
         μ₋ = μₒ - μ
 
         isnothing(objective) || (objective += dot(μ₋, Σ⁻¹, μ₋))
@@ -124,7 +142,7 @@ function evaluate!(
             mul!(gradient, ∇Σ', J')
         end
         if !isnothing(hessian)
-            if HessianEval(semml) === ApproxHessian
+            if HessianEval(loss) === ApproxHessian
                 mul!(hessian, ∇Σ' * kron(Σ⁻¹, Σ⁻¹), ∇Σ, 2, 0)
             else
                 ∇²Σ = implied.∇²Σ
@@ -143,24 +161,17 @@ end
 ############################################################################################
 ### Non-Symbolic Implied Types
 
-function evaluate!(
-    objective,
-    gradient,
-    hessian,
-    semml::SemML,
-    implied::RAM,
-    model::AbstractSemSingle,
-    par,
-)
+function evaluate!(objective, gradient, hessian, loss::SemML, par)
     if !isnothing(hessian)
         error("hessian of ML + non-symbolic implied type is not available")
     end
 
-    Σ = implied.Σ
-    Σₒ = obs_cov(observed(model))
-    Σ⁻¹Σₒ = semml.Σ⁻¹Σₒ
-    Σ⁻¹ = semml.Σ⁻¹
+    implied = SEM.implied(loss)
 
+    Σ = implied.Σ
+    Σₒ = obs_cov(observed(loss))
+    Σ⁻¹Σₒ = loss.Σ⁻¹Σₒ
+    Σ⁻¹ = loss.Σ⁻¹
     copyto!(Σ⁻¹, Σ)
     Σ_chol = cholesky!(Symmetric(Σ⁻¹); check = false)
     if !isposdef(Σ_chol)
@@ -179,7 +190,7 @@ function evaluate!(
 
         if MeanStruct(implied) === HasMeanStruct
             μ = implied.μ
-            μₒ = obs_mean(observed(model))
+            μₒ = obs_mean(observed(loss))
             μ₋ = μₒ - μ
             objective += dot(μ₋, Σ⁻¹, μ₋)
         end
@@ -198,7 +209,7 @@ function evaluate!(
 
         if MeanStruct(implied) === HasMeanStruct
             μ = implied.μ
-            μₒ = obs_mean(observed(model))
+            μₒ = obs_mean(observed(loss))
             ∇M = implied.∇M
             M = implied.M
             μ₋ = μₒ - μ
@@ -229,16 +240,17 @@ end
 ### recommended methods
 ############################################################################################
 
-update_observed(lossfun::SemML, observed::SemObservedMissing; kwargs...) =
+update_observed(loss::SemML, observed::SemObservedMissing; kwargs...) =
     error("ML estimation does not work with missing data - use FIML instead")
 
-function update_observed(lossfun::SemML, observed::SemObserved; kwargs...)
-    if size(lossfun.Σ⁻¹) == size(obs_cov(observed))
-        return lossfun
+function update_observed(loss::SemML, observed::SemObserved; kwargs...)
+    if (obs_cov(loss) == obs_cov(observed)) && (obs_mean(loss) == obs_mean(observed))
+        return loss # no change
     else
-        return SemML(;
-            observed = observed,
-            approximate_hessian = HessianEval(lossfun) == ApproxHessian,
+        return SemML(
+            observed,
+            loss.implied;
+            approximate_hessian = HessianEval(loss) == ApproxHessian,
             kwargs...,
         )
     end

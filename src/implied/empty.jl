@@ -13,8 +13,8 @@ Empty placeholder for models that don't need an implied part.
 - `specification`: either a `RAMMatrices` or `ParameterTable` object
 
 # Examples
-A multigroup model with ridge regularization could be specified as a `SemEnsemble` with one
-model per group and an additional model with `ImpliedEmpty` and `SemRidge` for the regularization part.
+A multigroup model with ridge regularization could be specified as a `Sem` with one
+SEM term (`SemLoss`) per group and an additional `SemRidge` regularization term.
 
 # Extended help
 
@@ -45,7 +45,7 @@ end
 ### methods
 ############################################################################################
 
-update!(targets::EvaluationTargets, implied::ImpliedEmpty, par, model) = nothing
+update!(targets::EvaluationTargets, implied::ImpliedEmpty, par) = nothing
 
 ############################################################################################
 ### Recommended methods
