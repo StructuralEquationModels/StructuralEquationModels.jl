@@ -167,14 +167,8 @@ end
     # set seed for simulation
     Random.seed!(83472834)
     # simulate data
-    model_ml_new = replace_observed(
-        model_ml,
-        rand(model_ml, params, 1_000_000),
-    )
-    model_ml_sym_new = replace_observed(
-        model_ml_sym,
-        rand(model_ml_sym, params, 1_000_000),
-    )
+    model_ml_new = replace_observed(model_ml, rand(model_ml, params, 1_000_000))
+    model_ml_sym_new = replace_observed(model_ml_sym, rand(model_ml_sym, params, 1_000_000))
     # fit models
     sol_ml = solution(fit(semoptimizer, model_ml_new))
     sol_ml_sym = solution(fit(semoptimizer, model_ml_sym_new))
@@ -376,14 +370,8 @@ end
     # set seed for simulation
     Random.seed!(83472834)
     # simulate data
-    model_ml_new = replace_observed(
-        model_ml,
-        rand(model_ml, params, 1_000_000),
-    )
-    model_ml_sym_new = replace_observed(
-        model_ml_sym,
-        rand(model_ml_sym, params, 1_000_000),
-    )
+    model_ml_new = replace_observed(model_ml, rand(model_ml, params, 1_000_000))
+    model_ml_sym_new = replace_observed(model_ml_sym, rand(model_ml_sym, params, 1_000_000))
     # fit models
     sol_ml = solution(fit(semoptimizer, model_ml_new))
     sol_ml_sym = solution(fit(semoptimizer, model_ml_sym_new))

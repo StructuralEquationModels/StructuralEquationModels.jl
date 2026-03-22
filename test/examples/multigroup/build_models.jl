@@ -19,17 +19,11 @@ model_ml_multigroup = Sem(
 end
 
 # replace observed using Dict of data matrices
-model_ml_multigroup3 = replace_observed(
-    model_ml_multigroup,
-    Dict(:Pasteur => dat_g1, :Grant_White => dat_g2),
-)
+model_ml_multigroup3 =
+    replace_observed(model_ml_multigroup, Dict(:Pasteur => dat_g1, :Grant_White => dat_g2))
 
 # replace observed using DataFrame with group column
-model_ml_multigroup4 = replace_observed(
-    model_ml_multigroup,
-    dat;
-    semterm_column = :school,
-)
+model_ml_multigroup4 = replace_observed(model_ml_multigroup, dat; semterm_column = :school)
 
 # gradients
 @testset "ml_gradients_multigroup" begin
