@@ -13,9 +13,9 @@ end
 and a method to update!:
 
 ```julia
-import StructuralEquationModels: objective!
+import StructuralEquationModels: update!
 
-function update!(targets::EvaluationTargets, implied::MyImplied, model::AbstractSemSingle, params)
+function update!(targets::EvaluationTargets, implied::MyImplied, params)
 
     if is_objective_required(targets)
         ...
@@ -31,10 +31,8 @@ function update!(targets::EvaluationTargets, implied::MyImplied, model::Abstract
 end
 ```
 
-As you can see, `update` gets passed as a first argument `targets`, which is telling us whether the objective value, gradient, and/or hessian are needed.
+As you can see, `update!` gets passed as a first argument `targets`, which is telling us whether the objective value, gradient, and/or hessian are needed.
 We can then use the functions `is_..._required` and conditional on what the optimizer needs, we can compute and store things we want to make available to the loss functions. For example, as we have seen in [Second example - maximum likelihood](@ref), the `RAM` implied type computes the model-implied covariance matrix and makes it available via `implied.Σ`.
-
-
 
 Just as described in [Custom loss functions](@ref), you may define a constructor. Typically, this will depend on the `specification = ...` argument that can be a `ParameterTable` or a `RAMMatrices` object.
 
@@ -56,7 +54,7 @@ Empty placeholder for models that don't need an implied part.
 - `specification`: either a `RAMMatrices` or `ParameterTable` object
 
 # Examples
-A multigroup model with ridge regularization could be specified as a `SemEnsemble` with one
+A multigroup model with ridge regularization could be specified as a `Sem` with one
 model per group and an additional model with `ImpliedEmpty` and `SemRidge` for the regularization part.
 
 # Extended help
@@ -75,26 +73,20 @@ end
 ### Constructors
 ############################################################################################
 
-function ImpliedEmpty(;
-    specification,
-    meanstruct = NoMeanStruct(),
-    hessianeval = ExactHessian(),
+function ImpliedEmpty(
+    spec::SemSpecification;
+    hessianeval::HessianApprox = ExactHessian(),
     kwargs...,
 )
-    return ImpliedEmpty(hessianeval, meanstruct, convert(RAMMatrices, specification))
+    ram_matrices = convert(RAMMatrices, spec)
+    return ImpliedEmpty(hessianeval, MeanStruct(ram_matrices), ram_matrices)
 end
 
 ############################################################################################
 ### methods
 ############################################################################################
 
-update!(targets::EvaluationTargets, implied::ImpliedEmpty, par, model) = nothing
-
-############################################################################################
-### Recommended methods
-############################################################################################
-
-update_observed(implied::ImpliedEmpty, observed::SemObserved; kwargs...) = implied
+update!(targets::EvaluationTargets, implied::ImpliedEmpty, par) = nothing
 ```
 
-As you see, similar to [Custom loss functions](@ref) we implement a method for `update_observed`.
+As you see, similar to [Custom loss functions](@ref) we implement a constructor.
