@@ -5,11 +5,11 @@
 
 Calculate the Comparative Fit Index (CFI).
 
-The CFI ranges from 0-1 and measures how much better the model 
+The CFI ranges from 0-1 and measures how much better the model
 fits the data compared to a baseline model.
 If no baseline model is provided, a model with unconstrained
 variances (and means) is compaired against.
-For multigroup models, variances (and means) per group are free 
+For multigroup models, variances (and means) per group are free
 without any equality constraints between groups.
 """
 function CFI end
@@ -35,34 +35,31 @@ function CFI(χ², dof, χ²₀, dof₀)
 end
 
 ###
-function χ²_varonly(model::AbstractSemSingle)
-    check_single_lossfun(model; throw_error = true)
-    return χ²_varonly(model.loss.functions[1], model)
+function χ²_varonly(model::AbstractSem)
+    check_same_semterm_type(model; throw_error = true)
+    return sum(sem_terms(model)) do semterm
+        χ²_varonly(_unwrap(loss(semterm)))
+    end
 end
 
-function χ²_varonly(model::SemEnsemble)
-    check_single_lossfun(model; throw_error = true)
-    return sum(χ²_varonly, model.sems)
-end
-
-function χ²_varonly(::SemML, model::AbstractSemSingle)
-    N⁻ = (nsamples(model) - 1)
-    S = obs_cov(observed(model))
+function χ²_varonly(loss::SemML)
+    N⁻ = (nsamples(loss) - 1)
+    S = obs_cov(observed(loss))
     Σ₀ = Diagonal(S)
-    p = nobserved_vars(model)
+    p = nobserved_vars(loss)
     return N⁻*(logdet(Σ₀) + tr(inv(Σ₀)*S) - logdet(S) - p)
 end
 
 # for the optimal variance only model, we have to solve 1/2 tr((I-XS⁻¹)^2) with X diagonal
-function χ²_varonly(::SemWLS, model)
-    N⁻ = (nsamples(model) - 1)
-    S⁻¹ = inv((obs_cov(observed(model))))
+function χ²_varonly(loss::SemWLS)
+    N⁻ = (nsamples(loss) - 1)
+    S⁻¹ = inv((obs_cov(observed(loss))))
     Σ₀ = Diagonal(inv(S⁻¹ .* S⁻¹)*diag(S⁻¹))
     return N⁻*0.5*tr((I - Σ₀*S⁻¹)^2)
 end
 
 # For FIML, an explicit bl model has to be passed
-function χ²_varonly(::SemFIML, model)
+function χ²_varonly(loss::SemFIML)
     """
     Computing the CFI with FIML requires explicitely passing a fitted baseline model as
         CFI(fit::SemFit, fit_baseline::SemFit)
@@ -71,12 +68,12 @@ function χ²_varonly(::SemFIML, model)
     throw
 end
 
-function dof_varonly(model::AbstractSemSingle)
-    nparams_varonly = nobserved_vars(model)
-    if MeanStruct(model.implied) === HasMeanStruct
-        nparams_varonly *= 2
+function dof_varonly(model::AbstractSem)
+    return sum(sem_terms(model)) do semterm
+        nparams_varonly = nobserved_vars(semterm)
+        if MeanStruct(implied(semterm)) === HasMeanStruct
+            nparams_varonly *= 2
+        end
+        return n_dp(loss(semterm)) - nparams_varonly
     end
-    return n_dp(model) - nparams_varonly
 end
-
-dof_varonly(model::SemEnsemble) = sum(dof_varonly, model.sems)
