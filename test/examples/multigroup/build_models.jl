@@ -249,7 +249,7 @@ end
         lav_col = :se,
         lav_groups = Dict(:Pasteur => 1, :Grant_White => 2),
     )
-    # test_bootstrap(solution_ls, partable; compare_bs = false, rtol_hessian = 0.3)
+    # test_bootstrap(solution_ls; compare_bs = false, rtol_hessian = 0.3)
     smoketest_CI_z(solution_ls, partable)
 end
 
@@ -360,7 +360,7 @@ if !isnothing(specification_miss_g1)
             fitmeasure_names = Dict(:CFI => "cfi"),
         )
 
-        test_bootstrap(solution, partable_miss; compare_bs = false, rtol_hessian = 0.5)
+        test_bootstrap(solution; compare_bs = false, rtol_hessian = 0.5)
         smoketest_CI_z(solution, partable_miss)
 
         update_se_hessian!(partable_miss, solution)

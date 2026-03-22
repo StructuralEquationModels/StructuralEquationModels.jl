@@ -138,17 +138,17 @@ function test_estimates(
 end
 
 function test_bootstrap(
-    model_fit,
-    spec;
+    model_fit::SemFit;
     compare_hessian = true,
     rtol_hessian = 0.2,
     compare_bs = true,
     rtol_bs = 0.1,
     n_boot = 500,
+    seed = 32432,
 )
-    @testset rng = Random.seed!(32432) "bootstrap" begin
-        se_bs = @suppress se_bootstrap(model_fit, spec; n_boot = n_boot)
-        # hessian and bootstrap se are close
+    @testset rng = Random.seed!(seed) "bootstrap" begin
+        se_bs = @suppress se_bootstrap(model_fit; n_boot = n_boot)
+        # hessian-based and bootstrap-based std.errors are close
         if compare_hessian
             se_he = @suppress se_hessian(model_fit)
             #println(maximum(abs.(se_he - se_bs)))
@@ -156,10 +156,9 @@ function test_bootstrap(
         end
         # se_bootstrap and bootstrap |> se are close
         if compare_bs
-            bs_samples = bootstrap(model_fit, spec; n_boot = n_boot)
-            @test bs_samples[:n_converged] >= 0.95*n_boot
-            bs_samples =
-                cat(bs_samples[:samples][BitVector(bs_samples[:converged])]..., dims = 2)
+            bs_samples = bootstrap(model_fit; n_boot = n_boot)
+            @test bs_samples.n_converged >= 0.95*n_boot
+            bs_samples = reduce(hcat, bs_samples.samples[bs_samples.converged_mask])
             se_bs_2 = sqrt.(var(bs_samples, corrected = false, dims = 2))
             #println(maximum(abs.(se_bs_2 - se_bs)))
             @test isapprox(se_bs_2, se_bs, rtol = rtol_bs)
@@ -167,14 +166,14 @@ function test_bootstrap(
     end
 end
 
-function smoketest_bootstrap(model_fit, spec; n_boot = 5)
-    # hessian and bootstrap se are close
-    se_bs = se_bootstrap(model_fit, spec; n_boot = n_boot)
-    bs_samples = bootstrap(model_fit, spec; n_boot = n_boot)
+function smoketest_bootstrap(model_fit::SemFit; n_boot = 5)
+    # just test that both methods succeed
+    se_bs = se_bootstrap(model_fit; n_boot = n_boot)
+    bs_samples = bootstrap(model_fit; n_boot = n_boot)
     return se_bs, bs_samples
 end
 
-function smoketest_CI_z(model_fit, partable)
+function smoketest_CI_z(model_fit::SemFit, partable)
     se_he = @suppress se_hessian(model_fit)
     normal_CI!(partable, model_fit, se_he)
     z_test!(partable, model_fit, se_he)
