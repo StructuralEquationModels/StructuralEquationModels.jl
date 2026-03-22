@@ -1,5 +1,5 @@
 using StructuralEquationModels, Test, FiniteDiff, Suppressor
-using LinearAlgebra: diagind, LowerTriangular
+using LinearAlgebra: diagind, isposdef, logdet, tr, LowerTriangular
 using Statistics: var
 using Random
 
