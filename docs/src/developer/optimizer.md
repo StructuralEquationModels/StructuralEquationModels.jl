@@ -26,12 +26,6 @@ struct MyoptResult{O <: SemOptimizerMyopt} <: SEM.SemOptimizerResult{O}
 end
 
 ############################################################################################
-### Recommended methods
-############################################################################################
-
-update_observed(optimizer::SemOptimizerMyopt, observed::SemObserved; kwargs...) = optimizer
-
-############################################################################################
 ### additional methods
 ############################################################################################
 
@@ -42,8 +36,6 @@ Note that `SemOptimizerMyopt` is defined as a subtype of [`SemOptimizer{:Myopt}`
 and `SEM.sem_optimizer_subtype(::Val{:Myopt})` returns `SemOptimizerMyopt`.
 This instructs *SEM.jl* to use `SemOptimizerMyopt` when `:Myopt` is specified as the engine for
 model fitting: `fit(..., engine = :Myopt)`.
-
-A method for `update_observed` and additional methods might be usefull, but are not necessary.
 
 Now comes the essential part: we need to provide the [`fit`](@ref) method with `SemOptimizerMyopt`
 as the first positional argument.

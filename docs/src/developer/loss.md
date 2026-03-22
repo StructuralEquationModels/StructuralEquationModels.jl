@@ -11,9 +11,9 @@ Since we allow for the optimization of sums of loss functions, and the maximum l
 using StructuralEquationModels
 ```
 
-To define a new loss function, you have to define a new type that is a subtype of `SemLossFunction`:
+To define a new loss function, you have to define a new type that is a subtype of `AbstractLoss`:
 ```@example loss
-struct Ridge <: SemLossFunction
+struct MyRidge <: AbstractLoss
     α
     I
 end
@@ -25,8 +25,8 @@ Additionaly, we need to define a *method* of the function `evaluate!` to compute
 ```@example loss
 import StructuralEquationModels: evaluate!
 
-evaluate!(objective::Number, gradient::Nothing, hessian::Nothing, ridge::Ridge, model::AbstractSem, par) = 
-  ridge.α * sum(i -> par[i]^2, ridge.I)
+evaluate!(objective::Number, gradient::Nothing, hessian::Nothing, ridge::MyRidge, par) =
+    ridge.α * sum(i -> abs2(par[i]), ridge.I)
 ```
 
 The function `evaluate!` recognizes by the types of the arguments `objective`, `gradient` and `hessian` whether it should compute the objective value, gradient or hessian of the model w.r.t. the parameters.
@@ -98,7 +98,7 @@ function evaluate!(objective, gradient, hessian::Nothing, ridge::Ridge, model::A
         gradient[ridge.I] .= 2 * ridge.α * par[ridge.I]
     end
     # compute objective
-    if !isnothing(objective) 
+    if !isnothing(objective)
         return ridge.α * sum(i -> par[i]^2, ridge.I)
     end
 end
@@ -165,17 +165,6 @@ end
 ```
 
 ## Additional functionality
-
-### Update observed data
-
-If you are planing a simulation study where you have to fit the **same model** to many **different datasets**, it is computationally beneficial to not build the whole model completely new everytime you change your data.
-Therefore, we provide a function to update the data of your model, `replace_observed(model(semfit); data = new_data)`. However, we can not know beforehand in what way your loss function depends on the specific datasets. The solution is to provide a method for `update_observed`. Since `Ridge` does not depend on the data at all, this is quite easy:
-
-```julia
-import StructuralEquationModels: update_observed
-
-update_observed(ridge::Ridge, observed::SemObserved; kwargs...) = ridge
-```
 
 ### Access additional information
 

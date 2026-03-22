@@ -2,12 +2,16 @@
 
 The type hierarchy is implemented in `"src/types.jl"`.
 
-`AbstractSem`: the most abstract type in our package
-- `AbstractSemSingle{O, I, L} <: AbstractSem` is an abstract parametric type that is a supertype of all single models
-    - `Sem`: models that do not need automatic differentiation or finite difference approximation
-    - `SemFiniteDiff`: models whose gradients and/or hessians should be computed via finite difference approximation
-- `AbstractSemCollection <: AbstractSem` is an abstract supertype of all models that contain multiple `AbstractSem` submodels
+[`AbstractLoss`](@ref): is the base abstract type for all loss functions:
+- `SemLoss{O <: SemObserved, I <: SemImplied}`: is the subtype of `AbstractLoss`, which is the
+  base for all SEM-specific loss functions ([`SemML`](@ref), [`SemWLS`](@ref) etc) that
+  evaluate how closely the implied covariation structure (represented by the object of type `I`)
+  matches the observed one (contained in the object of type `O`);
+- regularizing terms (e.g. [`SemRidge`](@ref)) are implemented as subtypes of `AbstractLoss`.
 
-Every `AbstractSemSingle` has to have `SemObserved`, `SemImplied`, and `SemLoss` fields (and can have additional fields).
-
-`SemLoss` is a container for multiple `SemLossFunctions`.
+[`AbstractSem`](@ref) is the base abstract type for all SEM models. It has two concrete subtypes:
+- `Sem{L <: Tuple} <: AbstractSem`: the main SEM model type that implements a list of weighted
+loss terms (using [`LossTerm`](@ref) wrapper around `AbstractLoss`) and allows modeling both single
+and multi-group SEMs and combining them with regularization terms.
+- `SemFiniteDiff{S <: AbstractSem} <: AbstractSem`: a wrapper around any `AbstractSem` that
+  substitutes dedicated gradient/hessian evaluation with finite difference approximation.

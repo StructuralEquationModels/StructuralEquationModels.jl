@@ -57,19 +57,7 @@ model = Sem(
     data = data_1
 )
 
-model_updated = replace_observed(model; data = data_2, specification = partable)
-```
-
-If you are building your models by parts, you can also update each part seperately with the function `update_observed`.
-For example,
-
-```@example replace_observed
-
-new_observed = SemObservedData(;data = data_2, specification = partable)
-
-my_optimizer = SemOptimizer()
-
-new_optimizer = update_observed(my_optimizer, new_observed)
+model_updated = replace_observed(model, data_2)
 ```
 
 ## Multithreading
@@ -90,7 +78,7 @@ model1 = Sem(
     data = data_1
 )
 
-model2 = deepcopy(replace_observed(model; data = data_2, specification = partable))
+model2 = deepcopy(replace_observed(model, data_2))
 
 models = [model1, model2]
 fits = Vector{SemFit}(undef, 2)
@@ -104,5 +92,4 @@ end
 
 ```@docs
 replace_observed
-update_observed
 ```
