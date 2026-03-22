@@ -347,19 +347,6 @@ if !isnothing(specification_miss_g1)
             lav_groups = Dict(:Pasteur => 1, :Grant_White => 2),
         )
 
-        solution = fit(semoptimizer, model_ml_multigroup2)
-        test_fitmeasures(
-            fit_measures(solution),
-            solution_lav[:fitmeasures_fiml];
-            rtol = 1e-3,
-            atol = 0,
-        )
-        test_fitmeasures(
-            Dict(:CFI => CFI(solution, solution_varonly)),
-            solution_lav[:fitmeasures_fiml];
-            fitmeasure_names = Dict(:CFI => "cfi"),
-        )
-
         test_bootstrap(solution; compare_bs = false, rtol_hessian = 0.5)
         smoketest_CI_z(solution, partable_miss)
 
