@@ -116,7 +116,7 @@ end
         lav_col = :se,
     )
 
-    test_bootstrap(solution_ml, partable)
+    test_bootstrap(solution_ml)
     smoketest_CI_z(solution_ml, partable)
 end
 
@@ -146,7 +146,7 @@ end
         lav_col = :se,
     )
 
-    test_bootstrap(solution_ls, partable; compare_bs = false)
+    test_bootstrap(solution_ls; compare_bs = false)
     smoketest_CI_z(solution_ls, partable)
 end
 
@@ -324,7 +324,7 @@ end
         lav_col = :se,
     )
 
-    test_bootstrap(solution_ml, partable_mean)
+    test_bootstrap(solution_ml)
     smoketest_CI_z(solution_ml, partable_mean)
 end
 
@@ -353,8 +353,8 @@ end
         lav_col = :se,
     )
 
-    test_bootstrap(solution_ls, partable_mean, compare_bs = false)
-    # smoketest_bootstrap(solution_ls, partable_mean)
+    test_bootstrap(solution_ls, compare_bs = false)
+    # smoketest_bootstrap(solution_ls)
     smoketest_CI_z(solution_ls, partable_mean)
 end
 
@@ -481,7 +481,7 @@ end
         lav_col = :se,
     )
 
-    # test_bootstrap(solution_ml, partable_mean) # too much compute
-    smoketest_bootstrap(solution_ml, partable_mean)
+    # test_bootstrap(solution_ml) # too much compute
+    smoketest_bootstrap(solution_ml)
     smoketest_CI_z(solution_ml, partable_mean)
 end
