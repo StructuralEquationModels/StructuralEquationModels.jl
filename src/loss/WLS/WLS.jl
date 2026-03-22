@@ -62,6 +62,7 @@ function SemWLS(
     wls_weight_matrix::Union{AbstractMatrix, Nothing} = nothing,
     wls_weight_matrix_mean::Union{AbstractMatrix, Nothing} = nothing,
     approximate_hessian::Bool = false,
+    verbose::Bool = false,
     kwargs...,
 )
     if observed isa SemObservedMissing
@@ -114,7 +115,8 @@ function SemWLS(
 
     if MeanStruct(implied) == HasMeanStruct
         if isnothing(wls_weight_matrix_mean)
-            @info "Computing WLS weight matrix for the meanstructure using obs_cov()"
+            verbose &&
+                @info "Computing WLS weight matrix for the meanstructure using obs_cov()"
             wls_weight_matrix_mean = inv(obs_cov(observed))
         end
         size(wls_weight_matrix_mean) == (nobs_vars, nobs_vars) || DimensionMismatch(
