@@ -10,17 +10,18 @@ const SEM = StructuralEquationModels
 include(joinpath(chop(dirname(pathof(SEM)), tail = 3), "test/examples/helper.jl"))
 
 dat = example_data("holzinger_swineford")
-dat_missing = example_data("holzinger_swineford_missing")
+dat.school = Symbol.(replace.(dat.school, "-" => "_"))
+
+dat_miss = example_data("holzinger_swineford_missing")
+dat_miss.school = Symbol.(replace.(dat_miss.school, "-" => "_"))
+
 solution_lav = example_data("holzinger_swineford_solution")
 
-dat_g1 = dat[dat.school .== "Pasteur", :]
-dat_g2 = dat[dat.school .== "Grant-White", :]
+dat_g1 = dat[dat.school .== :Pasteur, :]
+dat_g2 = dat[dat.school .== :Grant_White, :]
 
-dat_miss_g1 = dat_missing[dat_missing.school .== "Pasteur", :]
-dat_miss_g2 = dat_missing[dat_missing.school .== "Grant-White", :]
-
-dat.school = ifelse.(dat.school .== "Pasteur", :Pasteur, :Grant_White)
-dat_missing.school = ifelse.(dat_missing.school .== "Pasteur", :Pasteur, :Grant_White)
+dat_miss_g1 = dat_miss[dat_miss.school .== :Pasteur, :]
+dat_miss_g2 = dat_miss[dat_miss.school .== :Grant_White, :]
 
 ############################################################################################
 ### specification - RAMMatrices
