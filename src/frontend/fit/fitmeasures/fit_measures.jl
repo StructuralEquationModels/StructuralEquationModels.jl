@@ -1,6 +1,8 @@
-fit_measures(fit) = fit_measures(fit, nparams, dof, AIC, BIC, RMSEA, χ², p_value, minus2ll)
+const DEFAULT_FIT_MEASURES = [AIC, BIC, dof, χ², p_value, nparams, RMSEA, CFI]
 
-fit_measures(fit, measures...) = Dict(Symbol(fn) => fn(fit) for fn in measures)
+fit_measures(fit, measures::AbstractVector) = Dict(Symbol(fn) => fn(fit) for fn in measures)
+fit_measures(fit, measures...) = fit_measures(fit, measures)
+fit_measures(fit) = fit_measures(fit, DEFAULT_FIT_MEASURES)
 
 """
     fit_measures(fit::SemFit, measures...) -> Dict{Symbol}
@@ -20,6 +22,7 @@ fit_measures(semfit, nparams, dof, p_value)
 ```
 
 # See also
-[`AIC`](@ref), [`BIC`](@ref), [`RMSEA`](@ref), [`χ²`](@ref), [`p_value`](@ref), [`minus2ll`](@ref)
+[`AIC`](@ref), [`BIC`](@ref), [`RMSEA`](@ref), [`χ²`](@ref), [`p_value`](@ref),
+[`minus2ll`](@ref), [`CFI`](@ref)
 """
 fit_measures
