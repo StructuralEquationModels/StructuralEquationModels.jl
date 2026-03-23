@@ -49,7 +49,8 @@ function test_hessian(model, params; rtol = 1e-4, atol = 0)
     @test hessian ≈ true_hessian rtol = rtol atol = atol
 end
 
-fitmeasure_names_ml = Dict(
+# map from the SEM.jl name of the fit measure to the lavaan's one
+fitmeasure_semjl_to_lavaan = Dict(
     :AIC => "aic",
     :BIC => "bic",
     :dof => "df",
@@ -57,26 +58,31 @@ fitmeasure_names_ml = Dict(
     :p_value => "pvalue",
     :nparams => "npar",
     :RMSEA => "rmsea",
-)
-
-fitmeasure_names_ls = Dict(
-    :dof => "df",
-    :χ² => "chisq",
-    :p_value => "pvalue",
-    :nparams => "npar",
-    :RMSEA => "rmsea",
+    :CFI => "cfi",
 )
 
 function test_fitmeasures(
-    measures,
+    fitted::SemFit,
     measures_lav;
+    fitmeasures::AbstractVector = SEM.DEFAULT_FIT_MEASURES,
+    fitted_baseline::Union{SemFit, Nothing} = nothing,
     rtol = 1e-4,
     atol = 0,
-    fitmeasure_names = fitmeasure_names_ml,
 )
-    @testset "$name" for (key, name) in pairs(fitmeasure_names)
-        measure_lav = measures_lav.x[findfirst(==(name), measures_lav[!, 1])]
-        @test measures[key] ≈ measure_lav rtol = rtol atol = atol
+    @testset "$fn" for fn in fitmeasures
+        name = Symbol(fn)
+        # FIML CFI requires the baseline model
+        measure =
+            fn != CFI || isnothing(fitted_baseline) ? fn(fitted) :
+            fn(fitted, fitted_baseline)
+        lav_name = fitmeasure_semjl_to_lavaan[name]
+        lav_ix = findfirst(==(lav_name), measures_lav[!, 1])
+        if isnothing(lav_ix)
+            @test ismissing(measure)
+        else
+            measure_lav = measures_lav.x[lav_ix]
+            @test measure ≈ measure_lav rtol = rtol atol = atol
+        end
     end
 end
 

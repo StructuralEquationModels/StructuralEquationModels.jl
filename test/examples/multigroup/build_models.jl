@@ -52,17 +52,7 @@ end
 
 @testset "fitmeasures/se_ml" begin
     solution_ml = fit(semoptimizer, model_ml_multigroup)
-    test_fitmeasures(
-        fit_measures(solution_ml),
-        solution_lav[:fitmeasures_ml];
-        rtol = 1e-2,
-        atol = 1e-7,
-    )
-    test_fitmeasures(
-        Dict(:CFI => CFI(solution_ml)),
-        solution_lav[:fitmeasures_ml];
-        fitmeasure_names = Dict(:CFI => "cfi"),
-    )
+    test_fitmeasures(solution_ml, solution_lav[:fitmeasures_ml]; rtol = 1e-2, atol = 1e-7)
 
     update_se_hessian!(partable, solution_ml)
     test_estimates(
@@ -122,17 +112,7 @@ end
 
 @testset "fitmeasures/se_ml | sorted" begin
     solution_ml = fit(semoptimizer, model_ml_multigroup)
-    test_fitmeasures(
-        fit_measures(solution_ml),
-        solution_lav[:fitmeasures_ml];
-        rtol = 1e-2,
-        atol = 1e-7,
-    )
-    test_fitmeasures(
-        Dict(:CFI => CFI(solution_ml)),
-        solution_lav[:fitmeasures_ml];
-        fitmeasure_names = Dict(:CFI => "cfi"),
-    )
+    test_fitmeasures(solution_ml, solution_lav[:fitmeasures_ml]; rtol = 1e-2, atol = 1e-7)
 
     update_se_hessian!(partable_s, solution_ml)
     test_estimates(
@@ -221,18 +201,7 @@ end
 
 @testset "fitmeasures/se_ls" begin
     solution_ls = fit(semoptimizer, model_ls_multigroup)
-    test_fitmeasures(
-        fit_measures(solution_ls),
-        solution_lav[:fitmeasures_ls];
-        fitmeasure_names = fitmeasure_names_ls,
-        rtol = 1e-2,
-        atol = 1e-5,
-    )
-    test_fitmeasures(
-        Dict(:CFI => CFI(solution_ls)),
-        solution_lav[:fitmeasures_ls];
-        fitmeasure_names = Dict(:CFI => "cfi"),
-    )
+    test_fitmeasures(solution_ls, solution_lav[:fitmeasures_ls]; rtol = 1e-2, atol = 1e-5)
 
     @suppress update_se_hessian!(partable, solution_ls)
     test_estimates(
@@ -319,17 +288,13 @@ if !isnothing(specification_miss_g1)
 
     @testset "fitmeasures/se_fiml" begin
         solution = fit(semoptimizer, model_ml_multigroup)
-        test_fitmeasures(
-            fit_measures(solution),
-            solution_lav[:fitmeasures_fiml];
-            rtol = 1e-3,
-            atol = 0,
-        )
         solution_varonly = fit(semoptimizer, model_ml_varonly)
         test_fitmeasures(
-            Dict(:CFI => CFI(solution, solution_varonly)),
+            solution,
             solution_lav[:fitmeasures_fiml];
-            fitmeasure_names = Dict(:CFI => "cfi"),
+            fitted_baseline = solution_varonly,
+            rtol = 1e-3,
+            atol = 0,
         )
         update_se_hessian!(partable_miss, solution)
         test_estimates(
