@@ -240,7 +240,7 @@ if !isnothing(specification_miss_g1)
 
     model_ml_varonly = Sem(
         specification = partable_varonly,
-        data = dat_missing,
+        data = dat_miss,
         semterm_column = :school,
         loss = SemFIML,
         observed = SemObservedMissing,
