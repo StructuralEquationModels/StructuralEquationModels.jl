@@ -138,6 +138,9 @@ struct SemLossFiniteDiff{O, I, L <: SemLoss{O, I}} <: SemLoss{O, I}
     loss::L
 end
 
+SemFiniteDiff(args...; kwargs...) =
+    SemFiniteDiff(Sem(args...; gradient = false, hessian = false, kwargs...))
+
 """
     abstract type SemSpecification end
 
