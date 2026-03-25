@@ -28,20 +28,17 @@ for f in (
 end
 
 function Base.show(io::IO, term::LossTerm)
-    if !isnothing(id(term))
-        print(io, ":$(id(term)): ")
-    end
     print(io, nameof(losstype(term)))
+    print(io, "\n")
+    if !isnothing(id(term))
+        print(io, "    - id:          $(id(term)) \n")
+    end
     if issemloss(term)
-        print(
-            io,
-            " ($(nsamples(term)) samples, $(nobserved_vars(term)) observed, $(nlatent_vars(term)) latent variables)",
-        )
+        print(io, "    - observed:    $(nameof(typeof(observed(loss(term))))) \n")
+        print(io, "    - implied:     $(nameof(typeof(implied(loss(term))))) \n")
     end
     if !isnothing(weight(term))
-        print(io, " w=$(round(weight(term), digits=3))")
-    else
-        print(io, " w=1")
+        print(io, "    - weight:      $(round(weight(term), digits=3))")
     end
 end
 
@@ -604,12 +601,17 @@ end
 # pretty printing
 ##############################################################
 
+_subtype_info(::Sem) = nothing
+_subtype_info(::SemFiniteDiff) = "Finite Difference Approximation"
+
 function Base.show(io::IO, sem::AbstractSem)
-    println(io, "Structural Equation Model ($(nameof(typeof(sem))))")
-    println(io, "- $(nparams(sem)) parameters")
-    println(io, "- Loss terms:")
+    print(io, "Structural Equation Model")
+    si = _subtype_info(sem)
+    isnothing(si) || print(io, " : "*si)
+    print("\n")
+    print(io, "- Loss Functions \n")
     for term in loss_terms(sem)
-        print(io, "  - ")
+        print(io, "  > ")
         print(io, term)
         println(io)
     end
