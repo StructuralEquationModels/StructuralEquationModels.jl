@@ -2,8 +2,8 @@ _unwrap(wrapper::SemFiniteDiff) = wrapper.model
 params(wrapper::SemFiniteDiff) = params(wrapper.model)
 loss_terms(wrapper::SemFiniteDiff) = loss_terms(wrapper.model)
 
-replace_observed(wrapper::SemFiniteDiff, data) =
-    SemFiniteDiff(replace_observed(wrapper.model, data))
+replace_observed(wrapper::SemFiniteDiff, data; kwargs...) =
+    SemFiniteDiff(replace_observed(wrapper.model, data; kwargs...))
 
 FiniteDiffLossWrappers = Union{LossFiniteDiff, SemLossFiniteDiff}
 
@@ -12,16 +12,17 @@ _unwrap(wrapper::FiniteDiffLossWrappers) = wrapper.loss
 implied(wrapper::FiniteDiffLossWrappers) = implied(_unwrap(wrapper))
 observed(wrapper::FiniteDiffLossWrappers) = observed(_unwrap(wrapper))
 
-replace_observed(wrapper::LossFiniteDiff, data) =
-    LossFiniteDiff(replace_observed(_unwrap(wrapper), data))
+replace_observed(wrapper::LossFiniteDiff, data; kwargs...) =
+    LossFiniteDiff(replace_observed(_unwrap(wrapper), data; kwargs...))
 
-replace_observed(wrapper::SemLossFiniteDiff, new_observed::SemObserved) =
-    SemLossFiniteDiff(replace_observed(_unwrap(wrapper), new_observed))
+replace_observed(wrapper::SemLossFiniteDiff, new_observed::SemObserved; kwargs...) =
+    SemLossFiniteDiff(replace_observed(_unwrap(wrapper), new_observed; kwargs...))
 
 replace_observed(
     wrapper::SemLossFiniteDiff,
-    data::Union{AbstractMatrix, DataFrame},
-) = SemLossFiniteDiff(replace_observed(_unwrap(wrapper), data))
+    data::Union{AbstractMatrix, DataFrame};
+    kwargs...,
+) = SemLossFiniteDiff(replace_observed(_unwrap(wrapper), data; kwargs...))
 
 FiniteDiffWrapper(model::AbstractSem) = SemFiniteDiff(model)
 FiniteDiffWrapper(loss::AbstractLoss) = LossFiniteDiff(loss)
