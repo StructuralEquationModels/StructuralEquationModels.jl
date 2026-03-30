@@ -181,3 +181,17 @@ function evaluate!(objective, gradient, hessian, loss::SemWLS, par)
 
     return objective
 end
+
+function replace_observed(
+    loss::SemWLS,
+    new_observed::SemObserved;
+    update_internal_state::Bool = true,
+)
+    # recompute weight matrices only if update_internal_state=true
+    return SemWLS(
+        new_observed,
+        SEM.implied(loss);
+        wls_weight_matrix = update_internal_state ? nothing : loss.V,
+        wls_weight_matrix_mean = update_internal_state ? nothing : loss.V_μ,
+    )
+end
