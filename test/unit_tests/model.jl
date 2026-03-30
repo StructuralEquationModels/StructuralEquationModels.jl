@@ -1,5 +1,7 @@
 using StructuralEquationModels, Test, Statistics
 
+const SEM = StructuralEquationModels
+
 dat = example_data("political_democracy")
 dat_missing = example_data("political_democracy_missing")[:, names(dat)]
 
@@ -72,4 +74,35 @@ end
     @test sem_term(model) isa losstype
 
     @test @inferred(nsamples(model)) == nsamples(obs)
+end
+
+@testset "replace_observed() preserves WLS state through finite-diff wrappers" begin
+    model = Sem(
+        specification = ram_matrices,
+        observed = obs,
+        implied = RAMSymbolic,
+        loss = SemWLS,
+    )
+    wls_loss = sem_term(model)
+    findiff_model = Sem(SEM.FiniteDiffWrapper(wls_loss))
+
+    new_data = randn(nsamples(obs), nobserved_vars(obs))
+
+    findiff_model_oldstate =
+        replace_observed(findiff_model, new_data; update_internal_state = false)
+    findiff_model_newstate =
+        replace_observed(findiff_model, new_data; update_internal_state = true)
+
+    loss_orig = SEM._unwrap(sem_term(findiff_model))
+    loss_oldstate = SEM._unwrap(sem_term(findiff_model_oldstate))
+    loss_newstate = SEM._unwrap(sem_term(findiff_model_newstate))
+
+    @test loss_orig isa SemWLS
+    @test loss_oldstate isa SemWLS
+    @test loss_newstate isa SemWLS
+    @test loss_orig !== loss_oldstate
+    @test loss_orig !== loss_newstate
+    @test loss_oldstate.V === loss_orig.V
+    @test loss_newstate.V !== loss_orig.V
+    @test observed_vars(loss_oldstate) == observed_vars(loss_orig)
 end
