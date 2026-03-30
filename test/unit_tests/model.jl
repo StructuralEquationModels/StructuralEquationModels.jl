@@ -89,9 +89,9 @@ end
     new_data = randn(nsamples(obs), nobserved_vars(obs))
 
     findiff_model_oldstate =
-        replace_observed(findiff_model, new_data; update_internal_state = false)
+        replace_observed(findiff_model, new_data; recompute_observed_state = false)
     findiff_model_newstate =
-        replace_observed(findiff_model, new_data; update_internal_state = true)
+        replace_observed(findiff_model, new_data; recompute_observed_state = true)
 
     loss_orig = SEM._unwrap(sem_term(findiff_model))
     loss_oldstate = SEM._unwrap(sem_term(findiff_model_oldstate))
