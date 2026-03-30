@@ -475,18 +475,19 @@ replace_observed(model, new_df; semterm_column = :group)
 """
 function replace_observed end
 
-function replace_observed(sem::Sem, data::Union{SemObserved, AbstractMatrix})
+function replace_observed(sem::Sem, data::Union{SemObserved, AbstractMatrix}; kwargs...)
     nsem_terms(sem) > 1 && throw(
         ArgumentError(
             "Model contains $(nsem_terms(sem)) SEM terms. " *
             "Use a Dict{Symbol} or a DataFrame with `semterm_column` to provide per-term data.",
         ),
     )
-    updated_terms = Tuple(replace_observed(term, data) for term in loss_terms(sem))
+    updated_terms =
+        Tuple(replace_observed(term, data; kwargs...) for term in loss_terms(sem))
     return Sem(updated_terms...)
 end
 
-function replace_observed(sem::Sem, data::AbstractDict{Symbol})
+function replace_observed(sem::Sem, data::AbstractDict{Symbol}; kwargs...)
     term_ids = Set(
         if !isnothing(id(term))
             id(term)
@@ -507,12 +508,12 @@ function replace_observed(sem::Sem, data::AbstractDict{Symbol})
         term_data = get(data, tid, nothing)
         isnothing(term_data) &&
             throw(ArgumentError("No data provided for SEM term :$tid"))
-        return replace_observed(term, term_data)
+        return replace_observed(term, term_data; kwargs...)
     end
     return Sem(Tuple(updated_terms)...)
 end
 
-function replace_observed(sem::Sem, data::AbstractVector)
+function replace_observed(sem::Sem, data::AbstractVector; kwargs...)
     nsem = nsem_terms(sem)
     nsem == length(data) || throw(
         ArgumentError(
@@ -520,7 +521,7 @@ function replace_observed(sem::Sem, data::AbstractVector)
         ),
     )
     updated_terms = map(enumerate(loss_terms(sem))) do (i, term)
-        issemloss(term) ? replace_observed(term, data[i]) : term
+        issemloss(term) ? replace_observed(term, data[i]; kwargs...) : term
     end
     return Sem(Tuple(updated_terms)...)
 end
@@ -529,6 +530,7 @@ function replace_observed(
     sem::Sem,
     data::AbstractDataFrame;
     semterm_column::Union{Symbol, Nothing} = nothing,
+    kwargs...,
 )
     if isnothing(semterm_column)
         # single-term shortcut
@@ -538,7 +540,8 @@ function replace_observed(
                 "Provide `semterm_column` to specify which DataFrame column identifies the groups.",
             ),
         )
-        updated_terms = Tuple(replace_observed(term, data) for term in loss_terms(sem))
+        updated_terms =
+            Tuple(replace_observed(term, data; kwargs...) for term in loss_terms(sem))
         return Sem(updated_terms...)
     end
 
@@ -547,7 +550,7 @@ function replace_observed(
         g[semterm_column] => group_data for
         (g, group_data) in pairs(groupby(data, semterm_column))
     )
-    return replace_observed(sem, terms_data)
+    return replace_observed(sem, terms_data; kwargs...)
 end
 
 ##############################################################

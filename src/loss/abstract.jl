@@ -45,7 +45,7 @@ check_observed_vars(sem::SemLoss) = check_observed_vars(observed(sem), implied(s
 # replace_observed: SemLoss, AbstractLoss, LossTerm
 ############################################################################################
 
-function replace_observed(loss::SemLoss, new_observed::SemObserved)
+function replace_observed(loss::SemLoss, new_observed::SemObserved; kwargs...)
     old_obs = SEM.observed(loss)
     observed_vars(old_obs) == observed_vars(new_observed) || throw(
         ArgumentError(
@@ -53,19 +53,20 @@ function replace_observed(loss::SemLoss, new_observed::SemObserved)
             "expected $(observed_vars(old_obs)), got $(observed_vars(new_observed))",
         ),
     )
+    # the default replace_observed() does not pass through kwargs to the ctor
     return typeof(loss).name.wrapper(new_observed, SEM.implied(loss))
 end
 
-function replace_observed(loss::SemLoss, data::Union{AbstractMatrix, DataFrame})
+function replace_observed(loss::SemLoss, data::Union{AbstractMatrix, DataFrame}; kwargs...)
     old_obs = SEM.observed(loss)
     new_observed =
         typeof(old_obs).name.wrapper(data = data, observed_vars = observed_vars(old_obs))
-    return replace_observed(loss, new_observed)
+    return replace_observed(loss, new_observed; kwargs...)
 end
 
 # non-SEM loss terms are unchanged
-replace_observed(loss::AbstractLoss, ::Any) = loss
+replace_observed(loss::AbstractLoss, ::Any; kwargs...) = loss
 
 # LossTerm: delegate to inner loss
-replace_observed(term::LossTerm, data) =
-    LossTerm(replace_observed(loss(term), data), id(term), weight(term))
+replace_observed(term::LossTerm, data; kwargs...) =
+    LossTerm(replace_observed(loss(term), data; kwargs...), id(term), weight(term))
