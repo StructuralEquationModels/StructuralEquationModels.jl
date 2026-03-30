@@ -251,6 +251,8 @@ end
 # Fit one bootstrap replicate: resample, replace observed data, fit.
 function _fit_bootstrap_sample(sem_model, data, start; engine, fit_kwargs)
     boot_data = resample_with_replacement(data)
-    boot_model = replace_observed(sem_model, boot_data)
+    # we replace the observed data with the bootstrapped one,
+    # but preserve any internal state that is associated with the original data
+    boot_model = replace_observed(sem_model, boot_data; recompute_observed_state = true)
     return fit(boot_model; start_val = start, engine = engine, fit_kwargs...)
 end

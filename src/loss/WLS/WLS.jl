@@ -185,13 +185,13 @@ end
 function replace_observed(
     loss::SemWLS,
     new_observed::SemObserved;
-    update_internal_state::Bool = true,
+    recompute_observed_state::Bool = true,
 )
-    # recompute weight matrices only if update_internal_state=true
+    # recompute weight matrices only if recompute_observed_state=true
     return SemWLS(
         new_observed,
         SEM.implied(loss);
-        wls_weight_matrix = update_internal_state ? nothing : loss.V,
-        wls_weight_matrix_mean = update_internal_state ? nothing : loss.V_μ,
+        wls_weight_matrix = recompute_observed_state ? nothing : loss.V,
+        wls_weight_matrix_mean = recompute_observed_state ? nothing : loss.V_μ,
     )
 end
