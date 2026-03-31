@@ -335,6 +335,56 @@ function set_field_type_kwargs!(kwargs, observed, implied, loss, O, I)
     end
 end
 
+# build ensemble/multi-group observed from the specification and Sem(...) kwargs
+# used by Sem(...) and replace_observed()
+function build_ensemble_observed(observed_type, spec::EnsembleParameterTable, kwargs)
+    if !haskey(kwargs, :data)
+        @warn """
+        No data provided for ensemble SEM model. Each SEM term will be constructed with empty data.
+        To provide data for each term, pass a DataFrame with a column identifying the term groups or a Dict mapping term ids to data
+        """
+        semterms_data = nothing
+    else
+        kwdata = kwargs[:data]
+        if isa(kwdata, AbstractDataFrame)
+            semterm_col = get(kwargs, :semterm_column, nothing)
+            isnothing(semterm_col) &&
+                throw(ArgumentError("No semterm_column specified for ensemble data."))
+            semterms_data = Dict(
+                g[semterm_col] => group_data for
+                (g, group_data) in pairs(groupby(kwdata, semterm_col))
+            )
+        elseif isa(kwdata, AbstractDict)
+            semterms_data = kwdata
+        else
+            """
+            Unsupported data type for ensemble SEM model: $(typeof(kwdata)).
+            Provide a DataFrame with a column identifying the term groups or a Dict mapping term ids to data.
+            """ |>
+            ArgumentError |>
+            throw
+        end
+        unused_term_ids = setdiff(keys(semterms_data), keys(spec.tables))
+        isempty(unused_term_ids) ||
+            @warn "Ignoring data with ids=$(collect(unused_term_ids)): no such SEM terms exist"
+    end
+
+    # construct SemObserved for each term
+    return Dict(
+        term_id => begin
+            term_kwargs = copy(kwargs)
+            if !isnothing(semterms_data)
+                term_data = get(semterms_data, term_id, nothing)
+                isnothing(term_data) &&
+                    throw(ArgumentError("No data provided for SEM term :$term_id"))
+                term_kwargs[:data] = term_data
+                delete!(term_kwargs, :semterm_column)
+            end
+            observed_type(; specification = term_spec, term_kwargs...)
+        end for (term_id, term_spec) in pairs(spec.tables)
+    )
+end
+
 # construct Sem fields
 function get_fields!(kwargs, spec, observed, implied, loss)
     if !isa(spec, SemSpecification)
@@ -344,10 +394,7 @@ function get_fields!(kwargs, spec, observed, implied, loss)
     # observed
     if !isa(observed, SemObserved)
         observed = if spec isa EnsembleParameterTable
-            Dict(
-                term_id => observed(; specification = term_spec, kwargs...) for
-                (term_id, term_spec) in pairs(spec.tables)
-            )
+            build_ensemble_observed(observed, spec, kwargs)
         else
             observed(; specification = spec, kwargs...)
         end
