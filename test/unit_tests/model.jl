@@ -106,3 +106,38 @@ end
     @test loss_newstate.V !== loss_orig.V
     @test observed_vars(loss_oldstate) == observed_vars(loss_orig)
 end
+
+@testset "Sem(...; semterm_column=...) splits ensemble data by group" begin
+    dat_grouped = copy(dat[:, [:x1, :x2]])
+    n_g1 = size(dat_grouped, 1) ÷ 2
+    dat_grouped.group = [fill(:g1, n_g1); fill(:g2, size(dat_grouped, 1) - n_g1)]
+
+    group_graph = @StenoGraph begin
+        f1 → fixed(1.0, 1.0) * x1 + label(:λ₂, :λ₂) * x2
+        _(Symbol[:x1, :x2]) ↔ _(Symbol[:x1, :x2])
+        _(Symbol[:f1]) ↔ _(Symbol[:f1])
+    end
+
+    grouped_partable = EnsembleParameterTable(
+        group_graph;
+        observed_vars = [:x1, :x2],
+        latent_vars = [:f1],
+        groups = [:g1, :g2],
+    )
+
+    grouped_model = Sem(
+        specification = grouped_partable,
+        data = dat_grouped,
+        semterm_column = :group,
+        observed = SemObservedData,
+        implied = RAM,
+        loss = SemML,
+    )
+
+    term_g1 = only(filter(term -> SEM.id(term) == :g1, SEM.loss_terms(grouped_model)))
+    term_g2 = only(filter(term -> SEM.id(term) == :g2, SEM.loss_terms(grouped_model)))
+
+    @test nsamples(observed(term_g1)) == n_g1
+    @test nsamples(observed(term_g2)) == size(dat_grouped, 1) - n_g1
+    @test nsamples(grouped_model) == size(dat_grouped, 1)
+end
