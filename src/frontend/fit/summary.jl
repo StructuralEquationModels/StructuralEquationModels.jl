@@ -1,3 +1,38 @@
+function details(sem::AbstractSem)
+    print("Structural Equation Model")
+    print(_subtype_info(sem))
+    print("\n")
+    print("- Loss Functions \n")
+    for term in loss_terms(sem)
+        print("  > ")
+        details(term)
+        println()
+    end
+end
+
+function details(term::LossTerm)
+    if !issemloss(term)
+        print(term.loss)
+    else
+        println("Structural Equation Model Loss ($(nameof(typeof(term.loss))))")
+        if !isnothing(id(term))
+            print("    - id:          $(id(term)) \n")
+        end
+        println(
+            "    - Observed:    $(nameof(typeof(observed(term)))) ($(nsamples(term)) samples)",
+        )
+        println(
+            "    - Implied:     $(nameof(typeof(implied(term)))) ($(nparams(term)) parameters)",
+        )
+        println(
+            "    - Variables:   $(nobserved_vars(term)) observed, $(nlatent_vars(term)) latent",
+        )
+        if !isnothing(weight(term))
+            print("    - weight:      $(round(weight(term), digits=3))")
+        end
+    end
+end
+
 function details(sem_fit::SemFit; show_fitmeasures = false, color = :light_cyan, digits = 2)
     print("\n")
     println("Fitted Structural Equation Model")
@@ -325,11 +360,13 @@ function Base.findall(fun::Function, partable::ParameterTable)
 end
 
 """
-    (1) details(sem_fit::SemFit; show_fitmeasures = false)
+    (1) details(model::AbstractSem)
 
-    (2) details(partable::AbstractParameterTable; ...)
+    (2) details(sem_fit::SemFit; show_fitmeasures = false)
 
-Print information about (1) a fitted SEM or (2) a parameter table to stdout.
+    (3) details(partable::AbstractParameterTable; ...)
+
+Print information about (1) a SEM, (2) a fitted SEM or (3) a parameter table to stdout.
 
 # Extended help
 ## Addition keyword arguments
