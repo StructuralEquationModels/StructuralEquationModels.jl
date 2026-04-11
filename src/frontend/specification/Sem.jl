@@ -28,17 +28,35 @@ for f in (
 end
 
 function Base.show(io::IO, term::LossTerm)
-    print(io, nameof(losstype(term)))
-    print(io, "\n")
-    if !isnothing(id(term))
-        print(io, "    - id:          $(id(term)) \n")
-    end
-    if issemloss(term)
-        print(io, "    - observed:    $(nameof(typeof(observed(loss(term))))) \n")
-        print(io, "    - implied:     $(nameof(typeof(implied(loss(term))))) \n")
-    end
-    if !isnothing(weight(term))
-        print(io, "    - weight:      $(round(weight(term), digits=3))")
+    if (:compact => true) in io
+        if !isnothing(id(term))
+            print(io, ":$(id(term)): ")
+        end
+        print(io, nameof(losstype(term)))
+        if issemloss(term)
+            print(
+                io,
+                " ($(nsamples(term)) samples, $(nobserved_vars(term)) observed, $(nlatent_vars(term)) latent variables)",
+            )
+        end
+        if !isnothing(weight(term))
+            print(io, " w=$(round(weight(term), digits=3))")
+        else
+            print(io, " w=1")
+        end
+    else
+        print(io, nameof(losstype(term)))
+        print(io, "\n")
+        if !isnothing(id(term))
+            print(io, "    - id:          $(id(term)) \n")
+        end
+        if issemloss(term)
+            print(io, "    - observed:    $(nameof(typeof(observed(loss(term))))) \n")
+            print(io, "    - implied:     $(nameof(typeof(implied(loss(term))))) \n")
+        end
+        if !isnothing(weight(term))
+            print(io, "    - weight:      $(round(weight(term), digits=3))")
+        end
     end
 end
 
@@ -610,6 +628,7 @@ function Base.show(io::IO, sem::AbstractSem)
     isnothing(si) || print(io, " : "*si)
     print("\n")
     print(io, "- Loss Functions \n")
+    io = length(loss_terms(sem)) >= 5 ? IOContext(io, :compact => true) : io
     for term in loss_terms(sem)
         print(io, "  > ")
         print(io, term)
