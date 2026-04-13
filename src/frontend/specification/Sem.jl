@@ -200,9 +200,19 @@ function Sem(;
 ) where {O, I, L}
     kwdict = Dict{Symbol, Any}(kwargs...)
 
-    set_field_type_kwargs!(kwdict, observed, implied, loss, O, I)
+    # add kwargs with type information
+    kwdict[:observed_type] = O <: Type ? observed : typeof(observed)
+    kwdict[:implied_type] = I <: Type ? implied : typeof(implied)
+    if loss isa SemLoss
+        kwdict[:loss_types] =
+            [aloss isa SemLoss ? typeof(aloss) : aloss for aloss in loss.functions]
+    elseif applicable(iterate, loss)
+        kwdict[:loss_types] = [aloss isa SemLoss ? typeof(aloss) : aloss for aloss in loss]
+    else
+        kwdict[:loss_types] = [loss isa SemLoss ? typeof(loss) : loss]
+    end
 
-    loss = get_fields!(kwdict, specification, observed, implied, loss)
+    loss = build_sem_terms(kwdict, specification, observed, implied, loss)
 
     return Sem(loss...)
 end
@@ -337,19 +347,6 @@ vars(model::AbstractSem, id::Nothing = nothing) = vars(implied(model, id))
 observed_vars(model::AbstractSem, id::Nothing = nothing) = observed_vars(implied(model, id))
 latent_vars(model::AbstractSem, id::Nothing = nothing) = latent_vars(implied(model, id))
 
-function set_field_type_kwargs!(kwargs, observed, implied, loss, O, I)
-    kwargs[:observed_type] = O <: Type ? observed : typeof(observed)
-    kwargs[:implied_type] = I <: Type ? implied : typeof(implied)
-    if loss isa SemLoss
-        kwargs[:loss_types] =
-            [aloss isa SemLoss ? typeof(aloss) : aloss for aloss in loss.functions]
-    elseif applicable(iterate, loss)
-        kwargs[:loss_types] = [aloss isa SemLoss ? typeof(aloss) : aloss for aloss in loss]
-    else
-        kwargs[:loss_types] = [loss isa SemLoss ? typeof(loss) : loss]
-    end
-end
-
 # build ensemble/multi-group observed from the specification and Sem(...) kwargs
 # used by Sem(...) and replace_observed()
 function build_ensemble_observed(observed_type, spec::EnsembleParameterTable, kwargs)
@@ -400,8 +397,8 @@ function build_ensemble_observed(observed_type, spec::EnsembleParameterTable, kw
     )
 end
 
-# construct Sem fields
-function get_fields!(kwargs, spec, observed, implied, loss)
+# called by Sem() ctor to construct its loss terms
+function build_sem_terms(kwargs::AbstractDict, spec, observed, implied, loss)
     if !isa(spec, SemSpecification)
         spec = spec(; kwargs...)
     end
@@ -430,13 +427,13 @@ function get_fields!(kwargs, spec, observed, implied, loss)
     # loss
     loss_kwargs = copy(kwargs)
     loss_kwargs[:nparams] = nparams(spec)
-    loss = build_SemTerms(loss, observed, implied; loss_kwargs...)
+    loss = build_sem_terms(loss, observed, implied; loss_kwargs...)
 
     return loss
 end
 
-# construct loss field
-function build_SemTerms(loss, observed, implied; kwargs...)
+# construct loss terms for the given observed and implied
+function build_sem_terms(loss, observed, implied; kwargs...)
     function build_SemLoss(aloss, observed, implied)
         if loss isa AbstractLoss
             return loss
