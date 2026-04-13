@@ -58,6 +58,7 @@ end
         observed = obs,
         implied = impliedtype,
         loss = losstype,
+        vech = losstype <: SemWLS && impliedtype <: RAMSymbolic
     )
 
     @test model isa Sem
@@ -82,6 +83,7 @@ end
         observed = obs,
         implied = RAMSymbolic,
         loss = SemWLS,
+        vech = true
     )
     wls_loss = sem_term(model)
     findiff_model = Sem(SEM.FiniteDiffWrapper(wls_loss))
