@@ -417,21 +417,13 @@ function get_fields!(kwargs, spec, observed, implied, loss)
 
     # implied
     if !isa(implied, SemImplied)
-        # FIXME remove this implicit logic
-        # SemWLS only accepts vech-ed implied covariance
-        if isa(loss, Type) && (loss <: SemWLS) && !haskey(kwargs, :vech)
-            implied_kwargs = copy(kwargs)
-            implied_kwargs[:vech] = true
-        else
-            implied_kwargs = kwargs
-        end
         implied = if spec isa EnsembleParameterTable
             Dict(
-                term_id => implied(term_spec; implied_kwargs...) for
+                term_id => implied(term_spec; kwargs...) for
                 (term_id, term_spec) in pairs(spec.tables)
             )
         else
-            implied(spec; implied_kwargs...)
+            implied(spec; kwargs...)
         end
     end
 
