@@ -612,6 +612,19 @@ _subtype_info(::Sem) = nothing
 _subtype_info(::SemFiniteDiff) = "Finite Difference Approximation"
 
 function Base.show(io::IO, sem::AbstractSem)
+    io = IOContext(io, :compact => true)
+    println(io, "Structural Equation Model ($(nameof(typeof(sem))))")
+    println(io, "- $(nparams(sem)) parameters")
+    println(io, "- Loss Functions:")
+    for term in loss_terms(sem)
+        print(io, "  - ")
+        print(io, term)
+        println(io)
+    end
+end
+
+# pretty prenting for console
+function Base.show(io::IO, ::MIME"text/plain", sem::AbstractSem)
     # if not specified, use compact printing for larger models
     if !haskey(io, :compact) && length(loss_terms(sem)) >= 5
         io = IOContext(io, :compact => true)
