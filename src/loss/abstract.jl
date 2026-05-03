@@ -41,18 +41,20 @@ end
 
 check_observed_vars(sem::SemLoss) = check_observed_vars(observed(sem), implied(sem))
 
+function check_observed_vars(loss::SemLoss, new_observed::SemObserved)
+    observed_vars(new_observed) == observed_vars(SEM.observed(loss)) || throw(
+        ArgumentError(
+            "Observed variables of the loss term do not match the ones of the new observed data",
+        ),
+    )
+end
+
 ############################################################################################
 # replace_observed: SemLoss, AbstractLoss, LossTerm
 ############################################################################################
 
 function replace_observed(loss::SemLoss, new_observed::SemObserved; kwargs...)
-    old_obs = SEM.observed(loss)
-    observed_vars(old_obs) == observed_vars(new_observed) || throw(
-        ArgumentError(
-            "observed_vars of the new data do not match the model: " *
-            "expected $(observed_vars(old_obs)), got $(observed_vars(new_observed))",
-        ),
-    )
+    check_observed_vars(loss, new_observed)
     # the default replace_observed() does not pass through kwargs to the ctor
     return typeof(loss).name.wrapper(new_observed, SEM.implied(loss))
 end
