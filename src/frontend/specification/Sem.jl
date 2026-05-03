@@ -491,6 +491,14 @@ end
 # replace_observed: Sem level
 ##############################################################
 
+# internal function to create a copy of Sem with the loss term replaced
+# used by the replace_observed()
+_replace_loss_terms(sem::Sem, new_terms::Tuple) =
+    Sem{typeof(new_terms)}(new_terms, copy(params(sem)))
+
+_replace_loss_terms(sem::Sem, new_terms::AbstractVector) =
+    _replace_loss_terms(sem, Tuple(new_terms))
+
 """
     replace_observed(model::Sem, observed::SemObserved)
     replace_observed(model::Sem, data::AbstractDict{Symbol})
@@ -533,9 +541,10 @@ function replace_observed(sem::Sem, data::Union{SemObserved, AbstractMatrix}; kw
             "Use a Dict{Symbol} or a DataFrame with `semterm_column` to provide per-term data.",
         ),
     )
-    updated_terms =
-        Tuple(replace_observed(term, data; kwargs...) for term in loss_terms(sem))
-    return Sem(updated_terms...)
+    updated_terms = map(loss_terms(sem)) do term
+        replace_observed(term, data; kwargs...)
+    end
+    return _replace_loss_terms(sem, updated_terms)
 end
 
 function replace_observed(sem::Sem, data::AbstractDict{Symbol}; kwargs...)
@@ -561,7 +570,7 @@ function replace_observed(sem::Sem, data::AbstractDict{Symbol}; kwargs...)
             throw(ArgumentError("No data provided for SEM term :$tid"))
         return replace_observed(term, term_data; kwargs...)
     end
-    return Sem(Tuple(updated_terms)...)
+    return _replace_loss_terms(sem, updated_terms)
 end
 
 function replace_observed(sem::Sem, data::AbstractVector; kwargs...)
@@ -574,7 +583,7 @@ function replace_observed(sem::Sem, data::AbstractVector; kwargs...)
     updated_terms = map(enumerate(loss_terms(sem))) do (i, term)
         issemloss(term) ? replace_observed(term, data[i]; kwargs...) : term
     end
-    return Sem(Tuple(updated_terms)...)
+    return _replace_loss_terms(sem, updated_terms)
 end
 
 function replace_observed(
@@ -591,9 +600,10 @@ function replace_observed(
                 "Provide `semterm_column` to specify which DataFrame column identifies the groups.",
             ),
         )
-        updated_terms =
-            Tuple(replace_observed(term, data; kwargs...) for term in loss_terms(sem))
-        return Sem(updated_terms...)
+        updated_terms = map(loss_terms(sem)) do term
+            replace_observed(term, data; kwargs...)
+        end
+        return _replace_loss_terms(sem, updated_terms)
     end
 
     # multi-term: split DataFrame by semterm_column
