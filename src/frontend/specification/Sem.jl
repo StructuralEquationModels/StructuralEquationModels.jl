@@ -509,7 +509,12 @@ _replace_loss_terms(sem::Sem, new_terms::AbstractVector) =
 Construct a new SEM model or SEM loss with replaced observed data.
 
 The SEM structure (implied covariance, loss type) is preserved;
-only the observed data is swapped.
+only the observed data is swapped. The new loss terms preserve the configuration
+and share the implied state with the loss terms of the original SEM model.
+
+Keyword arguments:
+- `recompute_observed_state::Bool = true`: loss terms should recompute observed-dependent
+  caches. Losses without such caches ignore this argument.
 
 # Single-term models
 
