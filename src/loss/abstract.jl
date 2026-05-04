@@ -55,14 +55,18 @@ end
 
 function replace_observed(loss::SemLoss, new_observed::SemObserved; kwargs...)
     check_observed_vars(loss, new_observed)
-    # the default replace_observed() does not pass through kwargs to the ctor
-    return typeof(loss).name.wrapper(new_observed, SEM.implied(loss))
+    # construct the new loss:
+    # 1) replace the observed
+    # 2) share the implied and its internal state with the original loss
+    # 3) replicate the current loss configuration/share its internal state
+    loss_ctor = typeof(loss).name.wrapper # get the loss constructor
+    return loss_ctor(new_observed, SEM.implied(loss), loss)
 end
 
 function replace_observed(loss::SemLoss, data::Union{AbstractMatrix, DataFrame}; kwargs...)
     old_obs = SEM.observed(loss)
-    new_observed =
-        typeof(old_obs).name.wrapper(data = data, observed_vars = observed_vars(old_obs))
+    obs_ctor = typeof(old_obs).name.wrapper
+    new_observed = obs_ctor(data = data, observed_vars = observed_vars(old_obs))
     return replace_observed(loss, new_observed; kwargs...)
 end
 
