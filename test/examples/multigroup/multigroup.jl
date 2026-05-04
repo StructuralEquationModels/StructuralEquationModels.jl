@@ -103,8 +103,8 @@ end
 
 # w.o. meanstructure -----------------------------------------------------------------------
 
-latent_vars = [:visual, :textual, :speed]
-observed_vars = Symbol.(:x, 1:9)
+lat_vars = [:visual, :textual, :speed]
+obs_vars = Symbol.(:x, 1:9)
 
 graph = @StenoGraph begin
     # measurement model
@@ -112,14 +112,14 @@ graph = @StenoGraph begin
     textual → fixed(1.0, 1.0) * x4 + label(:λ₅, :λ₅) * x5 + label(:λ₆, :λ₆) * x6
     speed → fixed(1.0, 1.0) * x7 + label(:λ₈, :λ₈) * x8 + label(:λ₉, :λ₉) * x9
     # variances and covariances
-    _(observed_vars) ↔ _(observed_vars)
-    _(latent_vars) ⇔ _(latent_vars)
+    _(obs_vars) ↔ _(obs_vars)
+    _(lat_vars) ⇔ _(lat_vars)
 end
 
 partable = EnsembleParameterTable(
     graph;
-    observed_vars = observed_vars,
-    latent_vars = latent_vars,
+    observed_vars = obs_vars,
+    latent_vars = lat_vars,
     groups = [:Pasteur, :Grant_White],
 )
 
@@ -130,8 +130,8 @@ specification_g2 = specification[:Grant_White]
 
 # w. meanstructure (fiml) ------------------------------------------------------------------
 
-latent_vars = [:visual, :textual, :speed]
-observed_vars = Symbol.(:x, 1:9)
+lat_vars = [:visual, :textual, :speed]
+obs_vars = Symbol.(:x, 1:9)
 
 graph = @StenoGraph begin
     # measurement model
@@ -139,16 +139,16 @@ graph = @StenoGraph begin
     textual → fixed(1.0, 1.0) * x4 + label(:λ₅, :λ₅) * x5 + label(:λ₆, :λ₆) * x6
     speed → fixed(1.0, 1.0) * x7 + label(:λ₈, :λ₈) * x8 + label(:λ₉, :λ₉) * x9
     # variances and covariances
-    _(observed_vars) ↔ _(observed_vars)
-    _(latent_vars) ⇔ _(latent_vars)
+    _(obs_vars) ↔ _(obs_vars)
+    _(lat_vars) ⇔ _(lat_vars)
 
-    Symbol(1) → _(observed_vars)
+    Symbol(1) → _(obs_vars)
 end
 
 partable_miss = EnsembleParameterTable(
     graph;
-    observed_vars = observed_vars,
-    latent_vars = latent_vars,
+    observed_vars = obs_vars,
+    latent_vars = lat_vars,
     groups = [:Pasteur, :Grant_White],
 )
 
@@ -159,14 +159,14 @@ specification_miss_g2 = specification_miss[:Grant_White]
 
 # CFI baseline model
 graph_varonly = @StenoGraph begin
-    _(observed_vars) ↔ _(observed_vars)
-    Symbol(1) → _(observed_vars)
+    _(obs_vars) ↔ _(obs_vars)
+    Symbol(1) → _(obs_vars)
 end
 
 partable_varonly = EnsembleParameterTable(
     graph_varonly;
-    observed_vars = observed_vars,
-    latent_vars = latent_vars,
+    observed_vars = obs_vars,
+    latent_vars = lat_vars,
     groups = [:Pasteur, :Grant_White],
 )
 
