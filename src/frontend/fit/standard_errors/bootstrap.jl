@@ -18,8 +18,9 @@ function bootstrap!(
 
     # fit to bootstrap samples
     if !parallel
+        bs_sem = deepcopy(sem) # avoid mutating the original model
         for i in 1:n_boot
-            new_fit = _fit_bootstrap_sample(sem, data, start; engine, fit_kwargs)
+            new_fit = _fit_bootstrap_sample(bs_sem, data, start; engine, fit_kwargs)
             update!(acc, i, new_fit, nothing)
         end
     else
