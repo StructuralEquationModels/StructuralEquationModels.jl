@@ -136,31 +136,25 @@ Additionally, you may provide analytic hessians by writing a respective method f
 
 ## Convenient
 
-To be able to build the model with the [Outer Constructor](@ref), you need to add a constructor for your loss function that only takes keyword arguments and allows for passing optional additional kewyword arguments. A constructor is just a function that creates a new instance of your type:
+To be able to build the loss term, it needs a constructor.
+Every `SemLoss` subtype should provide a constructor with 3 positional arguments:
+  * `observed::SemObserved`: the observed part of the model
+  * `implied::SemImplied`: the implied part of the model
+  * `refloss::Union{MyLoss, Nothing} = nothing`: optional loss term of the same type
+    to use as a reference for any loss-specific configuration.
+
+Any additional loss configuration details should be passed as optional keyword arguments.
+If both `refloss` and the keyword arguments are provided, the keyword arguments take
+precedence. This constructor is used internally by the functions like [`replace_observed`](@ref)
+to rebuild the loss term with new observed data while preserving the implied state.
 
 ```julia
-function MyLoss(;arg1 = ..., arg2, kwargs...)
+function MyLoss(
+    observed::SemObserved, implied::SemImplied, refloss::Union{MyLoss, Nothing} = nothing;
+    kwarg1 = ..., kwarg2 = ..., kwargs...
+)
     ...
-    return MyLoss(...)
-end
-```
-
-All keyword arguments that a user passes to the Sem constructor are passed to your loss function. In addition, all previously constructed parts of the model (implied and observed part) are passed as keyword arguments as well as the number of parameters `n_par = ...`, so your constructor may depend on those. For example, the constructor for `SemML` in our package depends on the additional argument `meanstructure` as well as the observed part of the model to pre-allocate arrays of the same size as the observed covariance matrix and the observed mean vector:
-
-```julia
-function SemML(;observed, meanstructure = false, approx_H = false, kwargs...)
-
-    isnothing(obs_mean(observed)) ?
-        meandiff = nothing :
-        meandiff = copy(obs_mean(observed))
-
-    return SemML(
-        similar(obs_cov(observed)),
-        similar(obs_cov(observed)),
-        meandiff,
-        approx_H,
-        Val(meanstructure)
-        )
+    return MyLoss(...) # internal MyLoss constructor
 end
 ```
 

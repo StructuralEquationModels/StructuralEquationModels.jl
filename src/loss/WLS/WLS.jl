@@ -10,7 +10,7 @@ At the moment only available with the `RAMSymbolic` implied type.
 # Constructor
 
     SemWLS(
-        observed::SemObserved, implied::SemImplied;
+        observed::SemObserved, implied::SemImplied, refloss = nothing;
         wls_weight_matrix = nothing,
         wls_weight_matrix_mean = nothing,
         approximate_hessian = false,
@@ -19,6 +19,9 @@ At the moment only available with the `RAMSymbolic` implied type.
 # Arguments
 - `observed`: the `SemObserved` part of the model
 - `implied`: the `SemImplied` part of the model
+- `refloss::Union{SemWLS, Nothing}`: optional reference loss used to preserve
+    loss-specific configuration and share the internal state when rebuilding
+    a loss term, e.g. in [`replace_observed`](@ref)
 - `approximate_hessian::Bool`: should the hessian be swapped for an approximation
 - `wls_weight_matrix`: the weight matrix for weighted least squares.
     Defaults to GLS estimation (``0.5*(D^T*kron(S,S)*D)`` where D is the duplication matrix
@@ -58,10 +61,14 @@ end
 
 function SemWLS(
     observed::SemObserved,
-    implied::SemImplied;
-    wls_weight_matrix::Union{AbstractMatrix, Nothing} = nothing,
-    wls_weight_matrix_mean::Union{AbstractMatrix, Nothing} = nothing,
-    approximate_hessian::Bool = false,
+    implied::SemImplied,
+    refloss::Union{SemWLS, Nothing} = nothing;
+    wls_weight_matrix::Union{AbstractMatrix, Nothing} = !isnothing(refloss) ? refloss.V :
+                                                        nothing,
+    wls_weight_matrix_mean::Union{AbstractMatrix, Nothing} = !isnothing(refloss) ?
+                                                             refloss.V_μ : nothing,
+    approximate_hessian::Bool = !isnothing(refloss) ?
+                                HessianEval(refloss) === ApproxHessian : false,
     verbose::Bool = false,
     kwargs...,
 )
@@ -190,7 +197,8 @@ function replace_observed(
     # recompute weight matrices only if recompute_observed_state=true
     return SemWLS(
         new_observed,
-        SEM.implied(loss);
+        SEM.implied(loss),
+        loss;
         wls_weight_matrix = recompute_observed_state ? nothing : loss.V,
         wls_weight_matrix_mean = recompute_observed_state ? nothing : loss.V_μ,
     )

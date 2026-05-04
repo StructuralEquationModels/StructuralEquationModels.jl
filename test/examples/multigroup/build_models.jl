@@ -139,8 +139,11 @@ struct UserSemML{O, I} <: SemLoss{O, I}
     observed::O
     implied::I
 
-    UserSemML(observed::SemObserved, implied::SemImplied) =
-        new{typeof(observed), typeof(implied)}(ExactHessian(), observed, implied)
+    UserSemML(
+        observed::SemObserved,
+        implied::SemImplied,
+        refloss::Union{UserSemML, Nothing} = nothing,
+    ) = new{typeof(observed), typeof(implied)}(ExactHessian(), observed, implied)
 end
 
 function SEM.objective(ml::UserSemML, params)

@@ -8,11 +8,14 @@ Maximum likelihood estimation.
 
 # Constructor
 
-    SemML(observed, implied; approximate_hessian = false)
+    SemML(observed, implied, refloss = nothing; approximate_hessian = false)
 
 # Arguments
 - `observed::SemObserved`: the observed part of the model
 - `implied::SemImplied`: [`SemImplied`](@ref) instance
+- `refloss::Union{SemML, Nothing}`: optional reference loss used to preserve
+    loss-specific configuration and share the internal state when rebuilding
+    a loss term, e.g. in [`replace_observed`](@ref)
 - `approximate_hessian::Bool`: if hessian-based optimization is used, should the hessian be swapped for an approximation
 
 # Examples
@@ -39,8 +42,10 @@ end
 
 function SemML(
     observed::SemObserved,
-    implied::SemImplied;
-    approximate_hessian::Bool = false,
+    implied::SemImplied,
+    refloss::Union{SemML, Nothing} = nothing;
+    approximate_hessian::Bool = !isnothing(refloss) ?
+                                HessianEval(refloss) === ApproxHessian : false,
     kwargs...,
 )
     if observed isa SemObservedMissing

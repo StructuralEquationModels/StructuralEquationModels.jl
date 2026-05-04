@@ -75,13 +75,16 @@ Can handle observed data with missing values.
 
 # Constructor
 
-    SemFIML(observed::SemObservedMissing, implied::SemImplied)
+    SemFIML(observed::SemObservedMissing, implied::SemImplied, refloss = nothing)
 
 # Arguments
 - `observed::SemObservedMissing`: the observed part of the model
   (see [`SemObservedMissing`](@ref))
 - `implied::SemImplied`: the implied part of the model
   (see [`SemImplied`](@ref))
+- `refloss::Union{SemFIML, Nothing}`: optional reference loss used to preserve
+    loss-specific configuration and share the internal state when rebuilding
+    a loss term, e.g. in [`replace_observed`](@ref)
 
 # Examples
 ```julia
@@ -109,7 +112,12 @@ end
 ### Constructors
 ############################################################################################
 
-function SemFIML(observed::SemObservedMissing, implied::SemImplied; kwargs...)
+function SemFIML(
+    observed::SemObservedMissing,
+    implied::SemImplied,
+    refloss::Union{SemFIML, Nothing} = nothing;
+    kwargs...,
+)
     if MeanStruct(implied) === NoMeanStruct
         """
         Full information maximum likelihood (FIML) can only be used with a meanstructure.
@@ -124,8 +132,10 @@ function SemFIML(observed::SemObservedMissing, implied::SemImplied; kwargs...)
         observed,
         implied,
         [SemFIMLPattern(pat) for pat in observed.patterns],
+        # share the internal state with the refloss
+        !isnothing(refloss) ? refloss.imp_inv :
         zeros(nobserved_vars(observed), nobserved_vars(observed)),
-        CommutationMatrix(nvars(implied)),
+        !isnothing(refloss) ? refloss.commutator : CommutationMatrix(nvars(implied)),
         nothing,
     )
 end
