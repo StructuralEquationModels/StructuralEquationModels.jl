@@ -58,7 +58,7 @@ end
         observed = obs,
         implied = impliedtype,
         loss = losstype,
-        vech = losstype <: SemWLS && impliedtype <: RAMSymbolic
+        vech = losstype <: SemWLS && impliedtype <: RAMSymbolic,
     )
 
     @test model isa Sem
@@ -77,13 +77,20 @@ end
     @test @inferred(nsamples(model)) == nsamples(obs)
 end
 
-@testset "replace_observed() preserves WLS state through finite-diff wrappers" begin
+@testset "replace_observed() preserves WLS and approx_hessian=$(approx_hessian) state through finite-diff wrappers" for approx_hessian in
+                                                                                                                        (
+    false,
+    true,
+)
+    expected_hessianeval = approx_hessian ? SEM.ApproxHessian : SEM.ExactHessian
+
     model = Sem(
         specification = ram_matrices,
         observed = obs,
         implied = RAMSymbolic,
         loss = SemWLS,
-        vech = true
+        vech = true,
+        approximate_hessian = approx_hessian,
     )
     wls_loss = sem_term(model)
     findiff_model = Sem(SEM.FiniteDiffWrapper(wls_loss))
@@ -104,9 +111,70 @@ end
     @test loss_newstate isa SemWLS
     @test loss_orig !== loss_oldstate
     @test loss_orig !== loss_newstate
+    @test SEM.HessianEval(loss_orig) === expected_hessianeval
+    @test SEM.HessianEval(loss_oldstate) === expected_hessianeval
+    @test SEM.HessianEval(loss_newstate) === expected_hessianeval
     @test loss_oldstate.V === loss_orig.V
     @test loss_newstate.V !== loss_orig.V
     @test observed_vars(loss_oldstate) == observed_vars(loss_orig)
+end
+
+@testset "replace_observed() shares implied unless model is deepcopied and approx_hessian=$(approx_hessian)" for approx_hessian in
+                                                                                                                 (
+    false,
+    true,
+)
+    expected_hessianeval = approx_hessian ? SEM.ApproxHessian : SEM.ExactHessian
+
+    model = Sem(
+        specification = ram_matrices,
+        observed = obs,
+        implied = RAMSymbolic,
+        loss = SemML,
+        approximate_hessian = approx_hessian,
+    )
+
+    data_new = randn(nsamples(obs), nobserved_vars(obs))
+
+    model_new = replace_observed(model, data_new)
+    model_deepcopy = replace_observed(deepcopy(model), data_new)
+
+    loss_orig = sem_term(model)
+    loss_new = sem_term(model_new)
+    loss_deepcopy = sem_term(model_deepcopy)
+
+    @test SEM.HessianEval(loss_orig) === expected_hessianeval
+    @test SEM.HessianEval(loss_new) === expected_hessianeval
+    @test SEM.HessianEval(loss_deepcopy) === expected_hessianeval
+    @test implied(loss_new) === implied(loss_orig)
+    @test implied(loss_deepcopy) !== implied(loss_orig)
+end
+
+@testset "replace_observed() preserves Sem container defaults" begin
+    data_g1 = dat[1:40, :]
+    data_g2 = dat[41:end, :]
+
+    sem_multigroup = Sem(
+        :g1 => SemML(
+            SemObservedData(specification = ram_matrices, data = data_g1),
+            RAM(ram_matrices),
+        ),
+        :g2 => SemML(
+            SemObservedData(specification = ram_matrices, data = data_g2),
+            RAM(ram_matrices),
+        );
+        default_sem_weights = :one,
+    )
+
+    sem_newobs = replace_observed(
+        sem_multigroup,
+        Dict(:g1 => randn(10, nobserved_vars(obs)), :g2 => randn(25, nobserved_vars(obs))),
+    )
+
+    @test all(isnothing, map(SEM.weight, SEM.loss_terms(sem_multigroup)))
+    @test all(isnothing, map(SEM.weight, SEM.loss_terms(sem_newobs)))
+    @test params(sem_newobs) == params(sem_multigroup)
+    @test params(sem_newobs) !== params(sem_multigroup)
 end
 
 @testset "Sem(...; semterm_column=...) splits ensemble data by group" begin
