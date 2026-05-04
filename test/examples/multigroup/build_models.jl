@@ -178,6 +178,16 @@ end
     )
 end
 
+@testset "replace_observed_user_defined_loss" begin
+    wrapped_loss = SEM.FiniteDiffWrapper(UserSemML(obs_g2, RAMSymbolic(specification_g2)))
+    new_data = randn(nsamples(obs_g2), nobserved_vars(obs_g2))
+    replaced_loss = SEM._unwrap(replace_observed(wrapped_loss, new_data))
+
+    @test replaced_loss isa UserSemML
+    @test observed_vars(replaced_loss) == observed_vars(obs_g2)
+    @test implied(replaced_loss) === implied(SEM._unwrap(wrapped_loss))
+end
+
 ############################################################################################
 # GLS estimation
 ############################################################################################
