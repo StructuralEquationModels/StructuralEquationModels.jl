@@ -114,7 +114,10 @@ function Base.show(io::IO, partable::ParameterTable)
     pretty_table(
         io,
         as_matrix,
-        column_labels = [shown_columns, [eltype(partable.columns[col]) for col in shown_columns]],
+        column_labels = [
+            shown_columns,
+            [eltype(partable.columns[col]) for col in shown_columns],
+        ],
         table_format = TextTableFormat(borders = text_table_borders__compact),
         # TODO switch to `missing` as non-specified values and suppress printing of `missing` instead
         formatters = [(v, i, j) -> isa(v, Number) && isnan(v) ? "" : v],
