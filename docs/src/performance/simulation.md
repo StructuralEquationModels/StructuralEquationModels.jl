@@ -3,8 +3,13 @@
 ## Replace observed data
 In simulation studies, a common task is fitting the same model to many different datasets.
 It would be a waste of resources to reconstruct the complete model for each dataset.
-We therefore provide the function `replace_observed` to change the `observed` part of a model,
-without necessarily reconstructing the other parts.
+We therefore provide the function [`replace_observed`](@ref) to change the `observed` part
+of a model, without necessarily reconstructing the other parts.
+
+For `SemLoss` terms, `replace_observed()` constructs the new loss by passing the new observed
+data, the current implied state, and the current loss (as `refloss`) to the appropriate loss
+constructor. The new loss term therefore shares the implied state with the original one, as well
+as loss-specific settings and, potentially, the internal state.
 
 For the [A first model](@ref), you would use it as
 
