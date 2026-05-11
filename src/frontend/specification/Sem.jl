@@ -44,6 +44,7 @@ function Base.show(io::IO, term::LossTerm)
         else
             print(io, " w=1")
         end
+        println(io)
     else
         print(io, nameof(losstype(term)))
         print(io, "\n")
@@ -55,7 +56,7 @@ function Base.show(io::IO, term::LossTerm)
             print(io, "    - implied:     $(nameof(typeof(implied(loss(term))))) \n")
         end
         if !isnothing(weight(term))
-            print(io, "    - weight:      $(round(weight(term), digits=3))")
+            print(io, "    - weight:      $(round(weight(term), digits=3)) \n")
         end
     end
 end
@@ -435,8 +436,8 @@ end
 # construct loss terms for the given observed and implied
 function build_sem_terms(loss, observed, implied; kwargs...)
     function build_SemLoss(aloss, observed, implied)
-        if loss isa AbstractLoss
-            return loss
+        if aloss isa AbstractLoss
+            return aloss
         elseif aloss <: SemLoss{O, I} where {O, I}
             return aloss(observed, implied; kwargs...)
         else
@@ -634,7 +635,6 @@ function Base.show(io::IO, sem::AbstractSem)
     for term in loss_terms(sem)
         print(io, "  - ")
         print(io, term)
-        println(io)
     end
 end
 
@@ -652,6 +652,5 @@ function Base.show(io::IO, ::MIME"text/plain", sem::AbstractSem)
     for term in loss_terms(sem)
         print(io, "  > ")
         print(io, term)
-        println(io)
     end
 end
