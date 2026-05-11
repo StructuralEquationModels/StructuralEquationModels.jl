@@ -30,12 +30,12 @@ end
 # pretty printing
 ############################################################################################
 
-function Base.show(io::IO, semfit::SemFit)
+function Base.show(io::IO, m::MIME"text/plain", semfit::SemFit)
     print(io, "Fitted Structural Equation Model \n")
     print(io, "=============================================== \n")
     print(io, "--------------------- Model ------------------- \n")
     print(io, "\n")
-    print(io, semfit.model)
+    show(io, m, semfit.model)
     print(io, "\n")
     #print(io, "Objective value: $(round(semfit.minimum, digits = 4)) \n")
     print(io, "------------- Optimization result ------------- \n")
