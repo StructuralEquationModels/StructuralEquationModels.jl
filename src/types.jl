@@ -46,6 +46,8 @@ If you have a special kind of data, e.g. ordinal data, you should implement a su
 abstract type SemObserved end
 
 """
+    abstract type SemImplied
+
 Supertype of all objects that can serve as the implied field of a SEM.
 Computes model-implied values that should be compared with the observed data to find parameter estimates,
 e. g. the model implied covariance or mean.
@@ -55,6 +57,22 @@ abstract type SemImplied end
 
 "Subtype of SemImplied for all objects that can serve as the implied field of a SEM and use some form of symbolic precomputation."
 abstract type SemImpliedSymbolic <: SemImplied end
+
+"""
+    abstract type SemImpliedState
+
+State of [`SemImplied`](@ref) that corresponds to the specific SEM parameter values.
+
+Contains the necessary vectors and matrices for calculating the SEM
+objective, gradient and hessian (whichever is requested).
+"""
+abstract type SemImpliedState{I <: SemImplied} end
+
+impliedtype(::Type{SemImpliedState{I}}) where {I} = I
+impliedtype(state::SemImpliedState) = impliedtype(typeof(state))
+implied(state::SemImpliedState) = state.implied
+MeanStruct(::Type{S}) where {S <: SemImpliedState} = MeanStruct(impliedtype(state))
+HessianEval(::Type{S}) where {S <: SemImpliedState} = HessianEval(impliedtype(state))
 
 """
     abstract type SemLoss{O <: SemObserved, I <: SemImplied} <: AbstractLoss
