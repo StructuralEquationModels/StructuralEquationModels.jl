@@ -456,6 +456,99 @@ function SemScoresPredictMethod(method::Symbol)
     end
 end
 
+"""
+    score_basis_transform(model::SemLoss, params; method = :regression,
+                          latent_vars = nothing, alpha = 0,
+                          prior_cov_alpha = nothing)
+
+Return the centered latent-score basis transform associated with a score-prediction
+method.
+
+For [`SemRegressionScores`](@ref) and [`SemBartlettScores`](@ref), the result is the
+identity transform. For [`SemAndersonRubinScores`](@ref), the result stores the whitening
+map between the model's original latent-variable basis and the Anderson-Rubin basis.
+
+The returned object can be used to map centered Anderson-Rubin scores back to the
+original latent-variable basis via:
+
+```julia
+orig_scores = transform(ar_scores; inverse = true)
+```
+
+`alpha` matters only for [`SemAndersonRubinScores`](@ref), because the whitening
+transform is built from the ridge-regularized Bartlett score operator. For regression and
+Bartlett scores the transform is the identity, so `alpha` does not affect the result.
+
+`prior_cov_alpha` is currently accepted for API symmetry with
+[`predict_latent_scores`](@ref) and for forward compatibility, but it does not affect the
+returned transform for the currently implemented score methods.
+"""
+function score_basis_transform(
+    method::SemScoresPredictMethod,
+    model::SemLoss,
+    params::AbstractVector;
+    latent_vars::Union{AbstractVector, Nothing} = nothing,
+    alpha::Number = 0,
+    prior_cov_alpha::Union{Number, Nothing} = nothing,
+)
+    length(params) == nparams(model) || throw(
+        DimensionMismatch(
+            "The length of parameters vector ($(length(params))) does not match the number of parameters in the model ($(nparams(model))).",
+        ),
+    )
+    alpha >= 0 ||
+        throw(ArgumentError("The regularization parameter alpha must be non-negative"))
+    isnothing(prior_cov_alpha) ||
+        prior_cov_alpha >= 0 ||
+        throw(
+            ArgumentError(
+                "The regularization parameter prior_cov_alpha must be non-negative",
+            ),
+        )
+
+    implied = imply(model)
+    ram = implied.ram_matrices
+    lvar_inds =
+        check_var_indices(ram, latent_vars, allow_observed = false, normalize = true)
+    lvars = vars(ram)[lvar_inds]
+    if !(method isa SemAndersonRubinScores) # identity transform
+        return SemVariablesTransform(lvars, I, I)
+    end
+
+    update!(EvaluationTargets(0.0, nothing, nothing), implied, params)
+
+    A = materialize(ram.A, params)
+    S = materialize(ram.S, params)
+    T = float(promote_type(eltype(A), eltype(S), typeof(alpha)))
+
+    I_A = Matrix{eltype(A)}(I, size(A, 1), size(A, 2)) - A
+    lv_I_A⁻¹ = inverse_rows(I_A, lvar_inds)
+    base_solver =
+        QRScoresSolver(implied, lvar_inds, A, S, lv_I_A⁻¹; alpha, prior_cov_alpha = 0)
+    nobs = nobserved_vars(implied)
+    base_op = permutedims(base_solver(Matrix{T}(I, nobs, nobs)))
+    score_cov = Symmetric(X_A_Xt(implied.Σ, base_op))
+    score_cov_chol = cholesky!(score_cov)
+
+    return SemVariablesTransform(lvars, I / score_cov_chol.U, score_cov_chol.U)
+end
+
+score_basis_transform(
+    method::Symbol,
+    model::SemLoss,
+    params::Union{AbstractVector, Nothing} = nothing;
+    latent_vars::Union{AbstractVector, Nothing} = nothing,
+    alpha::Number = 0,
+    prior_cov_alpha::Union{Number, Nothing} = nothing,
+) = score_basis_transform(
+    SemScoresPredictMethod(method),
+    model,
+    params;
+    latent_vars,
+    alpha,
+    prior_cov_alpha,
+)
+
 predict_latent_scores(
     fit::SemFit,
     data::SemObserved = observed(sem_term(fit.model));
