@@ -121,7 +121,7 @@ function evaluate!(
     Σ_chol = cholesky!(Symmetric(Σ⁻¹); check = false)
     if !isposdef(Σ_chol)
         #@warn "∑⁻¹ is not positive definite"
-        isnothing(objective) || (objective = non_posdef_return(par))
+        isnothing(objective) || (objective = non_posdef_objective(par))
         isnothing(gradient) || fill!(gradient, 1)
         isnothing(hessian) || copyto!(hessian, I)
         return objective
@@ -188,7 +188,7 @@ function evaluate!(objective, gradient, hessian, loss::SemML, par)
     Σ_chol = cholesky!(Symmetric(Σ⁻¹); check = false)
     if !isposdef(Σ_chol)
         #@warn "Σ⁻¹ is not positive definite"
-        isnothing(objective) || (objective = non_posdef_return(par))
+        isnothing(objective) || (objective = non_posdef_objective(par))
         isnothing(gradient) || fill!(gradient, 1)
         isnothing(hessian) || copyto!(hessian, I)
         return objective
@@ -255,16 +255,4 @@ function evaluate!(objective, gradient, hessian, loss::SemML, par)
     end
 
     return objective
-end
-
-############################################################################################
-### additional functions
-############################################################################################
-
-function non_posdef_return(par)
-    if eltype(par) <: AbstractFloat
-        return floatmax(eltype(par))
-    else
-        return typemax(eltype(par))
-    end
 end

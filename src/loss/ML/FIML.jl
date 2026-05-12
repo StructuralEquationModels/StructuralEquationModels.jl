@@ -154,7 +154,7 @@ function evaluate!(objective, gradient, hessian, loss::SemFIML, params)
     Σ_chol = cholesky!(Symmetric(loss.imp_inv); check = false)
 
     if !isposdef(Σ_chol)
-        isnothing(objective) || (objective = non_posdef_return(params))
+        isnothing(objective) || (objective = non_posdef_objective(params))
         isnothing(gradient) || fill!(gradient, 1)
         return objective
     end
