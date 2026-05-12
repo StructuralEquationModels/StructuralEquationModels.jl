@@ -122,7 +122,7 @@ function trunc_eigvals(
     if eigmin < min_eigval
         # substitute small eigvals with min_eigval
         eigvals_mtx = Diagonal(max.(mtx_eig.values, min_eigval))
-        newmtx = mtx_eig.vectors * eigvals_mtx * mtx_eig.vectors'
+        newmtx = X_A_Xt(eigvals_mtx, mtx_eig.vectors)
         StatsBase._symmetrize!(newmtx)
         if verbose
             Δmtx = newmtx .- mtx
