@@ -38,6 +38,16 @@ Return the vector of parameter labels (in the same order as [`params`](@ref)).
 param_labels(spec::SemSpecification) = spec.param_labels
 
 """
+    param_indices(spec::SemSpecification, params::AbstractVector{Symbol}) -> Vector{Int}
+
+Convert parameter labels to their indices in the SEM specification.
+"""
+function param_indices(spec::SemSpecification, params::AbstractVector{Symbol})
+    param_map = Dict(param => i for (i, param) in enumerate(SEM.params(spec)))
+    return [param_map[param] for param in params]
+end
+
+"""
 `ParameterTable`s contain the specification of a structural equation model.
 
 # Constructor
