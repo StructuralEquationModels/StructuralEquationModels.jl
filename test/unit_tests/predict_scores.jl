@@ -28,9 +28,18 @@ function regression_operator(
     Ψ::AbstractMatrix,
     Φ::AbstractMatrix;
     alpha::Real = 0.0,
+    prior_cov_alpha::Real = 1.0,
 )
     nobs, nlat = size(Λ)
-    T = float(promote_type(eltype(Λ), eltype(Ψ), eltype(Φ), typeof(alpha)))
+    T = float(
+        promote_type(
+            eltype(Λ),
+            eltype(Ψ),
+            eltype(Φ),
+            typeof(alpha),
+            typeof(prior_cov_alpha),
+        ),
+    )
     Ψ_chol = cholesky(Symmetric(Matrix{T}(Ψ)))
     Φ_chol = cholesky(Symmetric(Matrix{T}(Φ)))
     I_obs = Matrix{T}(I, nobs, nobs)
@@ -38,7 +47,7 @@ function regression_operator(
     Ψ⁻¹Λ = Ψ_chol \ Matrix{T}(Λ)
     Ψ⁻¹ = Ψ_chol \ I_obs
     Φ⁻¹ = Φ_chol \ I_lat
-    return (Λ' * Ψ⁻¹Λ + Φ⁻¹ + T(alpha) * I_lat) \ (Λ' * Ψ⁻¹)
+    return (Λ' * Ψ⁻¹Λ + T(prior_cov_alpha) * Φ⁻¹ + T(alpha) * I_lat) \ (Λ' * Ψ⁻¹)
 end
 
 function anderson_rubin_operator(
@@ -138,6 +147,26 @@ end
     regression_op = regression_operator(Λ, Ψ, Φ; alpha = regression_alpha)
     @test regression_scores ≈ centered_data * regression_op' rtol = 1e-10 atol = 1e-10
 
+    regression_prior_cov_alpha = 0.35
+    regression_scores_tuned = SEM.predict_latent_scores(
+        model,
+        params,
+        data;
+        method = :regression,
+        latent_vars = lv_vars,
+        alpha = regression_alpha,
+        prior_cov_alpha = regression_prior_cov_alpha,
+    )
+    regression_op_tuned = regression_operator(
+        Λ,
+        Ψ,
+        Φ;
+        alpha = regression_alpha,
+        prior_cov_alpha = regression_prior_cov_alpha,
+    )
+    @test regression_scores_tuned ≈ centered_data * regression_op_tuned' rtol = 1e-10 atol =
+        1e-10
+
     regression_scores_0 = SEM.predict_latent_scores(
         model,
         params,
@@ -158,7 +187,42 @@ end
         latent_vars = lv_vars,
         alpha = 0.0,
     )
+    @test_throws ArgumentError SEM.predict_latent_scores(
+        model,
+        params,
+        data;
+        method = :Bartlett,
+        latent_vars = lv_vars,
+        prior_cov_alpha = 0.1,
+    )
+    @test_throws ArgumentError SEM.predict_latent_scores(
+        model,
+        params,
+        data;
+        method = :AndersonRubin,
+        latent_vars = lv_vars,
+        prior_cov_alpha = 0.1,
+    )
+    regression_scores_bartlett = SEM.predict_latent_scores(
+        model,
+        params,
+        data;
+        method = :regression,
+        latent_vars = lv_vars,
+        alpha = 0.0,
+        prior_cov_alpha = 0.0,
+    )
+    @test regression_scores_bartlett ≈ bartlett_scores_0 rtol = 1e-10 atol = 1e-10
     @test !isapprox(regression_scores_0, bartlett_scores_0; rtol = 1e-6, atol = 1e-6)
+
+    @test_throws ArgumentError SEM.predict_latent_scores(
+        model,
+        params,
+        data;
+        method = :regression,
+        latent_vars = lv_vars,
+        prior_cov_alpha = -0.1,
+    )
 
     ar_alpha = 0.15
     ar_scores = SEM.predict_latent_scores(

@@ -46,14 +46,22 @@ function QRScoresSolver(
     loadings::AbstractMatrix,
     obs_cov::AbstractMatrix;
     prior_cov::Union{AbstractMatrix, Nothing} = nothing,
+    prior_cov_alpha::Number = 1,
     alpha::Number = 0,
 )
-    nobs, nlat = size(loadings)
+    alpha >= 0 ||
+        throw(ArgumentError("The regularization parameter alpha must be non-negative"))
+    prior_cov_alpha >= 0 || throw(
+        ArgumentError("The regularization parameter prior_cov_alpha must be non-negative"),
+    )
+
+    _, nlat = size(loadings)
     T = float(
         promote_type(
             eltype(loadings),
             eltype(obs_cov),
             isnothing(prior_cov) ? Float64 : eltype(prior_cov),
+            typeof(prior_cov_alpha),
             typeof(alpha),
         ),
     )
@@ -65,9 +73,9 @@ function QRScoresSolver(
     aug_lhs = Matrix{T}[Matrix(Ψ_chol.U' \ Λ)]
     extra_rhs_rows = 0
 
-    if !isnothing(prior_cov)
+    if !isnothing(prior_cov) && prior_cov_alpha != 0
         Φ_chol = cholesky(Symmetric(Matrix{T}(prior_cov)))
-        push!(aug_lhs, Matrix(Φ_chol.U' \ I_lat))
+        push!(aug_lhs, sqrt(T(prior_cov_alpha)) * Matrix(Φ_chol.U' \ I_lat))
         extra_rhs_rows += nlat
     end
 
@@ -76,7 +84,8 @@ function QRScoresSolver(
         extra_rhs_rows += nlat
     end
 
-    return QRScoresSolver(qr(reduce(vcat, aug_lhs), ColumnNorm()), Ψ_chol, extra_rhs_rows)
+    lhs_qr = qr(reduce(vcat, aug_lhs), ColumnNorm())
+    return QRScoresSolver(lhs_qr, Ψ_chol, extra_rhs_rows)
 end
 
 function (solver::QRScoresSolver)(data::AbstractMatrix)
@@ -126,7 +135,8 @@ abstract type SemScoresPredictMethod end
         latent_vars::AbstractVector,
         A::AbstractMatrix, S::AbstractMatrix,
         lv_I_A⁻¹::Union{AbstractMatrix, Nothing} = nothing;
-        alpha::Number = 0
+        alpha::Number = 0,
+        prior_cov_alpha::Number = 1,
     ) -> ScoresSolver
 
 Create a solver for the latent scores based on the specified prediction method.
@@ -154,14 +164,15 @@ which is equivalent to the penalized least-squares problem
 ```math
 \hat z_{\mathrm{reg}}
 = \arg\min_z \left(\lVert L_\Psi (y - \Lambda z) \rVert_2^2
-+ \lVert L_\Phi z \rVert_2^2
++ \lambda_\Phi \lVert L_\Phi z \rVert_2^2
 + \alpha \lVert z \rVert_2^2 \right),
 ```
 
-where `L_Ψ' L_Ψ = Ψ^{-1}` and `L_Φ' L_Φ = Φ^{-1}`. The prior term `\lVert L_\Phi z \rVert_2^2`
-shrinks `z` toward the latent mean, penalizing directions with small prior variance more
-strongly than directions with large prior variance. Internally the scores are computed via
-an augmented QR solve instead of explicitly forming the normal equations.
+where `L_Ψ' L_Ψ = Ψ^{-1}` and `L_Φ' L_Φ = Φ^{-1}`. The classical regression/Thomson
+scores correspond to `prior_cov_alpha = λ_Φ = 1`. Setting `prior_cov_alpha = 0`
+switches off the latent-covariance prior and recovers the Bartlett objective with the
+same `alpha`. Internally the scores are computed via an augmented QR solve instead of
+explicitly forming the normal equations.
 
 # References
 
@@ -181,18 +192,30 @@ function QRScoresSolver(
     S::AbstractMatrix,
     lv_I_A⁻¹::Union{AbstractMatrix, Nothing} = nothing;
     alpha::Number = 0,
+    prior_cov_alpha::Number = 0,
 )
     ram = implied.ram_matrices
     lv_FA = Matrix(ram.F * A[:, latent_vars])
-    if isnothing(lv_I_A⁻¹)
-        I_A = Matrix{eltype(A)}(I, size(A, 1), size(A, 2)) - A
-        lv_I_A⁻¹ = inv_matrix_rows(I_A, latent_vars)
+
+    prior_cov = if prior_cov_alpha != 0
+        if isnothing(lv_I_A⁻¹)
+            I_A = Matrix{eltype(A)}(I, size(A, 1), size(A, 2)) - A
+            lv_I_A⁻¹ = inv_matrix_rows(I_A, latent_vars)
+        end
+        # postpone scaling by prior_cov_alpha until the Cholesky factor
+        SEM.trunc_eigvals(
+            Symmetric(X_A_Xt(S, lv_I_A⁻¹)),
+            1e-6,
+            mtx_label = "prior_cov",
+            verbose = false,
+        )
+    else
+        nothing
     end
-    cov_lv = X_A_Xt(S, lv_I_A⁻¹)
 
     obs_inds = observed_var_indices(ram)
     obs_cov = Matrix(S[obs_inds, obs_inds])
-    return QRScoresSolver(lv_FA, obs_cov; prior_cov = cov_lv, alpha)
+    return QRScoresSolver(lv_FA, obs_cov; prior_cov, prior_cov_alpha, alpha)
 end
 
 latent_scores_solver(
@@ -203,7 +226,16 @@ latent_scores_solver(
     S::AbstractMatrix,
     lv_I_A⁻¹::Union{AbstractMatrix, Nothing} = nothing;
     alpha::Number = 0,
-) = QRScoresSolver(implied, latent_vars, A, S, lv_I_A⁻¹; alpha)
+    prior_cov_alpha::Union{Number, Nothing} = nothing,
+) = QRScoresSolver(
+    implied,
+    latent_vars,
+    A,
+    S,
+    lv_I_A⁻¹;
+    alpha,
+    prior_cov_alpha = something(prior_cov_alpha, 1),
+)
 
 raw"""
     SemBartlettScores
@@ -227,8 +259,9 @@ which is equivalent to the weighted ridge least-squares problem
 + \alpha \lVert z \rVert_2^2 \right),
 ```
 
-where `L_Ψ' L_Ψ = Ψ^{-1}`. Internally the score operator is computed from the
-augmented QR solve instead of explicitly forming the normal equations.
+where `L_Ψ' L_Ψ = Ψ^{-1}`. Equivalently, this is the regression-score objective with
+`prior_cov_alpha = 0`, i.e. with the latent-covariance prior switched off. Internally
+the score operator is computed via the same augmented QR solve as the regression case.
 
 # References
 
@@ -241,7 +274,7 @@ augmented QR solve instead of explicitly forming the normal equations.
 """
 struct SemBartlettScores <: SemScoresPredictMethod end
 
-function latent_scores_solver(
+latent_scores_solver(
     ::SemBartlettScores,
     implied::SemImplied,
     latent_vars::AbstractVector,
@@ -249,14 +282,16 @@ function latent_scores_solver(
     S::AbstractMatrix,
     lv_I_A⁻¹::Union{AbstractMatrix, Nothing} = nothing;
     alpha::Number = 0,
+    prior_cov_alpha::Nothing = nothing,
+) = latent_scores_solver_qr(
+    implied,
+    latent_vars,
+    A,
+    S,
+    lv_I_A⁻¹;
+    alpha,
+    prior_cov_alpha = 0,
 )
-    ram = implied.ram_matrices
-    lv_FA = Matrix(ram.F * A[:, latent_vars])
-
-    obs_inds = observed_var_indices(ram)
-    obs_cov = Matrix(S[obs_inds, obs_inds])
-    return QRScoresSolver(lv_FA, obs_cov; alpha)
-end
 
 raw"""
         SemAndersonRubinScores
@@ -338,10 +373,19 @@ function latent_scores_solver(
     S::AbstractMatrix,
     lv_I_A⁻¹::Union{AbstractMatrix, Nothing} = nothing;
     alpha::Number = 0,
+    prior_cov_alpha::Nothing = nothing,
 )
     nobs = nobserved_vars(implied)
 
-    base_solver = QRScoresSolver(SemBartlettScores(), implied, latent_vars, A, S; alpha)
+    base_solver = QRScoresSolver(
+        SemBartlettScores(),
+        implied,
+        latent_vars,
+        A,
+        S;
+        alpha,
+        prior_cov_alpha = 0,
+    )
     base_op = permutedims(base_solver(Matrix{eltype(S)}(I, nobs, nobs)))
 
     score_cov = Symmetric(X_A_Xt(implied.Σ, base_op))
@@ -364,13 +408,34 @@ predict_latent_scores(
     fit::SemFit,
     data::SemObserved = observed(sem_term(fit.model));
     method::Symbol = :regression,
-) = predict_latent_scores(SemScoresPredictMethod(method), fit, data)
+    latent_vars::Union{AbstractVector, Nothing} = nothing,
+    alpha::Number = 0,
+    prior_cov_alpha::Union{Number, Nothing} = nothing,
+) = predict_latent_scores(
+    SemScoresPredictMethod(method),
+    fit,
+    data;
+    latent_vars,
+    alpha,
+    prior_cov_alpha,
+)
 
 predict_latent_scores(
     method::SemScoresPredictMethod,
     fit::SemFit,
-    data::SemObserved = observed(sem_term(fit.model)),
-) = predict_latent_scores(method, loss(sem_term(fit.model)), fit.solution, data)
+    data::SemObserved = observed(sem_term(fit.model));
+    latent_vars::Union{AbstractVector, Nothing} = nothing,
+    alpha::Number = 0,
+    prior_cov_alpha::Union{Number, Nothing} = nothing,
+) = predict_latent_scores(
+    method,
+    loss(sem_term(fit.model)),
+    fit.solution,
+    data;
+    latent_vars,
+    alpha,
+    prior_cov_alpha,
+)
 
 # return the rows of inv(A) for the specified row indices avoiding full inv(A) calculation
 function inv_matrix_rows(A::AbstractMatrix, row_inds::AbstractVector{<:Integer})
@@ -386,7 +451,8 @@ end
 """
     predict_latent_scores(
         model::SemLoss, params, data = observed(model);
-        method = :regression, latent_vars = nothing, alpha = 0
+        method = :regression, latent_vars = nothing,
+        alpha = 0, prior_cov_alpha = nothing
     )
 
 Predict latent scores for the selected latent variables from observed data.
@@ -400,6 +466,10 @@ definitions and interpretation of each method.
 latent variables in the model are scored.
 
 `alpha` is a non-negative ridge regularization parameter passed to the selected scoring method.
+`prior_cov_alpha` is the non-negative weight of the latent-covariance prior used by
+[`SemRegressionScores`](@ref). The default `prior_cov_alpha = 1` gives the classical
+regression/Thomson scores, while `prior_cov_alpha = 0` reduces the regression objective
+to the Bartlett objective with the same `alpha`.
 """
 function predict_latent_scores(
     method::SemScoresPredictMethod,
@@ -408,6 +478,7 @@ function predict_latent_scores(
     data::SemObserved = observed(model);
     latent_vars::Union{AbstractVector, Nothing} = nothing,
     alpha::Number = 0,
+    prior_cov_alpha::Union{Number, Nothing} = nothing,
 )
     nobserved_vars(data) == nobserved_vars(model) || throw(
         DimensionMismatch(
@@ -419,8 +490,20 @@ function predict_latent_scores(
             "The length of parameters vector ($(length(params))) does not match the number of parameters in the model ($(nparams(model)))",
         ),
     )
-    (alpha < 0) &&
+    (alpha >= 0) ||
         throw(ArgumentError("The regularization parameter alpha must be non-negative"))
+    if method isa Union{SemBartlettScores, SemAndersonRubinScores}
+        !isnothing(prior_cov_alpha)
+        @warn "prior_cov_alpha is only supported for regression scores, ignored for $(typeof(method))"
+        prior_cov_alpha = nothing
+    end
+    isnothing(prior_cov_alpha) ||
+        prior_cov_alpha >= 0 ||
+        throw(
+            ArgumentError(
+                "The regularization parameter prior_cov_alpha must be non-negative",
+            ),
+        )
 
     implied = SEM.implied(model)
     ram = implied.ram_matrices
@@ -432,7 +515,16 @@ function predict_latent_scores(
     S = materialize(ram.S, params)
     I_A = Matrix{eltype(A)}(I, size(A, 1), size(A, 2)) - A
     lv_I_A⁻¹ = inv_matrix_rows(I_A, lv_inds)
-    lv_scores_solver = latent_scores_solver(method, implied, lv_inds, A, S, lv_I_A⁻¹; alpha)
+    lv_scores_solver = latent_scores_solver(
+        method,
+        implied,
+        lv_inds,
+        A,
+        S,
+        lv_I_A⁻¹;
+        alpha,
+        prior_cov_alpha,
+    )
 
     centered_data =
         data.data .- (isnothing(data.obs_mean) ? mean(data.data, dims = 1) : data.obs_mean')
@@ -454,6 +546,7 @@ predict_latent_scores(
     method::Symbol = :regression,
     latent_vars::Union{AbstractVector, Nothing} = nothing,
     alpha::Number = 0,
+    prior_cov_alpha::Union{Number, Nothing} = nothing,
 ) = predict_latent_scores(
     SemScoresPredictMethod(method),
     model,
@@ -461,4 +554,5 @@ predict_latent_scores(
     data;
     latent_vars,
     alpha,
+    prior_cov_alpha,
 )
