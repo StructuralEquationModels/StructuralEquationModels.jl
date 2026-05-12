@@ -75,6 +75,7 @@ end
 function latent_scores_operator(
     ::Type{T},
     model::SemLoss,
+    latent_vars::AbstractVector,
     params::AbstractVector;
     kwargs...,
 ) where {T <: SemScoresPredictMethod}
@@ -82,6 +83,7 @@ function latent_scores_operator(
     latent_scores_operator(
         T,
         SEM.implied(model),
+        latent_vars,
         materialize(ram.A, params),
         materialize(ram.S, params);
         kwargs...,
@@ -91,21 +93,21 @@ end
 function latent_scores_operator(
     ::SemRegressionScores,
     implied::SemImplied,
+    latent_vars::AbstractVector,
     A::AbstractMatrix,
     S::AbstractMatrix;
     alpha::Number = 0,
 )
     implied = SEM.implied(model)
     ram = implied.ram_matrices
-    lv_inds = latent_var_indices(ram)
 
-    lv_FA = ram.F * A[:, lv_inds]
+    lv_FA = ram.F * A[:, latent_vars]
 
     cov_lv = if alpha == 0
-        lv_I_A⁻¹ = inv(I - A)[lv_inds, :]
+        lv_I_A⁻¹ = inv(I - A)[latent_vars, :]
         X_A_Xt(S, lv_I_A⁻¹)
     else
-        inv(Xt_A_X(inv(S), I - A) + alpha * I)[lv_inds, lv_inds]
+        inv(Xt_A_X(inv(S), I - A) + alpha * I)[latent_vars, latent_vars]
     end
     Σ = implied.Σ
     Σ⁻¹ = inv(Σ)
@@ -115,13 +117,13 @@ end
 function latent_scores_operator(
     ::SemBartlettScores,
     implied::SemImplied,
+    latent_vars::AbstractVector,
     A::AbstractMatrix,
     S::AbstractMatrix;
     alpha::Number = 0,
 )
     ram = implied.ram_matrices
-    lv_inds = latent_var_indices(ram)
-    lv_FA = ram.F * A[:, lv_inds]
+    lv_FA = ram.F * A[:, latent_vars]
 
     obs_inds = observed_var_indices(ram)
     ov_S⁻¹ = inv(S[obs_inds, obs_inds])
@@ -137,6 +139,7 @@ function predict_latent_scores(
     model::SemLoss,
     params::AbstractVector,
     data::SemObserved = observed(model);
+    latent_vars::Union{AbstractVector, Nothing} = nothing,
     alpha::Number = 0,
 )
     nobserved_vars(data) == nobserved_vars(model) || throw(
@@ -154,12 +157,13 @@ function predict_latent_scores(
 
     implied = SEM.implied(model)
     ram = implied.ram_matrices
+    lv_inds = check_var_indices(ram, latent_vars, allow_observed = false, normalize = true)
+
     update!(EvaluationTargets(0.0, nothing, nothing), implied, params)
 
     A = materialize(ram.A, params)
     S = materialize(ram.S, params)
-    lv_inds = latent_var_indices(ram)
-    lv_scores_op = latent_scores_operator(method, implied, A, S; alpha)
+    lv_scores_op = latent_scores_operator(method, implied, lv_inds, A, S; alpha)
 
     data =
         data.data .- (isnothing(data.obs_mean) ? mean(data.data, dims = 1) : data.obs_mean')
@@ -179,5 +183,13 @@ predict_latent_scores(
     params::AbstractVector,
     data::SemObserved = observed(model);
     method::Symbol = :regression,
+    latent_vars::Union{AbstractVector, Nothing} = nothing,
     alpha::Number = 0,
-) = predict_latent_scores(SemScoresPredictMethod(method), model, params, data; alpha)
+) = predict_latent_scores(
+    SemScoresPredictMethod(method),
+    model,
+    params,
+    data;
+    latent_vars,
+    alpha,
+)
