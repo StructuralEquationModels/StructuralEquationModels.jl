@@ -35,6 +35,7 @@ include("objective_gradient_hessian.jl")
 include("additional_functions/commutation_matrix.jl")
 include("additional_functions/sparse_utils.jl")
 include("additional_functions/params_array.jl")
+include("additional_functions/quad.jl")
 
 # fitted objects
 include("frontend/fit/SemFit.jl")
