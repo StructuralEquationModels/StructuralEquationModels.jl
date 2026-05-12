@@ -8,6 +8,7 @@ available_tests = Dict(
     "specification" => "SemSpecification",
     "model" => "Sem model",
     "StatsAPI" => "StatsAPI",
+    "predict_scores" => "Predict latent variables scores",
 )
 
 # Determine which tests to run based on command-line arguments

@@ -95,8 +95,7 @@ function SemWLS(
     check_observed_vars(observed, implied)
 
     nobs_vars = nobserved_vars(observed)
-    tril_ind = filter(x -> (x[1] >= x[2]), CartesianIndices(obs_cov(observed)))
-    s = obs_cov(observed)[tril_ind]
+    s = vech(obs_cov(observed))
     size(s) == size(implied.Σ) || throw(
         DimensionMismatch(
             "SemWLS requires implied covariance to be in vech-ed form " *

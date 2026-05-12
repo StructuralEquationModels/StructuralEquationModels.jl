@@ -198,10 +198,7 @@ end
 function eval_Σ_symbolic(S, I_A⁻¹, F; vech::Bool = false, simplify::Bool = false)
     Σ = F * I_A⁻¹ * S * permutedims(I_A⁻¹) * permutedims(F)
     Σ = Array(Σ)
-    if vech
-        n = size(Σ, 1)
-        Σ = [Σ[i, j] for j in 1:n for i in j:n]
-    end
+    vech && (Σ = SEM.vech(Σ))
     if simplify
         Threads.@threads for i in eachindex(Σ)
             Σ[i] = Symbolics.simplify(Σ[i])
