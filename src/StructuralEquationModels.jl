@@ -71,6 +71,7 @@ include("loss/constant/constant.jl")
 # regularization
 include("loss/regularization/hinge.jl")
 include("loss/regularization/norm.jl")
+include("loss/regularization/squared_hinge.jl")
 # constructor
 include("frontend/specification/Sem.jl")
 include("frontend/specification/documentation.jl")
@@ -132,6 +133,7 @@ export AbstractSem,
     SemLasso,
     SemNorm,
     SemRidge,
+    SemSquaredHinge,
     loss,
     nsem_terms,
     sem_terms,
