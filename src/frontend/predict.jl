@@ -109,6 +109,58 @@ function (solver::WhitenedScoresSolver)(data::AbstractMatrix)
     return base_scores / solver.score_cov_chol.U
 end
 
+const BasisTransformOperator = Union{AbstractMatrix, UniformScaling}
+
+"""
+    SemVariablesTransform
+
+Linear change-of-basis metadata for centered latent scores.
+
+`old_to_new` maps centered variables from the original basis to the transformed basis.
+`new_to_old` applies the inverse map.
+
+For [`SemAndersonRubinScores`](@ref), the method basis is the whitened Anderson-Rubin
+coordinate system. For [`SemRegressionScores`](@ref) and [`SemBartlettScores`](@ref), the
+transform is the identity.
+"""
+struct SemVariablesTransform{TN <: BasisTransformOperator, TO <: BasisTransformOperator}
+    vars::Vector{Symbol}
+    old_to_new::TN
+    new_to_old::TO
+end
+
+"""
+    (transform::SemVariablesTransform)(scores; inverse = false)
+
+Apply a centered latent-score basis transform.
+
+When `inverse = false` (default), the rows of `scores` are interpreted in the model's
+original latent-variable basis and mapped to the method basis stored in `transform`.
+When `inverse = true`, the rows are interpreted in the method basis and mapped back to
+the original latent-variable basis.
+
+The transform acts on centered scores. For uncentered scores, subtract the corresponding
+latent means before applying the transform and add the target-basis means after.
+"""
+function (transform::SemVariablesTransform)(scores::AbstractMatrix; inverse::Bool = false)
+    size(scores, 2) == length(transform.vars) || throw(
+        DimensionMismatch(
+            "Number of score columns ($(size(scores, 2))) does not match transform size ($(length(transform.vars))).",
+        ),
+    )
+    basis_mtx = inverse ? transform.new_to_old : transform.old_to_new
+    return scores * basis_mtx
+end
+
+function (transform::SemVariablesTransform)(scores::AbstractVector; inverse::Bool = false)
+    length(scores) == length(transform.vars) || throw(
+        DimensionMismatch(
+            "Score vector length ($(length(scores))) does not match transform size ($(length(transform.vars))).",
+        ),
+    )
+    return vec(transform(reshape(collect(scores), 1, :); inverse))
+end
+
 """
     SemScoresPredictMethod
 
