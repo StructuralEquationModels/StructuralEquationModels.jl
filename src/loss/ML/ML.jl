@@ -214,7 +214,7 @@ function evaluate!(objective, gradient, hessian, loss::SemML, par)
         one_Σ⁻¹Σₒ[diagind(one_Σ⁻¹Σₒ)] .+= 1
 
         C = F⨉I_A⁻¹' * one_Σ⁻¹Σₒ * Σ⁻¹ * F⨉I_A⁻¹
-        mul!(gradient, ∇A', vec(C * S * I_A⁻¹'), 2, 0)
+        mul!(gradient, ∇A', vec(C * mul!(similar(C), S, I_A⁻¹')), 2, 0)
         mul!(gradient, ∇S', vec(C), 1, 1)
 
         if MeanStruct(implied) === HasMeanStruct
