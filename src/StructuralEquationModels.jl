@@ -15,7 +15,8 @@ using LinearAlgebra,
     LazyArtifacts,
     DelimitedFiles,
     DataFrames,
-    ProgressMeter
+    ProgressMeter,
+    PackageExtensionCompat
 
 import StatsAPI: params, coef, coefnames, dof, fit, nobs, coeftable
 
@@ -210,4 +211,9 @@ export AbstractSem,
     ←,
     ↔,
     ⇔
+
+function __init__()
+    @require_extensions
+end
+
 end
