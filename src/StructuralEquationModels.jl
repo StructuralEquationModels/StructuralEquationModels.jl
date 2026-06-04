@@ -64,9 +64,10 @@ include("implied/empty.jl")
 include("loss/abstract.jl")
 include("loss/ML/ML.jl")
 include("loss/ML/FIML.jl")
-include("loss/regularization/ridge.jl")
 include("loss/WLS/WLS.jl")
 include("loss/constant/constant.jl")
+# regularization
+include("loss/regularization/params_penalty.jl")
 # constructor
 include("frontend/specification/Sem.jl")
 include("frontend/specification/documentation.jl")
@@ -122,9 +123,14 @@ export AbstractSem,
     SemML,
     SemFIML,
     em_mvn,
-    SemRidge,
-    SemConstant,
     SemWLS,
+    SemConstant,
+    SemParamsPenalty,
+    SemHinge,
+    SemLasso,
+    SemNorm,
+    SemRidge,
+    SemElasticNet,
     loss,
     nsem_terms,
     sem_terms,
