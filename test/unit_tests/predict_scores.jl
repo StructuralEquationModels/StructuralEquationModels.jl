@@ -263,6 +263,31 @@ end
     @test ar_op * Σ * ar_op' ≈ Matrix{Float64}(I, size(ar_op, 1), size(ar_op, 1)) rtol =
         1e-10 atol = 1e-10
 
+    ar_transform = SEM.score_basis_transform(
+        model,
+        params;
+        method = :AndersonRubin,
+        latent_vars = lv_vars,
+        alpha = ar_alpha,
+    )
+    @test ar_transform.vars == lv_vars
+    @test ar_transform.old_to_new * ar_transform.new_to_old ≈ Matrix{Float64}(I, 2, 2) atol =
+        1e-10 rtol = 1e-10
+    @test ar_transform(bartlett_scores) ≈ ar_scores rtol = 1e-10 atol = 1e-10
+    @test ar_transform(ar_scores; inverse = true) ≈ bartlett_scores rtol = 1e-10 atol =
+        1e-10
+
+    bartlett_transform = SEM.score_basis_transform(
+        model,
+        params;
+        method = :Bartlett,
+        latent_vars = lv_vars,
+        alpha = bartlett_alpha,
+    )
+    @test bartlett_transform.old_to_new == I
+    @test bartlett_transform.new_to_old == I
+    @test bartlett_transform(bartlett_scores) ≈ bartlett_scores rtol = 1e-12 atol = 1e-12
+
     ar_scores_0 = SEM.predict_latent_scores(
         model,
         params,
