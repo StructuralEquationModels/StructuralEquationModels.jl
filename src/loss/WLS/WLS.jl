@@ -95,8 +95,7 @@ function SemWLS(
     check_observed_vars(observed, implied)
 
     nobs_vars = nobserved_vars(observed)
-    tril_ind = filter(x -> (x[1] >= x[2]), CartesianIndices(obs_cov(observed)))
-    s = obs_cov(observed)[tril_ind]
+    s = vech(obs_cov(observed))
     size(s) == size(implied.Σ) || throw(
         DimensionMismatch(
             "SemWLS requires implied covariance to be in vech-ed form " *
@@ -112,9 +111,9 @@ function SemWLS(
         S = kron(S, S)
         wls_weight_matrix = 0.5 * (D' * S * D)
     else
-        size(wls_weight_matrix) == (length(tril_ind), length(tril_ind)) ||
+        size(wls_weight_matrix) == (length(s), length(s)) ||
             DimensionMismatch(
-                "wls_weight_matrix has to be of size $(length(tril_ind))×$(length(tril_ind))",
+                "wls_weight_matrix has to be of size $(length(s))×$(length(s))",
             )
     end
     size(wls_weight_matrix) == (length(s), length(s)) ||
