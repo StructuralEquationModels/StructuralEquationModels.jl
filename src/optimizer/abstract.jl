@@ -41,7 +41,7 @@ function fit(optim::SemOptimizer, model::AbstractSem; start_val = nothing, kwarg
 end
 
 fit(model::AbstractSem; engine::Symbol = :Optim, start_val = nothing, kwargs...) =
-fit(SemOptimizer(; engine, kwargs...), model; start_val, kwargs...)
+    fit(SemOptimizer(; engine, kwargs...), model; start_val, kwargs...)
 
 # fallback method
 fit(optim::SemOptimizer, model::AbstractSem, start_params; kwargs...) =
@@ -56,8 +56,7 @@ prepare_start_params(start_val::Nothing, model::AbstractSem; kwargs...) =
     start_simple(model; kwargs...)
 
 # first argument is a function
-prepare_start_params(start_val, model::AbstractSem; kwargs...) =
-    start_val(model; kwargs...)
+prepare_start_params(start_val, model::AbstractSem; kwargs...) = start_val(model; kwargs...)
 
 function prepare_start_params(start_val::AbstractVector, model::AbstractSem; kwargs...)
     (length(start_val) == nparams(model)) || throw(

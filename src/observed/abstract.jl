@@ -124,6 +124,20 @@ function prepare_data(
         end
         # make sure data_mtx is a dense matrix (required for methods like mean_and_cov())
         data_mtx = convert(Matrix, data_ordered)
+        # Validate that all columns contain numeric data
+        for j in axes(data_mtx, 2)
+            if !all(x -> x isa Number || ismissing(x), data_mtx[:, j])
+                varname =
+                    isnothing(obs_vars_reordered) ? "column $j" :
+                    string(obs_vars_reordered[j])
+
+                throw(
+                    ArgumentError(
+                        "Observed variable '$varname' contains non-numeric data. SEM models require numeric variables.",
+                    ),
+                )
+            end
+        end
     elseif data isa NTuple{2, Integer} # given the dimensions of the data matrix, but no data itself
         data_mtx = nothing
         nobs_vars = data[2]
