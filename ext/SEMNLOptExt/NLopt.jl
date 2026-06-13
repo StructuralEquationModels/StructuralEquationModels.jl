@@ -19,7 +19,7 @@ function SemOptimizerNLopt(;
     applicable(iterate, equality_constraints) && !isa(equality_constraints, NamedTuple) ||
         (equality_constraints = [equality_constraints])
     applicable(iterate, inequality_constraints) &&
-        !isa(inequality_constraints, NamedTuple) ||
+    !isa(inequality_constraints, NamedTuple) ||
         (inequality_constraints = [inequality_constraints])
     return SemOptimizerNLopt(
         algorithm,

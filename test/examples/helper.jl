@@ -90,12 +90,8 @@ function test_estimates(
     skip::Bool = false,
 )
     actual = StructuralEquationModels.params(partable, col)
-    expected = StructuralEquationModels.lavaan_params(
-        partable_lav,
-        partable,
-        lav_col,
-        lav_group,
-    )
+    expected =
+        StructuralEquationModels.lavaan_params(partable_lav, partable, lav_col, lav_group)
     @test !any(isnan, actual)
     @test !any(isnan, expected)
 

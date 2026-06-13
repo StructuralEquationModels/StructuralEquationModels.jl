@@ -494,3 +494,12 @@ end # SemObservedCovariance
         )
     end # meanstructure
 end # SemObservedMissing
+@testset "Non-numeric observed variable" begin
+    bad_data = Any[
+        1.0 "a";
+        2.0 "b";
+        3.0 "c"
+    ]
+
+    @test_throws ArgumentError SemObservedData(data = bad_data)
+end
