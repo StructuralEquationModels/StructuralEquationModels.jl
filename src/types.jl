@@ -16,7 +16,7 @@ MeanStruct(::Type{T}) where {T} =
 
 MeanStruct(semobj) = MeanStruct(typeof(semobj))
 
-"Hessian Evaluation trait for `SemImplied` and `SemLossFunction` subtypes"
+"Hessian Evaluation trait for `SemImplied` and `AbstractLoss` subtypes"
 abstract type HessianEval end
 struct ApproxHessian <: HessianEval end
 struct ExactHessian <: HessianEval end
