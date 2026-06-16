@@ -3,7 +3,7 @@
 With *StructuralEquationModels.jl*, you can fit weighted sums of structural equation models.
 The most common use case for this are [Multigroup models](@ref).
 Another use case may be optimizing the sum of loss functions for some of which you do know the analytic gradient, but not for others.
-In this case, [`FiniteDiffWrapper`](@ref) can generate a wrapper around the specific `SemLoss` term. The wrapper loss term will
+In this case, [`FiniteDiffWrapper`](@ref StructuralEquationModels.FiniteDiffWrapper) can generate a wrapper around the specific `SemLoss` term. The wrapper loss term will
 only use the objective of the original term to calculate its gradient using finite difference approximation.
 
 ```julia
@@ -47,6 +47,8 @@ model2_weighted = Sem(:main => loss_1 => 0.5, :alt => loss_2 => 1.0)
 
 ```@docs
 Sem
-LossTerm
-FiniteDiffWrapper
+SemFiniteDiff
+AbstractSem
+StructuralEquationModels.LossTerm
+StructuralEquationModels.FiniteDiffWrapper
 ```
