@@ -106,11 +106,11 @@ For our example,
 ```@example meanstructure
 observed = SemObservedData(specification = partable, data = data, meanstructure = true)
 
-implied_ram = RAM(specification = partable, meanstructure = true)
+implied_ram = RAM(partable, meanstructure = true)
 
-ml = SemML(observed = observed, meanstructure = true)
+ml = SemML(observed, implied_ram)
 
-model = Sem(observed, implied_ram, SemLoss(ml))
+model = Sem(ml)
 
 fit(model)
 ```

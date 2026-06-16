@@ -11,7 +11,7 @@ The type hierarchy is implemented in `"src/types.jl"`.
 
 [`AbstractSem`](@ref) is the base abstract type for all SEM models. It has two concrete subtypes:
 - `Sem{L <: Tuple} <: AbstractSem`: the main SEM model type that implements a list of weighted
-loss terms (using [`LossTerm`](@ref) wrapper around `AbstractLoss`) and allows modeling both single
+loss terms (using [`LossTerm`](@ref StructuralEquationModels.LossTerm) wrapper around `AbstractLoss`) and allows modeling both single
 and multi-group SEMs and combining them with regularization terms.
 - `SemFiniteDiff{S <: AbstractSem} <: AbstractSem`: a wrapper around any `AbstractSem` that
   substitutes dedicated gradient/hessian evaluation with finite difference approximation.

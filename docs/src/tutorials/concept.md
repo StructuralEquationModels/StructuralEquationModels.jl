@@ -21,7 +21,7 @@ So everything that can be used as the 'observed' part has to be of type `SemObse
 
 Here is an overview on the available building blocks:
 
-|[`SemObserved`](@ref)            | [`SemImplied`](@ref)  | [`SemLossFunction`](@ref) | [`SemOptimizer`](@ref)     |
+|[`SemObserved`](@ref)            | [`SemImplied`](@ref)  | [`AbstractLoss`](@ref)    | [`SemOptimizer`](@ref)     |
 |---------------------------------|-----------------------|---------------------------|----------------------------|
 | [`SemObservedData`](@ref)       | [`RAM`](@ref)         | [`SemML`](@ref)           | [:Optim](@ref StructuralEquationModels.SemOptimizerOptim)                     |
 | [`SemObservedCovariance`](@ref) | [`RAMSymbolic`](@ref) | [`SemWLS`](@ref)          | [:NLopt](@ref SEMNLOptExt.SemOptimizerNLopt)                     |
@@ -42,7 +42,7 @@ There are two options at the moment: [`RAM`](@ref), which uses the reticular act
 
 ## The loss part aka `SemLoss`
 The loss part specifies the objective that is optimized to find the parameter estimates.
-If it contains more then one loss function (aka [`SemLossFunction`](@ref))), we find the parameters by minimizing the sum of loss functions (for example in maximum likelihood estimation + ridge regularization).
+If it contains more then one loss function (aka [`AbstractLoss`](@ref)), we find the parameters by minimizing the sum of loss functions (for example in maximum likelihood estimation + ridge regularization).
 Available loss functions are
 - [`SemML`](@ref): maximum likelihood estimation
 - [`SemWLS`](@ref): weighted least squares estimation
@@ -75,6 +75,7 @@ SemObservedMissing
 samples
 observed_vars
 SemSpecification
+em_mvn
 ```
 
 ## implied
@@ -89,8 +90,8 @@ ImpliedEmpty
 ## loss functions
 
 ```@docs
+AbstractLoss
 SemLoss
-SemLossFunction
 SemML
 SemFIML
 SemWLS

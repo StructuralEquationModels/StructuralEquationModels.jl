@@ -135,4 +135,5 @@ dof
 minus2ll
 p_value
 RMSEA
+CFI
 ```

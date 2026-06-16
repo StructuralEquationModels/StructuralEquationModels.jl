@@ -71,7 +71,7 @@ partable = ParameterTable(
 )
 
 parameter_indices = getindex.([param_indices(partable)], [:a, :b, :c])
-myridge = Ridge(0.01, parameter_indices)
+myridge = MyRidge(0.01, parameter_indices)
 
 model = SemFiniteDiff(
     specification = partable,
@@ -82,16 +82,16 @@ model = SemFiniteDiff(
 model_fit = fit(model)
 ```
 
-This is one way of specifying the model - we now have **one model** with **multiple loss functions**. Because we did not provide a gradient for `Ridge`, we have to specify a `SemFiniteDiff` model that computes numerical gradients with finite difference approximation.
+This is one way of specifying the model - we now have **one model** with **multiple loss functions**. Because we did not provide a gradient for `MyRidge`, we have to specify a `SemFiniteDiff` model that computes numerical gradients with finite difference approximation.
 
-Note that the last argument to the `objective!` method is the whole model. Therefore, we can access everything that is stored inside our model everytime we compute the objective value for our loss function. Since ridge regularization is a very easy case, we do not need to do this. But maximum likelihood estimation for example depends on both the observed and the model implied covariance matrix. See [Second example - maximum likelihood](@ref) for information on how to do that.
+Ridge regularization only depends on the parameters, so the `evaluate!` method above does not need anything else. Other loss functions, however, depend on the observed data and on what the model implies about it. Loss functions that compare the implied and the observed structure are subtypes of [`SemLoss`](@ref) and store their own `observed` and `implied` parts, which can be accessed inside `evaluate!` via `observed(loss)` and `implied(loss)`. See [Second example - maximum likelihood](@ref) for information on how to do that.
 
 ### Improve performance
 
 By far the biggest improvements in performance will result from specifying analytical gradients. We can do this for our example:
 
 ```@example loss
-function evaluate!(objective, gradient, hessian::Nothing, ridge::Ridge, model::AbstractSem, par)
+function evaluate!(objective, gradient, hessian::Nothing, ridge::MyRidge, par)
     # compute gradient
     if !isnothing(gradient)
         fill!(gradient, 0)
@@ -165,8 +165,8 @@ end
 If you want to provide a way to query information about loss functions of your type, you can provide functions for that:
 
 ```julia
-hyperparameter(ridge::Ridge) = ridge.α
-regularization_indices(ridge::Ridge) = ridge.I
+hyperparameter(ridge::MyRidge) = ridge.α
+regularization_indices(ridge::MyRidge) = ridge.I
 ```
 
 # Second example - maximum likelihood
@@ -178,7 +178,9 @@ To keep it simple, we only cover models without a meanstructure. The maximum lik
 F_{ML} = \log \det \Sigma_i + \mathrm{tr}\left(\Sigma_{i}^{-1} \Sigma_o \right)
 ```
 
-where ``\Sigma_i`` is the model implied covariance matrix and ``\Sigma_o`` is the observed covariance matrix. We can query the model implied covariance matrix from the `implied` par of our model, and the observed covariance matrix from the `observed` path of our model.
+where ``\Sigma_i`` is the model implied covariance matrix and ``\Sigma_o`` is the observed covariance matrix. We can query the model implied covariance matrix from the `implied` part of our loss term, and the observed covariance matrix from the `observed` part of our loss term.
+
+Since this loss function compares the implied and the observed structure, it is a subtype of [`SemLoss`](@ref) rather than a plain `AbstractLoss`. Every `SemLoss` stores its own `observed` and `implied` parts, which can be accessed inside `evaluate!` via `observed(loss)` and `implied(loss)`.
 
 To get information on what we can access from a certain `implied` or `observed` type, we can check it`s documentation an the pages [API - model parts](@ref) or via the help mode of the REPL:
 
@@ -190,20 +192,27 @@ help?> RAM
 help?> SemObservedData
 ```
 
-We see that the model implied covariance matrix can be assessed as `Σ(implied)` and the observed covariance matrix as `obs_cov(observed)`.
+We see that the model implied covariance matrix can be assessed as `implied(loss).Σ` and the observed covariance matrix as `obs_cov(observed(loss))`.
 
-With this information, we write can implement maximum likelihood optimization as
+A `SemLoss` subtype stores its `observed` and `implied` parts in the first two fields, and provides a constructor with the positional arguments `(observed, implied, refloss = nothing; kwargs...)` (see the [Convenient](@ref) section above). This constructor is used by the [`Sem`](@ref) constructor to build the loss term. With this information, we can implement maximum likelihood optimization as
 
 ```@example loss
-struct MaximumLikelihood <: SemLossFunction end
+struct MaximumLikelihood{O <: SemObserved, I <: SemImplied} <: SemLoss{O, I}
+    observed::O
+    implied::I
+end
+
+# constructor used by the `Sem` constructor to build the loss term
+MaximumLikelihood(observed::SemObserved, implied::SemImplied, refloss = nothing; kwargs...) =
+    MaximumLikelihood{typeof(observed), typeof(implied)}(observed, implied)
 
 using LinearAlgebra
-import StructuralEquationModels: obs_cov, evaluate!
+import StructuralEquationModels: evaluate!
 
-function evaluate!(objective::Number, gradient::Nothing, hessian::Nothing, semml::MaximumLikelihood, model::AbstractSem, par)
+function evaluate!(objective::Number, gradient::Nothing, hessian::Nothing, semml::MaximumLikelihood, par)
     # access the model implied and observed covariance matrices
-    Σᵢ = implied(model).Σ
-    Σₒ = obs_cov(observed(model))
+    Σᵢ = implied(semml).Σ
+    Σₒ = obs_cov(observed(semml))
     # compute the objective
     if isposdef(Symmetric(Σᵢ)) # is the model implied covariance matrix positive definite?
         return logdet(Σᵢ) + tr(inv(Σᵢ)*Σₒ)
@@ -221,7 +230,7 @@ Let's specify and fit a model:
 model_ml = SemFiniteDiff(
     specification = partable,
     data = example_data("political_democracy"),
-    loss = MaximumLikelihood()
+    loss = MaximumLikelihood
 )
 
 model_fit = fit(model_ml)

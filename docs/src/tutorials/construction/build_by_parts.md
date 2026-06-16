@@ -51,19 +51,17 @@ Now, we construct the different parts:
 observed = SemObservedData(specification = partable, data = data)
 
 # implied ------------------------------------------------------------------------------
-implied_ram = RAM(specification = partable)
+implied_ram = RAM(partable)
 
 # loss ---------------------------------------------------------------------------------
-ml = SemML(observed = observed)
-
-loss_ml = SemLoss(ml)
+ml = SemML(observed, implied_ram)
 
 # optimizer ----------------------------------------------------------------------------
 optimizer = SemOptimizer()
 
 # model --------------------------------------------------------------------------------
 
-model_ml = Sem(observed, implied_ram, loss_ml)
+model_ml = Sem(ml)
 
 fit(optimizer, model_ml)
 ```
