@@ -39,8 +39,8 @@ Estimate the covariance and the mean for data with missing values using
 the expectation maximization (EM) algorithm.
 
 # Arguments
-- `patterns`: the observed data with missing values, grouped by missingness pattern (see [`
-  SemObservedMissingPattern`](@ref))
+- `patterns`: the observed data with missing values, grouped by missingness pattern
+  (each pattern is a `SemObservedMissingPattern`)
 - `max_iter_em`: the maximum number of EM iterations
 - `rtol_em`: the relative tolerance for convergence of the EM algorithm
 - `max_nsamples_em`: the maximum number of samples to use for each pattern in each EM iteration,

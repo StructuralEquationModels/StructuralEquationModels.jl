@@ -24,6 +24,19 @@ replace_observed(
     kwargs...,
 ) = SemLossFiniteDiff(replace_observed(_unwrap(wrapper), data; kwargs...))
 
+"""
+    FiniteDiffWrapper(model::AbstractSem)
+    FiniteDiffWrapper(loss::AbstractLoss)
+
+Wrap a SEM `model` or an individual `loss` term so that its gradient and Hessian
+are approximated with finite differences of the objective (using the *FiniteDiff.jl*
+package) instead of dedicated analytic evaluation.
+
+Wrapping the whole `model` returns a [`SemFiniteDiff`](@ref). Wrapping a single loss
+term returns a loss wrapper that only uses the objective of the original term to
+compute its gradient/Hessian, which is useful in [Collections](@ref) where analytic
+gradients are available for some terms but not for others.
+"""
 FiniteDiffWrapper(model::AbstractSem) = SemFiniteDiff(model)
 FiniteDiffWrapper(loss::AbstractLoss) = LossFiniteDiff(loss)
 FiniteDiffWrapper(loss::SemLoss) = SemLossFiniteDiff(loss)

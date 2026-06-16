@@ -68,7 +68,7 @@ function gradient!(JΣ, Jμ, patloss::SemFIMLPattern, pat::SemObservedMissingPat
 end
 
 """
-    SemFIML{T, W} <: SemLossFunction
+    SemFIML{O, I, T, W} <: SemLoss{O, I}
 
 Full information maximum likelihood (FIML) estimation.
 Can handle observed data with missing values.
