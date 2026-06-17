@@ -78,7 +78,7 @@ Structural Equation Model- Loss Functions
 engine: Proximal
 
 Minimum:          21.22 
-No. evaluations:  487 
+No. evaluations:  521 
 Operator:         NormL1 
 </code></pre><p>and compare the solution to unregularizted estimates:</p><pre><code class="language-julia hljs">sem_fit = fit(model)
 
@@ -190,7 +190,7 @@ Structural Equation Model- Loss Functions
 engine: Proximal
 
 Minimum:          21.22 
-No. evaluations:  487 
+No. evaluations:  521 
 Operator:         NormL1 
 </code></pre><h2 id="Second-example-mixed-l1-and-l0-regularization"><a class="docs-heading-anchor" href="#Second-example-mixed-l1-and-l0-regularization">Second example - mixed l1 and l0 regularization</a><a id="Second-example-mixed-l1-and-l0-regularization-1"></a><a class="docs-heading-anchor-permalink" href="#Second-example-mixed-l1-and-l0-regularization" title="Permalink"></a></h2><p>You can choose to penalize different parameters with different types of regularization functions. Let&#39;s use the <em>lasso</em> (<em>l1</em>) again on the covariances, but additionally penalize the error variances of the observed items via <em>l0</em> regularization.</p><p>The <em>l0</em> penalty is defined as</p><p class="math-container">\[l_0 = \lambda \mathrm{nnz}(\theta)\]</p><p>Since we apply <em>l1</em> and <em>l0</em> to the disjoint sets of parameters, this regularization can be represented as a sum of <em>separable proximal operators</em> (i.e. no parameter is penalized twice) implemented by the <a href="https://juliafirstorder.github.io/ProximalOperators.jl/stable/calculus/#ProximalOperators.SlicedSeparableSum"><code>SlicedSeparableSum</code></a> operator:</p><pre><code class="language-julia hljs">l0_and_l1_reg = SlicedSeparableSum((NormL0(20.0), NormL1(0.02), NormL0(0.0)), ([cov_inds], [9:11], [vcat(1:8, 12:25)]))
 
@@ -208,7 +208,7 @@ Structural Equation Model- Loss Functions
 engine: Proximal
 
 Minimum:          21.66 
-No. evaluations:  464 
+No. evaluations:  457 
 Operator:         SlicedSeparableSum 
 </code></pre><p>Let&#39;s again compare the different results:</p><pre><code class="language-julia hljs">update_partable!(partable, :estimate_mixed, fit_mixed, solution(fit_mixed))
 
@@ -302,4 +302,4 @@ Covariances:
   y4     ↔   y8   0.35                             0.27             0.0        ⋯
   y6     ↔   y8   1.37                             1.21             0.0        ⋯
 
-                                                               3 columns omitted</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../../developer/sem/">« Custom model types</a><a class="docs-footer-nextpage" href="../../../performance/sorting/">Model sorting »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.17.0 on <span class="colophon-date" title="Tuesday 16 June 2026 11:18">Tuesday 16 June 2026</span>. Using Julia version 1.12.6.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+                                                               3 columns omitted</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../../developer/sem/">« Custom model types</a><a class="docs-footer-nextpage" href="../../../performance/sorting/">Model sorting »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.17.0 on <span class="colophon-date" title="Wednesday 17 June 2026 14:24">Wednesday 17 June 2026</span>. Using Julia version 1.12.6.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

@@ -70,17 +70,18 @@ engine: Optim
     Algorithm:     L-BFGS
 
  * Convergence measures
-    |x - x&#39;|               = 4.76e-05 ≰ 1.5e-08
-    |x - x&#39;|/|x&#39;|          = 6.39e-06 ≰ 0.0e+00
-    |f(x) - f(x&#39;)|         = 1.94e-09 ≰ 0.0e+00
-    |f(x) - f(x&#39;)|/|f(x&#39;)| = 9.15e-11 ≤ 1.0e-10
-    |g(x)|                 = 4.39e-05 ≰ 1.0e-08
+    |x - x&#39;|               = 5.85e-05 ≰ 1.5e-08
+    |x - x&#39;|/|x&#39;|          = 7.85e-06 ≰ 0.0e+00
+    |f(x) - f(x&#39;)|         = 1.96e-09 ≰ 0.0e+00
+    |f(x) - f(x&#39;)|/|f(x&#39;)| = 9.21e-11 ≤ 1.0e-10
+    |g(x)|                 = 3.27e-05 ≰ 1.0e-08
 
  * Work counters
-    Seconds run:   0  (vs limit Inf)
-    Iterations:    137
-    f(x) calls:    408
-    ∇f(x) calls:   408
+    Seconds run:   1  (vs limit Inf)
+    Iterations:    182
+    f(x) calls:    236
+    ∇f(x) calls:   236
+    ∇f(x)ᵀv calls: 0
 </code></pre><p>This is one way of specifying the model - we now have <strong>one model</strong> with <strong>multiple loss functions</strong>. Because we did not provide a gradient for <code>MyRidge</code>, we have to specify a <code>SemFiniteDiff</code> model that computes numerical gradients with finite difference approximation.</p><p>Ridge regularization only depends on the parameters, so the <code>evaluate!</code> method above does not need anything else. Other loss functions, however, depend on the observed data and on what the model implies about it. Loss functions that compare the implied and the observed structure are subtypes of <a href="../../tutorials/concept/#StructuralEquationModels.SemLoss"><code>SemLoss</code></a> and store their own <code>observed</code> and <code>implied</code> parts, which can be accessed inside <code>evaluate!</code> via <code>observed(loss)</code> and <code>implied(loss)</code>. See <a href="#Second-example-maximum-likelihood">Second example - maximum likelihood</a> for information on how to do that.</p><h3 id="Improve-performance"><a class="docs-heading-anchor" href="#Improve-performance">Improve performance</a><a id="Improve-performance-1"></a><a class="docs-heading-anchor-permalink" href="#Improve-performance" title="Permalink"></a></h3><p>By far the biggest improvements in performance will result from specifying analytical gradients. We can do this for our example:</p><pre><code class="language-julia hljs">function evaluate!(objective, gradient, hessian::Nothing, ridge::MyRidge, par)
     # compute gradient
     if !isnothing(gradient)
@@ -120,17 +121,18 @@ engine: Optim
     Algorithm:     L-BFGS
 
  * Convergence measures
-    |x - x&#39;|               = 2.82e-05 ≰ 1.5e-08
-    |x - x&#39;|/|x&#39;|          = 3.79e-06 ≰ 0.0e+00
-    |f(x) - f(x&#39;)|         = 1.05e-09 ≰ 0.0e+00
-    |f(x) - f(x&#39;)|/|f(x&#39;)| = 4.95e-11 ≤ 1.0e-10
-    |g(x)|                 = 2.08e-04 ≰ 1.0e-08
+    |x - x&#39;|               = 6.88e-05 ≰ 1.5e-08
+    |x - x&#39;|/|x&#39;|          = 9.23e-06 ≰ 0.0e+00
+    |f(x) - f(x&#39;)|         = 8.70e-10 ≰ 0.0e+00
+    |f(x) - f(x&#39;)|/|f(x&#39;)| = 4.10e-11 ≤ 1.0e-10
+    |g(x)|                 = 9.25e-05 ≰ 1.0e-08
 
  * Work counters
     Seconds run:   0  (vs limit Inf)
-    Iterations:    137
-    f(x) calls:    413
-    ∇f(x) calls:   413
+    Iterations:    165
+    f(x) calls:    213
+    ∇f(x) calls:   213
+    ∇f(x)ᵀv calls: 0
 </code></pre><p>The results are the same, but we can verify that the computational costs are way lower (for this, the julia package <code>BenchmarkTools</code> has to be installed):</p><pre><code class="language-julia hljs">using BenchmarkTools
 
 @benchmark fit(model)
@@ -196,15 +198,16 @@ engine: Optim
     Algorithm:     L-BFGS
 
  * Convergence measures
-    |x - x&#39;|               = 1.59e-05 ≰ 1.5e-08
-    |x - x&#39;|/|x&#39;|          = 2.13e-06 ≰ 0.0e+00
-    |f(x) - f(x&#39;)|         = 8.07e-10 ≰ 0.0e+00
-    |f(x) - f(x&#39;)|/|f(x&#39;)| = 3.80e-11 ≤ 1.0e-10
-    |g(x)|                 = 7.09e-05 ≰ 1.0e-08
+    |x - x&#39;|               = 5.81e-05 ≰ 1.5e-08
+    |x - x&#39;|/|x&#39;|          = 7.77e-06 ≰ 0.0e+00
+    |f(x) - f(x&#39;)|         = 1.26e-09 ≰ 0.0e+00
+    |f(x) - f(x&#39;)|/|f(x&#39;)| = 5.92e-11 ≤ 1.0e-10
+    |g(x)|                 = 7.45e-05 ≰ 1.0e-08
 
  * Work counters
     Seconds run:   0  (vs limit Inf)
-    Iterations:    144
-    f(x) calls:    431
-    ∇f(x) calls:   431
-</code></pre><p>If you want to differentiate your own loss functions via automatic differentiation, check out the <a href="https://github.com/StructuralEquationModels/AutoDiffSEM">AutoDiffSEM</a> package.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../extending/">« Extending the package</a><a class="docs-footer-nextpage" href="../implied/">Custom implied types »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.17.0 on <span class="colophon-date" title="Tuesday 16 June 2026 11:18">Tuesday 16 June 2026</span>. Using Julia version 1.12.6.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+    Iterations:    168
+    f(x) calls:    209
+    ∇f(x) calls:   209
+    ∇f(x)ᵀv calls: 0
+</code></pre><p>If you want to differentiate your own loss functions via automatic differentiation, check out the <a href="https://github.com/StructuralEquationModels/AutoDiffSEM">AutoDiffSEM</a> package.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../extending/">« Extending the package</a><a class="docs-footer-nextpage" href="../implied/">Custom implied types »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.17.0 on <span class="colophon-date" title="Wednesday 17 June 2026 14:24">Wednesday 17 June 2026</span>. Using Julia version 1.12.6.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

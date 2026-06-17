@@ -80,17 +80,18 @@ engine: Optim
     Algorithm:     L-BFGS
 
  * Convergence measures
-    |x - x&#39;|               = 9.44e-06 ≰ 1.5e-08
-    |x - x&#39;|/|x&#39;|          = 1.26e-06 ≰ 0.0e+00
-    |f(x) - f(x&#39;)|         = 5.69e-10 ≰ 0.0e+00
-    |f(x) - f(x&#39;)|/|f(x&#39;)| = 2.68e-11 ≤ 1.0e-10
-    |g(x)|                 = 1.03e-04 ≰ 1.0e-08
+    |x - x&#39;|               = 3.77e-05 ≰ 1.5e-08
+    |x - x&#39;|/|x&#39;|          = 5.05e-06 ≰ 0.0e+00
+    |f(x) - f(x&#39;)|         = 1.28e-09 ≰ 0.0e+00
+    |f(x) - f(x&#39;)|/|f(x&#39;)| = 6.04e-11 ≤ 1.0e-10
+    |g(x)|                 = 1.21e-04 ≰ 1.0e-08
 
  * Work counters
     Seconds run:   0  (vs limit Inf)
-    Iterations:    126
-    f(x) calls:    388
-    ∇f(x) calls:   388
+    Iterations:    174
+    f(x) calls:    226
+    ∇f(x) calls:   226
+    ∇f(x)ᵀv calls: 0
 </code></pre><p>and compute fit measures as</p><pre><code class="language-julia hljs">fit_measures(model_fit)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Dict{Symbol, Real} with 8 entries:
   :AIC     =&gt; 3168.66
   :BIC     =&gt; 3240.5
@@ -99,7 +100,7 @@ engine: Optim
   :dof     =&gt; 35.0
   :p_value =&gt; 0.350263
   :nparams =&gt; 31
-  :RMSEA   =&gt; 0.0315739</code></pre><p>We can also get a bit more information about the fitted model via the <code>details()</code> function:</p><pre><code class="language-julia hljs">details(model_fit)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">
+  :RMSEA   =&gt; 0.0315738</code></pre><p>We can also get a bit more information about the fitted model via the <code>details()</code> function:</p><pre><code class="language-julia hljs">details(model_fit)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">
 Fitted Structural Equation Model
 
 --------------------------------- Properties ---------------------------------
@@ -107,7 +108,7 @@ Fitted Structural Equation Model
 Optimization engine:         Optim
 Optimization algorithm:      L-BFGS
 Convergence:                 [:f_converged]
-No. iterations/evaluations:  126
+No. iterations/evaluations:  174
 
 Number of parameters:        31
 Number of data samples:      75
@@ -123,19 +124,19 @@ Structural Equation Model (Sem)
  -------- ---------- -------- ------- ------------- --------- ----------- ------
    ind60          →       x1   false           1.0                   1.0    co ⋯
    ind60          →       x2    true                             2.18038       ⋯
-   ind60          →       x3    true                             1.81852       ⋯
+   ind60          →       x3    true                              1.8185       ⋯
    dem60          →       y1   false           1.0                   1.0    co ⋯
-   dem60          →       y2    true                             1.25681       ⋯
+   dem60          →       y2    true                             1.25675       ⋯
    dem60          →       y3    true                             1.05773       ⋯
-   dem60          →       y4    true                             1.26486       ⋯
+   dem60          →       y4    true                             1.26478       ⋯
    dem65          →       y5   false           1.0                   1.0    co ⋯
-   dem65          →       y6    true                             1.18572       ⋯
-   dem65          →       y7    true                             1.27951       ⋯
-   dem65          →       y8    true                             1.26596       ⋯
-   ind60          →    dem60    true                             1.48311       ⋯
-   dem60          →    dem65    true                            0.837365     θ ⋯
-   ind60          →    dem65    true                            0.572316     θ ⋯
-      x1          ↔       x1    true                           0.0826524     θ ⋯
+   dem65          →       y6    true                             1.18569       ⋯
+   dem65          →       y7    true                             1.27952       ⋯
+   dem65          →       y8    true                             1.26595       ⋯
+   ind60          →    dem60    true                             1.48294       ⋯
+   dem60          →    dem65    true                            0.837327     θ ⋯
+   ind60          →    dem65    true                            0.572397     θ ⋯
+      x1          ↔       x1    true                           0.0826512     θ ⋯
        ⋮          ⋮        ⋮       ⋮             ⋮         ⋮           ⋮       ⋱
  -------- ---------- -------- ------- ------------- --------- ----------- ------
                                                     1 column and 19 rows omitted
@@ -224,4 +225,4 @@ Covariances:
   y2     ↔   y6   2.18                             1.0    θ_28
   y3     ↔   y7   0.81                             1.0    θ_29
   y8     ↔   y4   0.35                             1.0    θ_30
-  y8     ↔   y6   1.37                             1.0    θ_31</code></pre><p>Congratulations, you fitted and inspected your very first model!  We recommend continuing with <a href="../concept/#Our-Concept-of-a-Structural-Equation-Model">Our Concept of a Structural Equation Model</a>.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../">« A fast and flexible SEM framework</a><a class="docs-footer-nextpage" href="../concept/">Our Concept of a Structural Equation Model »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.17.0 on <span class="colophon-date" title="Tuesday 16 June 2026 11:18">Tuesday 16 June 2026</span>. Using Julia version 1.12.6.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+  y8     ↔   y6   1.37                             1.0    θ_31</code></pre><p>Congratulations, you fitted and inspected your very first model!  We recommend continuing with <a href="../concept/#Our-Concept-of-a-Structural-Equation-Model">Our Concept of a Structural Equation Model</a>.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../">« A fast and flexible SEM framework</a><a class="docs-footer-nextpage" href="../concept/">Our Concept of a Structural Equation Model »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.17.0 on <span class="colophon-date" title="Wednesday 17 June 2026 14:24">Wednesday 17 June 2026</span>. Using Julia version 1.12.6.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

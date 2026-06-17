@@ -63,17 +63,18 @@ engine: Optim
     Algorithm:     L-BFGS
 
  * Convergence measures
-    |x - x&#39;|               = 6.03e-05 ≰ 1.5e-08
-    |x - x&#39;|/|x&#39;|          = 8.07e-06 ≰ 0.0e+00
-    |f(x) - f(x&#39;)|         = 2.11e-09 ≰ 0.0e+00
-    |f(x) - f(x&#39;)|/|f(x&#39;)| = 9.94e-11 ≤ 1.0e-10
-    |g(x)|                 = 3.88e-05 ≰ 1.0e-08
+    |x - x&#39;|               = 3.31e-05 ≰ 1.5e-08
+    |x - x&#39;|/|x&#39;|          = 4.44e-06 ≰ 0.0e+00
+    |f(x) - f(x&#39;)|         = 9.17e-10 ≰ 0.0e+00
+    |f(x) - f(x&#39;)|/|f(x&#39;)| = 4.32e-11 ≤ 1.0e-10
+    |g(x)|                 = 6.42e-05 ≰ 1.0e-08
 
  * Work counters
     Seconds run:   0  (vs limit Inf)
-    Iterations:    124
-    f(x) calls:    381
-    ∇f(x) calls:   381
+    Iterations:    188
+    f(x) calls:    246
+    ∇f(x) calls:   246
+    ∇f(x)ᵀv calls: 0
 </code></pre><p>If we build the model by parts, we have to pass the <code>meanstructure = true</code> argument to every part that requires it (when in doubt, simply consult the documentation for the respective part).</p><p>For our example,</p><pre><code class="language-julia hljs">observed = SemObservedData(specification = partable, data = data, meanstructure = true)
 
 implied_ram = RAM(partable, meanstructure = true)
@@ -104,15 +105,16 @@ engine: Optim
     Algorithm:     L-BFGS
 
  * Convergence measures
-    |x - x&#39;|               = 6.03e-05 ≰ 1.5e-08
-    |x - x&#39;|/|x&#39;|          = 8.07e-06 ≰ 0.0e+00
-    |f(x) - f(x&#39;)|         = 2.11e-09 ≰ 0.0e+00
-    |f(x) - f(x&#39;)|/|f(x&#39;)| = 9.94e-11 ≤ 1.0e-10
-    |g(x)|                 = 3.88e-05 ≰ 1.0e-08
+    |x - x&#39;|               = 3.31e-05 ≰ 1.5e-08
+    |x - x&#39;|/|x&#39;|          = 4.44e-06 ≰ 0.0e+00
+    |f(x) - f(x&#39;)|         = 9.17e-10 ≰ 0.0e+00
+    |f(x) - f(x&#39;)|/|f(x&#39;)| = 4.32e-11 ≤ 1.0e-10
+    |g(x)|                 = 6.42e-05 ≰ 1.0e-08
 
  * Work counters
     Seconds run:   0  (vs limit Inf)
-    Iterations:    124
-    f(x) calls:    381
-    ∇f(x) calls:   381
-</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../inspection/inspection/">« Model Inspection</a><a class="docs-footer-nextpage" href="../collection/collection/">Collections »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.17.0 on <span class="colophon-date" title="Tuesday 16 June 2026 11:18">Tuesday 16 June 2026</span>. Using Julia version 1.12.6.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+    Iterations:    188
+    f(x) calls:    246
+    ∇f(x) calls:   246
+    ∇f(x)ᵀv calls: 0
+</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../inspection/inspection/">« Model Inspection</a><a class="docs-footer-nextpage" href="../collection/collection/">Collections »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.17.0 on <span class="colophon-date" title="Wednesday 17 June 2026 14:24">Wednesday 17 June 2026</span>. Using Julia version 1.12.6.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
