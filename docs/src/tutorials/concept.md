@@ -13,7 +13,7 @@ For example, to build a model for maximum likelihood estimation with the NLopt o
 
 As you can see, a model can have as many loss functions as you want it to have. We always optimize over their (weighted) sum. So to build a model for ridge regularized full information maximum likelihood estimation, you would choose two loss functions, `SemFIML` and `SemRidge`.
 
-In julia, everything has a type. To make more precise which objects can be used as the different building blocks, we require them to have a certain type:
+To specify which objects can be used as the different building blocks, we require them to have a certain type:
 
 ![SEM concept typed](../assets/concept_typed.svg)
 
