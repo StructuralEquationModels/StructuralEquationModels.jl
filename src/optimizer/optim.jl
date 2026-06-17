@@ -113,7 +113,7 @@ function fit(
         )
         start_params = clamp.(start_params, lbounds, ubounds)
         result = Optim.optimize(
-            Optim.only_fgh!((F, G, H, par) -> evaluate!(F, G, H, model, par)),
+            NLSolversBase.only_fgh!((F, G, H, par) -> evaluate!(F, G, H, model, par)),
             lbounds,
             ubounds,
             start_params,
@@ -122,7 +122,7 @@ function fit(
         )
     else
         result = Optim.optimize(
-            Optim.only_fgh!((F, G, H, par) -> evaluate!(F, G, H, model, par)),
+            NLSolversBase.only_fgh!((F, G, H, par) -> evaluate!(F, G, H, model, par)),
             start_params,
             optim.algorithm,
             optim.options,
