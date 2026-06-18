@@ -136,27 +136,33 @@ Additionally, you may provide analytic hessians by writing a respective method f
 
 ## Convenient
 
-To be able to build the loss term, it needs a constructor.
-Every `SemLoss` subtype should provide a constructor with 3 positional arguments:
-  * `observed::SemObserved`: the observed part of the model
-  * `implied::SemImplied`: the implied part of the model
-  * `refloss::Union{MyLoss, Nothing} = nothing`: optional loss term of the same type
-    to use as a reference for any loss-specific configuration.
-
-Any additional loss configuration details should be passed as optional keyword arguments.
-If both `refloss` and the keyword arguments are provided, the keyword arguments take
-precedence. This constructor is used internally by the functions like [`replace_observed`](@ref)
-to rebuild the loss term with new observed data while preserving the implied state.
+In the minimal example above we built `myridge` ourselves and passed the ready-made instance to
+the model via `loss = (SemML, myridge)`. Alternatively, you can let the outer [`Sem`](@ref)
+constructor build the loss term for you: pass the loss *type* instead of an instance and provide
+a keyword constructor.
 
 ```julia
-function MyLoss(
-    observed::SemObserved, implied::SemImplied, refloss::Union{MyLoss, Nothing} = nothing;
-    kwarg1 = ..., kwarg2 = ..., kwargs...
-)
-    ...
-    return MyLoss(...) # internal MyLoss constructor
-end
+MyRidge(; α_ridge, which_ridge, kwargs...) = MyRidge(α_ridge, which_ridge)
 ```
+
+Any keyword arguments passed to `Sem(...)` are forwarded to this constructor (along with some that
+the model supplies automatically, such as `nparams`), so the loss can be configured directly from
+the model call:
+
+```julia
+model = SemFiniteDiff(
+    specification = partable,
+    data = example_data("political_democracy"),
+    loss = (SemML, MyRidge),
+    α_ridge = 0.01,
+    which_ridge = parameter_indices,
+)
+```
+
+Note that, being a plain `AbstractLoss`, `MyRidge` neither stores nor receives an `observed` or
+`implied` part — it depends only on the parameters. 
+SEM-specific loss functions are constructed differently; see
+[Second example - maximum likelihood](@ref).
 
 ## Additional functionality
 
@@ -194,7 +200,13 @@ help?> SemObservedData
 
 We see that the model implied covariance matrix can be assessed as `implied(loss).Σ` and the observed covariance matrix as `obs_cov(observed(loss))`.
 
-A `SemLoss` subtype stores its `observed` and `implied` parts in the first two fields, and provides a constructor with the positional arguments `(observed, implied, refloss = nothing; kwargs...)` (see the [Convenient](@ref) section above). This constructor is used by the [`Sem`](@ref) constructor to build the loss term. With this information, we can implement maximum likelihood optimization as
+Unlike a plain `AbstractLoss`, a `SemLoss` subtype stores its `observed` and `implied` parts (in its first two fields), and the [`Sem`](@ref) constructor builds it for you. To support this, every `SemLoss` subtype should provide a constructor with three positional arguments:
+  * `observed::SemObserved`: the observed part of the loss term
+  * `implied::SemImplied`: the implied part of the loss term
+  * `refloss::Union{MaximumLikelihood, Nothing} = nothing`: an optional existing loss term of the
+    same type, used as a reference for any loss-specific configuration.
+
+Any additional configuration is passed as optional keyword arguments; if both `refloss` and keyword arguments are given, the keyword arguments take precedence. This constructor is also used by [`replace_observed`](@ref) to rebuild the loss term with new observed data while sharing the implied state. With this, we can implement maximum likelihood optimization as
 
 ```@example loss
 struct MaximumLikelihood{O <: SemObserved, I <: SemImplied} <: SemLoss{O, I}

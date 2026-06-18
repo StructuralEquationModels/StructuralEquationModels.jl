@@ -12,13 +12,12 @@ model = Sem(
 
 Structural Equation Model
 - Loss Functions
-   SemML
-- Fields
-   observed:  SemObservedData
-   implied:   RAM
+  > SemML
+    - observed:    SemObservedData
+    - implied:     RAM
 ```
 
-The output of this call tells you exactly what model you just constructed (i.e. what the loss functions, observed, implied and optimizer parts are).
+The output of this call tells you exactly what model you just constructed (i.e. what the loss functions and their observed and implied parts are).
 
 As you can see, by default, we use maximum likelihood estimation abd the RAM implied type.
 To choose something different, you can provide it as a keyword argument:
@@ -40,10 +39,11 @@ model = Sem(
     specification = partable,
     data = data,
     implied = RAMSymbolic,
-    loss = SemWLS,
-    optimizer = SemOptimizer
+    loss = SemWLS
 )
 ```
+
+The optimizer is not part of the model itself; it is chosen when fitting (see [Model fitting](@ref)).
 
 In the section on [Our Concept of a Structural Equation Model](@ref), we go over the different options you have for each part of the model, and in [API - model parts](@ref) we explain each option in detail.
 Let's make another example: to use full information maximum likelihood information (FIML), we use

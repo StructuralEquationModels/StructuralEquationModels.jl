@@ -1,23 +1,44 @@
 # Our Concept of a Structural Equation Model
 
-In our package, every Structural Equation Model (`Sem`) consists of three parts (four, if you count the optimizer):
+In our package, a structural equation model (a [`Sem`](@ref)) is built from one or more **loss terms**.
+Fitting the model means finding the parameters that minimize the (weighted) sum of all of its loss terms.
+This simple idea is remarkably general: within the same structure it covers a single SEM fit by maximum
+likelihood, a regularized SEM (e.g. maximum likelihood plus a ridge penalty), and multigroup models
+(one SEM term per group).
 
 ![SEM concept](../assets/concept.svg)
 
-Those parts are interchangable building blocks (like 'Legos'), i.e. there are different pieces available you can choose as the `observed` slot of the model, and stick them together with other pieces that can serve as the `implied` part.
+A loss term is anything of type [`AbstractLoss`](@ref) — a function that maps the model parameters to a
+number that should be minimized. There are two kinds of loss terms:
 
-The `observed` part is for observed data, the `implied` part is what the model implies about your data (e.g. the model implied covariance matrix), and the loss part compares the observed data and implied properties (e.g. weighted least squares difference between the observed and implied covariance matrix).
-The optimizer part is not part of the model itself, but it is needed to fit the model as it connects to the optimization backend (e.g. the type of optimization algorithm used).
+- **SEM loss functions** ([`SemLoss`](@ref)), such as [`SemML`](@ref), [`SemWLS`](@ref) and [`SemFIML`](@ref),
+  measure how well the model explains the data. To do so, each `SemLoss` *bundles its own observed part
+  (the data) and implied part (what the model implies about the data)*. They are the heart of a SEM.
+- **Other loss functions**, such as the regularization terms [`SemRidge`](@ref) and [`SemConstant`](@ref),
+  depend only on the parameters and therefore need neither an observed nor an implied part.
 
-For example, to build a model for maximum likelihood estimation with the NLopt optimization suite as a backend you would choose `SemML` as a loss function and `SemOptimizerNLopt` as the optimizer.
+Because a model is just a (weighted) sum of loss terms, you can freely combine them.
+For example, ridge-regularized full information maximum likelihood estimation is a model with two loss terms,
+a [`SemFIML`](@ref) term and a [`SemRidge`](@ref) term. A two-group model is a model with two [`SemML`](@ref)
+terms, one per group, weighted by the respective sample sizes.
 
-As you can see, a model can have as many loss functions as you want it to have. We always optimize over their (weighted) sum. So to build a model for ridge regularized full information maximum likelihood estimation, you would choose two loss functions, `SemFIML` and `SemRidge`.
+All models are subtypes of [`AbstractSem`](@ref). The default [`Sem`](@ref) computes the weighted sum of its
+loss terms together with their (analytic) gradients. [`SemFiniteDiff`](@ref) is an alternative that
+approximates the gradient with finite differences, which is useful for loss functions that do not provide an
+analytic gradient.
 
-To specify which objects can be used as the different building blocks, we require them to have a certain type:
+## The parts of a SEM loss
+
+Each SEM loss function ([`SemLoss`](@ref)) is itself composed of interchangeable building blocks (like 'Legos'):
+an *observed* part and an *implied* part. To make precise which objects can play each role, we require them to
+have a certain type:
 
 ![SEM concept typed](../assets/concept_typed.svg)
 
-So everything that can be used as the 'observed' part has to be of type `SemObserved`.
+So everything that can serve as the *observed* part has to be of type [`SemObserved`](@ref), everything that can
+serve as the *implied* part has to be of type [`SemImplied`](@ref), and the loss function that combines them is a
+[`SemLoss`](@ref). To fit the model, you additionally choose a [`SemOptimizer`](@ref); it connects to the
+numerical optimization backend but is not itself part of the model.
 
 Here is an overview on the available building blocks:
 
@@ -29,28 +50,44 @@ Here is an overview on the available building blocks:
 |                                 |                       | [`SemRidge`](@ref)        |                            |
 |                                 |                       | [`SemConstant`](@ref)     |                            |
 
-The rest of this page explains the building blocks for each part. First, we explain every part and give an overview on the different options that are available. After that, the [API - model parts](@ref) section serves as a reference for detailed explanations about the different options.
-(How to stick them together to a final model is explained in the section on [Model Construction](@ref).)
+The rest of this page explains each building block and the available options. After that, the
+[API - model parts](@ref) section serves as a reference for detailed explanations.
+(How to stick the building blocks together into a final model is explained in the section on
+[Model Construction](@ref).)
 
 ## The observed part aka [`SemObserved`](@ref)
 
-The *observed* part contains all necessary information about the observed data. Currently, we have three options: [`SemObservedData`](@ref) for fully observed datasets, [`SemObservedCovariance`](@ref) for observed covariances (and means) and [`SemObservedMissing`](@ref) for data that contains missing values.
+The *observed* part contains all necessary information about the observed data, and pre-computes the statistics
+a loss function needs from it — for example the observed covariance matrix, or the different patterns of
+missingness used for full information maximum likelihood (FIML) estimation.
+Currently, we have three options: [`SemObservedData`](@ref) for fully observed datasets,
+[`SemObservedCovariance`](@ref) for observed covariances (and means) and [`SemObservedMissing`](@ref) for data
+that contains missing values.
 
 ## The implied part aka [`SemImplied`](@ref)
-The *implied* part is what your model implies about the data, for example, the model-implied covariance matrix.
-There are two options at the moment: [`RAM`](@ref), which uses the reticular action model to compute the model implied covariance matrix, and [`RAMSymbolic`](@ref) which does the same but symbolically pre-computes part of the model, which increases subsequent performance in model fitting (see [Symbolic precomputation](@ref)). There is also a third option, [`ImpliedEmpty`](@ref) that can serve as a 'placeholder' for models that do not need an implied part.
+The *implied* part defines how the model-implied statistics (for example, the model-implied covariance matrix
+and mean vector) are computed from the parameters.
+There are two options at the moment: [`RAM`](@ref), which uses the reticular action model to compute the model
+implied covariance matrix, and [`RAMSymbolic`](@ref) which does the same but symbolically pre-computes part of
+the model, which increases subsequent performance in model fitting (see [Symbolic precomputation](@ref)). There
+is also a third option, [`ImpliedEmpty`](@ref) that can serve as a 'placeholder' for loss terms that do not need
+an implied part.
 
-## The loss part aka `SemLoss`
-The loss part specifies the objective that is optimized to find the parameter estimates.
-If it contains more then one loss function (aka [`AbstractLoss`](@ref)), we find the parameters by minimizing the sum of loss functions (for example in maximum likelihood estimation + ridge regularization).
+## The loss functions aka [`AbstractLoss`](@ref)
+The loss terms specify the objective that is minimized to find the parameter estimates; a model minimizes the
+(weighted) sum of all its loss terms.
+SEM loss functions ([`SemLoss`](@ref)) compare what the model implies to the observed data, while regularization
+terms depend only on the parameters.
 Available loss functions are
 - [`SemML`](@ref): maximum likelihood estimation
 - [`SemWLS`](@ref): weighted least squares estimation
 - [`SemFIML`](@ref): full-information maximum likelihood estimation
 - [`SemRidge`](@ref): ridge regularization
+- [`SemConstant`](@ref): adds a constant to the objective
 
-## The optimizer part aka `SemOptimizer`
-The optimizer part of a model connects to the numerical optimization backend used to fit the model.
+## The optimizer aka [`SemOptimizer`](@ref)
+The optimizer connects to the numerical optimization backend used to fit the model. It is not part of the model
+itself, but it is chosen when fitting (see [Model fitting](@ref)).
 It can be used to control options like the optimization algorithm, linesearch, stopping criteria, etc.
 There are currently three available engines (i.e., backends used to carry out the numerical optimization), [`:Optim`](@ref StructuralEquationModels.SemOptimizerOptim) connecting to the [Optim.jl](https://github.com/JuliaNLSolvers/Optim.jl) backend, [`:NLopt`](@ref SEMNLOptExt.SemOptimizerNLopt) connecting to the [NLopt.jl](https://github.com/JuliaOpt/NLopt.jl) backend and [`:Proximal`](@ref SEMProximalOptExt.SemOptimizerProximal) connecting to [ProximalAlgorithms.jl](https://github.com/JuliaFirstOrder/ProximalAlgorithms.jl).
 For more information about the available options see also the tutorials about [Using Optim.jl](@ref) and [Using NLopt.jl](@ref), as well as [Constrained optimization](@ref) and [Regularization](@ref) .
