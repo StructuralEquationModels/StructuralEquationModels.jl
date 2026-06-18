@@ -67,7 +67,9 @@ end
 multigroup_correction_scale(::Type{<:SemLoss}) = nothing
 
 multigroup_correction_scale(::Type{<:SemFIML}) = 0
-multigroup_correction_scale(::Type{<:SemML}) = 0
+# ML (like WLS) uses the Wishart convention: per-group (Nᵍ-1) weighting and N-G in the
+# χ²/RMSEA.
+multigroup_correction_scale(::Type{<:SemML}) = -1
 multigroup_correction_scale(::Type{<:SemWLS}) = -1
 
 multigroup_correction_scale(loss::SemLoss) = multigroup_correction_scale(typeof(loss))
@@ -104,9 +106,9 @@ end
 function Sem(
     loss_terms...;
     params::Union{Vector{Symbol}, Nothing} = nothing,
-    default_sem_weights = :nsamples,
+    default_sem_weights = :nsamples_corrected,
 )
-    default_sem_weights ∈ [:nsamples, :uniform, :one] ||
+    default_sem_weights ∈ [:nsamples_corrected, :nsamples, :uniform, :one] ||
         throw(ArgumentError("Unsupported default_sem_weights=:$default_sem_weights"))
     # assemble a list of weighted losses and check params equality
     terms = Vector{LossTerm}()
@@ -169,7 +171,16 @@ function Sem(
 
     if !has_sem_weights && nsems > 1
         # set the weights of SEMs in the ensemble
-        if default_sem_weights == :nsamples
+        if default_sem_weights == :nsamples_corrected
+            # weight SEM terms by the number of samples, applying a loss-type-specific
+            # correction (see multigroup_correction_scale); consistent with the
+            # multigroup RMSEA sample-size correction
+            sem_idxs = [i for (i, term) in enumerate(terms) if issemloss(term)]
+            sem_weights = multigroup_weights(terms[sem_idxs]...)
+            for (k, i) in enumerate(sem_idxs)
+                terms[i] = LossTerm(loss(terms[i]), id(terms[i]), sem_weights[k])
+            end
+        elseif default_sem_weights == :nsamples
             # weight SEM by the number of samples
             nsamples_total = sum(nsamples(term) for term in terms if issemloss(term))
             for (i, term) in enumerate(terms)
