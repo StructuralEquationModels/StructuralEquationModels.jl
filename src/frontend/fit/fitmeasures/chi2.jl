@@ -21,7 +21,9 @@ function χ²(fit::SemFit, model::AbstractSem)
 end
 
 # bollen, p. 115, only correct for GLS weight matrix
-χ²(::Type{<:SemWLS}, fit::SemFit, model::AbstractSem) = (nsamples(model) - 1) * fit.minimum
+# N - G (= Σ(Nᵍ-1)) multiplier; reduces to N-1 for a single group
+χ²(::Type{<:SemWLS}, fit::SemFit, model::AbstractSem) =
+    (nsamples(model) - nsem_terms(model)) * fit.minimum
 
 function χ²(::Type{<:SemML}, fit::SemFit, model::AbstractSem)
     G = sum(loss_terms(model)) do term
@@ -32,7 +34,8 @@ function χ²(::Type{<:SemML}, fit::SemFit, model::AbstractSem)
             return 0.0
         end
     end
-    return (nsamples(model) - 1) * (fit.minimum - G)
+    # N - G (= Σ(Nᵍ-1)) multiplier; reduces to N-1 for a single group
+    return (nsamples(model) - nsem_terms(model)) * (fit.minimum - G)
 end
 
 function χ²(::Type{<:SemFIML}, fit::SemFit, model::AbstractSem)
