@@ -13,10 +13,9 @@ Fitted Structural Equation Model
 
 Structural Equation Model
 - Loss Functions
-   SemML
-- Fields
-   observed:  SemObservedData
-   implied:   RAM
+  > SemML
+    - observed:    SemObservedData
+    - implied:     RAM
 
 ------------- Optimization result -------------
 

@@ -76,7 +76,7 @@ parind[:y3y7] # 29
 ```
 
 The bound constraint is easy to specify: just give a vector of upper or lower bounds for each parameter.
-In our example, only the parameter labeled `:λₗ` has an upper bound, and the number of total parameters is `n_par(model) = 31`, so
+In our example, only the parameter labeled `:λₗ` has an upper bound, and the number of total parameters is `nparams(model) = 31`, so
 
 ```@example constraints
 upper_bounds = fill(Inf, 31)

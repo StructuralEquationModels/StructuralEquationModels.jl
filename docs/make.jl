@@ -52,11 +52,6 @@ makedocs(
             "Starting values" => "performance/starting_values.md",
             "Parametric Types" => "performance/parametric.md",
         ],
-        "Internals and design" => [
-            "Internals and design" => "internals/internals.md",
-            "files" => "internals/files.md",
-            "types" => "internals/types.md",
-        ],
     ],
     format = Documenter.HTML(
         prettyurls = get(ENV, "CI", nothing) == "true",

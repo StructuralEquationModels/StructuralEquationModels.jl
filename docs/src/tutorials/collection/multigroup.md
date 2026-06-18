@@ -52,7 +52,7 @@ graph = @StenoGraph begin
 end
 ```
 
-You can pass multiple arguments to `fix()` and `label()` for each group. Parameters with the same label (within and across groups) are constrained to be equal. To fix a parameter in one group, but estimate it freely in the other, you may write `fix(NaN, 4.3)`.
+You can pass multiple arguments to `fixed()` and `label()` for each group. Parameters with the same label (within and across groups) are constrained to be equal. To fix a parameter in one group, but estimate it freely in the other, you may write `fixed(NaN, 4.3)`.
 
 You can then use the resulting graph to specify an `EnsembleParameterTable`
 
@@ -72,8 +72,7 @@ The parameter table can be used to create a multigroup `Sem` model:
 model_ml_multigroup = Sem(
     specification = partable,
     data = dat,
-    semterm_column = :school,
-    groups = groups)
+    semterm_column = :school)
 ```
 
 !!! note "A different way to specify"

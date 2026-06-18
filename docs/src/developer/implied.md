@@ -43,8 +43,7 @@ We implement an `ImpliedEmpty` type in our package that does nothing but serving
 ### Types
 ############################################################################################
 """
-Empty placeholder for models that don't need an implied part.
-(For example, models that only regularize parameters.)
+Empty placeholder for loss functions that don't need an implied part.
 
 # Constructor
 
@@ -55,7 +54,7 @@ Empty placeholder for models that don't need an implied part.
 
 # Examples
 A multigroup model with ridge regularization could be specified as a `Sem` with one
-model per group and an additional model with `ImpliedEmpty` and `SemRidge` for the regularization part.
+SEM term (`SemLoss`) per group and an additional `SemRidge` regularization term.
 
 # Extended help
 
@@ -73,13 +72,13 @@ end
 ### Constructors
 ############################################################################################
 
-function ImpliedEmpty(
-    spec::SemSpecification;
-    hessianeval::HessianApprox = ExactHessian(),
+function ImpliedEmpty(;
+    specification,
+    meanstruct = NoMeanStruct(),
+    hessianeval = ExactHessian(),
     kwargs...,
 )
-    ram_matrices = convert(RAMMatrices, spec)
-    return ImpliedEmpty(hessianeval, MeanStruct(ram_matrices), ram_matrices)
+    return ImpliedEmpty(hessianeval, meanstruct, convert(RAMMatrices, specification))
 end
 
 ############################################################################################

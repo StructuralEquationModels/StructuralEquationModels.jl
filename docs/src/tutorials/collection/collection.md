@@ -26,16 +26,22 @@ It is also possible to use finite difference for the entire `Sem` model:
 model_findiff2 = FiniteDiffWrapper(model)
 ```
 
-The weighting scheme of the SEM loss terms is specified using `default_set_weights` argument of the `Sem` constructor.
-The `:nsamples` scheme (the default) weights SEM terms by ``N_{term}/N_{total}``, i.e. each term is weighted by the number
-of observations in its data (which matches the formula for multigroup models).
-The weights for the loss terms (both SEM and regularization) can be explicitly specified the pair syntax `loss => weight`:
+The weighting scheme of the SEM loss terms is specified using the `default_sem_weights` argument of the `Sem` constructor.
+The available schemes are:
+- `:nsamples_corrected` (the default): like `:nsamples`, but applies a loss-type-specific correction
+  to the sample counts (e.g. ``N_{term} - 1`` for maximum likelihood and weighted least squares). For FIML the correction is zero, so it coincides with `:nsamples`,
+- `:nsamples`: weights each SEM term by ``N_{term}/N_{total}``, i.e. by the (uncorrected) number of
+  observations in its data,
+- `:uniform`: weights each of the ``k`` SEM terms by ``1/k``,
+- `:one`: leaves all SEM terms unweighted.
+
+The weights for the loss terms (both SEM and regularization) can also be explicitly specified using the pair syntax `loss => weight`:
 
 ```julia
 model_weighted = Sem(loss_1 => 0.5, loss_2 => 1.0)
 ```
 
-`Sem` support assigning unique identifier to each loss term, which is essential for complex multi-term model.
+`Sem` supports assigning a unique identifier to each loss term, which is useful for complex multi-term models.
 The syntax is `id => loss`, or `id => loss => weight`:
 
 ```julia
