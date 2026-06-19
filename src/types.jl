@@ -41,7 +41,7 @@ abstract type SemOptimizerResult{O <: SemOptimizer} end
 
 Supertype of all objects that can serve as the observed field of a SEM.
 Pre-processes data and computes sufficient statistics for example.
-If you have a special kind of data, e.g. ordinal data, you should implement a subtype of SemObserved.
+If you have a special kind of data, you should implement a subtype of SemObserved.
 """
 abstract type SemObserved end
 
