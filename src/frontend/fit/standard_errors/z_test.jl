@@ -13,7 +13,7 @@ Tests the null hypothesis that each parameter is zero using the test statistic
 - `fitted`: a fitted SEM.
 - `se`: standard errors for each parameter, e.g. from [`se_hessian`](@ref) or
   [`se_bootstrap`](@ref).
-- `partable`: a [`ParameterTable`](@ref) to write p-values to.
+- `partable`: a `ParameterTable` to write p-values to.
 - `name`: column name for the p-values in `partable`. Defaults to `:p_value`.
 
 # Returns

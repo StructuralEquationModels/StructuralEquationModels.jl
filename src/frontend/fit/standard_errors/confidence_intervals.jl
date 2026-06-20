@@ -10,7 +10,7 @@ Return normal-theory confidence intervals for all model parameters.
 - `fitted`: a fitted SEM.
 - `se`: standard errors for each parameter, e.g. from [`se_hessian`](@ref) or
   [`se_bootstrap`](@ref).
-- `partable`: a [`ParameterTable`](@ref) to write confidence intervals to.
+- `partable`: a `ParameterTable` to write confidence intervals to.
 - `α`: significance level. Defaults to `0.05` (95% intervals).
 - `name_lower`: column name for the lower bound in `partable`. Defaults to `:ci_lower`.
 - `name_upper`: column name for the upper bound in `partable`. Defaults to `:ci_upper`.
