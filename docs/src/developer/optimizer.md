@@ -32,7 +32,7 @@ end
 options(optimizer::SemOptimizerMyopt) = optimizer.options
 ```
 
-Note that `SemOptimizerMyopt` is defined as a subtype of [`SemOptimizer{:Myopt}`](@ref SEM.SemOptimizer)`,
+Note that `SemOptimizerMyopt` is defined as a subtype of [`SemOptimizer{:Myopt}`](@ref SEM.SemOptimizer),
 and `SEM.sem_optimizer_subtype(::Val{:Myopt})` returns `SemOptimizerMyopt`.
 This instructs *SEM.jl* to use `SemOptimizerMyopt` when `:Myopt` is specified as the engine for
 model fitting: `fit(..., engine = :Myopt)`.
