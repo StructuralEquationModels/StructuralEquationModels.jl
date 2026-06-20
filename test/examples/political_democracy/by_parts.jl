@@ -5,7 +5,7 @@
 semoptimizer = SemOptimizer(engine = opt_engine)
 
 model_ml = Sem(specification = spec, data = dat)
-@test SEM.params(model_ml) == SEM.params(spec)
+@test SEM.param_labels(model_ml) == SEM.param_labels(spec)
 
 model_ls_sym =
     Sem(specification = spec, data = dat, implied = RAMSymbolic, vech = true, loss = SemWLS)

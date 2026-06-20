@@ -58,15 +58,10 @@ function χ²_varonly(loss::SemWLS)
     return N⁻*0.5*tr((I - Σ₀*S⁻¹)^2)
 end
 
-# For FIML, an explicit bl model has to be passed
-function χ²_varonly(loss::SemFIML)
-    """
-    Computing the CFI with FIML requires explicitely passing a fitted baseline model as
-        CFI(fit::SemFit, fit_baseline::SemFit)
-    """ |>
-    ArgumentError |>
-    throw
-end
+# For FIML, the variance-only baseline cannot be derived automatically, so the CFI is
+# `missing` unless an explicit baseline model is passed via `CFI(fit, fit_baseline)`.
+# Returning `missing` (instead of throwing) keeps `fit_measures()` usable for FIML models.
+χ²_varonly(loss::SemFIML) = missing
 
 function dof_varonly(model::AbstractSem)
     return sum(sem_terms(model)) do semterm
