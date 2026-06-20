@@ -5,7 +5,13 @@ on:
 jobs:
   code-style:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: write
+      issues: write
+      pull-requests: write
     steps:
       - uses: julia-actions/julia-format@v4
         with:
           version: '2'
+
