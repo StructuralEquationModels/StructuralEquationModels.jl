@@ -276,6 +276,17 @@ model_ml_sym = Sem(
     loss = SemFIML,
 )
 
+if !ismissing(spec_varonly)
+    model_varonly = Sem(
+        data = dat_missing,
+        observed = SemObservedMissing,
+        specification = spec_varonly,
+        loss = SemFIML,
+    )
+else
+    model_varonly = nothing
+end
+
 ############################################################################################
 ### test gradients
 ############################################################################################
@@ -310,9 +321,14 @@ end
 
 @testset "fitmeasures/se_fiml" begin
     solution_ml = fit(semoptimizer, model_ml)
+    solution_varonly =
+        !isnothing(model_varonly) ? fit(semoptimizer, model_varonly) : nothing
     test_fitmeasures(
-        fit_measures(solution_ml),
+        solution_ml,
         solution_lav[:fitmeasures_fiml];
+        fitted_baseline = solution_varonly,
+        fitmeasures = !isnothing(solution_varonly) ? SEM.DEFAULT_FIT_MEASURES :
+                      filter(!=(CFI), SEM.DEFAULT_FIT_MEASURES),
         atol = 1e-3,
     )
 
