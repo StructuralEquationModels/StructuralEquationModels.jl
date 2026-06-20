@@ -6,8 +6,8 @@ Subtype of `SemImplied` that implements the RAM notation with symbolic precomput
 
 # Constructor
 
-    RAMSymbolic(;
-        specification,
+    RAMSymbolic(
+        specification;
         vech = false,
         gradient = true,
         hessian = false,

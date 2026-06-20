@@ -6,7 +6,7 @@ Model implied covariance and means via RAM notation.
 
 # Constructor
 
-    RAM(; specification, gradient = true, kwargs...)
+    RAM(specification; gradient = true, kwargs...)
 
 # Arguments
 - `specification`: either a `RAMMatrices` or `ParameterTable` object

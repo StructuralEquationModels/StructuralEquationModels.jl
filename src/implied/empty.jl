@@ -7,7 +7,7 @@ Empty placeholder for models that don't need an implied part.
 
 # Constructor
 
-    ImpliedEmpty(;specification, kwargs...)
+    ImpliedEmpty(specification; kwargs...)
 
 # Arguments
 - `specification`: either a `RAMMatrices` or `ParameterTable` object
@@ -32,8 +32,8 @@ end
 ### Constructors
 ############################################################################################
 
-function ImpliedEmpty(;
-    specification,
+function ImpliedEmpty(
+    specification::SemSpecification;
     meanstruct = NoMeanStruct(),
     hessianeval = ExactHessian(),
     kwargs...,

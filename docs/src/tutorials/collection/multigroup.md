@@ -87,3 +87,9 @@ details(partable)
 ```
 
 Other things you can query about your fitted model (fit measures, standard errors, etc.) are described in the section [Model inspection](@ref) and work the same way for multigroup models.
+
+# API
+
+```@docs
+EnsembleParameterTable
+```

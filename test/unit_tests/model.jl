@@ -211,3 +211,12 @@ end
     @test nsamples(observed(term_g2)) == size(dat_grouped, 1) - n_g1
     @test nsamples(grouped_model) == size(dat_grouped, 1)
 end
+
+@testset "ImpliedEmpty" begin
+    # positional `specification`, consistent with RAM/RAMSymbolic
+    @test ImpliedEmpty(ram_matrices) isa ImpliedEmpty
+
+    # implied can be selected by type through the outer `Sem` constructor (like `implied = RAM`)
+    model = Sem(specification = ram_matrices, data = dat, implied = ImpliedEmpty)
+    @test implied(model) isa ImpliedEmpty
+end
