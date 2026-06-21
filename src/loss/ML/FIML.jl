@@ -154,7 +154,7 @@ function evaluate!(objective, gradient, hessian, loss::SemFIML, params)
     Σ_chol = cholesky!(Symmetric(loss.imp_inv); check = false)
 
     if !isposdef(Σ_chol)
-        isnothing(objective) || (objective = non_posdef_return(params))
+        isnothing(objective) || (objective = non_posdef_objective(params))
         isnothing(gradient) || fill!(gradient, 1)
         return objective
     end
@@ -181,16 +181,18 @@ end
 function ∇F_fiml_outer!(G, JΣ, Jμ, loss::SemFIML)
     implied = loss.implied
 
+    I_A⁻¹ = parent(implied.I_A⁻¹)
+    F⨉I_A⁻¹ = parent(implied.F⨉I_A⁻¹)
+    S = parent(implied.S)
+
     Iₙ = sparse(1.0I, size(implied.A)...)
-    P = kron(implied.F⨉I_A⁻¹, implied.F⨉I_A⁻¹)
-    Q = kron(implied.S * implied.I_A⁻¹', Iₙ)
+    P = kron(F⨉I_A⁻¹, F⨉I_A⁻¹)
+    Q = kron(S * I_A⁻¹', Iₙ)
     Q .+= loss.commutator * Q
 
     ∇Σ = P * (implied.∇S + Q * implied.∇A)
 
-    ∇μ =
-        implied.F⨉I_A⁻¹ * implied.∇M +
-        kron((implied.I_A⁻¹ * implied.M)', implied.F⨉I_A⁻¹) * implied.∇A
+    ∇μ = F⨉I_A⁻¹ * implied.∇M + kron((I_A⁻¹ * implied.M)', F⨉I_A⁻¹) * implied.∇A
 
     mul!(G, ∇Σ', JΣ) # actually transposed
     mul!(G, ∇μ', Jμ, -1, 1)
