@@ -1,43 +1,40 @@
 # Regularization
 
-## Setup
+At the moment, *StructuralEquationModels.jl* offers two ways to regularize SEMs:
 
-For ridge regularization, you can simply use `SemRidge` as an additional loss function
-(for example, a model with the loss functions `SemML` and `SemRidge` corresponds to ridge-regularized maximum likelihood estimation).
+1. Built-in smooth penalties via [`SemParamsPenalty`](@ref) and its convenience wrappers such as
+    [`SemRidge`](@ref), [`SemLasso`](@ref), and [`SemElasticNet`](@ref).
+2. More general proximal regularization via
+    [`ProximalOperators.jl`](https://github.com/JuliaFirstOrder/ProximalOperators.jl)
+    combined with *proximal optimization* from
+    [`ProximalAlgorithms.jl`](https://github.com/JuliaFirstOrder/ProximalAlgorithms.jl).
 
-You can define lasso, elastic net and other forms of regularization using [`ProximalOperators.jl`](https://github.com/JuliaFirstOrder/ProximalOperators.jl)
-and optimize the SEM with so-called *proximal optimization* algorithms from [`ProximalAlgorithms.jl`](https://github.com/JuliaFirstOrder/ProximalAlgorithms.jl).
+## 1. Regularization with SemParamsPenalty terms
+
 
 ```@setup reg
-using StructuralEquationModels, ProximalAlgorithms, ProximalOperators
+using StructuralEquationModels, ProximalAlgorithms, ProximalOperators, StenoGraphs
 ```
 
-```julia
-using Pkg
-Pkg.add("ProximalAlgorithms")
-Pkg.add("ProximalOperators")
+[`SemParamsPenalty`](@ref) is a generic regularization loss term acting on selected SEM
+parameters. Its wrappers cover common penalties:
 
-using StructuralEquationModels, ProximalAlgorithms, ProximalOperators
+- [`SemRidge`](@ref): l2 regularization
+- [`SemLasso`](@ref): l1 regularization
+- [`SemElasticNet`](@ref): elastic net regularization
+
+These regularization terms are added to a model just like any other loss term. The
+`=>` syntax sets the overall weight of the penalty in the objective. For
+[`SemElasticNet`](@ref), its `weight2` keyword argument controls the relative strength of the
+l2 part inside the elastic-net penalty, while the outer loss-term weight controls the overall
+regularization strength.
+
+```@docs
+SemParamsPenalty
+SemRidge
+SemLasso
+SemElasticNet
 ```
-
-## Proximal optimization
-
-With the *ProximalAlgorithms* package loaded, it is now possible to use the `:Proximal`
-optimization engine in `SemOptimizer` for estimating regularized models.
-
-```julia
-SemOptimizer(;
-    engine = :Proximal,
-    algorithm = ProximalAlgorithms.PANOC(),
-    operator_g,
-    operator_h = nothing
-)
-```
-
-The *proximal operator* (aka the *regularization function*) is passed as `operator_g`, see [available operators](https://juliafirstorder.github.io/ProximalOperators.jl/stable/functions/).
-The `algorithm` is chosen from one of the [available algorithms](https://juliafirstorder.github.io/ProximalAlgorithms.jl/stable/guide/implemented_algorithms/).
-
-## First example - lasso
 
 To show how it works, let's revisit [A first model](@ref):
 
@@ -80,29 +77,78 @@ model = Sem(
 )
 ```
 
-We labeled the covariances between the items because we want to regularize those:
+Ridge regularization is added as an additional loss term listing the parameters we want to
+regularize. In this example, we regularize the covariances between the observed variables
+using the labels of the corresponding model parameters.
 
 ```@example reg
-cov_inds = getindex.(
-    Ref(param_indices(model)),
-    [:cov_15, :cov_24, :cov_26, :cov_37, :cov_48, :cov_68])
+cov_params = [:cov_15, :cov_24, :cov_26, :cov_37, :cov_48, :cov_68]
+
+model_ridge =
+    Sem(
+        SemML(SemObservedData(data = data), RAM(partable)),
+        SemRidge(partable, cov_params) => 0.02,
+    )
+
+fit_ridge = fit(model_ridge)
 ```
 
-In the following, we fit the same model with lasso regularization of those covariances.
+The same pattern also works for lasso and elastic net:
+
+```@example reg
+lasso_term = SemLasso(partable, cov_params)
+elasticnet_term = SemElasticNet(partable, cov_params; weight2 = 0.5)
+```
+
+## 2. Proximal optimization
+
+*SEM.jl* uses Julia extensions mechanism to automatically enable proximal optimization when
+the *ProximalAlgorithms* package is loaded.
+
+```julia
+using Pkg
+Pkg.add("ProximalAlgorithms")
+Pkg.add("ProximalOperators")
+
+using StructuralEquationModels, ProximalAlgorithms, ProximalOperators
+```
+
+To use proximal optimization for SEM models fitting, specify `:Proximal` as the
+optimization engine in `SemOptimizer`.
+
+```julia
+SemOptimizer(;
+    engine = :Proximal,
+    algorithm = ProximalAlgorithms.PANOC(),
+    operator_g,
+    operator_h = nothing
+)
+```
+
+The *proximal operator* (aka the *regularization function*) is passed as `operator_g`,
+see [available operators](https://juliafirstorder.github.io/ProximalOperators.jl/stable/functions/).
+The `algorithm` is chosen from one of the [available algorithms](https://juliafirstorder.github.io/ProximalAlgorithms.jl/stable/guide/implemented_algorithms/).
+
+### LASSO via proximal operators
+
+In the following example, we fit the same SEM model with lasso regularization for selected covariances.
 The lasso penalty is defined as
 
 ```math
 \sum \lambda_i \lvert \theta_i \rvert
 ```
 
-In `ProximalOperators.jl`, lasso regularization is represented by the [`NormL1`](https://juliafirstorder.github.io/ProximalOperators.jl/stable/functions/#ProximalOperators.NormL1) operator. It allows controlling the amount of
-regularization individually for each SEM model parameter via the vector of hyperparameters (`λ`).
-To regularize only the observed item covariances, we define `λ` as
+In `ProximalOperators.jl`, lasso regularization is represented by the [`NormL1`](https://juliafirstorder.github.io/ProximalOperators.jl/stable/functions/#ProximalOperators.NormL1)
+operator. It allows controlling the amount of regularization individually for each SEM model parameter
+via the vector of hyperparameters (`λ`). To regularize only the observed item covariances,
+we define `λ` as
 
 ```@example reg
-λ = zeros(31); λ[cov_inds] .= 0.02
+cov_params = [:cov_15, :cov_24, :cov_26, :cov_37, :cov_48, :cov_68]
+cov_inds = param_indices(partable, cov_params)
+λ = zeros(nparams(partable)); λ[cov_inds] .= 0.02
 
-optimizer_lasso = SemOptimizer(
+optimizer_lasso_proximal = SemOptimizer(
     engine = :Proximal,
     operator_g = NormL1(λ)
 )
@@ -112,7 +158,7 @@ Let's fit the regularized model
 
 ```@example reg
 
-fit_lasso = fit(optimizer_lasso, model)
+fit_lasso = fit(optimizer_lasso_proximal, model)
 ```
 
 and compare the solution to unregularizted estimates:
@@ -134,7 +180,7 @@ and additional keyword arguments directly to the `fit` function:
 fit_lasso2 = fit(model; engine = :Proximal, operator_g = NormL1(λ))
 ```
 
-## Second example - mixed l1 and l0 regularization
+### Mixed l1 and l0 regularization
 
 You can choose to penalize different parameters with different types of regularization functions.
 Let's use the *lasso* (*l1*) again on the covariances, but additionally penalize the error variances of
