@@ -248,4 +248,93 @@ model_ml = SemFiniteDiff(
 model_fit = fit(model_ml)
 ```
 
-If you want to differentiate your own loss functions via automatic differentiation, check out the [AutoDiffSEM](https://github.com/StructuralEquationModels/AutoDiffSEM) package.
+## Supporting `replace_observed`
+
+[`replace_observed`](@ref) swaps the observed data of a model while keeping the rest of
+the model (specification, implied type, loss configuration) intact. It is the backbone of
+[Simulation studies](@ref) and the [`bootstrap`](@ref), where the same model is fitted to
+many datasets and rebuilding it from scratch each time would be wasteful.
+
+### The default mechanism
+
+For a `SemLoss` term, the generic implementation rebuilds the term by calling its three-argument
+constructor with the new observed data, the *original* implied part, and the *original* loss term
+as `refloss`:
+
+```julia
+# simplified; see src/loss/abstract.jl
+function replace_observed(loss::SemLoss, new_observed::SemObserved; kwargs...)
+    loss_ctor = typeof(loss).name.wrapper           # e.g. `MaximumLikelihood`
+    return loss_ctor(new_observed, implied(loss), loss)  # third arg is the `refloss`
+end
+```
+
+This is exactly the three-argument constructor every `SemLoss` already provides (see
+[Second example - maximum likelihood](@ref)). The `refloss` argument is what makes this work
+without re-deriving anything: the new term inherits the loss-specific configuration from the
+reference term and shares its implied state (and, where applicable, internal buffers). The implied
+part is shared rather than copied because it depends only on the model specification, not on the data.
+
+Because of this, **a loss term that does not cache anything derived from the observed data needs no
+extra code** — implementing the three-argument constructor is enough, and `replace_observed` works
+out of the box. `MaximumLikelihood` above is such a case: it reads `obs_cov(observed(loss))` on every
+evaluation and stores nothing, so it even ignores `refloss` entirely and is already fully compatible.
+
+### Plain `AbstractLoss` terms (no observed part)
+
+The mechanism above only applies to [`SemLoss`](@ref) terms, which carry an `observed` part. A plain
+[`AbstractLoss`](@ref) term — like the `MyRidge` regularizer from the [Minimal](@ref) example — depends
+only on the parameters and has no notion of observed data. There is therefore nothing to swap, and
+`replace_observed` returns such terms unchanged:
+
+```julia
+# src/loss/abstract.jl — fallback for non-SEM loss terms
+replace_observed(loss::AbstractLoss, ::Any; kwargs...) = loss
+```
+
+This is handled by the default fallback, so **you do not need to write anything** for your own
+`AbstractLoss` types: when a model mixes SEM and non-SEM loss terms (e.g. `loss = (SemML, MyRidge)`),
+`replace_observed` rebuilds the `SemML` term with the new data and carries the `MyRidge` term over
+as-is. The `recompute_observed_state` keyword is likewise accepted and ignored.
+
+If your regularizer *does* need to know about the data, the idiomatic solution is to make it a
+`SemLoss` (so it owns an `observed` part and participates in the rebuild) rather than to specialize
+`replace_observed` on a plain `AbstractLoss`.
+
+### When you need a custom method
+
+You need to specialize `replace_observed` when your loss term **precomputes and stores a quantity
+derived from the observed data**. The default mechanism inherits that quantity from the `refloss`,
+so after swapping in new data the cached value would be stale.
+
+[`SemWLS`](@ref) is the canonical example. Its weight matrix `V` defaults to the GLS weights computed
+from the *observed* covariance matrix and is stored on the term. If `replace_observed` simply reused
+`refloss.V`, the new term would weight the new data with the old data's weights. `SemWLS` therefore
+overrides `replace_observed` to recompute the weights from the new data by default, while exposing a
+`recompute_observed_state` keyword to opt out:
+
+```julia
+# src/loss/WLS/WLS.jl
+function replace_observed(
+    loss::SemWLS,
+    new_observed::SemObserved;
+    recompute_observed_state::Bool = true,
+)
+    return SemWLS(
+        new_observed,
+        implied(loss),
+        loss;
+        # pass `nothing` to recompute from the new data, or reuse the old matrices
+        wls_weight_matrix = recompute_observed_state ? nothing : loss.V,
+        wls_weight_matrix_mean = recompute_observed_state ? nothing : loss.V_μ,
+    )
+end
+```
+
+Note how the override still goes through the three-argument constructor with `loss` as `refloss`,
+so all *other* configuration (e.g. the choice of approximate vs. analytic Hessian) is still
+inherited automatically — the custom method only intervenes for the observed-dependent caches.
+
+The `recompute_observed_state` keyword is a convention shared by all `replace_observed` methods: it
+is forwarded from the model-level call down to every loss term, and terms without observed-dependent
+caches simply ignore it.

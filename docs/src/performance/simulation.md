@@ -65,6 +65,46 @@ model = Sem(
 model_updated = replace_observed(model, data_2)
 ```
 
+`replace_observed` accepts a data matrix, a `DataFrame`, or a ready-made `SemObserved` object, and
+works for multigroup/collection models too (pass a `Dict` mapping term ids to data, or a `DataFrame`
+together with a `semterm_column`). See the [API](@ref simulation_api) below for all signatures.
+
+### Recomputing observed-dependent state
+
+Some loss terms cache quantities that are derived from the observed data. The most prominent example
+is weighted least squares ([`SemWLS`](@ref)), whose weight matrix defaults to the GLS weights computed
+from the observed covariance matrix. By default, `replace_observed` **recomputes** these quantities
+from the new data, which is what you want in most simulation studies:
+
+```@example replace_observed
+model_wls = Sem(
+    specification = partable,
+    data = data_1,
+    implied = RAMSymbolic,
+    vech = true,
+    loss = SemWLS,
+)
+
+# weight matrix recomputed from `data_2` (default)
+model_wls_updated = replace_observed(model_wls, data_2)
+```
+
+If instead you want to keep the original observed-dependent state — e.g. fit every replication with
+the *same* fixed weight matrix — pass `recompute_observed_state = false`:
+
+```@example replace_observed
+model_wls_fixed = replace_observed(model_wls, data_2; recompute_observed_state = false)
+```
+
+Loss terms without observed-dependent caches (such as `SemML`) ignore this keyword.
+
+!!! tip "Simulating with your own loss type"
+    If you run simulation studies with a custom loss function, see
+    [Supporting `replace_observed`](@ref) in the [Custom loss functions](@ref) chapter. It explains
+    how `replace_observed` rebuilds a loss term, when the default behavior is enough, and how to
+    implement a custom `replace_observed` method (with `recompute_observed_state`) if your loss
+    caches quantities derived from the observed data.
+
 ## Multithreading
 !!! danger "Thread safety"
     *This is only relevant when you are planning to fit updated models in parallel*
@@ -93,7 +133,7 @@ Threads.@threads for i in 1:2
 end
 ```
 
-## API
+## [API](@id simulation_api)
 
 ```@docs
 replace_observed
