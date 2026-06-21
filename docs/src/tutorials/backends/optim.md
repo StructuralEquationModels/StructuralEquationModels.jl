@@ -1,23 +1,23 @@
 # Using Optim.jl
 
-[`SemOptimizerOptim`](@ref) implements the connection to `Optim.jl`.
-It takes two arguments, `algorithm` and `options`.
-The defaults are LBFGS as the optimization algorithm and the standard options from `Optim.jl`.
-We can load the `Optim` and `LineSearches` packages to choose something different:
+[*Optim.jl*](https://github.com/JuliaNLSolvers/Optim.jl) is the default optimization engine of *SEM.jl*,
+see [`SEM.SemOptimizerOptim`](@ref) for a full list of its parameters.
+It defaults to the LBFGS optimization, but we can load the `Optim` and `LineSearches` packages
+and specify BFGS (!not L-BFGS) with a back-tracking linesearch and Hager-Zhang initial step length guess:
 
 ```julia
 using Optim, LineSearches
 
-my_optimizer = SemOptimizerOptim(
+my_optimizer = SemOptimizer(
     algorithm = BFGS(
-        linesearch = BackTracking(order=3), 
+        linesearch = BackTracking(order=3),
         alphaguess = InitialHagerZhang()
-        ),
-    options = Optim.Options(show_trace = true) 
-    )
+    ),
+    options = Optim.Options(show_trace = true)
+)
 ```
 
-This optimizer will use BFGS (!not L-BFGS) with a back tracking linesearch and a certain initial step length guess. Also, the trace of the optimization will be printed to the console.
+Note that we used `options` to print the optimization progress to the console.
 
 To see how to use the optimizer to actually fit a model now, check out the [Model fitting](@ref) section.
 

@@ -13,9 +13,10 @@ Fitted structural equation model.
 - `model(::SemFit)`
 - `optimization_result(::SemFit)`
 
-- `optimizer(::SemFit)` -> optimization algorithm
+- `algorithm_name(::SemFit)` -> optimization algorithm
 - `n_iterations(::SemFit)` -> number of iterations
-- `convergence(::SemFit)` -> convergence properties
+- `convergence(::SemFit)` -> convergence flags
+- `converged(::SemFit)` -> convergence success
 """
 mutable struct SemFit{Mi, So, St, Mo, O}
     minimum::Mi
@@ -29,15 +30,19 @@ end
 # pretty printing
 ############################################################################################
 
-function Base.show(io::IO, semfit::SemFit)
+function Base.show(io::IO, m::MIME"text/plain", semfit::SemFit)
     print(io, "Fitted Structural Equation Model \n")
     print(io, "=============================================== \n")
     print(io, "--------------------- Model ------------------- \n")
     print(io, "\n")
-    print(io, semfit.model)
+    show(io, m, semfit.model)
     print(io, "\n")
     #print(io, "Objective value: $(round(semfit.minimum, digits = 4)) \n")
     print(io, "------------- Optimization result ------------- \n")
+    print(io, "\n")
+    print(io, "engine: ")
+    print(io, optimizer_engine(semfit))
+    print(io, "\n")
     print(io, "\n")
     print(io, semfit.optimization_result)
 end
@@ -52,12 +57,19 @@ nsamples(fit::SemFit) = nsamples(fit.model)
 
 # access fields
 minimum(sem_fit::SemFit) = sem_fit.minimum
+"""
+    solution(sem_fit::SemFit)
+
+Returns the vector of parameter estimates from a fitted SEM.
+"""
 solution(sem_fit::SemFit) = sem_fit.solution
 start_val(sem_fit::SemFit) = sem_fit.start_val
 model(sem_fit::SemFit) = sem_fit.model
 optimization_result(sem_fit::SemFit) = sem_fit.optimization_result
 
 # optimizer properties
-optimizer(sem_fit::SemFit) = optimizer(optimization_result(sem_fit))
+optimizer_engine(sem_fit::SemFit) = optimizer_engine(optimization_result(sem_fit))
+algorithm_name(sem_fit::SemFit) = algorithm_name(optimization_result(sem_fit))
 n_iterations(sem_fit::SemFit) = n_iterations(optimization_result(sem_fit))
 convergence(sem_fit::SemFit) = convergence(optimization_result(sem_fit))
+converged(sem_fit::SemFit) = converged(optimization_result(sem_fit))

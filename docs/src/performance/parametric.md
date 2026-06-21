@@ -25,7 +25,7 @@ giving each field a type and adding them as parameters to our type declaration.
 Recall our example from [Custom loss functions](@ref):
 
 ```julia
-struct Ridge <: SemLossFunction
+struct Ridge <: AbstractLoss
     α
     I
 end
@@ -34,7 +34,7 @@ end
 We could also declare it as a parametric type:
 
 ```julia
-struct ParametricRidge{X, Y} <: SemLossFunction
+struct ParametricRidge{X, Y} <: AbstractLoss
     α::X
     I::Y
 end

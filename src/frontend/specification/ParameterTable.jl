@@ -34,7 +34,9 @@ function ParameterTable(
     latent_vars::Union{AbstractVector{Symbol}, Nothing} = nothing,
     param_labels::Union{AbstractVector{Symbol}, Nothing} = nothing,
 )
-    param_labels = isnothing(param_labels) ? unique!(filter(!=(:const), columns[:label])) : copy(param_labels)
+    param_labels =
+        isnothing(param_labels) ? unique!(filter(!=(:const), columns[:label])) :
+        copy(param_labels)
     check_param_labels(param_labels, columns[:label])
     return ParameterTable(
         columns,
@@ -112,10 +114,13 @@ function Base.show(io::IO, partable::ParameterTable)
     pretty_table(
         io,
         as_matrix,
-        header = (shown_columns, [eltype(partable.columns[col]) for col in shown_columns]),
-        tf = PrettyTables.tf_compact,
+        column_labels = [
+            shown_columns,
+            [eltype(partable.columns[col]) for col in shown_columns],
+        ],
+        table_format = TextTableFormat(borders = text_table_borders__compact),
         # TODO switch to `missing` as non-specified values and suppress printing of `missing` instead
-        formatters = (v, i, j) -> isa(v, Number) && isnan(v) ? "" : v,
+        formatters = [(v, i, j) -> isa(v, Number) && isnan(v) ? "" : v],
     )
 
     print(io, "Latent Variables:    $(partable.latent_vars) \n")
@@ -288,14 +293,25 @@ function update_partable!(
 end
 
 """
-    update_partable!(partable::AbstractParameterTable, param_labels::Vector{Symbol}, params, column)
+    (1) update_partable!(partable::AbstractParameterTable, column, fitted:SemFit, params, default = nothing)
+    
+    (2) update_partable!(partable::AbstractParameterTable, column, param_labels::Vector{Symbol}, params, default = nothing)
 
-Write parameter `values` into `column` of `partable`.
-
-The `param_labels` and `params` vectors define the pairs of 
-parameters, which are being matched to the `:param` column
-of the `partable`.
+Add a new column to a parameter table. 
+`column` is the name of the column, `params` contains the values of the new column,
+and `fitted` or `param_labels` is used to match the values to the correct parameter labels.
+The `default` value is used if a parameter in `partable` does not occur in `param_labels`.
 """
+function update_partable!(
+    partable::AbstractParameterTable,
+    column::Symbol,
+    fitted::SemFit,
+    params::AbstractVector,
+    default::Any = nothing,
+)
+    update_partable!(partable, column, param_labels(fitted), params, default)
+end
+
 function update_partable!(
     partable::ParameterTable,
     column::Symbol,
@@ -389,7 +405,6 @@ function update_se_hessian!(
     return update_partable!(partable, :se, param_labels(fit), se)
 end
 
-
 """
     lavaan_params!(out::AbstractVector, partable_lav,
                          partable::ParameterTable,
@@ -438,8 +453,8 @@ function lavaan_params!(
             lav_ind = findallrows(
                 r ->
                     r[:lhs] == String(to) &&
-                        r[:op] == "~1" &&
-                        (isnothing(lav_group) || r[:group] == lav_group),
+                    r[:op] == "~1" &&
+                    (isnothing(lav_group) || r[:group] == lav_group),
                 partable_lav,
             )
         else
@@ -458,20 +473,20 @@ function lavaan_params!(
                 lav_ind = findallrows(
                     r ->
                         (
-                                (r[:lhs] == String(from) && r[:rhs] == String(to)) ||
-                                (r[:lhs] == String(to) && r[:rhs] == String(from))
-                            ) &&
-                            r[:op] == lav_type &&
-                            (isnothing(lav_group) || r[:group] == lav_group),
+                            (r[:lhs] == String(from) && r[:rhs] == String(to)) ||
+                            (r[:lhs] == String(to) && r[:rhs] == String(from))
+                        ) &&
+                        r[:op] == lav_type &&
+                        (isnothing(lav_group) || r[:group] == lav_group),
                     partable_lav,
                 )
             else
                 lav_ind = findallrows(
                     r ->
                         r[:lhs] == String(from) &&
-                            r[:rhs] == String(to) &&
-                            r[:op] == lav_type &&
-                            (isnothing(lav_group) || r[:group] == lav_group),
+                        r[:rhs] == String(to) &&
+                        r[:op] == lav_type &&
+                        (isnothing(lav_group) || r[:group] == lav_group),
                     partable_lav,
                 )
             end
@@ -524,10 +539,4 @@ lavaan_params(
     partable::ParameterTable,
     lav_col::Symbol = :est,
     lav_group = nothing,
-) = lavaan_params!(
-    fill(NaN, nparams(partable)),
-    partable_lav,
-    partable,
-    lav_col,
-    lav_group,
-)
+) = lavaan_params!(fill(NaN, nparams(partable)), partable_lav, partable, lav_col, lav_group)

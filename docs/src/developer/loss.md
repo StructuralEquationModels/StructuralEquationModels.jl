@@ -11,9 +11,9 @@ Since we allow for the optimization of sums of loss functions, and the maximum l
 using StructuralEquationModels
 ```
 
-To define a new loss function, you have to define a new type that is a subtype of `SemLossFunction`:
+To define a new loss function, you have to define a new type that is a subtype of `AbstractLoss`:
 ```@example loss
-struct Ridge <: SemLossFunction
+struct MyRidge <: AbstractLoss
     α
     I
 end
@@ -25,8 +25,8 @@ Additionaly, we need to define a *method* of the function `evaluate!` to compute
 ```@example loss
 import StructuralEquationModels: evaluate!
 
-evaluate!(objective::Number, gradient::Nothing, hessian::Nothing, ridge::Ridge, model::AbstractSem, par) = 
-  ridge.α * sum(i -> par[i]^2, ridge.I)
+evaluate!(objective::Number, gradient::Nothing, hessian::Nothing, ridge::MyRidge, par) =
+    ridge.α * sum(i -> abs2(par[i]), ridge.I)
 ```
 
 The function `evaluate!` recognizes by the types of the arguments `objective`, `gradient` and `hessian` whether it should compute the objective value, gradient or hessian of the model w.r.t. the parameters.
@@ -71,7 +71,7 @@ partable = ParameterTable(
 )
 
 parameter_indices = getindex.([param_indices(partable)], [:a, :b, :c])
-myridge = Ridge(0.01, parameter_indices)
+myridge = MyRidge(0.01, parameter_indices)
 
 model = SemFiniteDiff(
     specification = partable,
@@ -82,23 +82,23 @@ model = SemFiniteDiff(
 model_fit = fit(model)
 ```
 
-This is one way of specifying the model - we now have **one model** with **multiple loss functions**. Because we did not provide a gradient for `Ridge`, we have to specify a `SemFiniteDiff` model that computes numerical gradients with finite difference approximation.
+This is one way of specifying the model - we now have **one model** with **multiple loss functions**. Because we did not provide a gradient for `MyRidge`, we have to specify a `SemFiniteDiff` model that computes numerical gradients with finite difference approximation.
 
-Note that the last argument to the `objective!` method is the whole model. Therefore, we can access everything that is stored inside our model everytime we compute the objective value for our loss function. Since ridge regularization is a very easy case, we do not need to do this. But maximum likelihood estimation for example depends on both the observed and the model implied covariance matrix. See [Second example - maximum likelihood](@ref) for information on how to do that.
+Ridge regularization only depends on the parameters, so the `evaluate!` method above does not need anything else. Other loss functions, however, depend on the observed data and on what the model implies about it. Loss functions that compare the implied and the observed structure are subtypes of [`SemLoss`](@ref) and store their own `observed` and `implied` parts, which can be accessed inside `evaluate!` via `observed(loss)` and `implied(loss)`. See [Second example - maximum likelihood](@ref) for information on how to do that.
 
 ### Improve performance
 
 By far the biggest improvements in performance will result from specifying analytical gradients. We can do this for our example:
 
 ```@example loss
-function evaluate!(objective, gradient, hessian::Nothing, ridge::Ridge, model::AbstractSem, par)
+function evaluate!(objective, gradient, hessian::Nothing, ridge::MyRidge, par)
     # compute gradient
     if !isnothing(gradient)
         fill!(gradient, 0)
         gradient[ridge.I] .= 2 * ridge.α * par[ridge.I]
     end
     # compute objective
-    if !isnothing(objective) 
+    if !isnothing(objective)
         return ridge.α * sum(i -> par[i]^2, ridge.I)
     end
 end
@@ -136,54 +136,43 @@ Additionally, you may provide analytic hessians by writing a respective method f
 
 ## Convenient
 
-To be able to build the model with the [Outer Constructor](@ref), you need to add a constructor for your loss function that only takes keyword arguments and allows for passing optional additional kewyword arguments. A constructor is just a function that creates a new instance of your type:
+In the minimal example above we built `myridge` ourselves and passed the ready-made instance to
+the model via `loss = (SemML, myridge)`. Alternatively, you can let the outer [`Sem`](@ref)
+constructor build the loss term for you: pass the loss *type* instead of an instance and provide
+a keyword constructor.
 
 ```julia
-function MyLoss(;arg1 = ..., arg2, kwargs...)
-    ...
-    return MyLoss(...)
-end
+MyRidge(; α_ridge, which_ridge, kwargs...) = MyRidge(α_ridge, which_ridge)
 ```
 
-All keyword arguments that a user passes to the Sem constructor are passed to your loss function. In addition, all previously constructed parts of the model (implied and observed part) are passed as keyword arguments as well as the number of parameters `n_par = ...`, so your constructor may depend on those. For example, the constructor for `SemML` in our package depends on the additional argument `meanstructure` as well as the observed part of the model to pre-allocate arrays of the same size as the observed covariance matrix and the observed mean vector:
+Any keyword arguments passed to `Sem(...)` are forwarded to this constructor (along with some that
+the model supplies automatically, such as `nparams`), so the loss can be configured directly from
+the model call:
 
 ```julia
-function SemML(;observed, meanstructure = false, approx_H = false, kwargs...)
-
-    isnothing(obs_mean(observed)) ?
-        meandiff = nothing :
-        meandiff = copy(obs_mean(observed))
-
-    return SemML(
-        similar(obs_cov(observed)),
-        similar(obs_cov(observed)),
-        meandiff,
-        approx_H,
-        Val(meanstructure)
-        )
-end
+model = SemFiniteDiff(
+    specification = partable,
+    data = example_data("political_democracy"),
+    loss = (SemML, MyRidge),
+    α_ridge = 0.01,
+    which_ridge = parameter_indices,
+)
 ```
+
+Note that, being a plain `AbstractLoss`, `MyRidge` neither stores nor receives an `observed` or
+`implied` part — it depends only on the parameters. 
+SEM-specific loss functions are constructed differently; see
+[Second example - maximum likelihood](@ref).
 
 ## Additional functionality
-
-### Update observed data
-
-If you are planing a simulation study where you have to fit the **same model** to many **different datasets**, it is computationally beneficial to not build the whole model completely new everytime you change your data.
-Therefore, we provide a function to update the data of your model, `replace_observed(model(semfit); data = new_data)`. However, we can not know beforehand in what way your loss function depends on the specific datasets. The solution is to provide a method for `update_observed`. Since `Ridge` does not depend on the data at all, this is quite easy:
-
-```julia
-import StructuralEquationModels: update_observed
-
-update_observed(ridge::Ridge, observed::SemObserved; kwargs...) = ridge
-```
 
 ### Access additional information
 
 If you want to provide a way to query information about loss functions of your type, you can provide functions for that:
 
 ```julia
-hyperparameter(ridge::Ridge) = ridge.α
-regularization_indices(ridge::Ridge) = ridge.I
+hyperparameter(ridge::MyRidge) = ridge.α
+regularization_indices(ridge::MyRidge) = ridge.I
 ```
 
 # Second example - maximum likelihood
@@ -195,7 +184,9 @@ To keep it simple, we only cover models without a meanstructure. The maximum lik
 F_{ML} = \log \det \Sigma_i + \mathrm{tr}\left(\Sigma_{i}^{-1} \Sigma_o \right)
 ```
 
-where ``\Sigma_i`` is the model implied covariance matrix and ``\Sigma_o`` is the observed covariance matrix. We can query the model implied covariance matrix from the `implied` par of our model, and the observed covariance matrix from the `observed` path of our model.
+where ``\Sigma_i`` is the model implied covariance matrix and ``\Sigma_o`` is the observed covariance matrix. We can query the model implied covariance matrix from the `implied` part of our loss term, and the observed covariance matrix from the `observed` part of our loss term.
+
+Since this loss function compares the implied and the observed structure, it is a subtype of [`SemLoss`](@ref) rather than a plain `AbstractLoss`. Every `SemLoss` stores its own `observed` and `implied` parts, which can be accessed inside `evaluate!` via `observed(loss)` and `implied(loss)`.
 
 To get information on what we can access from a certain `implied` or `observed` type, we can check it`s documentation an the pages [API - model parts](@ref) or via the help mode of the REPL:
 
@@ -207,20 +198,33 @@ help?> RAM
 help?> SemObservedData
 ```
 
-We see that the model implied covariance matrix can be assessed as `Σ(implied)` and the observed covariance matrix as `obs_cov(observed)`.
+We see that the model implied covariance matrix can be assessed as `implied(loss).Σ` and the observed covariance matrix as `obs_cov(observed(loss))`.
 
-With this information, we write can implement maximum likelihood optimization as
+Unlike a plain `AbstractLoss`, a `SemLoss` subtype stores its `observed` and `implied` parts (in its first two fields), and the [`Sem`](@ref) constructor builds it for you. To support this, every `SemLoss` subtype should provide a constructor with three positional arguments:
+  * `observed::SemObserved`: the observed part of the loss term
+  * `implied::SemImplied`: the implied part of the loss term
+  * `refloss::Union{MaximumLikelihood, Nothing} = nothing`: an optional existing loss term of the
+    same type, used as a reference for any loss-specific configuration.
+
+Any additional configuration is passed as optional keyword arguments; if both `refloss` and keyword arguments are given, the keyword arguments take precedence. This constructor is also used by [`replace_observed`](@ref) to rebuild the loss term with new observed data while sharing the implied state. With this, we can implement maximum likelihood optimization as
 
 ```@example loss
-struct MaximumLikelihood <: SemLossFunction end
+struct MaximumLikelihood{O <: SemObserved, I <: SemImplied} <: SemLoss{O, I}
+    observed::O
+    implied::I
+end
+
+# constructor used by the `Sem` constructor to build the loss term
+MaximumLikelihood(observed::SemObserved, implied::SemImplied, refloss = nothing; kwargs...) =
+    MaximumLikelihood{typeof(observed), typeof(implied)}(observed, implied)
 
 using LinearAlgebra
-import StructuralEquationModels: obs_cov, evaluate!
+import StructuralEquationModels: evaluate!
 
-function evaluate!(objective::Number, gradient::Nothing, hessian::Nothing, semml::MaximumLikelihood, model::AbstractSem, par)
+function evaluate!(objective::Number, gradient::Nothing, hessian::Nothing, semml::MaximumLikelihood, par)
     # access the model implied and observed covariance matrices
-    Σᵢ = implied(model).Σ
-    Σₒ = obs_cov(observed(model))
+    Σᵢ = implied(semml).Σ
+    Σₒ = obs_cov(observed(semml))
     # compute the objective
     if isposdef(Symmetric(Σᵢ)) # is the model implied covariance matrix positive definite?
         return logdet(Σᵢ) + tr(inv(Σᵢ)*Σₒ)
@@ -238,10 +242,99 @@ Let's specify and fit a model:
 model_ml = SemFiniteDiff(
     specification = partable,
     data = example_data("political_democracy"),
-    loss = MaximumLikelihood()
+    loss = MaximumLikelihood
 )
 
 model_fit = fit(model_ml)
 ```
 
-If you want to differentiate your own loss functions via automatic differentiation, check out the [AutoDiffSEM](https://github.com/StructuralEquationModels/AutoDiffSEM) package.
+## Supporting `replace_observed`
+
+[`replace_observed`](@ref) swaps the observed data of a model while keeping the rest of
+the model (specification, implied type, loss configuration) intact. It is the backbone of
+[Simulation studies](@ref) and the [`bootstrap`](@ref), where the same model is fitted to
+many datasets and rebuilding it from scratch each time would be wasteful.
+
+### The default mechanism
+
+For a `SemLoss` term, the generic implementation rebuilds the term by calling its three-argument
+constructor with the new observed data, the *original* implied part, and the *original* loss term
+as `refloss`:
+
+```julia
+# simplified; see src/loss/abstract.jl
+function replace_observed(loss::SemLoss, new_observed::SemObserved; kwargs...)
+    loss_ctor = typeof(loss).name.wrapper           # e.g. `MaximumLikelihood`
+    return loss_ctor(new_observed, implied(loss), loss)  # third arg is the `refloss`
+end
+```
+
+This is exactly the three-argument constructor every `SemLoss` already provides (see
+[Second example - maximum likelihood](@ref)). The `refloss` argument is what makes this work
+without re-deriving anything: the new term inherits the loss-specific configuration from the
+reference term and shares its implied state (and, where applicable, internal buffers). The implied
+part is shared rather than copied because it depends only on the model specification, not on the data.
+
+Because of this, **a loss term that does not cache anything derived from the observed data needs no
+extra code** — implementing the three-argument constructor is enough, and `replace_observed` works
+out of the box. `MaximumLikelihood` above is such a case: it reads `obs_cov(observed(loss))` on every
+evaluation and stores nothing, so it even ignores `refloss` entirely and is already fully compatible.
+
+### Plain `AbstractLoss` terms (no observed part)
+
+The mechanism above only applies to [`SemLoss`](@ref) terms, which carry an `observed` part. A plain
+[`AbstractLoss`](@ref) term — like the `MyRidge` regularizer from the [Minimal](@ref) example — depends
+only on the parameters and has no notion of observed data. There is therefore nothing to swap, and
+`replace_observed` returns such terms unchanged:
+
+```julia
+# src/loss/abstract.jl — fallback for non-SEM loss terms
+replace_observed(loss::AbstractLoss, ::Any; kwargs...) = loss
+```
+
+This is handled by the default fallback, so **you do not need to write anything** for your own
+`AbstractLoss` types: when a model mixes SEM and non-SEM loss terms (e.g. `loss = (SemML, MyRidge)`),
+`replace_observed` rebuilds the `SemML` term with the new data and carries the `MyRidge` term over
+as-is. The `recompute_observed_state` keyword is likewise accepted and ignored.
+
+If your regularizer *does* need to know about the data, the idiomatic solution is to make it a
+`SemLoss` (so it owns an `observed` part and participates in the rebuild) rather than to specialize
+`replace_observed` on a plain `AbstractLoss`.
+
+### When you need a custom method
+
+You need to specialize `replace_observed` when your loss term **precomputes and stores a quantity
+derived from the observed data**. The default mechanism inherits that quantity from the `refloss`,
+so after swapping in new data the cached value would be stale.
+
+[`SemWLS`](@ref) is the canonical example. Its weight matrix `V` defaults to the GLS weights computed
+from the *observed* covariance matrix and is stored on the term. If `replace_observed` simply reused
+`refloss.V`, the new term would weight the new data with the old data's weights. `SemWLS` therefore
+overrides `replace_observed` to recompute the weights from the new data by default, while exposing a
+`recompute_observed_state` keyword to opt out:
+
+```julia
+# src/loss/WLS/WLS.jl
+function replace_observed(
+    loss::SemWLS,
+    new_observed::SemObserved;
+    recompute_observed_state::Bool = true,
+)
+    return SemWLS(
+        new_observed,
+        implied(loss),
+        loss;
+        # pass `nothing` to recompute from the new data, or reuse the old matrices
+        wls_weight_matrix = recompute_observed_state ? nothing : loss.V,
+        wls_weight_matrix_mean = recompute_observed_state ? nothing : loss.V_μ,
+    )
+end
+```
+
+Note how the override still goes through the three-argument constructor with `loss` as `refloss`,
+so all *other* configuration (e.g. the choice of approximate vs. analytic Hessian) is still
+inherited automatically — the custom method only intervenes for the observed-dependent caches.
+
+The `recompute_observed_state` keyword is a convention shared by all `replace_observed` methods: it
+is forwarded from the model-level call down to every loss term, and terms without observed-dependent
+caches simply ignore it.

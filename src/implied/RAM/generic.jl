@@ -6,14 +6,10 @@ Model implied covariance and means via RAM notation.
 
 # Constructor
 
-    RAM(;specification,
-        meanstructure = false,
-        gradient = true,
-        kwargs...)
+    RAM(specification; gradient = true, kwargs...)
 
 # Arguments
 - `specification`: either a `RAMMatrices` or `ParameterTable` object
-- `meanstructure::Bool`: does the model have a meanstructure?
 - `gradient::Bool`: is gradient-based optimization used
 
 # Extended help
@@ -53,9 +49,9 @@ Vector of indices of each parameter in the respective RAM matrix:
 - `ram.M_indices`
 
 Additional interfaces
-- `ram.F⨉I_A⁻¹` -> ``F(I-A)^{-1}``
-- `ram.F⨉I_A⁻¹S` -> ``F(I-A)^{-1}S``
-- `ram.I_A` -> ``I-A``
+- `F⨉I_A⁻¹(::RAM)` -> ``F(I-A)^{-1}``
+- `F⨉I_A⁻¹S(::RAM)` -> ``F(I-A)^{-1}S``
+- `I_A(::RAM)` -> ``I-A``
 
 Only available in gradient! calls:
 - `ram.I_A⁻¹` -> ``(I-A)^{-1}``
@@ -90,13 +86,13 @@ end
 ### Constructors
 ############################################################################################
 
-function RAM(;
-    specification::SemSpecification,
+function RAM(
+    spec::SemSpecification;
+    #vech = false,
     gradient_required = true,
-    meanstructure = false,
     kwargs...,
 )
-    ram_matrices = convert(RAMMatrices, specification)
+    ram_matrices = convert(RAMMatrices, spec)
 
     # get dimensions of the model
     n_par = nparams(ram_matrices)
@@ -124,13 +120,8 @@ function RAM(;
     end
 
     # μ
-    if meanstructure
+    if !isnothing(ram_matrices.M)
         MS = HasMeanStruct
-        !isnothing(ram_matrices.M) || throw(
-            ArgumentError(
-                "You set `meanstructure = true`, but your model specification contains no mean parameters.",
-            ),
-        )
         M_pre = materialize(ram_matrices.M, rand_params)
         ∇M = gradient_required ? sparse_gradient(ram_matrices.M) : nothing
         μ = zeros(n_obs)
@@ -152,7 +143,7 @@ function RAM(;
         F⨉I_A⁻¹,
         F⨉I_A⁻¹S,
         I_A,
-        copy(I_A),
+        similar(I_A),
         ∇A,
         ∇S,
         ∇M,
@@ -163,11 +154,11 @@ end
 ### methods
 ############################################################################################
 
-function update!(targets::EvaluationTargets, implied::RAM, model::AbstractSemSingle, param_labels)
-    materialize!(implied.A, implied.ram_matrices.A, param_labels)
-    materialize!(implied.S, implied.ram_matrices.S, param_labels)
+function update!(targets::EvaluationTargets, implied::RAM, params)
+    materialize!(implied.A, implied.ram_matrices.A, params)
+    materialize!(implied.S, implied.ram_matrices.S, params)
     if !isnothing(implied.M)
-        materialize!(implied.M, implied.ram_matrices.M, param_labels)
+        materialize!(implied.M, implied.ram_matrices.M, params)
     end
 
     parent(implied.I_A) .= .-implied.A
@@ -186,17 +177,5 @@ function update!(targets::EvaluationTargets, implied::RAM, model::AbstractSemSin
 
     if MeanStruct(implied) === HasMeanStruct
         mul!(implied.μ, implied.F⨉I_A⁻¹, implied.M)
-    end
-end
-
-############################################################################################
-### Recommended methods
-############################################################################################
-
-function update_observed(implied::RAM, observed::SemObserved; kwargs...)
-    if nobserved_vars(observed) == size(implied.Σ, 1)
-        return implied
-    else
-        return RAM(; observed = observed, kwargs...)
     end
 end

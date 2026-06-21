@@ -81,17 +81,33 @@ update_estimate!(partable, model_fit)
 details(partable)
 ```
 
-We can also update the `ParameterTable` object with other information via [`update_partable!`](@ref). For example, if we want to compare hessian-based and bootstrap-based standard errors, we may write
+We can also update the `ParameterTable` object with other information via [`update_partable!`](@ref). For example, we can obtain standard errors from the inverse Hessian with [`se_hessian`](@ref) or by bootstrapping with [`se_bootstrap`](@ref), and add both to the table to compare them:
 
 ```@example colored; ansicolor = true
 se_bs = se_bootstrap(model_fit; n_boot = 20)
 se_he = se_hessian(model_fit)
 
-update_partable!(partable, :se_hessian, param_labels(model_fit), se_he)
-update_partable!(partable, :se_bootstrap, param_labels(model_fit), se_bs)
+update_partable!(partable, :se_hessian, model_fit, se_he)
+update_partable!(partable, :se_bootstrap, model_fit, se_bs)
 
 details(partable)
 ```
+
+From a vector of standard errors we can also compute *p*-values and confidence intervals for the parameter estimates.
+[`z_test!`](@ref) adds the two-sided *p*-value of the test that each parameter is zero (using `z = estimate / se`), and [`normal_CI!`](@ref) adds the lower and upper bounds of a normal-theory confidence interval (95% by default).
+Both update the `ParameterTable` in place:
+
+```@example colored; ansicolor = true
+z_test!(partable, model_fit, se_he)
+normal_CI!(partable, model_fit, se_he)
+
+details(partable; show_columns = [:to, :estimate, :p_value, :ci_lower, :ci_upper])
+```
+
+The non-mutating variants [`z_test`](@ref) and [`normal_CI`](@ref) return the values instead of writing them to the table.
+
+Beyond standard errors, [`bootstrap`](@ref) draws bootstrap samples of an arbitrary statistic of a fitted model (not only the parameter estimates), while [`se_bootstrap`](@ref) is a convenience wrapper returning bootstrapped standard errors.
+Both support parallel resampling across the available Julia threads via the `parallel = true` keyword.
 
 ## Export results
 
@@ -100,7 +116,7 @@ You may convert a `ParameterTable` to a `DataFrame` and use the [`DataFrames`](h
 ```@example colored; ansicolor = true
 using DataFrames
 
-parameters_df = DataFrame(partable)
+parameters_df = DataFrame(partable);
 ```
 
 # API - model inspection
@@ -135,4 +151,18 @@ dof
 minus2ll
 p_value
 RMSEA
+CFI
+```
+
+## Standard errors and inference
+
+```@docs
+se_hessian
+se_bootstrap
+bootstrap
+StructuralEquationModels.BootstrapResult
+z_test
+z_test!
+normal_CI
+normal_CI!
 ```

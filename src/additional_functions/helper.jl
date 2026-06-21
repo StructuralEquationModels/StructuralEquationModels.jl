@@ -14,14 +14,8 @@ function neumann_series(mat::SparseMatrixCSC; maxiter::Integer = size(mat, 1))
     return inverse
 end
 
-function batch_inv!(fun, model)
-    for i in 1:size(fun.inverses, 1)
-        fun.inverses[i] .= LinearAlgebra.inv!(fun.choleskys[i])
-    end
-end
-
 # computes A*S*B -> C, where ind gives the entries of S that are 1
-function sparse_outer_mul!(C, A, B, ind) 
+function sparse_outer_mul!(C, A, B, ind)
     fill!(C, 0.0)
     for i in 1:length(ind)
         BLAS.ger!(1.0, A[:, ind[i][1]], B[ind[i][2], :], C)
@@ -29,14 +23,14 @@ function sparse_outer_mul!(C, A, B, ind)
 end
 
 # computes A*∇m, where ∇m ind gives the entries of ∇m that are 1
-function sparse_outer_mul!(C, A, ind) 
+function sparse_outer_mul!(C, A, ind)
     fill!(C, 0.0)
     @views C .= sum(A[:, ind], dims = 2)
     return C
 end
 
 # computes A*S*B -> C, where ind gives the entries of S that are 1
-function sparse_outer_mul!(C, A, B::Vector, ind) 
+function sparse_outer_mul!(C, A, B::Vector, ind)
     fill!(C, 0.0)
     @views @inbounds for i in 1:length(ind)
         C .+= B[ind[i][2]] .* A[:, ind[i][1]]
@@ -73,6 +67,38 @@ function elimination_matrix(n::Integer)
         end
     end
     return L
+end
+
+# truncate eigenvalues of a symmetric matrix and return the result
+function trunc_eigvals(
+    mtx::AbstractMatrix{T},
+    min_eigval::Number;
+    mtx_label::AbstractString = "matrix",
+    verbose::Bool = false,
+) where {T}
+    size(mtx, 1) == size(mtx, 2) ||
+        throw(ArgumentError("Matrix must be square, $(size(mtx)) given"))
+    issymmetric(mtx) || throw(ArgumentError("Matrix must be symmetric"))
+
+    # eigen decomposition of the mtx
+    mtx_eig = eigen(convert(Matrix{T}, mtx))
+    verbose &&
+        @info "min(eigvals($mtx_label))=$(Base.minimum(mtx_eig.values)), N(eigvals < $min_eigval) = $(sum(<(min_eigval), mtx_eig.values))"
+
+    eigmin = Base.minimum(mtx_eig.values)
+    if eigmin < min_eigval
+        # substitute small eigvals with min_eigval
+        eigvals_mtx = Diagonal(max.(mtx_eig.values, min_eigval))
+        newmtx = mtx_eig.vectors * eigvals_mtx * mtx_eig.vectors'
+        StatsBase._symmetrize!(newmtx)
+        if verbose
+            Δmtx = newmtx .- mtx
+            @info "Δ($mtx_label, posdef)=$(norm(Δmtx, 2)), min,max(Δᵢ)=$(extrema(Δmtx))"
+        end
+        return newmtx
+    else
+        return mtx
+    end
 end
 
 # returns the vector of non-unique values in the order of appearance

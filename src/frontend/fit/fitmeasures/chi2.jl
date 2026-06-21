@@ -1,89 +1,45 @@
 """
-    χ²(sem_fit::SemFit)
+    χ²(fit::SemFit)
 
-Return the χ² value.
+Calculate the *χ²* (*chi-square*) value for the `fit`.
+
+The *χ²* is a test statistic for the SEM goodness-of-fit.
+It compares the *implied* covariance matrix of the SEM model
+with the *observed* covariance matrix.
+
+# See also
+[`fit_measures`](@ref)
 """
-function χ² end
+χ²(fit::SemFit) = χ²(fit, fit.model)
 
-############################################################################################
-# Single Models
-############################################################################################
+function χ²(fit::SemFit, model::AbstractSem)
+    terms = sem_terms(model)
+    @assert !isempty(terms)
 
-# SemFit splices loss functions ------------------------------------------------------------
-χ²(sem_fit::SemFit{Mi, So, St, Mo, O} where {Mi, So, St, Mo <: AbstractSemSingle, O}) = χ²(
-    sem_fit,
-    sem_fit.model.observed,
-    sem_fit.model.implied,
-    sem_fit.model.loss.functions...,
-)
-
-# RAM + SemML
-χ²(sem_fit::SemFit, observed, imp::Union{RAM, RAMSymbolic}, loss_ml::SemML) =
-    (nsamples(sem_fit) - 1) *
-    (sem_fit.minimum - logdet(observed.obs_cov) - nobserved_vars(observed))
+    L = check_same_semterm_type(model; throw_error = true)
+    return χ²(L, fit, model)
+end
 
 # bollen, p. 115, only correct for GLS weight matrix
-χ²(sem_fit::SemFit, observed, imp::Union{RAM, RAMSymbolic}, loss_ml::SemWLS) =
-    (nsamples(sem_fit) - 1) * sem_fit.minimum
+# N - G (= Σ(Nᵍ-1)) multiplier; reduces to N-1 for a single group
+χ²(::Type{<:SemWLS}, fit::SemFit, model::AbstractSem) =
+    (nsamples(model) - nsem_terms(model)) * fit.minimum
 
-# FIML
-function χ²(sem_fit::SemFit, observed::SemObservedMissing, imp, loss_ml::SemFIML)
-    ll_H0 = minus2ll(sem_fit)
-    ll_H1 = minus2ll(observed)
-    chi2 = ll_H0 - ll_H1
-    return chi2
-end
-
-############################################################################################
-# Collections
-############################################################################################
-
-# SemFit splices loss functions ------------------------------------------------------------
-χ²(sem_fit::SemFit{Mi, So, St, Mo, O} where {Mi, So, St, Mo <: SemEnsemble, O}) =
-    χ²(sem_fit, sem_fit.model, sem_fit.model.sems[1].loss.functions[1])
-
-function χ²(sem_fit::SemFit, model::SemEnsemble, lossfun::L) where {L <: SemWLS}
-    check_ensemble_length(model)
-    check_lossfun_types(model, L)
-    return (nsamples(model) - 1) * sem_fit.minimum
-end
-
-function χ²(sem_fit::SemFit, model::SemEnsemble, lossfun::L) where {L <: SemML}
-    check_ensemble_length(model)
-    check_lossfun_types(model, L)
-    F_G = sem_fit.minimum
-    F_G -= sum([
-        w * (logdet(m.observed.obs_cov) + nobserved_vars(m.observed)) for
-        (w, m) in zip(model.weights, model.sems)
-    ])
-    return (nsamples(model) - 1) * F_G
-end
-
-function χ²(sem_fit::SemFit, model::SemEnsemble, lossfun::L) where {L <: SemFIML}
-    check_ensemble_length(model)
-    check_lossfun_types(model, L)
-
-    ll_H0 = minus2ll(sem_fit)
-    ll_H1 = sum(minus2ll.(observed.(models(model))))
-    chi2 = ll_H0 - ll_H1
-
-    return chi2
-end
-
-function check_ensemble_length(model)
-    for sem in model.sems
-        if length(sem.loss.functions) > 1
-            @error "A model for one of the groups contains multiple loss functions."
+function χ²(::Type{<:SemML}, fit::SemFit, model::AbstractSem)
+    G = sum(loss_terms(model)) do term
+        if issemloss(term)
+            data = observed(term)
+            something(weight(term), 1.0) * (logdet(obs_cov(data)) + nobserved_vars(data))
+        else
+            return 0.0
         end
     end
+    # N - G (= Σ(Nᵍ-1)) multiplier; reduces to N-1 for a single group
+    return (nsamples(model) - nsem_terms(model)) * (fit.minimum - G)
 end
 
-function check_lossfun_types(model, type)
-    for sem in model.sems
-        for lossfun in sem.loss.functions
-            if !isa(lossfun, type)
-                @error "Your model(s) contain multiple lossfunctions with differing types."
-            end
-        end
-    end
+function χ²(::Type{<:SemFIML}, fit::SemFit, model::AbstractSem)
+    ll_H0 = minus2ll(fit)
+    ll_H1 = sum(minus2ll ∘ observed, sem_terms(model))
+    return ll_H0 - ll_H1
 end

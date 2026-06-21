@@ -4,19 +4,20 @@
 using StructuralEquationModels
 ```
 
-As an example, we will fit the model from [the `lavaan` tutorial](https://lavaan.ugent.be/tutorial/groups.html) with loadings constrained to equality across groups.
+As an example, we will fit the model from [the `lavaan` tutorial](https://lavaan.ugent.be/tutorial/groups.html)
+with loadings constrained to equality across groups.
 
-We first load the example data. 
+We first load the example data.
 We have to make sure that the column indicating the group (here called `school`) is a vector of `Symbol`s, not strings - so we convert it.
 
 ```@setup mg
 dat = example_data("holzinger_swineford")
-dat.school = ifelse.(dat.school .== "Pasteur", :Pasteur, :Grant_White)
+dat.school = Symbol.(replace.(dat.school, "-" => "_"))
 ```
 
 ```julia
 dat = example_data("holzinger_swineford")
-dat.school = ifelse.(dat.school .== "Pasteur", :Pasteur, :Grant_White)
+dat.school = Symbol.(replace.(dat.school, "-" => "_"))
 ```
 
 We then specify our model via the graph interface:
@@ -51,7 +52,7 @@ graph = @StenoGraph begin
 end
 ```
 
-You can pass multiple arguments to `fix()` and `label()` for each group. Parameters with the same label (within and across groups) are constrained to be equal. To fix a parameter in one group, but estimate it freely in the other, you may write `fix(NaN, 4.3)`.
+You can pass multiple arguments to `fixed()` and `label()` for each group. Parameters with the same label (within and across groups) are constrained to be equal. To fix a parameter in one group, but estimate it freely in the other, you may write `fixed(NaN, 4.3)`.
 
 You can then use the resulting graph to specify an `EnsembleParameterTable`
 
@@ -59,20 +60,19 @@ You can then use the resulting graph to specify an `EnsembleParameterTable`
 groups = [:Pasteur, :Grant_White]
 
 partable = EnsembleParameterTable(
-    graph, 
+    graph,
     observed_vars = observed_vars,
     latent_vars = latent_vars,
     groups = groups)
 ```
 
-The parameter table can be used to create a `SemEnsemble` model:
+The parameter table can be used to create a multigroup `Sem` model:
 
 ```@example mg; ansicolor = true
-model_ml_multigroup = SemEnsemble(
+model_ml_multigroup = Sem(
     specification = partable,
     data = dat,
-    column = :school,
-    groups = groups)
+    semterm_column = :school)
 ```
 
 !!! note "A different way to specify"
@@ -87,3 +87,9 @@ details(partable)
 ```
 
 Other things you can query about your fitted model (fit measures, standard errors, etc.) are described in the section [Model inspection](@ref) and work the same way for multigroup models.
+
+# API
+
+```@docs
+EnsembleParameterTable
+```

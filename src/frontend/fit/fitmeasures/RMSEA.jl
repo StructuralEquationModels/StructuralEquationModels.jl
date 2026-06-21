@@ -1,18 +1,31 @@
 """
-    RMSEA(sem_fit::SemFit)
+    RMSEA(fit::SemFit)
 
-Return the RMSEA.
+Calculate the RMSEA ([*Root Mean Squared Error of Approximation*](https://meth.psychopen.eu/index.php/meth/article/download/2333/2333.html?inline=1#sec1)).
+
+Uses the formula
+```math
+\\mathrm{RMSEA} = \\sqrt{\\frac{\\chi^2 - N_{\\mathrm{df}}}{N_{\\mathrm{obs}} * N_{\\mathrm{df}}}},
+```
+where *χ²* is the chi-squared statistic, ``N_{\\mathrm{df}}`` is the degrees of freedom,
+and ``N_{\\mathrm{obs}}`` is the (corrected) number of observations
+for the SEM model.
+
+# See also
+[`fit_measures`](@ref), [`χ²`](@ref), [`dof`](@ref)
+
+# Extended help
+
+For multigroup models, the correction proposed by J.H. Steiger is applied
+(see [Steiger, J. H. (1998). *A note on multiple sample extensions of the RMSEA fit index*](https://doi.org/10.1080/10705519809540115)).
 """
-function RMSEA end
+RMSEA(fit::SemFit) = RMSEA(fit, fit.model)
 
-RMSEA(sem_fit::SemFit{Mi, So, St, Mo, O} where {Mi, So, St, Mo <: AbstractSemSingle, O}) =
-    RMSEA(dof(sem_fit), χ²(sem_fit), nsamples(sem_fit))
-
-RMSEA(sem_fit::SemFit{Mi, So, St, Mo, O} where {Mi, So, St, Mo <: SemEnsemble, O}) =
-    sqrt(length(sem_fit.model.sems)) * RMSEA(dof(sem_fit), χ²(sem_fit), nsamples(sem_fit))
-
-function RMSEA(dof, chi2, nsamples)
-    rmsea = (chi2 - dof) / (nsamples * dof)
-    rmsea > 0 ? nothing : rmsea = 0
-    return sqrt(rmsea)
+function RMSEA(fit::SemFit, model::AbstractSem)
+    term_type = check_same_semterm_type(model; throw_error = true)
+    n = nsamples(fit) + nsem_terms(model) * multigroup_correction_scale(term_type)
+    sqrt(nsem_terms(model)) * RMSEA(dof(fit), χ²(fit), n)
 end
+
+RMSEA(dof::Number, chi2::Number, nsamples::Number) =
+    sqrt(max((chi2 - dof) / (nsamples * dof), 0.0))

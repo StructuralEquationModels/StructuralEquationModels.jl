@@ -2,22 +2,20 @@
 
 This way of specifying our model is not ideal, however, because now also the maximum likelihood loss function lives inside a `SemFiniteDiff` model, and this means even though we have defined analytical gradients for it, we do not make use of them.
 
-A more efficient way is therefore to specify our model as an ensemble model: 
+A more efficient way is therefore to specify our model as a combined model with multiple loss terms:
 
 ```julia
-model_ml = Sem(
-    specification = partable,
-    data = data,
-    loss = SemML
+ml_term = SemML(
+    SemObservedData(data = data, specification = partable),
+    RAMSymbolic(partable)
 )
 
-model_ridge = SemFiniteDiff(
-    specification = partable,
-    data = data,
-    loss = myridge
+ridge_term = SemRidge(
+    α_ridge = 0.01,
+    which_ridge = params(ml_term)
 )
 
-model_ml_ridge = SemEnsemble(model_ml, model_ridge)
+model_ml_ridge = Sem(ml_term, ridge_term)
 
 model_ml_ridge_fit = fit(model_ml_ridge)
 ```

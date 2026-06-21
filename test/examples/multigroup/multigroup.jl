@@ -1,22 +1,27 @@
 using StructuralEquationModels, Test, FiniteDiff, Suppressor
-using LinearAlgebra: diagind, LowerTriangular
+using LinearAlgebra: diagind, isposdef, logdet, tr, LowerTriangular
+using Statistics: var
+using Random
+
+Random.seed!(948723)
 
 const SEM = StructuralEquationModels
 
 include(joinpath(chop(dirname(pathof(SEM)), tail = 3), "test/examples/helper.jl"))
 
 dat = example_data("holzinger_swineford")
-dat_missing = example_data("holzinger_swineford_missing")
+dat.school = Symbol.(replace.(dat.school, "-" => "_"))
+
+dat_miss = example_data("holzinger_swineford_missing")
+dat_miss.school = Symbol.(replace.(dat_miss.school, "-" => "_"))
+
 solution_lav = example_data("holzinger_swineford_solution")
 
-dat_g1 = dat[dat.school.=="Pasteur", :]
-dat_g2 = dat[dat.school.=="Grant-White", :]
+dat_g1 = dat[dat.school .== :Pasteur, :]
+dat_g2 = dat[dat.school .== :Grant_White, :]
 
-dat_miss_g1 = dat_missing[dat_missing.school.=="Pasteur", :]
-dat_miss_g2 = dat_missing[dat_missing.school.=="Grant-White", :]
-
-dat.school = ifelse.(dat.school .== "Pasteur", :Pasteur, :Grant_White)
-dat_missing.school = ifelse.(dat_missing.school .== "Pasteur", :Pasteur, :Grant_White)
+dat_miss_g1 = dat_miss[dat_miss.school .== :Pasteur, :]
+dat_miss_g2 = dat_miss[dat_miss.school .== :Grant_White, :]
 
 ############################################################################################
 ### specification - RAMMatrices
@@ -86,7 +91,7 @@ start_test = [
     fill(0.05, 3)
     fill(0.01, 3)
 ]
-semoptimizer = SemOptimizerOptim()
+semoptimizer = SemOptimizer()
 
 @testset "RAMMatrices | constructor | Optim" begin
     include("build_models.jl")
@@ -98,8 +103,8 @@ end
 
 # w.o. meanstructure -----------------------------------------------------------------------
 
-latent_vars = [:visual, :textual, :speed]
-observed_vars = Symbol.(:x, 1:9)
+lat_vars = [:visual, :textual, :speed]
+obs_vars = Symbol.(:x, 1:9)
 
 graph = @StenoGraph begin
     # measurement model
@@ -107,14 +112,14 @@ graph = @StenoGraph begin
     textual → fixed(1.0, 1.0) * x4 + label(:λ₅, :λ₅) * x5 + label(:λ₆, :λ₆) * x6
     speed → fixed(1.0, 1.0) * x7 + label(:λ₈, :λ₈) * x8 + label(:λ₉, :λ₉) * x9
     # variances and covariances
-    _(observed_vars) ↔ _(observed_vars)
-    _(latent_vars) ⇔ _(latent_vars)
+    _(obs_vars) ↔ _(obs_vars)
+    _(lat_vars) ⇔ _(lat_vars)
 end
 
 partable = EnsembleParameterTable(
     graph;
-    observed_vars = observed_vars,
-    latent_vars = latent_vars,
+    observed_vars = obs_vars,
+    latent_vars = lat_vars,
     groups = [:Pasteur, :Grant_White],
 )
 
@@ -125,8 +130,8 @@ specification_g2 = specification[:Grant_White]
 
 # w. meanstructure (fiml) ------------------------------------------------------------------
 
-latent_vars = [:visual, :textual, :speed]
-observed_vars = Symbol.(:x, 1:9)
+lat_vars = [:visual, :textual, :speed]
+obs_vars = Symbol.(:x, 1:9)
 
 graph = @StenoGraph begin
     # measurement model
@@ -134,16 +139,16 @@ graph = @StenoGraph begin
     textual → fixed(1.0, 1.0) * x4 + label(:λ₅, :λ₅) * x5 + label(:λ₆, :λ₆) * x6
     speed → fixed(1.0, 1.0) * x7 + label(:λ₈, :λ₈) * x8 + label(:λ₉, :λ₉) * x9
     # variances and covariances
-    _(observed_vars) ↔ _(observed_vars)
-    _(latent_vars) ⇔ _(latent_vars)
+    _(obs_vars) ↔ _(obs_vars)
+    _(lat_vars) ⇔ _(lat_vars)
 
-    Symbol(1) → _(observed_vars)
+    Symbol(1) → _(obs_vars)
 end
 
 partable_miss = EnsembleParameterTable(
     graph;
-    observed_vars = observed_vars,
-    latent_vars = latent_vars,
+    observed_vars = obs_vars,
+    latent_vars = lat_vars,
     groups = [:Pasteur, :Grant_White],
 )
 
@@ -151,6 +156,19 @@ specification_miss = convert(Dict{Symbol, RAMMatrices}, partable_miss)
 
 specification_miss_g1 = specification_miss[:Pasteur]
 specification_miss_g2 = specification_miss[:Grant_White]
+
+# CFI baseline model
+graph_varonly = @StenoGraph begin
+    _(obs_vars) ↔ _(obs_vars)
+    Symbol(1) → _(obs_vars)
+end
+
+partable_varonly = EnsembleParameterTable(
+    graph_varonly;
+    observed_vars = obs_vars,
+    latent_vars = lat_vars,
+    groups = [:Pasteur, :Grant_White],
+)
 
 start_test = [
     fill(0.5, 6)
@@ -169,7 +187,7 @@ start_test = [
     0.01
     0.05
 ]
-semoptimizer = SemOptimizerOptim()
+semoptimizer = SemOptimizer()
 
 @testset "Graph → Partable → RAMMatrices | constructor | Optim" begin
     include("build_models.jl")

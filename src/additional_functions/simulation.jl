@@ -1,134 +1,39 @@
-"""
-    (1) replace_observed(model::AbstractSemSingle; kwargs...)
-
-    (2) replace_observed(model::AbstractSemSingle, observed; kwargs...)
-
-Return a new model with swaped observed part.
-
-# Arguments
-- `model::AbstractSemSingle`: model to swap the observed part of.
-- `kwargs`: additional keyword arguments; typically includes `data` and `specification`
-- `observed`: Either an object of subtype of `SemObserved` or a subtype of `SemObserved`
-
-# Examples
-See the online documentation on [Replace observed data](@ref).
-"""
-function replace_observed end
-
-"""
-    update_observed(to_update, observed::SemObserved; kwargs...)
-
-Update a `SemImplied`, `SemLossFunction` or `SemOptimizer` object to use a `SemObserved` object.
-
-# Examples
-See the online documentation on [Replace observed data](@ref).
-
-# Implementation
-You can provide a method for this function when defining a new type, for more information
-on this see the online developer documentation on [Update observed data](@ref).
-"""
-function update_observed end
-
-############################################################################################
-# change observed (data) without reconstructing the whole model
-############################################################################################
-
-# use the same observed type as before
-replace_observed(model::AbstractSemSingle; kwargs...) =
-    replace_observed(model, typeof(observed(model)).name.wrapper; kwargs...)
-
-# construct a new observed type
-replace_observed(model::AbstractSemSingle, observed_type; kwargs...) =
-    replace_observed(model, observed_type(; kwargs...); kwargs...)
-
-replace_observed(model::AbstractSemSingle, new_observed::SemObserved; kwargs...) =
-    replace_observed(
-        model,
-        observed(model),
-        implied(model),
-        loss(model),
-        new_observed;
-        kwargs...,
-    )
-
-function replace_observed(
-    model::AbstractSemSingle,
-    old_observed,
-    implied,
-    loss,
-    new_observed::SemObserved;
-    kwargs...,
-)
-    kwargs = Dict{Symbol, Any}(kwargs...)
-
-    # get field types
-    kwargs[:observed_type] = typeof(new_observed)
-    kwargs[:old_observed_type] = typeof(old_observed)
-    kwargs[:implied_type] = typeof(implied)
-    kwargs[:loss_types] = [typeof(lossfun) for lossfun in loss.functions]
-
-    # update implied
-    implied = update_observed(implied, new_observed; kwargs...)
-    kwargs[:implied] = implied
-    kwargs[:nparams] = nparams(implied)
-
-    # update loss
-    loss = update_observed(loss, new_observed; kwargs...)
-    kwargs[:loss] = loss
-
-    #new_implied = update_observed(model.implied, new_observed; kwargs...)
-
-    return Sem(
-        new_observed,
-        update_observed(model.implied, new_observed; kwargs...),
-        update_observed(model.loss, new_observed; kwargs...),
-    )
-end
-
-function update_observed(loss::SemLoss, new_observed; kwargs...)
-    new_functions = Tuple(
-        update_observed(lossfun, new_observed; kwargs...) for lossfun in loss.functions
-    )
-    return SemLoss(new_functions, loss.weights)
-end
-
 ############################################################################################
 # simulate data
 ############################################################################################
 """
-    (1) rand(model::AbstractSemSingle, params, n)
+    rand(sem::Union{Sem, SemLoss, SemImplied}, [params], n)
 
-    (2) rand(model::AbstractSemSingle, n)
-
-Sample normally distributed data from the model-implied covariance matrix and mean vector.
+Sample from the multivariate normal distribution implied by the SEM model.
 
 # Arguments
-- `model::AbstractSemSingle`: model to simulate from.
-- `params`: parameter values to simulate from.
-- `n::Integer`: Number of samples.
+- `sem`: SEM model to use. Ensemble models with multiple SEM terms are not supported.
+- `params`: optional SEM model parameters to simulate from, otherwise uses the
+  current state of implied covariances and means.
+- `n::Integer`: Number of samples to draw.
 
 # Examples
 ```julia
 rand(model, start_simple(model), 100)
 ```
 """
-function Distributions.rand(
-    model::AbstractSemSingle{O, I, L},
-    params,
-    n::Integer,
-) where {O, I <: Union{RAM, RAMSymbolic}, L}
-    update!(EvaluationTargets{true, false, false}(), model.implied, model, params)
-    return rand(model, n)
+function Distributions.rand(implied::SemImplied, params, n::Integer)
+    if !isnothing(params)
+        # update the implied covariances with the new model params
+        update!(EvaluationTargets{true, false, false}(), implied, params)
+    end
+    Σ = Symmetric(implied.Σ)
+    if MeanStruct(implied) === NoMeanStruct
+        return permutedims(rand(MvNormal(Σ), n))
+    elseif MeanStruct(implied) === HasMeanStruct
+        return permutedims(rand(MvNormal(implied.μ, Σ), n))
+    end
 end
 
-function Distributions.rand(
-    model::AbstractSemSingle{O, I, L},
-    n::Integer,
-) where {O, I <: Union{RAM, RAMSymbolic}, L}
-    if MeanStruct(model.implied) === NoMeanStruct
-        data = permutedims(rand(MvNormal(Symmetric(model.implied.Σ)), n))
-    elseif MeanStruct(model.implied) === HasMeanStruct
-        data = permutedims(rand(MvNormal(model.implied.μ, Symmetric(model.implied.Σ)), n))
-    end
-    return data
-end
+Distributions.rand(loss::SemLoss, params, n::Integer) = rand(SEM.implied(loss), params, n)
+
+Distributions.rand(model::Sem, params, n::Integer) = rand(sem_term(model), params, n)
+
+# rand() overloads without SEM params
+Distributions.rand(implied::Union{SemImplied, SemLoss, Sem}, n::Integer) =
+    Distributions.rand(implied, nothing, n)

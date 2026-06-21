@@ -1,3 +1,38 @@
+function details(sem::AbstractSem)
+    print("Structural Equation Model")
+    print(_subtype_info(sem))
+    print("\n")
+    print("- Loss Functions \n")
+    for term in loss_terms(sem)
+        print("  > ")
+        details(term)
+        println()
+    end
+end
+
+function details(term::LossTerm)
+    if !issemloss(term)
+        print(term.loss)
+    else
+        println("Structural Equation Model Loss ($(nameof(typeof(term.loss))))")
+        if !isnothing(id(term))
+            print("    - id:          $(id(term)) \n")
+        end
+        println(
+            "    - Observed:    $(nameof(typeof(observed(term)))) ($(nsamples(term)) samples)",
+        )
+        println(
+            "    - Implied:     $(nameof(typeof(implied(term)))) ($(nparams(term)) parameters)",
+        )
+        println(
+            "    - Variables:   $(nobserved_vars(term)) observed, $(nlatent_vars(term)) latent",
+        )
+        if !isnothing(weight(term))
+            print("    - weight:      $(round(weight(term), digits=3))")
+        end
+    end
+end
+
 function details(sem_fit::SemFit; show_fitmeasures = false, color = :light_cyan, digits = 2)
     print("\n")
     println("Fitted Structural Equation Model")
@@ -7,7 +42,8 @@ function details(sem_fit::SemFit; show_fitmeasures = false, color = :light_cyan,
         color = color,
     )
     print("\n")
-    println("Optimization algorithm:      $(optimizer(sem_fit))")
+    println("Optimization engine:         $(optimizer_engine(sem_fit))")
+    println("Optimization algorithm:      $(algorithm_name(sem_fit))")
     println("Convergence:                 $(convergence(sem_fit))")
     println("No. iterations/evaluations:  $(n_iterations(sem_fit))")
     print("\n")
@@ -113,10 +149,10 @@ function details(
         print("\n")
         pretty_table(
             loading_array;
-            header = header_cols,
-            tf = PrettyTables.tf_borderless,
+            column_labels = header_cols,
+            table_format = TextTableFormat(borders = text_table_borders__borderless),
             alignment = :l,
-            formatters = (v, i, j) -> isa(v, Number) && isnan(v) ? "" : v,
+            formatters = [(v, i, j) -> isa(v, Number) && isnan(v) ? "" : v],
         )
         print("\n")
     end
@@ -151,10 +187,10 @@ function details(
     print("\n")
     pretty_table(
         regression_array;
-        header = regression_columns,
-        tf = PrettyTables.tf_borderless,
+        column_labels = regression_columns,
+        table_format = TextTableFormat(borders = text_table_borders__borderless),
         alignment = :l,
-        formatters = (v, i, j) -> isa(v, Number) && isnan(v) ? "" : v,
+        formatters = [(v, i, j) -> isa(v, Number) && isnan(v) ? "" : v],
     )
     print("\n")
 
@@ -178,10 +214,10 @@ function details(
     print("\n")
     pretty_table(
         var_array;
-        header = var_columns,
-        tf = PrettyTables.tf_borderless,
+        column_labels = var_columns,
+        table_format = TextTableFormat(borders = text_table_borders__borderless),
         alignment = :l,
-        formatters = (v, i, j) -> isa(v, Number) && isnan(v) ? "" : v,
+        formatters = [(v, i, j) -> isa(v, Number) && isnan(v) ? "" : v],
     )
     print("\n")
 
@@ -205,10 +241,10 @@ function details(
     print("\n")
     pretty_table(
         covar_array;
-        header = covar_columns,
-        tf = PrettyTables.tf_borderless,
+        column_labels = covar_columns,
+        table_format = TextTableFormat(borders = text_table_borders__borderless),
         alignment = :l,
-        formatters = (v, i, j) -> isa(v, Number) && isnan(v) ? "" : v,
+        formatters = [(v, i, j) -> isa(v, Number) && isnan(v) ? "" : v],
     )
     print("\n")
 
@@ -235,10 +271,10 @@ function details(
         print("\n")
         pretty_table(
             mean_array;
-            header = mean_columns,
-            tf = PrettyTables.tf_borderless,
+            column_labels = mean_columns,
+            table_format = TextTableFormat(borders = text_table_borders__borderless),
             alignment = :l,
-            formatters = (v, i, j) -> isa(v, Number) && isnan(v) ? "" : v,
+            formatters = [(v, i, j) -> isa(v, Number) && isnan(v) ? "" : v],
         )
         print("\n")
     end
@@ -324,11 +360,13 @@ function Base.findall(fun::Function, partable::ParameterTable)
 end
 
 """
-    (1) details(sem_fit::SemFit; show_fitmeasures = false)
+    (1) details(model::AbstractSem)
 
-    (2) details(partable::AbstractParameterTable; ...)
+    (2) details(sem_fit::SemFit; show_fitmeasures = false)
 
-Print information about (1) a fitted SEM or (2) a parameter table to stdout.
+    (3) details(partable::AbstractParameterTable; ...)
+
+Print information about (1) a SEM, (2) a fitted SEM or (3) a parameter table to stdout.
 
 # Extended help
 ## Addition keyword arguments

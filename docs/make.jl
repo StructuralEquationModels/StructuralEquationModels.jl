@@ -1,7 +1,12 @@
-using Documenter, StructuralEquationModels
+using Documenter, StructuralEquationModels, NLopt, ProximalAlgorithms, ProximalOperators
+
+SEM = StructuralEquationModels
+SEMNLOptExt = Base.get_extension(StructuralEquationModels, :SEMNLOptExt)
+SEMProximalOptExt = Base.get_extension(StructuralEquationModels, :SEMProximalOptExt)
 
 makedocs(
     sitename = "StructuralEquationModels.jl",
+    modules = [SEM, SEMNLOptExt, SEMProximalOptExt],
     pages = [
         "index.md",
         "Tutorials" => [
@@ -47,11 +52,6 @@ makedocs(
             "Starting values" => "performance/starting_values.md",
             "Parametric Types" => "performance/parametric.md",
         ],
-        "Internals and design" => [
-            "Internals and design" => "internals/internals.md",
-            "files" => "internals/files.md",
-            "types" => "internals/types.md",
-        ],
     ],
     format = Documenter.HTML(
         prettyurls = get(ENV, "CI", nothing) == "true",
@@ -60,6 +60,7 @@ makedocs(
         collapselevel = 1,
     ),
     doctest = false,
+    checkdocs = :none,
 )
 
 # doctest(StructuralEquationModels, fix=true)

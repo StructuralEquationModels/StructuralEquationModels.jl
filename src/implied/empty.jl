@@ -7,14 +7,14 @@ Empty placeholder for models that don't need an implied part.
 
 # Constructor
 
-    ImpliedEmpty(;specification, kwargs...)
+    ImpliedEmpty(specification; kwargs...)
 
 # Arguments
 - `specification`: either a `RAMMatrices` or `ParameterTable` object
 
 # Examples
-A multigroup model with ridge regularization could be specified as a `SemEnsemble` with one
-model per group and an additional model with `ImpliedEmpty` and `SemRidge` for the regularization part.
+A multigroup model with ridge regularization could be specified as a `Sem` with one
+SEM term (`SemLoss`) per group and an additional `SemRidge` regularization term.
 
 # Extended help
 
@@ -32,8 +32,8 @@ end
 ### Constructors
 ############################################################################################
 
-function ImpliedEmpty(;
-    specification,
+function ImpliedEmpty(
+    specification::SemSpecification;
     meanstruct = NoMeanStruct(),
     hessianeval = ExactHessian(),
     kwargs...,
@@ -45,10 +45,4 @@ end
 ### methods
 ############################################################################################
 
-update!(targets::EvaluationTargets, implied::ImpliedEmpty, par, model) = nothing
-
-############################################################################################
-### Recommended methods
-############################################################################################
-
-update_observed(implied::ImpliedEmpty, observed::SemObserved; kwargs...) = implied
+update!(targets::EvaluationTargets, implied::ImpliedEmpty, par) = nothing
