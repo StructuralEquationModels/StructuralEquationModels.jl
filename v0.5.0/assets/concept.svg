@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   version="1.1"
+   id="svg1"
+   width="544.33575"
+   height="252.04678"
+   viewBox="0 0 544.33575 252.04678"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs1" />
+  <g
+     id="g1"
+     transform="translate(-186.32495,-167.73082)">
+    <path
+       id="path1"
+       d="m 186.85534,359.41361 h 543.275 v -191.1524 h -543.275 z"
+       style="fill:none;stroke:#808080;stroke-width:2.649;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:0.40000001" />
+    <text
+       id="text1"
+       xml:space="preserve"
+       x="206.90506"
+       y="199.88748"
+       style="font-size:21.2948px;stroke-width:1.77457"><tspan
+         id="tspan1"
+         style="font-variant:normal;font-weight:normal;font-size:25.4583px;font-family:LMMono12;writing-mode:lr-tb;fill:#808080;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.77457"
+         x="206.90506"
+         y="199.88748">Sem</tspan></text>
+    <path
+       id="path2"
+       d="M 204.46147,349.35308 H 380.52273 V 213.53456 H 204.46147 Z"
+       style="fill:#4063d8;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.77457" />
+    <path
+       id="path3"
+       d="m 206.97678,249.29941 h 171.0306 v -31.28836 h -171.0306 z"
+       style="fill:none;stroke:#4063d8;stroke-width:1.77457;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1" />
+    <text
+       id="text3"
+       xml:space="preserve"
+       x="218.24098"
+       y="238.41679"
+       style="font-size:21.2948px;stroke-width:1.77457"><tspan
+         id="tspan3"
+         style="font-variant:normal;font-weight:normal;font-size:17.6793px;font-family:LMMono10;writing-mode:lr-tb;fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.77457"
+         x="218.24098"
+         dx="0 0 0 0 9.2816505 0 0 0 0 0 0 0 9.2816505"
+         y="238.41679">lossfunction#1</tspan></text>
+    <path
+       id="path4"
+       d="M 217.03726,294.01923 H 367.9469 v -40.2427 H 217.03726 Z"
+       style="fill:#9558b2;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.77457" />
+    <text
+       id="text4"
+       xml:space="preserve"
+       x="255.36838"
+       y="278.66037"
+       style="font-size:21.2948px;stroke-width:1.77457"><tspan
+         id="tspan4"
+         style="font-variant:normal;font-weight:normal;font-size:17.6793px;font-family:LMMono10;writing-mode:lr-tb;fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.77457"
+         x="255.36838"
+         y="278.66037">observed</tspan></text>
+    <path
+       id="path5"
+       d="M 217.03726,339.29258 H 367.9469 V 299.04989 H 217.03726 Z"
+       style="fill:#389826;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.77457" />
+    <text
+       id="text5"
+       xml:space="preserve"
+       x="260.00888"
+       y="323.93298"
+       style="font-size:21.2948px;stroke-width:1.77457"><tspan
+         id="tspan5"
+         style="font-variant:normal;font-weight:normal;font-size:17.6793px;font-family:LMMono10;writing-mode:lr-tb;fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.77457"
+         x="260.00888"
+         y="323.93298">implied</tspan></text>
+    <path
+       id="path6"
+       d="M 390.58317,349.35308 H 566.64442 V 213.53456 H 390.58317 Z"
+       style="fill:#4063d8;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.77457" />
+    <path
+       id="path7"
+       d="M 393.0985,249.29941 H 564.1291 V 218.01105 H 393.0985 Z"
+       style="fill:none;stroke:#4063d8;stroke-width:1.77457;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1" />
+    <text
+       id="text7"
+       xml:space="preserve"
+       x="404.36072"
+       y="238.41679"
+       style="font-size:21.2948px;stroke-width:1.77457"><tspan
+         id="tspan7"
+         style="font-variant:normal;font-weight:normal;font-size:17.6793px;font-family:LMMono10;writing-mode:lr-tb;fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.77457"
+         x="404.36072"
+         dx="0 0 0 0 9.2816505 0 0 0 0 0 0 0 9.2816505"
+         y="238.41679">lossfunction#2</tspan></text>
+    <path
+       id="path8"
+       d="m 403.15896,294.01923 h 150.90965 v -40.2427 H 403.15896 Z"
+       style="fill:#9558b2;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.77457" />
+    <text
+       id="text8"
+       xml:space="preserve"
+       x="441.48813"
+       y="278.66037"
+       style="font-size:21.2948px;stroke-width:1.77457"><tspan
+         id="tspan8"
+         style="font-variant:normal;font-weight:normal;font-size:17.6793px;font-family:LMMono10;writing-mode:lr-tb;fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.77457"
+         x="441.48813"
+         y="278.66037">observed</tspan></text>
+    <path
+       id="path9"
+       d="M 403.15896,339.29258 H 554.06861 V 299.04989 H 403.15896 Z"
+       style="fill:#389826;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.77457" />
+    <text
+       id="text9"
+       xml:space="preserve"
+       x="446.12863"
+       y="323.93298"
+       style="font-size:21.2948px;stroke-width:1.77457"><tspan
+         id="tspan9"
+         style="font-variant:normal;font-weight:normal;font-size:17.6793px;font-family:LMMono10;writing-mode:lr-tb;fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.77457"
+         x="446.12863"
+         y="323.93298">implied</tspan></text>
+    <path
+       id="path10"
+       d="M 576.70524,349.35308 H 712.52376 V 213.53456 H 576.70524 Z"
+       style="fill:#4063d8;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.77457" />
+    <text
+       id="text10"
+       xml:space="preserve"
+       x="587.75476"
+       y="237.91991"
+       style="font-size:21.2948px;stroke-width:1.77457"><tspan
+         id="tspan10"
+         style="font-variant:normal;font-weight:normal;font-size:17.6793px;font-family:LMMono10;writing-mode:lr-tb;fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.77457"
+         x="587.75476"
+         y="237.91991">...</tspan></text>
+    <path
+       id="path11"
+       d="m 206.97667,419.77761 h 503.0323 v -50.30316 h -503.0323 z"
+       style="fill:#cb3c33;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.77457" />
+    <text
+       id="text11"
+       xml:space="preserve"
+       x="416.72586"
+       y="399.38565"
+       style="font-size:21.2948px;stroke-width:1.77457"><tspan
+         id="tspan11"
+         style="font-variant:normal;font-weight:normal;font-size:17.6793px;font-family:LMMono10;writing-mode:lr-tb;fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.77457"
+         x="416.72586"
+         y="399.38565">optimizer</tspan></text>
+  </g>
+</svg>

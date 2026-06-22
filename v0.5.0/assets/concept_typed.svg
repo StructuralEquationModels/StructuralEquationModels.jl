@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   version="1.1"
+   id="svg1"
+   width="544.20795"
+   height="252.04646"
+   viewBox="0 0 544.20794 252.04646"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs1" />
+  <g
+     id="g1"
+     transform="translate(-185.72497,-167.13084)">
+    <path
+       id="path1"
+       d="M 187.0497,359.00402 H 728.60822 V 168.45557 H 187.0497 Z"
+       style="fill:none;stroke:#808080;stroke-width:2.64945;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:0.4" />
+    <text
+       id="text1"
+       xml:space="preserve"
+       style="font-size:21.2275px;fill:#808080;fill-opacity:1;stroke-width:1.76896"
+       x="207.03607"
+       y="199.9819"><tspan
+         id="tspan1"
+         style="font-variant:normal;font-weight:normal;font-size:25.3778px;font-family:LMMono12;writing-mode:lr-tb;fill:#808080;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.76896"
+         x="207.03607"
+         y="199.9819">Sem</tspan></text>
+    <path
+       id="path2"
+       d="m 204.60019,348.97527 h 175.505 V 213.58588 h -175.505 z"
+       style="fill:#4063d8;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.76896" />
+    <path
+       id="path3"
+       d="M 207.10757,249.23772 H 377.5978 v -31.1895 H 207.10757 Z"
+       style="fill:none;stroke:#4063d8;stroke-width:1.76896;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1" />
+    <text
+       id="text3"
+       xml:space="preserve"
+       x="259.97211"
+       y="238.38948"
+       style="font-size:21.2275px;stroke-width:1.76896"><tspan
+         id="tspan3"
+         style="font-variant:normal;font-weight:normal;font-size:17.6235px;font-family:LMMono10;writing-mode:lr-tb;fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.76896"
+         x="259.97211"
+         y="238.38948">SemLoss</tspan></text>
+    <path
+       id="path4"
+       d="M 217.13626,293.81625 H 367.5691 V 253.70071 H 217.13626 Z"
+       style="fill:#9558b2;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.76896" />
+    <text
+       id="text4"
+       xml:space="preserve"
+       x="241.46704"
+       y="278.50589"
+       style="font-size:21.2275px;stroke-width:1.76896"><tspan
+         id="tspan4"
+         style="font-variant:normal;font-weight:normal;font-size:17.6235px;font-family:LMMono10;writing-mode:lr-tb;fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.76896"
+         x="241.46704"
+         y="278.50589">SemObserved</tspan></text>
+    <path
+       id="path5"
+       d="M 217.13626,338.94656 H 367.5691 V 298.83102 H 217.13626 Z"
+       style="fill:#389826;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.76896" />
+    <text
+       id="text5"
+       xml:space="preserve"
+       x="246.09286"
+       y="323.6355"
+       style="font-size:21.2275px;stroke-width:1.76896"><tspan
+         id="tspan5"
+         style="font-variant:normal;font-weight:normal;font-size:17.6235px;font-family:LMMono10;writing-mode:lr-tb;fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.76896"
+         x="246.09286"
+         y="323.6355">SemImplied</tspan></text>
+    <path
+       id="path6"
+       d="M 390.13384,348.97527 H 565.63883 V 213.58588 H 390.13384 Z"
+       style="fill:#4063d8;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.76896" />
+    <path
+       id="path7"
+       d="m 392.64123,249.23772 h 170.49023 v -31.1895 H 392.64123 Z"
+       style="fill:none;stroke:#4063d8;stroke-width:1.76896;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1" />
+    <text
+       id="text7"
+       xml:space="preserve"
+       x="445.50381"
+       y="238.38948"
+       style="font-size:21.2275px;stroke-width:1.76896"><tspan
+         id="tspan7"
+         style="font-variant:normal;font-weight:normal;font-size:17.6235px;font-family:LMMono10;writing-mode:lr-tb;fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.76896"
+         x="445.50381"
+         y="238.38948">SemLoss</tspan></text>
+    <path
+       id="path8"
+       d="M 402.66991,293.81625 H 553.10275 V 253.70071 H 402.66991 Z"
+       style="fill:#9558b2;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.76896" />
+    <text
+       id="text8"
+       xml:space="preserve"
+       x="426.99875"
+       y="278.50589"
+       style="font-size:21.2275px;stroke-width:1.76896"><tspan
+         id="tspan8"
+         style="font-variant:normal;font-weight:normal;font-size:17.6235px;font-family:LMMono10;writing-mode:lr-tb;fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.76896"
+         x="426.99875"
+         y="278.50589">SemObserved</tspan></text>
+    <path
+       id="path9"
+       d="M 402.66991,338.94656 H 553.10275 V 298.83102 H 402.66991 Z"
+       style="fill:#389826;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.76896" />
+    <text
+       id="text9"
+       xml:space="preserve"
+       x="431.62457"
+       y="323.6355"
+       style="font-size:21.2275px;stroke-width:1.76896"><tspan
+         id="tspan9"
+         style="font-variant:normal;font-weight:normal;font-size:17.6235px;font-family:LMMono10;writing-mode:lr-tb;fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.76896"
+         x="431.62457"
+         y="323.6355">SemImplied</tspan></text>
+    <path
+       id="path10"
+       d="M 575.66788,348.97527 H 711.05727 V 213.58588 H 575.66788 Z"
+       style="fill:#4063d8;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.76896" />
+    <text
+       id="text10"
+       xml:space="preserve"
+       x="586.6825"
+       y="237.89418"
+       style="font-size:21.2275px;stroke-width:1.76896"><tspan
+         id="tspan10"
+         style="font-variant:normal;font-weight:normal;font-size:17.6235px;font-family:LMMono10;writing-mode:lr-tb;fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.76896"
+         x="586.6825"
+         y="237.89418">AbstractLoss</tspan></text>
+    <path
+       id="path11"
+       d="M 207.10746,419.17731 H 708.55043 V 369.03307 H 207.10746 Z"
+       style="fill:#cb3c33;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.76896" />
+    <text
+       id="text11"
+       xml:space="preserve"
+       x="402.31473"
+       y="398.84979"
+       style="font-size:21.2275px;stroke-width:1.76896"><tspan
+         id="tspan11"
+         style="font-variant:normal;font-weight:normal;font-size:17.6235px;font-family:LMMono10;writing-mode:lr-tb;fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.76896"
+         x="402.31473"
+         y="398.84979">SemOptimizer</tspan></text>
+  </g>
+</svg>
