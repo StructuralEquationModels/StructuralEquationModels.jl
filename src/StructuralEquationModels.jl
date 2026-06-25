@@ -90,6 +90,7 @@ include("frontend/fit/fitmeasures/p.jl")
 include("frontend/fit/fitmeasures/RMSEA.jl")
 include("frontend/fit/fitmeasures/CFI.jl")
 include("frontend/fit/fitmeasures/fit_measures.jl")
+include("frontend/fit/fitmeasures/explained_variance.jl")
 # standard errors
 include("frontend/fit/standard_errors/hessian.jl")
 include("frontend/fit/standard_errors/bootstrap.jl")
@@ -186,6 +187,7 @@ export AbstractSem,
     param_indices,
     param_labels,
     fit_measures,
+    explained_variance,
     AIC,
     BIC,
     χ²,
