@@ -191,8 +191,13 @@ if opt_engine == :Optim
     end
 
     @testset "ml_solution_hessian" begin
-        solution = fit(SemOptimizer(engine = :Optim, algorithm = Newton()), model_ml)
-
+        solution = fit(
+            SemOptimizer(
+                engine = :Optim,
+                algorithm = Newton(linesearch = BackTracking(order = 3)),
+            ),
+            model_ml,
+        )
         update_estimate!(partable, solution)
         test_estimates(partable, solution_lav[:parameter_estimates_ml]; atol = 1e-2)
     end
