@@ -59,6 +59,7 @@ fitmeasure_semjl_to_lavaan = Dict(
     :nparams => "npar",
     :RMSEA => "rmsea",
     :CFI => "cfi",
+    :minus2ll => "logl"
 )
 
 function test_fitmeasures(
@@ -81,6 +82,7 @@ function test_fitmeasures(
             @test ismissing(measure)
         else
             measure_lav = measures_lav.x[lav_ix]
+            measure_lav = name == :minus2ll ? -2measure_lav : measure_lav
             @test measure ≈ measure_lav rtol = rtol atol = atol
         end
     end
