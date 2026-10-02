@@ -34,6 +34,8 @@ Distributions.rand(loss::SemLoss, params, n::Integer) = rand(SEM.implied(loss), 
 
 Distributions.rand(model::Sem, params, n::Integer) = rand(sem_term(model), params, n)
 
+Distributions.rand(wrapper::SemFiniteDiff, params, n::Integer) = rand(wrapper.model, params, n)
+
 # rand() overloads without SEM params
 Distributions.rand(implied::Union{SemImplied, SemLoss, Sem}, n::Integer) =
     Distributions.rand(implied, nothing, n)
