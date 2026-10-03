@@ -58,7 +58,7 @@ end
     test_estimates(
         partable,
         solution_lav[:parameter_estimates_ml];
-        atol = 1e-3,
+        atol = 1e-4,
         col = :se,
         lav_col = :se,
         lav_groups = Dict(:Pasteur => 1, :Grant_White => 2),
@@ -118,7 +118,7 @@ end
     test_estimates(
         partable_s,
         solution_lav[:parameter_estimates_ml];
-        atol = 1e-3,
+        atol = 1e-4,
         col = :se,
         lav_col = :se,
         lav_groups = Dict(:Pasteur => 1, :Grant_White => 2),

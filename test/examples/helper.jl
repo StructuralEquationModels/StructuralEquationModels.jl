@@ -59,7 +59,7 @@ fitmeasure_semjl_to_lavaan = Dict(
     :nparams => "npar",
     :RMSEA => "rmsea",
     :CFI => "cfi",
-    :minus2ll => "logl"
+    :minus2ll => "logl",
 )
 
 function test_fitmeasures(
@@ -88,6 +88,10 @@ function test_fitmeasures(
     end
 end
 
+# LinearAlgebra v1.13 ignores`norm` keyword for isapprox on arrays (issue #1675)
+isapprox_infnorm(x::AbstractArray, y::AbstractArray; atol::Real = 0, rtol::Real = 0) =
+    norm(x - y, Inf) <= max(atol, rtol * max(norm(x, Inf), norm(y, Inf)))
+
 function test_estimates(
     partable::ParameterTable,
     partable_lav;
@@ -105,10 +109,9 @@ function test_estimates(
     @test !any(isnan, expected)
 
     if skip # workaround skip=false not supported in earlier versions
-        @test actual ≈ expected rtol = rtol atol = atol norm = Base.Fix2(norm, Inf) skip =
-            skip
+        @test isapprox_infnorm(actual, expected; atol = atol, rtol = rtol) skip = skip
     else
-        @test actual ≈ expected rtol = rtol atol = atol norm = Base.Fix2(norm, Inf)
+        @test isapprox_infnorm(actual, expected; atol = atol, rtol = rtol)
     end
 end
 
@@ -138,10 +141,9 @@ function test_estimates(
     @test !any(isnan, expected)
 
     if skip # workaround skip=false not supported in earlier versions
-        @test actual ≈ expected rtol = rtol atol = atol norm = Base.Fix2(norm, Inf) skip =
-            skip
+        @test isapprox_infnorm(actual, expected; atol = atol, rtol = rtol) skip = skip
     else
-        @test actual ≈ expected rtol = rtol atol = atol norm = Base.Fix2(norm, Inf)
+        @test isapprox_infnorm(actual, expected; atol = atol, rtol = rtol)
     end
 end
 
