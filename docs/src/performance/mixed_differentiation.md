@@ -10,12 +10,9 @@ ml_term = SemML(
     RAMSymbolic(partable)
 )
 
-ridge_term = SemRidge(
-    α_ridge = 0.01,
-    which_ridge = params(ml_term)
-)
+ridge_penalty = SemRidge(partable)
 
-model_ml_ridge = Sem(ml_term, ridge_term)
+model_ml_ridge = Sem(ml_term, ridge_penalty => 0.01)
 
 model_ml_ridge_fit = fit(model_ml_ridge)
 ```

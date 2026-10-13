@@ -20,13 +20,8 @@ model_ls_sym =
 
 model_ml_sym = Sem(specification = spec, data = dat, implied = RAMSymbolic)
 
-model_ml_ridge = Sem(
-    specification = spec,
-    data = dat,
-    loss = (SemML, SemRidge),
-    α_ridge = 0.001,
-    which_ridge = 16:20,
-)
+model_ml_ridge =
+    Sem(SemML(SemObservedData(data = dat), RAM(spec)), SemRidge(16:20) => 0.001)
 
 model_ml_const = Sem(
     specification = spec,

@@ -7,6 +7,7 @@ available_tests = Dict(
     "data_input_formats" => "SemObserved",
     "specification" => "SemSpecification",
     "model" => "Sem model",
+    "regularization" => "Regularization penalties",
     "StatsAPI" => "StatsAPI",
 )
 
