@@ -75,7 +75,7 @@ A list of available [Fit measures](@ref) is at the end of this page.
 
 To inspect the parameter estimates, we can update a `ParameterTable` object and call `details` on it:
 
-```@example colored; ansicolor = true; output = false
+```@example colored; ansicolor = true
 update_estimate!(partable, model_fit)
 
 details(partable)
