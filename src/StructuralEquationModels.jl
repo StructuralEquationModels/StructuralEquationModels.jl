@@ -1,6 +1,7 @@
 module StructuralEquationModels
 
 using LinearAlgebra,
+    Printf,
     Optim,
     NLSolversBase,
     Statistics,
@@ -15,7 +16,8 @@ using LinearAlgebra,
     LazyArtifacts,
     DelimitedFiles,
     DataFrames,
-    ProgressMeter
+    ProgressMeter,
+    PackageExtensionCompat
 
 import StatsAPI: params, coef, coefnames, dof, fit, nobs, coeftable
 
@@ -31,7 +33,9 @@ include("objective_gradient_hessian.jl")
 
 # helper objects and functions
 include("additional_functions/commutation_matrix.jl")
+include("additional_functions/sparse_utils.jl")
 include("additional_functions/params_array.jl")
+include("additional_functions/quad.jl")
 
 # fitted objects
 include("frontend/fit/SemFit.jl")
@@ -45,6 +49,7 @@ include("frontend/specification/StenoGraphs.jl")
 include("frontend/fit/summary.jl")
 include("frontend/StatsAPI.jl")
 include("frontend/finite_diff.jl")
+include("frontend/predict.jl")
 # pretty printing
 include("frontend/pretty_printing.jl")
 # observed
@@ -63,9 +68,10 @@ include("implied/empty.jl")
 include("loss/abstract.jl")
 include("loss/ML/ML.jl")
 include("loss/ML/FIML.jl")
-include("loss/regularization/ridge.jl")
 include("loss/WLS/WLS.jl")
 include("loss/constant/constant.jl")
+# regularization
+include("loss/regularization/params_penalty.jl")
 # constructor
 include("frontend/specification/Sem.jl")
 include("frontend/specification/documentation.jl")
@@ -121,9 +127,14 @@ export AbstractSem,
     SemML,
     SemFIML,
     em_mvn,
-    SemRidge,
-    SemConstant,
     SemWLS,
+    SemConstant,
+    SemParamsPenalty,
+    SemHinge,
+    SemLasso,
+    SemNorm,
+    SemRidge,
+    SemElasticNet,
     loss,
     nsem_terms,
     sem_terms,
@@ -210,4 +221,9 @@ export AbstractSem,
     ←,
     ↔,
     ⇔
+
+function __init__()
+    @require_extensions
+end
+
 end

@@ -37,11 +37,8 @@ sem_fit = fit(model)
 
 # use ridge from StructuralEquationModels
 model_ridge = Sem(
-    specification = partable,
-    data = dat,
-    loss = (SemML, SemRidge),
-    α_ridge = 0.02,
-    which_ridge = 16:20,
+    SemML(SemObservedData(data = dat), RAM(partable)),
+    SemRidge(16:20) => 0.02,
 )
 
 solution_ridge = fit(model_ridge)

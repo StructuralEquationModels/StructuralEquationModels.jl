@@ -76,3 +76,12 @@ replace_observed(loss::AbstractLoss, ::Any; kwargs...) = loss
 # LossTerm: delegate to inner loss
 replace_observed(term::LossTerm, data; kwargs...) =
     LossTerm(replace_observed(loss(term), data; kwargs...), id(term), weight(term))
+
+# returned objective if the implied Σ(par) matrix is not positive definite
+function non_posdef_objective(par::AbstractVector)
+    if eltype(par) <: AbstractFloat
+        return floatmax(eltype(par))
+    else
+        return typemax(eltype(par))
+    end
+end
