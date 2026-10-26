@@ -277,7 +277,7 @@ function update_partable!(
 
     for (i, par) in enumerate(partable.columns[:label])
         if par == :const
-            coldata[i] = !isnothing(default) ? (isvec_def ? default[i] : default) : zero(T)
+            coldata[i] = !isnothing(default) ? (isvec_def ? default[i] : default) : T(NaN)
         elseif haskey(params, par)
             coldata[i] = params[par]
         else

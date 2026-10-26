@@ -1,4 +1,4 @@
-const DEFAULT_FIT_MEASURES = [AIC, BIC, dof, χ², p_value, nparams, RMSEA, CFI]
+const DEFAULT_FIT_MEASURES = [minus2ll, AIC, BIC, dof, χ², p_value, nparams, RMSEA, CFI]
 
 fit_measures(fit, measures::AbstractVector) = Dict(Symbol(fn) => fn(fit) for fn in measures)
 fit_measures(fit, measures...) = fit_measures(fit, measures)
